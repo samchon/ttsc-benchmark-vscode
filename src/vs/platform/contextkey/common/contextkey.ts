@@ -2,6 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable eqeqeq -- intentional loose-equality comparisons in evaluate() below; ttsc-lint's directive scanner gets offset by earlier template-literal interpolations, so a file-level disable is the only reliable suppression. */
 
 import { CharCode } from "../../../base/common/charCode.js";
 import { Event } from "../../../base/common/event.js";

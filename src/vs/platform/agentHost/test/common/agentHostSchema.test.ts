@@ -284,8 +284,8 @@ suite("agentHostSchema", () => {
 
     test("ignores keys not in defaults", () => {
       const schema = fixture();
-      // @ts-expect-error: test that extra keys not in the defaults are ignored, even if they pass validation.
       const result = schema.validateOrDefault(
+        // @ts-expect-error: test that extra keys not in the defaults are ignored, even if they pass validation.
         { name: "a", count: 1, ignored: true },
         { name: "d", count: 0 },
       );
@@ -308,8 +308,8 @@ suite("agentHostSchema", () => {
 
     test("omits schema keys when value is invalid and no default is supplied", () => {
       const schema = fixture();
-      // @ts-expect-error: test that invalid values are dropped even when the caller doesn't provide a default.
       const result = schema.validateOrDefault(
+        // @ts-expect-error: test that invalid values are dropped even when the caller doesn't provide a default.
         { name: 42, count: 3 },
         { count: 0 },
       );

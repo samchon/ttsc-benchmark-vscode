@@ -219,13 +219,14 @@ function configureCrashReporter(): void {
     process.env["VSCODE_CRASH_REPORTER_PROCESS_TYPE"];
   if (crashReporterProcessType) {
     try {
-      //@ts-expect-error
       if (
+        // @ts-expect-error
         process["crashReporter"] &&
+        // @ts-expect-error
         typeof process["crashReporter"].addExtraParameter ===
           "function" /* Electron only */
       ) {
-        //@ts-expect-error
+        // @ts-expect-error
         process["crashReporter"].addExtraParameter(
           "processType",
           crashReporterProcessType,
