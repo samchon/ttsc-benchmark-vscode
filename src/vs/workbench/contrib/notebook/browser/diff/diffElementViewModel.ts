@@ -249,18 +249,18 @@ export class NotebookDocumentMetadataViewModel extends DiffElementViewModelBase 
       editorHeight + editorMargin + cellStatusHeight + bodyMargin;
 
     const newLayout: IDiffElementLayoutInfo = {
-      width: width,
-      editorHeight: editorHeight,
-      editorMargin: editorMargin,
+      width,
+      editorHeight,
+      editorMargin,
       metadataHeight: 0,
       cellStatusHeight,
       metadataStatusHeight: 0,
       outputTotalHeight: 0,
       outputStatusHeight: 0,
-      bodyMargin: bodyMargin,
+      bodyMargin,
       rawOutputHeight: 0,
       outputMetadataHeight: 0,
-      totalHeight: totalHeight,
+      totalHeight,
       layoutState: CellLayoutState.Measured,
     };
 
@@ -542,7 +542,7 @@ export abstract class DiffElementCellViewModelBase extends DiffElementViewModelB
     const cellStatusHeight = PropertyHeaderHeight;
     this._layoutInfo = {
       width: 0,
-      editorHeight: editorHeight,
+      editorHeight,
       editorMargin: 0,
       metadataHeight: 0,
       cellStatusHeight,
@@ -651,18 +651,18 @@ export abstract class DiffElementCellViewModelBase extends DiffElementViewModelB
       bodyMargin;
 
     const newLayout: IDiffElementLayoutInfo = {
-      width: width,
-      editorHeight: editorHeight,
-      editorMargin: editorMargin,
-      metadataHeight: metadataHeight,
+      width,
+      editorHeight,
+      editorMargin,
+      metadataHeight,
       cellStatusHeight,
-      metadataStatusHeight: metadataStatusHeight,
+      metadataStatusHeight,
       outputTotalHeight: outputHeight,
-      outputStatusHeight: outputStatusHeight,
-      bodyMargin: bodyMargin,
-      rawOutputHeight: rawOutputHeight,
-      outputMetadataHeight: outputMetadataHeight,
-      totalHeight: totalHeight,
+      outputStatusHeight,
+      bodyMargin,
+      rawOutputHeight,
+      outputMetadataHeight,
+      totalHeight,
       layoutState: CellLayoutState.Measured,
     };
 

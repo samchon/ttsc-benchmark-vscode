@@ -470,7 +470,7 @@ function layoutSubtree(
     tooltip: node.tooltip,
     isError: node.isError,
     x: startX,
-    y: y,
+    y,
     width: nodeWidth,
     height: nodeHeight,
     mergedCount: isMerged ? node.mergedNodes!.length : undefined,

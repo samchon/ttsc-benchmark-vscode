@@ -80,9 +80,9 @@ export function getEnterAction(
   }
 
   return {
-    indentAction: indentAction,
-    appendText: appendText,
-    removeText: removeText,
-    indentation: indentation,
+    indentAction,
+    appendText,
+    removeText,
+    indentation,
   };
 }

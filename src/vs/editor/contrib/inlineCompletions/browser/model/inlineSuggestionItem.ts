@@ -556,7 +556,7 @@ export class InlineEditItem extends InlineSuggestionItemBase {
       kind: "edit",
       snippetInfo: undefined,
       insertText: newText,
-      range: range,
+      range,
       uri: textModel.uri,
       alternativeAction: undefined,
     };

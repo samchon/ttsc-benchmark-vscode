@@ -794,7 +794,7 @@ class InspectEditorTokensWidget extends Disposable implements IContentWidget {
     return {
       languageId:
         this._languageService.languageIdCodec.decodeLanguageId(languageId),
-      tokenType: tokenType,
+      tokenType,
       bold: fontStyle & FontStyle.Bold ? true : undefined,
       italic: fontStyle & FontStyle.Italic ? true : undefined,
       underline: fontStyle & FontStyle.Underline ? true : undefined,

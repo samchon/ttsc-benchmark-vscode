@@ -172,7 +172,7 @@ export class AgentCustomizationItemProvider
     const uri = this.toRemoteUri(customization);
     return {
       itemKey: customizationItemKey(customization, clientId),
-      uri: uri,
+      uri,
       type: "plugin",
       name: customization.displayName,
       description: customization.description,

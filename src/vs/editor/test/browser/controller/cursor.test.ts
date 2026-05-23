@@ -1705,7 +1705,7 @@ suite("Editor Controller", () => {
           {
             beforeText: /.*/,
             action: {
-              indentAction: indentAction,
+              indentAction,
             },
           },
         ],
@@ -1721,7 +1721,7 @@ suite("Editor Controller", () => {
     disposables.add(languageService.registerLanguage({ id: languageId }));
     disposables.add(
       languageConfigurationService.register(languageId, {
-        indentationRules: indentationRules,
+        indentationRules,
       }),
     );
     return languageId;
@@ -3768,7 +3768,7 @@ suite("Editor Controller", () => {
     usingCursor(
       {
         text: ["\thello"],
-        languageId: languageId,
+        languageId,
       },
       (editor, model, viewModel) => {
         moveTo(editor, viewModel, 1, 7, false);
@@ -3788,7 +3788,7 @@ suite("Editor Controller", () => {
     usingCursor(
       {
         text: ["\thello"],
-        languageId: languageId,
+        languageId,
       },
       (editor, model, viewModel) => {
         moveTo(editor, viewModel, 1, 7, false);
@@ -3808,7 +3808,7 @@ suite("Editor Controller", () => {
     usingCursor(
       {
         text: ["\thell()"],
-        languageId: languageId,
+        languageId,
       },
       (editor, model, viewModel) => {
         moveTo(editor, viewModel, 1, 7, false);
@@ -3915,7 +3915,7 @@ suite("Editor Controller", () => {
     usingCursor(
       {
         text: ["text"],
-        languageId: languageId,
+        languageId,
       },
       (editor, model, viewModel) => {
         moveTo(editor, viewModel, 1, 5);
@@ -3932,7 +3932,7 @@ suite("Editor Controller", () => {
     usingCursor(
       {
         text: ["function foo (params: string) {}"],
-        languageId: languageId,
+        languageId,
       },
       (editor, model, viewModel) => {
         moveTo(editor, viewModel, 1, 32);
@@ -5231,7 +5231,7 @@ suite("Editor Controller", () => {
     usingCursor(
       {
         text: ["Project:"],
-        languageId: languageId,
+        languageId,
         modelOpts: { insertSpaces: false },
         editorOpts: { autoIndent: "full" },
       },
@@ -6222,7 +6222,7 @@ suite("Editor Controller", () => {
     usingCursor(
       {
         text: [""],
-        languageId: languageId,
+        languageId,
       },
       (editor, model, viewModel) => {
         viewModel.type("(", "keyboard");
@@ -6284,7 +6284,7 @@ suite("Editor Controller", () => {
     usingCursor(
       {
         text: ["little goat", "little LAMB", "little sheep", "Big LAMB"],
-        languageId: languageId,
+        languageId,
       },
       (editor, model, viewModel) => {
         model.tokenization.forceTokenization(model.getLineCount());
@@ -6636,7 +6636,7 @@ suite("Editor Controller", () => {
         editorOpts: {
           autoClosingBrackets: "beforeWhitespace",
         },
-        languageId: languageId,
+        languageId,
       },
       (editor, model, viewModel) => {
         assertType(

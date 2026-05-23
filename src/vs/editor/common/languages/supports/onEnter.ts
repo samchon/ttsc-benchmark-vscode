@@ -44,9 +44,9 @@ export class OnEnterSupport {
       if (openRegExp && closeRegExp) {
         this._brackets.push({
           open: bracket[0],
-          openRegExp: openRegExp,
+          openRegExp,
           close: bracket[1],
-          closeRegExp: closeRegExp,
+          closeRegExp,
         });
       }
     });

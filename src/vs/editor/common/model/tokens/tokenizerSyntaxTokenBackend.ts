@@ -303,7 +303,7 @@ export class TokenizerSyntaxTokenBackend extends AbstractSyntaxTokenBackend {
       });
     }
 
-    return { changes: changes };
+    return { changes };
   }
 
   private setFontInfo(changes: FontTokensUpdate): void {

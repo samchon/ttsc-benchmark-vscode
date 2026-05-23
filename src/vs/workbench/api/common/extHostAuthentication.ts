@@ -1363,7 +1363,7 @@ class TokenStore implements Disposable {
         label:
           claims?.preferred_username || claims?.name || claims?.email || "MCP",
       },
-      scopes: scopes,
+      scopes,
       idToken: token.id_token,
     };
   }

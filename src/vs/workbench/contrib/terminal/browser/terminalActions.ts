@@ -2265,7 +2265,7 @@ async function pickTerminalCwd(
     return {
       label,
       description: description !== label ? description : undefined,
-      pair: pair,
+      pair,
       iconClasses: getIconClasses(
         modelService,
         languageService,

@@ -369,7 +369,7 @@ suite("Untitled text editors", () => {
   test("created with files.defaultLanguage setting", () => {
     const defaultLanguage = "javascript";
     const config = accessor.testConfigurationService;
-    config.setUserConfiguration("files", { defaultLanguage: defaultLanguage });
+    config.setUserConfiguration("files", { defaultLanguage });
 
     const service = accessor.untitledTextEditorService;
     const input = disposables.add(service.create());
@@ -400,7 +400,7 @@ suite("Untitled text editors", () => {
     const language = "typescript";
     const defaultLanguage = "javascript";
     const config = accessor.testConfigurationService;
-    config.setUserConfiguration("files", { defaultLanguage: defaultLanguage });
+    config.setUserConfiguration("files", { defaultLanguage });
 
     const service = accessor.untitledTextEditorService;
     const input = disposables.add(service.create({ languageId: language }));
@@ -423,7 +423,7 @@ suite("Untitled text editors", () => {
     const input = disposables.add(
       instantiationService.createInstance(
         UntitledTextEditorInput,
-        service.create({ languageId: languageId }),
+        service.create({ languageId }),
       ),
     );
 

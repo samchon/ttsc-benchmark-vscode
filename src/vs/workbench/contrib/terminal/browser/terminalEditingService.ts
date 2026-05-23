@@ -29,7 +29,7 @@ export class TerminalEditingService implements ITerminalEditingService {
     if (!data) {
       this._editable = undefined;
     } else {
-      this._editable = { instance: instance, data };
+      this._editable = { instance, data };
     }
     const pane =
       this._viewsService.getActiveViewWithId<TerminalViewPane>(

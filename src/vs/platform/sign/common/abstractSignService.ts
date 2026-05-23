@@ -31,7 +31,7 @@ export abstract class AbstractSignService implements ISignService {
         const id = String(AbstractSignService._nextId++);
         this.validators.set(id, validator);
         return {
-          id: id,
+          id,
           data: validator.createNewMessage(value),
         };
       }

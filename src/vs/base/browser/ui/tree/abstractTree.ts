@@ -1012,7 +1012,7 @@ export class FindFilter<T> implements IFindFilter<T>, IDisposable {
         this._matchCount++;
         return labels.length === 1
           ? { data: score, visibility }
-          : { data: { label: labelStr, score: score }, visibility };
+          : { data: { label: labelStr, score }, visibility };
       }
     }
 

@@ -360,7 +360,7 @@ class EditSessionDataViewDataProvider implements ITreeViewDataProvider {
         handle: resource.toString(),
         collapsibleState: TreeItemCollapsibleState.Collapsed,
         label: { label },
-        description: description,
+        description,
         themeIcon: Codicon.repo,
         contextValue: `edit-session`,
       });

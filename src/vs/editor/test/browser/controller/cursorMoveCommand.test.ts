@@ -653,9 +653,9 @@ function moveLeft(
 ) {
   move(viewModel, {
     to: CursorMove.RawDirection.Left,
-    by: by,
-    value: value,
-    select: select,
+    by,
+    value,
+    select,
   });
 }
 
@@ -667,9 +667,9 @@ function moveRight(
 ) {
   move(viewModel, {
     to: CursorMove.RawDirection.Right,
-    by: by,
-    value: value,
-    select: select,
+    by,
+    value,
+    select,
   });
 }
 
@@ -678,7 +678,7 @@ function moveUp(viewModel: ViewModel, noOfLines: number = 1, select?: boolean) {
     to: CursorMove.RawDirection.Up,
     by: CursorMove.RawUnit.WrappedLine,
     value: noOfLines,
-    select: select,
+    select,
   });
 }
 
@@ -686,7 +686,7 @@ function moveUpByBlankLine(viewModel: ViewModel, select?: boolean) {
   move(viewModel, {
     to: CursorMove.RawDirection.PrevBlankLine,
     by: CursorMove.RawUnit.WrappedLine,
-    select: select,
+    select,
   });
 }
 
@@ -698,7 +698,7 @@ function moveUpByModelLine(
   move(viewModel, {
     to: CursorMove.RawDirection.Up,
     value: noOfLines,
-    select: select,
+    select,
   });
 }
 
@@ -711,7 +711,7 @@ function moveDown(
     to: CursorMove.RawDirection.Down,
     by: CursorMove.RawUnit.WrappedLine,
     value: noOfLines,
-    select: select,
+    select,
   });
 }
 
@@ -719,7 +719,7 @@ function moveDownByBlankLine(viewModel: ViewModel, select?: boolean) {
   move(viewModel, {
     to: CursorMove.RawDirection.NextBlankLine,
     by: CursorMove.RawUnit.WrappedLine,
-    select: select,
+    select,
   });
 }
 
@@ -731,7 +731,7 @@ function moveDownByModelLine(
   move(viewModel, {
     to: CursorMove.RawDirection.Down,
     value: noOfLines,
-    select: select,
+    select,
   });
 }
 
@@ -744,7 +744,7 @@ function moveDownByFoldedLine(
     to: CursorMove.RawDirection.Down,
     by: CursorMove.RawUnit.FoldedLine,
     value: noOfLines,
-    select: select,
+    select,
   });
 }
 
@@ -757,7 +757,7 @@ function moveUpByFoldedLine(
     to: CursorMove.RawDirection.Up,
     by: CursorMove.RawUnit.FoldedLine,
     value: noOfLines,
-    select: select,
+    select,
   });
 }
 
@@ -769,14 +769,14 @@ function moveToTop(
   move(viewModel, {
     to: CursorMove.RawDirection.ViewPortTop,
     value: noOfLines,
-    select: select,
+    select,
   });
 }
 
 function moveToCenter(viewModel: ViewModel, select?: boolean) {
   move(viewModel, {
     to: CursorMove.RawDirection.ViewPortCenter,
-    select: select,
+    select,
   });
 }
 
@@ -788,7 +788,7 @@ function moveToBottom(
   move(viewModel, {
     to: CursorMove.RawDirection.ViewPortBottom,
     value: noOfLines,
-    select: select,
+    select,
   });
 }
 

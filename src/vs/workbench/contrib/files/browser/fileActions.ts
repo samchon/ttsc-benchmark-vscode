@@ -845,7 +845,7 @@ export class GlobalCompareResourcesAction extends Action2 {
         ) {
           editorService.openEditor({
             original: { resource: activeResource },
-            modified: { resource: resource },
+            modified: { resource },
             options: { pinned: true },
           });
         }
@@ -1286,7 +1286,7 @@ export class CompareWithClipboardAction extends Action2 {
       await editorService
         .openEditor({
           original: { resource: resource.with({ scheme }) },
-          modified: { resource: resource },
+          modified: { resource },
           label: editorLabel,
           options: { pinned: true },
         })

@@ -161,9 +161,9 @@ function _parse(
       const newDict: { [key: string]: any } = {};
       if (locationKeyName !== null) {
         newDict[locationKeyName] = {
-          filename: filename,
-          line: line,
-          char: char,
+          filename,
+          line,
+          char,
         };
       }
       cur[curKey] = newDict;
@@ -186,9 +186,9 @@ function _parse(
       const newDict: { [key: string]: any } = {};
       if (locationKeyName !== null) {
         newDict[locationKeyName] = {
-          filename: filename,
-          line: line,
-          char: char,
+          filename,
+          line,
+          char,
         };
       }
       cur.push(newDict);
@@ -211,9 +211,9 @@ function _parse(
       cur = {};
       if (locationKeyName !== null) {
         cur[locationKeyName] = {
-          filename: filename,
-          line: line,
-          char: char,
+          filename,
+          line,
+          char,
         };
       }
       pushState(State.DICT_STATE, cur);
@@ -394,7 +394,7 @@ function _parse(
 
     return {
       name: r.trim(),
-      isClosed: isClosed,
+      isClosed,
     };
   }
 

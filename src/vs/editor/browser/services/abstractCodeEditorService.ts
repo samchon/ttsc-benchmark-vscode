@@ -215,9 +215,9 @@ export abstract class AbstractCodeEditorService
     if (!provider) {
       const styleSheet = this._getOrCreateStyleSheet(editor);
       const providerArgs: ProviderArguments = {
-        styleSheet: styleSheet,
-        key: key,
-        parentTypeKey: parentTypeKey,
+        styleSheet,
+        key,
+        parentTypeKey,
         options: options || Object.create(null),
       };
       if (!parentTypeKey) {

@@ -609,7 +609,7 @@ export class InputBox extends Widget {
       onHide: () => {
         this.state = "closed";
       },
-      layout: layout,
+      layout,
     });
 
     // ARIA Support

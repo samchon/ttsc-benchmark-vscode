@@ -198,7 +198,7 @@ const chatAgentWithMarkdown: IChatAgent = {
 function getAgentData(id: string): IChatAgentData {
   return {
     name: id,
-    id: id,
+    id,
     extensionId: nullExtensionDescription.identifier,
     extensionVersion: undefined,
     extensionPublisherId: "",

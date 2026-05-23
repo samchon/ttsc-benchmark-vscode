@@ -129,7 +129,7 @@ export class NotebookCellsLayout implements IRangeMap {
       priority = Math.max(...existingWhitespaces.map((ws) => ws.priority)) + 1;
     }
 
-    this._whitespace.push({ id, afterPosition: afterPosition, size, priority });
+    this._whitespace.push({ id, afterPosition, size, priority });
     this._size += size; // Update the total size to include the whitespace
     this._whitespace.sort((a, b) => {
       if (a.afterPosition === b.afterPosition) {

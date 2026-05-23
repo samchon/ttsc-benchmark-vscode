@@ -975,7 +975,7 @@ class NativeExtensionHostFactory implements IExtensionHostFactory {
     remoteAuthority: string,
   ): IRemoteExtensionHostDataProvider {
     return {
-      remoteAuthority: remoteAuthority,
+      remoteAuthority,
       getInitData: async (): Promise<IRemoteExtensionHostInitData> => {
         const snapshot = await this._getExtensionRegistrySnapshotWhenReady();
 

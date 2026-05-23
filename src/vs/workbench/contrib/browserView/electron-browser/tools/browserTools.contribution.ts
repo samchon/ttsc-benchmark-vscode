@@ -319,7 +319,7 @@ class BrowserChatAgentToolsContribution
         {
           handle: 0,
           label: localize("browserContext.label", "Browser Pages"),
-          value: value,
+          value,
         },
       ],
     );

@@ -441,7 +441,7 @@ abstract class OpenChatGlobalAction extends Action2 {
           id: historyItemChange.uri.toString(),
           name: `${basename(historyItemChange.uri)}`,
           value: historyItemChange.uri,
-          historyItem: historyItem,
+          historyItem,
           kind: "scmHistoryItemChange",
         } satisfies ISCMHistoryItemChangeVariableEntry);
       }

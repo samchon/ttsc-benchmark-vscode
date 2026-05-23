@@ -577,7 +577,7 @@ export class IndexTreeModel<
     const deleteCount = previousRenderNodeCount - (listIndex === -1 ? 0 : 1);
     this._onDidSpliceRenderedNodes.fire({
       start: listIndex + 1,
-      deleteCount: deleteCount,
+      deleteCount,
       elements: toInsert.slice(1),
     });
 

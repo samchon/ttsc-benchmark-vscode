@@ -136,9 +136,9 @@ export function decodeSemanticTokensDto(_buff: VSBuffer): ISemanticTokensDto {
     const data = src.subarray(offset, offset + length);
     offset += length;
     return {
-      id: id,
+      id,
       type: "full",
-      data: data,
+      data,
     };
   }
   const deltaCount = src[offset++];
@@ -156,8 +156,8 @@ export function decodeSemanticTokensDto(_buff: VSBuffer): ISemanticTokensDto {
     deltas[i] = { start, deleteCount, data };
   }
   return {
-    id: id,
+    id,
     type: "delta",
-    deltas: deltas,
+    deltas,
   };
 }

@@ -577,7 +577,7 @@ class CellOutputElement extends Disposable {
         arr.push({
           label: mimeType.mimeType,
           id: mimeType.mimeType,
-          index: index,
+          index,
           picked: index === currIndex,
           detail: this._generateRendererInfo(mimeType.rendererId),
           description:

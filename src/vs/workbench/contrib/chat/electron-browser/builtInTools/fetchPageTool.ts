@@ -484,7 +484,7 @@ export class FetchWebPageTool implements IToolImpl {
         return {
           kind: "text",
           title,
-          value: value,
+          value,
         };
       } else if (value.type === "tooldata") {
         return { ...value.value, title };

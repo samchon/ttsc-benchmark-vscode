@@ -94,7 +94,7 @@ export class DropdownMenuActionViewItem extends BaseActionViewItem {
     const isActionsArray = Array.isArray(this.menuActionsOrProvider);
     const options: IDropdownMenuOptions = {
       contextMenuProvider: this.contextMenuProvider,
-      labelRenderer: labelRenderer,
+      labelRenderer,
       menuAsChild: this.options.menuAsChild,
       actions: isActionsArray
         ? (this.menuActionsOrProvider as IAction[])

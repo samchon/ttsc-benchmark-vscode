@@ -76,7 +76,7 @@ class PieceTreeTextBufferFactory implements ITextBufferFactory {
       this._isBasicASCII,
       this._normalizeEOL,
     );
-    return { textBuffer: textBuffer, disposable: textBuffer };
+    return { textBuffer, disposable: textBuffer };
   }
 
   public getFirstLineText(lengthLimit: number): string {

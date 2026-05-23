@@ -756,8 +756,8 @@ export function revealCommentThread(
       {
         resource,
         options: {
-          pinned: pinned,
-          preserveFocus: preserveFocus,
+          pinned,
+          preserveFocus,
           selection: range ?? new Range(1, 1, 1, 1),
         },
       },
@@ -2142,7 +2142,7 @@ export class CommentController
   ) {
     editor.updateOptions({
       extraEditorClassName: extraEditorClassName.join(" "),
-      lineDecorationsWidth: lineDecorationsWidth,
+      lineDecorationsWidth,
     });
   }
 

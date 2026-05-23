@@ -449,7 +449,7 @@ export class TerminalGroup extends Disposable implements ITerminalGroup {
       .map((t) => this._splitPaneContainer?.getPaneSize(t) || 0)
       .reduce((total, size) => (total += size), 0);
     return {
-      isActive: isActive,
+      isActive,
       activePersistentProcessId: this.activeInstance
         ? this.activeInstance.persistentProcessId
         : undefined,

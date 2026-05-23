@@ -71,7 +71,7 @@ export class NotebookHorizontalTracker extends Disposable {
           const targetWindow = getWindow(event);
           const evt = {
             deltaMode: event.deltaMode,
-            deltaX: deltaX,
+            deltaX,
             deltaY: 0,
             deltaZ: 0,
             wheelDelta:

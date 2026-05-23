@@ -374,7 +374,7 @@ export class ExtHostCommands implements ExtHostCommandsShape {
     >("Extension:ActionExecuted", {
       extensionId: command.extension.identifier.value,
       id: new TelemetryTrustedValue(id),
-      duration: duration,
+      duration,
     });
   }
 

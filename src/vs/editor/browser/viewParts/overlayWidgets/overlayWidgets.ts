@@ -127,9 +127,9 @@ export class ViewOverlayWidgets extends ViewPart {
     const domNode = createFastDomNode(widget.getDomNode());
 
     this._widgets[widget.getId()] = {
-      widget: widget,
+      widget,
       preference: null,
-      domNode: domNode,
+      domNode,
     };
 
     // This is sync because a widget wants to be in the dom

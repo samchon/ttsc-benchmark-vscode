@@ -1656,7 +1656,7 @@ export class ChatSessionsService
         }
       }
       session = {
-        sessionResource: sessionResource,
+        sessionResource,
         onWillDispose: Event.None,
         history: [],
         options: options.size > 0 ? options : undefined,
@@ -1767,7 +1767,7 @@ export class ChatSessionsService
     if (didChange) {
       this._onDidChangeSessionOptions.fire({
         sessionResource,
-        updates: updates,
+        updates,
       });
     }
     return didChange;
@@ -1947,7 +1947,7 @@ function registerNewSessionInPlaceAction(
         }
 
         await openChatSession(accessor, {
-          type: type,
+          type,
           displayName: localize("chat", "Chat"),
           position: chatSessionPosition,
           replaceEditor: true,

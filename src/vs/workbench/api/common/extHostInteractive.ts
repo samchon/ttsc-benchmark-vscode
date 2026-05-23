@@ -112,8 +112,8 @@ export class ExtHostInteractive implements ExtHostInteractiveShape {
         {
           EOL: eol,
           lines: [""],
-          languageId: languageId,
-          uri: uri,
+          languageId,
+          uri,
           isDirty: false,
           versionId: 1,
           encoding: "utf8",

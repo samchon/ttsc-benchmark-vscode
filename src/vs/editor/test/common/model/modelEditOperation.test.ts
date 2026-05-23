@@ -45,8 +45,8 @@ suite("Editor Model - Model Edit Operation", () => {
     );
 
     return {
-      range: range,
-      text: text,
+      range,
+      text,
       forceMoveMarkers: false,
     };
   }

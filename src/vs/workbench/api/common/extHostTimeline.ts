@@ -130,7 +130,7 @@ export class ExtHostTimeline implements IExtHostTimeline {
     return this.registerTimelineProviderCore(
       {
         ...provider,
-        scheme: scheme,
+        scheme,
         onDidChange: undefined,
         async provideTimeline(
           uri: URI,
@@ -244,14 +244,14 @@ export class ExtHostTimeline implements IExtHostTimeline {
         return {
           ...props,
           id: props.id ?? undefined,
-          handle: handle,
-          source: source,
+          handle,
+          source,
           command: item.command
             ? commandConverter.toInternal(item.command, disposables)
             : undefined,
-          icon: icon,
-          iconDark: iconDark,
-          themeIcon: themeIcon,
+          icon,
+          iconDark,
+          themeIcon,
           tooltip,
           accessibilityInformation: item.accessibilityInformation,
         };

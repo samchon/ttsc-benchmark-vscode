@@ -187,7 +187,7 @@ suite("FileQueryCacheState", () => {
 
     public query(cacheKey: string): IFileQuery {
       this.cacheKeys.push(cacheKey);
-      return Object.assign({ cacheKey: cacheKey }, this.baseQuery);
+      return Object.assign({ cacheKey }, this.baseQuery);
     }
 
     public load(query: IFileQuery): Promise<any> {

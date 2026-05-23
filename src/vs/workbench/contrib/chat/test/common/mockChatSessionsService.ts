@@ -173,7 +173,7 @@ export class MockChatSessionsService implements IChatSessionsService {
       if (!providerTypeFilter || providerTypeFilter.includes(chatSessionType)) {
         await controllerEntry.initialRefresh; // ensure initial refresh is done
         yield {
-          chatSessionType: chatSessionType,
+          chatSessionType,
           items: controllerEntry.controller.items,
         };
       }

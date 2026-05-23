@@ -156,7 +156,7 @@ export class ScrollbarState {
       // There is no need for a slider
       return {
         computedAvailableSize: Math.round(computedAvailableSize),
-        computedIsNeeded: computedIsNeeded,
+        computedIsNeeded,
         computedSliderSize: Math.round(computedRepresentableSize),
         computedSliderRatio: 0,
         computedSliderPosition: 0,
@@ -180,9 +180,9 @@ export class ScrollbarState {
 
     return {
       computedAvailableSize: Math.round(computedAvailableSize),
-      computedIsNeeded: computedIsNeeded,
+      computedIsNeeded,
       computedSliderSize: Math.round(computedSliderSize),
-      computedSliderRatio: computedSliderRatio,
+      computedSliderRatio,
       computedSliderPosition: Math.round(computedSliderPosition),
     };
   }

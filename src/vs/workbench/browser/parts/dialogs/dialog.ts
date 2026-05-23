@@ -81,7 +81,7 @@ export function createBrowserAboutDialogDetails(
 
   return {
     title: productService.nameLong,
-    details: details,
-    detailsToCopy: detailsToCopy,
+    details,
+    detailsToCopy,
   };
 }

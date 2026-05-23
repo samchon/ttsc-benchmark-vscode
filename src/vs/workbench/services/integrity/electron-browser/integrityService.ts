@@ -179,9 +179,9 @@ export class IntegrityService implements IIntegrityService {
     expected: string,
   ): ChecksumPair {
     return {
-      uri: uri,
-      actual: actual,
-      expected: expected,
+      uri,
+      actual,
+      expected,
       isPure: actual === expected,
     };
   }

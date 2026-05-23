@@ -78,7 +78,7 @@ class NotebookKernelDetection
             );
             const task =
               this._notebookKernelService.registerNotebookKernelDetectionTask({
-                notebookType: notebookType,
+                notebookType,
               });
 
             this._detectionMap.set(notebookType, task);

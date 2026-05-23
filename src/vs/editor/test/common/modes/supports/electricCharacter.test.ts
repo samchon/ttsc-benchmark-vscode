@@ -59,7 +59,7 @@ suite("Editor Modes - Auto Indentation", () => {
       character,
       offset,
     );
-    assert.deepStrictEqual(actual, { matchOpenBracket: matchOpenBracket });
+    assert.deepStrictEqual(actual, { matchOpenBracket });
   }
 
   test("getElectricCharacters uses all sources and dedups", () => {

@@ -800,7 +800,7 @@ export class NotebookEditorWorkbenchToolbar extends Disposable {
     this._notebookLeftToolbar.setActions([], []);
 
     this._primaryActions = primaryActions.map((action) => ({
-      action: action,
+      action,
       size: action instanceof Separator ? 1 : 0,
       renderLabel: true,
       visible: true,

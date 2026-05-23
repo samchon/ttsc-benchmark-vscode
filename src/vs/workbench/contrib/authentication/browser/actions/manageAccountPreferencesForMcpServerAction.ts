@@ -158,7 +158,7 @@ class ManageAccountPreferenceForMcpServerActionImpl {
       if (lastUsedScopes) {
         items.push({ type: "separator" });
         items.push({
-          providerId: providerId,
+          providerId,
           scopes: lastUsedScopes,
           label: localize("use new account", "Use a new account..."),
         });

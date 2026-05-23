@@ -881,7 +881,7 @@ async function webviewPreloads(ctx: PreloadContext) {
     element.tabIndex = 0;
     element.addEventListener("focus", () => {
       postNotebookMessage<webviewMessages.IFocusEditorMessage>("focus-editor", {
-        cellId: cellId,
+        cellId,
         focusNext,
       });
     });
@@ -1082,7 +1082,7 @@ async function webviewPreloads(ctx: PreloadContext) {
     if (useCustom) {
       const ret = _internalHighlightRange(range, tagName, attributes);
       return {
-        range: range,
+        range,
         dispose: ret.remove,
         update: (color: string | undefined, className: string | undefined) => {
           if (className === undefined) {
@@ -1819,7 +1819,7 @@ async function webviewPreloads(ctx: PreloadContext) {
               matches.push({
                 type: "output",
                 id: outputNode.id,
-                cellId: cellId,
+                cellId,
                 container: outputNode,
                 isShadow: true,
                 originalRange: shadowSelection.getRangeAt(0),
@@ -1875,7 +1875,7 @@ async function webviewPreloads(ctx: PreloadContext) {
                     matches.push({
                       type: "output",
                       id: node.id,
-                      cellId: cellId,
+                      cellId,
                       container: node,
                       isShadow: false,
                       originalRange: selection.getRangeAt(0),
@@ -3038,7 +3038,7 @@ async function webviewPreloads(ctx: PreloadContext) {
         const lang = el.getAttribute("data-vscode-code-block-lang");
         if (el.textContent && lang) {
           const id = `${Date.now()}-${i++}`;
-          codeBlocks.push({ value: el.textContent, lang: lang, id });
+          codeBlocks.push({ value: el.textContent, lang, id });
           MarkdownCodeBlock.pendingCodeBlocksToHighlight.set(
             id,
             el as HTMLElement,
@@ -3077,7 +3077,7 @@ async function webviewPreloads(ctx: PreloadContext) {
     ) {
       const self = this;
       this.id = id;
-      this._content = { value: content, version: 0, metadata: metadata };
+      this._content = { value: content, version: 0, metadata };
 
       const { promise, resolve, reject } = promiseWithResolvers<void>();
       this.ready = promise;
@@ -3815,7 +3815,7 @@ async function webviewPreloads(ctx: PreloadContext) {
       postNotebookMessage<webviewMessages.ICellDragStartMessage>(
         "cell-drag-start",
         {
-          cellId: cellId,
+          cellId,
           dragOffsetY: e.clientY,
         },
       );
@@ -3828,7 +3828,7 @@ async function webviewPreloads(ctx: PreloadContext) {
         }
 
         postNotebookMessage<webviewMessages.ICellDragMessage>("cell-drag", {
-          cellId: cellId,
+          cellId,
           dragOffsetY: this.currentDrag.clientY,
         });
         window.requestAnimationFrame(trySendDragUpdate);
@@ -3850,7 +3850,7 @@ async function webviewPreloads(ctx: PreloadContext) {
       postNotebookMessage<webviewMessages.ICellDragEndMessage>(
         "cell-drag-end",
         {
-          cellId: cellId,
+          cellId,
         },
       );
 

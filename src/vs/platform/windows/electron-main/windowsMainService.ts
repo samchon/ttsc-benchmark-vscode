@@ -1964,7 +1964,7 @@ export class WindowsMainService
     const uri = URI.from({
       scheme: Schemas.vscodeRemote,
       authority: remoteAuthority,
-      path: path,
+      path,
     });
 
     // guess the file type:

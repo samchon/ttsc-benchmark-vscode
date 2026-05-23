@@ -56,7 +56,7 @@ export const getToolConfirmationAlert = (
             : toolContentToA11yString(state.contentForModel);
         return {
           title: localize("toolPostApprovalTitle", "Approve results of tool"),
-          detail: detail,
+          detail,
         };
       }
 

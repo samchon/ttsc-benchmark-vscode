@@ -233,7 +233,7 @@ export class ChatContextService extends Disposable {
       value: undefined,
       name: derivedLabel,
       icon: context.icon,
-      uri: uri,
+      uri,
       resourceUri: context.resourceUri,
       modelDescription: context.modelDescription,
       tooltip: context.tooltip,

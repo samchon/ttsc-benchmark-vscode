@@ -1174,7 +1174,7 @@ export class McpHTTPHandle extends Disposable {
         LogLevel.Trace,
         `Fetched ${currentUrl}: ${JSON.stringify({
           status: response.status,
-          headers: headers,
+          headers,
         })}`,
       );
     }

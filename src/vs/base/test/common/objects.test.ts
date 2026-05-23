@@ -112,7 +112,7 @@ suite("Objects", () => {
   test("cloneAndChange", () => {
     const o1 = { something: "hello" };
     const o = {
-      o1: o1,
+      o1,
       o2: o1,
     };
     assert.deepStrictEqual(

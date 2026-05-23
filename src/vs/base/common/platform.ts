@@ -260,7 +260,7 @@ export const setTimeout0 = (() => {
       const myId = ++lastId;
       pending.push({
         id: myId,
-        callback: callback,
+        callback,
       });
       $globalThis.postMessage({ vscodeScheduleAsyncWork: myId }, "*");
     };

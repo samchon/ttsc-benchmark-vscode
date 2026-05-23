@@ -252,7 +252,7 @@ export class DebugViewPaneContainer extends ViewPaneContainer {
   ): void {
     super.addPanes(panes);
 
-    for (const { pane: pane } of panes) {
+    for (const { pane } of panes) {
       // attach event listener to
       if (pane.id === BREAKPOINTS_VIEW_ID) {
         this.breakpointView = pane;

@@ -59,7 +59,7 @@ function validateMenuBarItem(
   menubar.push([
     {
       actions: [],
-      label: label,
+      label,
     },
   ]);
 

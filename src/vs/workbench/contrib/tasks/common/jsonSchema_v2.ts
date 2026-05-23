@@ -664,7 +664,7 @@ const taskConfiguration: IJSONSchema = {
     icon: Objects.deepClone(icon),
     hide: Objects.deepClone(hide),
     inAgents: Objects.deepClone(inAgents),
-    options: options,
+    options,
     problemMatcher: {
       $ref: "#/definitions/problemMatcherType",
       description: nls.localize(

@@ -31,7 +31,7 @@ function staticCodeActionProvider(
   return new (class implements languages.CodeActionProvider {
     provideCodeActions(): languages.CodeActionList {
       return {
-        actions: actions,
+        actions,
         dispose: () => {},
       };
     }

@@ -335,7 +335,7 @@ class CollapsibleChangesSummaryListPool extends Disposable {
       ),
     );
     return {
-      list: list,
+      list,
       dispose: () => {
         store.dispose();
       },

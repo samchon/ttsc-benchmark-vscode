@@ -268,7 +268,7 @@ export class DiffEditorOptions {
       ...newDiffEditorOptions,
     };
     this._options.set(newOptions, undefined, {
-      changedOptions: changedOptions,
+      changedOptions,
     });
   }
 

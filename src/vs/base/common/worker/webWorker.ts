@@ -141,8 +141,8 @@ class WebWorkerProtocol {
     const req = String(++this._lastSentReq);
     return new Promise<unknown>((resolve, reject) => {
       this._pendingReplies[req] = {
-        resolve: resolve,
-        reject: reject,
+        resolve,
+        reject,
       };
       this._send(
         new RequestMessage(this._workerId, req, channel, method, args),

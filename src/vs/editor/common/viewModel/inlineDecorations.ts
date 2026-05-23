@@ -210,7 +210,7 @@ export class InlineModelDecorationsComputer implements IInlineDecorationsCompute
 
     return {
       decorations: decorationsInViewport,
-      inlineDecorations: inlineDecorations,
+      inlineDecorations,
       hasVariableFonts,
     };
   }

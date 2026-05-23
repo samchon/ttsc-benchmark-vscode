@@ -42,7 +42,7 @@ export function serializeWebviewMessage(
             $$vscode_array_buffer_reference$$: true,
             index,
             view: {
-              type: type,
+              type,
               byteLength: value.byteLength,
               byteOffset: value.byteOffset,
             },

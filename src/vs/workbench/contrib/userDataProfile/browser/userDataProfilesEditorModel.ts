@@ -1722,7 +1722,7 @@ export class UserDataProfilesEditorModel extends EditorModel {
               {
                 name,
                 useDefaultFlags,
-                icon: icon,
+                icon,
                 resourceTypeFlags: this.newProfileElement.copyFlags,
                 transient,
               },

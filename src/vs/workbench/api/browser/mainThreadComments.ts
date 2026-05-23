@@ -570,7 +570,7 @@ export class MainThreadCommentController
         label: this.label,
         threads: [],
         commentingRanges: {
-          resource: resource,
+          resource,
           ranges: [],
           fileComments: false,
         },
@@ -604,7 +604,7 @@ export class MainThreadCommentController
       label: this.label,
       threads: ret,
       commentingRanges: {
-        resource: resource,
+        resource,
         ranges: commentingRanges?.ranges || [],
         fileComments: !!commentingRanges?.fileComments,
       },

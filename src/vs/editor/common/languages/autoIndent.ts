@@ -447,7 +447,7 @@ export function getIndentForEnter(
       ? currentLineIndent
       : beforeEnterIndent;
     return {
-      beforeEnter: beforeEnter,
+      beforeEnter,
       afterEnter: beforeEnter,
     };
   }

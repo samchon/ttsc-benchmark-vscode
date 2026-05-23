@@ -14,11 +14,11 @@ export {
 } from "./positionToOffsetImpl.js";
 
 _setPositionOffsetTransformerDependencies({
-  StringEdit: StringEdit,
-  StringReplacement: StringReplacement,
-  TextReplacement: TextReplacement,
-  TextEdit: TextEdit,
-  TextLength: TextLength,
+  StringEdit,
+  StringReplacement,
+  TextReplacement,
+  TextEdit,
+  TextLength,
 });
 
 // TODO@hediet this is dept and needs to go. See https://github.com/microsoft/vscode/issues/251126.

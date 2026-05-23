@@ -483,7 +483,7 @@ export class McpServerEditor extends EditorPane {
       name,
       navbar,
       actionsAndStatusContainer,
-      actionBar: actionBar,
+      actionBar,
       set mcpServer(mcpServer: IWorkbenchMcpServer) {
         mcpServerContainers.mcpServer = mcpServer;
         let lastNonEmptySubtitleEntryContainer;

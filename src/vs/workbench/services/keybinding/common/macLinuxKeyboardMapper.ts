@@ -611,8 +611,8 @@ export class MacLinuxKeyboardMapper implements IKeyboardMapper {
       ): void => {
         if (!producesLatinLetter[charCode]) {
           missingLatinLettersOverride[ScanCodeUtils.toString(scanCode)] = {
-            value: value,
-            withShift: withShift,
+            value,
+            withShift,
             withAltGr: "",
             withShiftAltGr: "",
           };
@@ -678,11 +678,11 @@ export class MacLinuxKeyboardMapper implements IKeyboardMapper {
         );
 
         const mapping: IScanCodeMapping = {
-          scanCode: scanCode,
-          value: value,
-          withShift: withShift,
-          withAltGr: withAltGr,
-          withShiftAltGr: withShiftAltGr,
+          scanCode,
+          value,
+          withShift,
+          withAltGr,
+          withShiftAltGr,
         };
         mappings[mappingsLen++] = mapping;
 
@@ -1339,7 +1339,7 @@ export class MacLinuxKeyboardMapper implements IKeyboardMapper {
     for (let i = CHAR_CODE_TO_KEY_CODE.length; i < charCode; i++) {
       CHAR_CODE_TO_KEY_CODE[i] = null;
     }
-    CHAR_CODE_TO_KEY_CODE[charCode] = { keyCode: keyCode, shiftKey: shiftKey };
+    CHAR_CODE_TO_KEY_CODE[charCode] = { keyCode, shiftKey };
   }
 
   for (let chCode = CharCode.A; chCode <= CharCode.Z; chCode++) {

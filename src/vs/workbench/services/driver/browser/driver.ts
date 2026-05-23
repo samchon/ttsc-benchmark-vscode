@@ -271,8 +271,8 @@ export class BrowserWindowDriver implements IWindowDriver {
 
   getLocaleInfo(): Promise<ILocaleInfo> {
     return Promise.resolve({
-      language: language,
-      locale: locale,
+      language,
+      locale,
     });
   }
 

@@ -1224,7 +1224,7 @@ export class NotebookCellOutline implements IOutline<OutlineEntry> {
         ];
         const deltaDecoration: ICellModelDeltaDecorations = {
           ownerId: entry.cell.handle,
-          decorations: decorations,
+          decorations,
         };
 
         editorDecorations = accessor.deltaDecorations([], [deltaDecoration]);

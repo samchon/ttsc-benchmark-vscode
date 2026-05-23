@@ -314,7 +314,7 @@ export class MergeEditorTelemetry {
         comment: "This event tracks when a user accepts one side of a conflict.";
       }
     >("mergeEditor.action.accept", {
-      otherAccepted: otherAccepted,
+      otherAccepted,
       isInput1: inputNumber === 1,
     });
   }
@@ -334,7 +334,7 @@ export class MergeEditorTelemetry {
         comment: 'This event tracks when the user clicks on "Accept Both".';
       }
     >("mergeEditor.action.smartCombination", {
-      otherAccepted: otherAccepted,
+      otherAccepted,
     });
   }
 
@@ -359,7 +359,7 @@ export class MergeEditorTelemetry {
         comment: "This event tracks when a user un-accepts one side of a conflict.";
       }
     >("mergeEditor.action.remove", {
-      otherAccepted: otherAccepted,
+      otherAccepted,
       isInput1: inputNumber === 1,
     });
   }

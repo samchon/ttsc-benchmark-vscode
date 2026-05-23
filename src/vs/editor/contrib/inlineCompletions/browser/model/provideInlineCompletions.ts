@@ -78,7 +78,7 @@ export function provideInlineCompletions(
 
   const contextWithUuid: InlineCompletionContext = {
     ...context,
-    requestUuid: requestUuid,
+    requestUuid,
   };
 
   const defaultReplaceRange = getDefaultRange(position, model);
@@ -340,7 +340,7 @@ function toInlineSuggestData(
         insertText = snippet.toString();
         snippetInfo = {
           snippet: inlineCompletion.insertText.snippet,
-          range: range,
+          range,
         };
       }
     } else {

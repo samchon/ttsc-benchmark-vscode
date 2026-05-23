@@ -130,7 +130,7 @@ class NotebookMarkerDecorationContribution
           handle: cell.handle,
           options: {
             overviewRuler: {
-              color: color,
+              color,
               modelRanges: [range],
               includeOutput: false,
               position: NotebookOverviewRulerLane.Right,

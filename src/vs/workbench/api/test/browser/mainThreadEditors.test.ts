@@ -332,7 +332,7 @@ suite("MainThreadEditors", () => {
     );
 
     const workspaceResourceEdit: IWorkspaceTextEditDto = {
-      resource: resource,
+      resource,
       versionId: model.getVersionId(),
       textEdit: {
         text: "asdfg",
@@ -358,7 +358,7 @@ suite("MainThreadEditors", () => {
     );
 
     const workspaceResourceEdit1: IWorkspaceTextEditDto = {
-      resource: resource,
+      resource,
       versionId: model.getVersionId(),
       textEdit: {
         text: "asdfg",
@@ -366,7 +366,7 @@ suite("MainThreadEditors", () => {
       },
     };
     const workspaceResourceEdit2: IWorkspaceTextEditDto = {
-      resource: resource,
+      resource,
       versionId: model.getVersionId(),
       textEdit: {
         text: "asdfg",
@@ -401,7 +401,7 @@ suite("MainThreadEditors", () => {
     const initialAlternativeVersionId = model.getAlternativeVersionId();
 
     const insertEdit: IWorkspaceTextEditDto = {
-      resource: resource,
+      resource,
       versionId: model.getVersionId(),
       textEdit: {
         range: new Range(1, 6, 1, 6),
@@ -420,7 +420,7 @@ suite("MainThreadEditors", () => {
     );
 
     const eolEdit: IWorkspaceTextEditDto = {
-      resource: resource,
+      resource,
       versionId: model.getVersionId(),
       textEdit: {
         range: new Range(1, 1, 1, 1),

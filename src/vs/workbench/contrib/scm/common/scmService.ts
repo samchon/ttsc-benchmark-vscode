@@ -115,7 +115,7 @@ class SCMInput extends Disposable implements ISCMInput {
     message: string | IMarkdownString,
     type: InputValidationType,
   ): void {
-    this._onDidChangeValidationMessage.fire({ message: message, type: type });
+    this._onDidChangeValidationMessage.fire({ message, type });
   }
 
   private readonly _onDidChangeValidationMessage = this._register(

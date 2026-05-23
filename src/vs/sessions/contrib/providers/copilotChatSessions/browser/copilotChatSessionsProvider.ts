@@ -3372,7 +3372,7 @@ export class CopilotChatSessionsProvider
       gitRepository: undefined,
     };
     return {
-      uri: uri,
+      uri,
       label: this._labelFromUri(uri),
       description: this._descriptionFromUri(uri),
       group:

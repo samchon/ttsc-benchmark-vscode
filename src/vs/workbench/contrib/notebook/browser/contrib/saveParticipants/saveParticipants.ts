@@ -1017,7 +1017,7 @@ export class CodeActionParticipantUtils {
         triggerAction: CodeActionTriggerSource.OnSave,
         filter: {
           include: codeActionKind,
-          excludes: excludes,
+          excludes,
           includeSourceActions: true,
         },
       },

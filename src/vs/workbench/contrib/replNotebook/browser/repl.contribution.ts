@@ -624,7 +624,7 @@ async function executeReplInput(
       await bulkEditService.apply([
         new ResourceNotebookCellEdit(notebookDocument.uri, {
           editType: CellEditType.Replace,
-          index: index,
+          index,
           count: 0,
           cells: [
             {

@@ -642,7 +642,7 @@ export abstract class AbstractNativeExtensionTipsService extends ExtensionTipsSe
               exeName,
               exeFriendlyName: extensionTip.exeFriendlyName,
               windowsPath: extensionTip.windowsPath,
-              whenNotInstalled: whenNotInstalled,
+              whenNotInstalled,
             });
           }
         }

@@ -765,7 +765,7 @@ export class KernelPickerMRUStrategy extends KernelPickerStrategyBase {
     const matchingResult =
       this._notebookKernelService.getMatchingKernel(notebook);
     return {
-      selected: selected,
+      selected,
       all: matchingResult.all,
       suggestions: all,
       hidden: [],

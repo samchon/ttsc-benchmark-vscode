@@ -909,7 +909,7 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
           documentation: entry.description,
           kind: CompletionItemKind.Value,
           filterText: insertText,
-          insertText: insertText,
+          insertText,
           range: toolRange,
         });
       }

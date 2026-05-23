@@ -214,7 +214,7 @@ export class StandaloneColorPickerWidget
       return null;
     }
     const colorInfo: IColorInformation = {
-      range: range,
+      range,
       color: { red: 0, green: 0, blue: 0, alpha: 1 },
     };
     const colorHoverResult: {

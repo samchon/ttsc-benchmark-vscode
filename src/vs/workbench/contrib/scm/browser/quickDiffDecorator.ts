@@ -276,9 +276,9 @@ class QuickDiffDecorator extends Disposable {
         case ChangeType.Add:
           decorations.push({
             range: {
-              startLineNumber: startLineNumber,
+              startLineNumber,
               startColumn: 1,
-              endLineNumber: endLineNumber,
+              endLineNumber,
               endColumn: 1,
             },
             options:
@@ -294,7 +294,7 @@ class QuickDiffDecorator extends Disposable {
         case ChangeType.Delete:
           decorations.push({
             range: {
-              startLineNumber: startLineNumber,
+              startLineNumber,
               startColumn: Number.MAX_VALUE,
               endLineNumber: startLineNumber,
               endColumn: Number.MAX_VALUE,
@@ -308,9 +308,9 @@ class QuickDiffDecorator extends Disposable {
         case ChangeType.Modify:
           decorations.push({
             range: {
-              startLineNumber: startLineNumber,
+              startLineNumber,
               startColumn: 1,
-              endLineNumber: endLineNumber,
+              endLineNumber,
               endColumn: 1,
             },
             options:

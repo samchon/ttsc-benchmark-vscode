@@ -699,7 +699,7 @@ class CodeActionOnSaveParticipant
         triggerAction: CodeActionTriggerSource.OnSave,
         filter: {
           include: codeActionKind,
-          excludes: excludes,
+          excludes,
           includeSourceActions: true,
         },
       },

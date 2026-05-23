@@ -68,7 +68,7 @@ export function iterateObservableChanges<T, TChange>(
     }
     store.add(
       runOnChange(obs, (value, prevValue, change) => {
-        e.emitOne({ value, prevValue, change: change });
+        e.emitOne({ value, prevValue, change });
       }),
     );
 

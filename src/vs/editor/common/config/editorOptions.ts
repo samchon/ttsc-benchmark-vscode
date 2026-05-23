@@ -3386,13 +3386,13 @@ export class EditorLayoutInfoComputer extends ComputedEditorOption<
         desiredRatio,
         minimapLineCount,
       } = EditorLayoutInfoComputer.computeContainedMinimapLineCount({
-        viewLineCount: viewLineCount,
-        scrollBeyondLastLine: scrollBeyondLastLine,
+        viewLineCount,
+        scrollBeyondLastLine,
         paddingTop: input.paddingTop,
         paddingBottom: input.paddingBottom,
         height: outerHeight,
-        lineHeight: lineHeight,
-        pixelRatio: pixelRatio,
+        lineHeight,
+        pixelRatio,
       });
       // ratio is intentionally not part of the layout to avoid the layout changing all the time
       // when doing sampling
@@ -3627,19 +3627,19 @@ export class EditorLayoutInfoComputer extends ComputedEditorOption<
 
     const minimapLayout = EditorLayoutInfoComputer._computeMinimapLayout(
       {
-        outerWidth: outerWidth,
-        outerHeight: outerHeight,
-        lineHeight: lineHeight,
-        typicalHalfwidthCharacterWidth: typicalHalfwidthCharacterWidth,
-        pixelRatio: pixelRatio,
-        scrollBeyondLastLine: scrollBeyondLastLine,
+        outerWidth,
+        outerHeight,
+        lineHeight,
+        typicalHalfwidthCharacterWidth,
+        pixelRatio,
+        scrollBeyondLastLine,
         paddingTop: padding.top,
         paddingBottom: padding.bottom,
-        minimap: minimap,
-        verticalScrollbarWidth: verticalScrollbarWidth,
-        viewLineCount: viewLineCount,
-        remainingWidth: remainingWidth,
-        isViewportWrapping: isViewportWrapping,
+        minimap,
+        verticalScrollbarWidth,
+        viewLineCount,
+        remainingWidth,
+        isViewportWrapping,
       },
       env.memory || new ComputeOptionsMemory(),
     );
@@ -3681,29 +3681,29 @@ export class EditorLayoutInfoComputer extends ComputedEditorOption<
       width: outerWidth,
       height: outerHeight,
 
-      glyphMarginLeft: glyphMarginLeft,
-      glyphMarginWidth: glyphMarginWidth,
+      glyphMarginLeft,
+      glyphMarginWidth,
       glyphMarginDecorationLaneCount: env.glyphMarginDecorationLaneCount,
 
-      lineNumbersLeft: lineNumbersLeft,
-      lineNumbersWidth: lineNumbersWidth,
+      lineNumbersLeft,
+      lineNumbersWidth,
 
-      decorationsLeft: decorationsLeft,
+      decorationsLeft,
       decorationsWidth: lineDecorationsWidth,
 
-      contentLeft: contentLeft,
-      contentWidth: contentWidth,
+      contentLeft,
+      contentWidth,
 
       minimap: minimapLayout,
 
-      viewportColumn: viewportColumn,
+      viewportColumn,
 
-      isWordWrapMinified: isWordWrapMinified,
-      isViewportWrapping: isViewportWrapping,
-      wrappingColumn: wrappingColumn,
+      isWordWrapMinified,
+      isViewportWrapping,
+      wrappingColumn,
 
-      verticalScrollbarWidth: verticalScrollbarWidth,
-      horizontalScrollbarHeight: horizontalScrollbarHeight,
+      verticalScrollbarWidth,
+      horizontalScrollbarHeight,
 
       overviewRuler: {
         top: verticalArrowSize,
@@ -4491,7 +4491,7 @@ class EditorMinimap extends BaseEditorOption<
         input.showMarkSectionHeaders,
         this.defaultValue.showMarkSectionHeaders,
       ),
-      markSectionHeaderRegex: markSectionHeaderRegex,
+      markSectionHeaderRegex,
       sectionHeaderFontSize: EditorFloatOption.clamp(
         EditorFloatOption.float(
           input.sectionHeaderFontSize,
@@ -5403,14 +5403,14 @@ class EditorScrollbar extends BaseEditorOption<
         input.alwaysConsumeMouseWheel,
         this.defaultValue.alwaysConsumeMouseWheel,
       ),
-      horizontalScrollbarSize: horizontalScrollbarSize,
+      horizontalScrollbarSize,
       horizontalSliderSize: EditorIntOption.clampedInt(
         input.horizontalSliderSize,
         horizontalScrollbarSize,
         0,
         1000,
       ),
-      verticalScrollbarSize: verticalScrollbarSize,
+      verticalScrollbarSize,
       verticalSliderSize: EditorIntOption.clampedInt(
         input.verticalSliderSize,
         verticalScrollbarSize,

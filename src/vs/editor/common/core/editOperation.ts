@@ -35,14 +35,14 @@ export class EditOperation {
         position.lineNumber,
         position.column,
       ),
-      text: text,
+      text,
       forceMoveMarkers: true,
     };
   }
 
   public static delete(range: Range): ISingleEditOperation {
     return {
-      range: range,
+      range,
       text: null,
     };
   }
@@ -52,8 +52,8 @@ export class EditOperation {
     text: string | null,
   ): ISingleEditOperation {
     return {
-      range: range,
-      text: text,
+      range,
+      text,
     };
   }
 
@@ -62,8 +62,8 @@ export class EditOperation {
     text: string | null,
   ): ISingleEditOperation {
     return {
-      range: range,
-      text: text,
+      range,
+      text,
       forceMoveMarkers: true,
     };
   }

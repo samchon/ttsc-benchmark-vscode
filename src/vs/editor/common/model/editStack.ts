@@ -586,7 +586,7 @@ export class EditStack {
       inverseEditOperations,
     );
     const textChanges = inverseEditOperations.map((op, index) => ({
-      index: index,
+      index,
       textChange: op.textChange,
     }));
     textChanges.sort((a, b) => {

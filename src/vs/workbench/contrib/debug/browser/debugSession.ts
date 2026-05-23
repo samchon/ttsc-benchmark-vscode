@@ -2259,7 +2259,7 @@ export class DebugSession implements IDebugSession {
     startColumn: number,
     endColumn: number,
   ): IBreakpoint[] {
-    return this.model.getBreakpoints({ uri: uri }).filter((bp) => {
+    return this.model.getBreakpoints({ uri }).filter((bp) => {
       if (bp.lineNumber < startLineNumber || bp.lineNumber > endLineNumber) {
         return false;
       }

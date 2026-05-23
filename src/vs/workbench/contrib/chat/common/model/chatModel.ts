@@ -3842,7 +3842,7 @@ export namespace ChatResponseResource {
 
     return {
       sessionResource,
-      toolCallId: toolCallId,
+      toolCallId,
       index: Number(index),
     };
   }

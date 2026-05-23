@@ -1449,7 +1449,7 @@ suite("ExtHostWorkspace", function () {
       const folders = [aWorkspaceFolderData(URI.file(root), 0)];
       const ws = createExtHostWorkspace(
         rpcProtocol,
-        { id: "foo", folders: folders, name: "Test" },
+        { id: "foo", folders, name: "Test" },
         new NullLogService(),
       );
 

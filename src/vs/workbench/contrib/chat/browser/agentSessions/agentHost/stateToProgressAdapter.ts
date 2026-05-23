@@ -656,7 +656,7 @@ export function completedToolCallToSerialized(
         : { type: ToolConfirmKind.Denied },
       isComplete: true,
       presentation: undefined,
-      subAgentInvocationId: subAgentInvocationId,
+      subAgentInvocationId,
       toolSpecificData: {
         kind: "subagent",
         description: getSubagentTaskDescription(tc) ?? tc.displayName,
@@ -712,7 +712,7 @@ export function completedToolCallToSerialized(
       : { type: ToolConfirmKind.Denied },
     isComplete: true,
     presentation: undefined,
-    subAgentInvocationId: subAgentInvocationId,
+    subAgentInvocationId,
     toolSpecificData,
     resultDetails,
   };

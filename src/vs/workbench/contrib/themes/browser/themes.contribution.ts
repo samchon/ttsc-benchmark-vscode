@@ -233,7 +233,7 @@ class MarketplaceThemesPicker implements IDisposable {
           for (const theme of allThemes[i]) {
             this._marketplaceThemes.push({
               id: theme.id,
-              theme: theme,
+              theme,
               label: theme.label,
               description: `${ext.displayName} · ${ext.publisherDisplayName}`,
               galleryExtension: ext,
@@ -1085,10 +1085,10 @@ function configurationEntry(
 ): QuickPickInput<ThemeItem> {
   return {
     id: undefined,
-    label: label,
+    label,
     alwaysShow: true,
     buttons: [configureButton],
-    configureItem: configureItem,
+    configureItem,
   };
 }
 
@@ -1122,7 +1122,7 @@ function toEntry(theme: IWorkbenchTheme): ThemeItem {
   const settingId = theme.settingsId ?? undefined;
   const item: ThemeItem = {
     id: theme.id,
-    theme: theme,
+    theme,
     label: theme.label,
     description:
       defaultThemeDescriptions[settingId ?? ""] ??

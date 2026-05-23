@@ -343,7 +343,7 @@ class RemoteExtensionHostAgentServer extends Disposable implements IServerAPI {
     this._logService.error(`${logPrefix} ${reason}.`);
     const errMessage: ErrorMessage = {
       type: "error",
-      reason: reason,
+      reason,
     };
     protocol.sendControl(VSBuffer.fromString(JSON.stringify(errMessage)));
     protocol.dispose();
@@ -419,7 +419,7 @@ class RemoteExtensionHostAgentServer extends Disposable implements IServerAPI {
         const signRequest: SignRequest = {
           type: "sign",
           data: someText,
-          signedData: signedData,
+          signedData,
         };
         protocol.sendControl(VSBuffer.fromString(JSON.stringify(signRequest)));
 
@@ -727,8 +727,8 @@ class RemoteExtensionHostAgentServer extends Disposable implements IServerAPI {
     return new Promise<net.Socket>((c, e) => {
       const socket = net.createConnection(
         {
-          host: host,
-          port: port,
+          host,
+          port,
           autoSelectFamily: true,
         },
         () => {

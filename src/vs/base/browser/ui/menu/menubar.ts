@@ -455,8 +455,8 @@ export class MenuBar extends Disposable {
         this.menus.push({
           label: menuBarMenu.label,
           actions: menuBarMenu.actions,
-          buttonElement: buttonElement,
-          titleElement: titleElement,
+          buttonElement,
+          titleElement,
         });
       }
     });
@@ -610,8 +610,8 @@ export class MenuBar extends Disposable {
     );
 
     this.overflowMenu = {
-      buttonElement: buttonElement,
-      titleElement: titleElement,
+      buttonElement,
+      titleElement,
       label: "More",
       actions: [],
     };

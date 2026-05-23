@@ -306,8 +306,8 @@ export class TextMateTokenizationFeature
       location: grammarLocation,
       language: validLanguageId,
       scopeName: grammar.scopeName,
-      embeddedLanguages: embeddedLanguages,
-      tokenTypes: tokenTypes,
+      embeddedLanguages,
+      tokenTypes,
       injectTo: grammar.injectTo,
       balancedBracketSelectors: asStringArray(grammar.balancedBracketScopes, [
         "*",

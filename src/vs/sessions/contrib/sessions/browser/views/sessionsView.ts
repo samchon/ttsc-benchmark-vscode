@@ -922,7 +922,7 @@ export class SessionsView extends ViewPane {
         label: localize("groupByWorkspace", "Group by Workspace"),
         checked: this.currentGrouping === SessionsGrouping.Workspace,
         group: "group",
-        groupTitle: groupTitle,
+        groupTitle,
       },
       {
         id: SessionsGrouping.Date,

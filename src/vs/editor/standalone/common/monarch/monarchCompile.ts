@@ -557,7 +557,7 @@ export function compile(
 
   // Create our lexer
   const lexer: monarchCommon.ILexer = {
-    languageId: languageId,
+    languageId,
     includeLF: bool(json.includeLF, false),
     noThrow: false, // raise exceptions during compilation
     maxStack: 100,

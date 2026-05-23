@@ -36,7 +36,7 @@ suite("Cell Output Clipboard Tests", () => {
     cellViewModel?: ICellViewModel,
   ) {
     const outputViewModel = {
-      model: { outputs: outputs },
+      model: { outputs },
     } as ICellOutputViewModel;
 
     if (cellViewModel) {

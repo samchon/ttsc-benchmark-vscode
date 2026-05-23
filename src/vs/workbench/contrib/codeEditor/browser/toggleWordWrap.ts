@@ -250,7 +250,7 @@ class ToggleWordWrapController
   private _applyWordWrapState(state: IWordWrapTransientState | null): void {
     const wordWrapOverride2 = state ? state.wordWrapOverride : "inherit";
     this._editor.updateOptions({
-      wordWrapOverride2: wordWrapOverride2,
+      wordWrapOverride2,
     });
   }
 }

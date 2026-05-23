@@ -153,7 +153,7 @@ export class AgentCustomizationContentExpander {
       items.push({
         uri,
         type: PromptsType.skill,
-        name: name,
+        name,
         description,
         source,
         groupKey,

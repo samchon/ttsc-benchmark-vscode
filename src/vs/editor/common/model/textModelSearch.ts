@@ -53,7 +53,7 @@ export class SearchParams {
       regex = strings.createRegExp(this.searchString, this.isRegex, {
         matchCase: this.matchCase,
         wholeWord: false,
-        multiline: multiline,
+        multiline,
         global: true,
         unicode: true,
       });

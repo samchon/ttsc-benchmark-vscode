@@ -395,7 +395,7 @@ export class TerminalLocalLinkDetector implements ITerminalLinkDetector {
       return {
         text: linkText ?? linkStat.link,
         uri: linkStat.uri,
-        bufferRange: bufferRange,
+        bufferRange,
         type,
       };
     }

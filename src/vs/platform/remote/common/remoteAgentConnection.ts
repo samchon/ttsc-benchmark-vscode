@@ -556,9 +556,9 @@ async function resolveConnectionOptions<T extends RemoteConnection>(
     commit: options.commit,
     quality: options.quality,
     connectTo,
-    connectionToken: connectionToken,
-    reconnectionToken: reconnectionToken,
-    reconnectionProtocol: reconnectionProtocol,
+    connectionToken,
+    reconnectionToken,
+    reconnectionProtocol,
     remoteSocketFactoryService: options.remoteSocketFactoryService,
     signService: options.signService,
     logService: options.logService,
@@ -1152,8 +1152,8 @@ export class ManagementPersistentConnection extends PersistentConnection {
       new Client<RemoteAgentConnectionContext>(
         protocol,
         {
-          remoteAuthority: remoteAuthority,
-          clientId: clientId,
+          remoteAuthority,
+          clientId,
         },
         options.ipcLogger,
       ),

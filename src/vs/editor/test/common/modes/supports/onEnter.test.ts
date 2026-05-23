@@ -21,7 +21,7 @@ suite("OnEnter", () => {
       ["begin", "end"],
     ];
     const support = new OnEnterSupport({
-      brackets: brackets,
+      brackets,
     });
     const testIndentAction = (
       beforeText: string,

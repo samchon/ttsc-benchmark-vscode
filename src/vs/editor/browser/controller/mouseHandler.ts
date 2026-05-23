@@ -895,7 +895,7 @@ class MouseDownOperation extends Disposable {
       startedOnLineNumbers: this._mouseState.startedOnLineNumbers,
       revealType,
 
-      inSelectionMode: inSelectionMode,
+      inSelectionMode,
       mouseDownCount: this._mouseState.count,
       altKey: this._mouseState.altKey,
       ctrlKey: this._mouseState.ctrlKey,

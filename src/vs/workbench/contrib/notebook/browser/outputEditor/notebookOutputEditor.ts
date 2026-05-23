@@ -539,7 +539,7 @@ export class NotebookOutputEditorContribution implements IWorkbenchContribution 
           );
           return {
             editor: editorInput,
-            options: options,
+            options,
           };
         },
       },

@@ -197,7 +197,7 @@ suite("FindController", () => {
   test('issue #1857: F3, Find Next, acts like "Find Under Cursor"', async () => {
     await withAsyncTestCodeEditor(
       ["ABC", "ABC", "XYZ", "ABC"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor, _, instantiationService) => {
         clipboardState = "";
         // The cursor is at the very top, of the file, at the first ABC
@@ -269,7 +269,7 @@ suite("FindController", () => {
   test("issue #3090: F3 does not loop with two matches on a single line", async () => {
     await withAsyncTestCodeEditor(
       ["import nls = require('vs/nls');"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor) => {
         clipboardState = "";
         const findController = editor.registerAndInstantiateContribution(
@@ -303,7 +303,7 @@ suite("FindController", () => {
   test("issue #6149: Auto-escape highlighted text for search and replace regex mode", async () => {
     await withAsyncTestCodeEditor(
       ["var x = (3 * 5)", "var y = (3 * 5)", "var z = (3  * 5)"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor, _, instantiationService) => {
         clipboardState = "";
         const findController = editor.registerAndInstantiateContribution(
@@ -337,7 +337,7 @@ suite("FindController", () => {
   test("issue #41027: Don't replace find input value on replace action if find input is active", async () => {
     await withAsyncTestCodeEditor(
       ["test"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor, _, instantiationService) => {
         const testRegexString = "tes.";
         const findController = editor.registerAndInstantiateContribution(
@@ -378,7 +378,7 @@ suite("FindController", () => {
   test("editor.find.closeOnResult: closes find widget when a match is found from explicit navigation", async () => {
     await withAsyncTestCodeEditor(
       ["ABC", "ABC", "XYZ"],
-      { serviceCollection: serviceCollection, find: { closeOnResult: true } },
+      { serviceCollection, find: { closeOnResult: true } },
       async (editor, _, instantiationService) => {
         const findController = editor.registerAndInstantiateContribution(
           TestFindController.ID,
@@ -401,7 +401,7 @@ suite("FindController", () => {
   test("editor.find.closeOnResult: keeps find widget open when no match is found", async () => {
     await withAsyncTestCodeEditor(
       ["ABC", "DEF", "XYZ"],
-      { serviceCollection: serviceCollection, find: { closeOnResult: true } },
+      { serviceCollection, find: { closeOnResult: true } },
       async (editor, _, instantiationService) => {
         const findController = editor.registerAndInstantiateContribution(
           TestFindController.ID,
@@ -425,7 +425,7 @@ suite("FindController", () => {
   test("editor.find.closeOnResult: disabled keeps find widget open after navigation", async () => {
     await withAsyncTestCodeEditor(
       ["ABC", "ABC", "XYZ"],
-      { serviceCollection: serviceCollection, find: { closeOnResult: false } },
+      { serviceCollection, find: { closeOnResult: false } },
       async (editor, _, instantiationService) => {
         const findController = editor.registerAndInstantiateContribution(
           TestFindController.ID,
@@ -448,7 +448,7 @@ suite("FindController", () => {
   test("issue #9043: Clear search scope when find widget is hidden", async () => {
     await withAsyncTestCodeEditor(
       ["var x = (3 * 5)", "var y = (3 * 5)", "var z = (3 * 5)"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor) => {
         clipboardState = "";
         const findController = editor.registerAndInstantiateContribution(
@@ -488,7 +488,7 @@ suite("FindController", () => {
   test("issue #18111: Regex replace with single space replaces with no space", async () => {
     await withAsyncTestCodeEditor(
       ["HRESULT OnAmbientPropertyChange(DISPID   dispid);"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor, _, instantiationService) => {
         clipboardState = "";
         const findController = editor.registerAndInstantiateContribution(
@@ -525,7 +525,7 @@ suite("FindController", () => {
   test("issue #24714: Regular expression with ^ in search & replace", async () => {
     await withAsyncTestCodeEditor(
       ["", "line2", "line3"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor, _, instantiationService) => {
         clipboardState = "";
         const findController = editor.registerAndInstantiateContribution(
@@ -559,7 +559,7 @@ suite("FindController", () => {
   test("issue #38232: Find Next Selection, regex enabled", async () => {
     await withAsyncTestCodeEditor(
       ["([funny]", "", "([funny]"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor) => {
         clipboardState = "";
         const findController = editor.registerAndInstantiateContribution(
@@ -589,7 +589,7 @@ suite("FindController", () => {
   test("issue #38232: Find Next Selection, regex enabled, find widget open", async () => {
     await withAsyncTestCodeEditor(
       ["([funny]", "", "([funny]"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor, _, instantiationService) => {
         clipboardState = "";
         const findController = editor.registerAndInstantiateContribution(
@@ -622,7 +622,7 @@ suite("FindController", () => {
   test("issue #47400, CMD+E supports feeding multiple line of text into the find widget", async () => {
     await withAsyncTestCodeEditor(
       ["ABC", "ABC", "XYZ", "ABC", "ABC"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor, _, instantiationService) => {
         clipboardState = "";
         const findController = editor.registerAndInstantiateContribution(
@@ -657,7 +657,7 @@ suite("FindController", () => {
   test("issue #109756, CMD+E with empty cursor should always work", async () => {
     await withAsyncTestCodeEditor(
       ["ABC", "ABC", "XYZ", "ABC", "ABC"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor) => {
         clipboardState = "";
         const findController = editor.registerAndInstantiateContribution(
@@ -705,7 +705,7 @@ suite("FindController query options persistence", () => {
   test("matchCase", async () => {
     await withAsyncTestCodeEditor(
       ["abc", "ABC", "XYZ", "ABC"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor, _, instantiationService) => {
         storageService.store(
           "editor.matchCase",
@@ -752,7 +752,7 @@ suite("FindController query options persistence", () => {
   test("wholeWord", async () => {
     await withAsyncTestCodeEditor(
       ["ABC", "AB", "XYZ", "ABC"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor, _, instantiationService) => {
         // The cursor is at the very top, of the file, at the first ABC
         const findController = editor.registerAndInstantiateContribution(
@@ -780,7 +780,7 @@ suite("FindController query options persistence", () => {
   test("toggling options is saved", async () => {
     await withAsyncTestCodeEditor(
       ["ABC", "AB", "XYZ", "ABC"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       async (editor) => {
         // The cursor is at the very top, of the file, at the first ABC
         const findController = editor.registerAndInstantiateContribution(
@@ -802,7 +802,7 @@ suite("FindController query options persistence", () => {
     await withAsyncTestCodeEditor(
       ["var x = (3 * 5)", "var y = (3 * 5)", "var z = (3 * 5)"],
       {
-        serviceCollection: serviceCollection,
+        serviceCollection,
         find: { autoFindInSelection: "always", globalFindClipboard: false },
       },
       async (editor) => {
@@ -847,7 +847,7 @@ suite("FindController query options persistence", () => {
     await withAsyncTestCodeEditor(
       ["var x = (3 * 5)", "var y = (3 * 5)", "var z = (3 * 5)"],
       {
-        serviceCollection: serviceCollection,
+        serviceCollection,
         find: { autoFindInSelection: "always", globalFindClipboard: false },
       },
       async (editor) => {
@@ -878,7 +878,7 @@ suite("FindController query options persistence", () => {
     await withAsyncTestCodeEditor(
       ["var x = (3 * 5)", "var y = (3 * 5)", "var z = (3 * 5)"],
       {
-        serviceCollection: serviceCollection,
+        serviceCollection,
         find: { autoFindInSelection: "always", globalFindClipboard: false },
       },
       async (editor) => {
@@ -911,7 +911,7 @@ suite("FindController query options persistence", () => {
     await withAsyncTestCodeEditor(
       ["var x = (3 * 5)", "var y = (3 * 5)", "var z = (3 * 5)"],
       {
-        serviceCollection: serviceCollection,
+        serviceCollection,
         find: { autoFindInSelection: "multiline", globalFindClipboard: false },
       },
       async (editor) => {

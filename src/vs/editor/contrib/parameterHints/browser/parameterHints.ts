@@ -144,7 +144,7 @@ registerEditorCommand(
     precondition: Context.Visible,
     handler: (x) => x.cancel(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.focus,
       primary: KeyCode.Escape,
       secondary: [KeyMod.Shift | KeyCode.Escape],
@@ -161,7 +161,7 @@ registerEditorCommand(
     ),
     handler: (x) => x.previous(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.focus,
       primary: KeyCode.UpArrow,
       secondary: [KeyMod.Alt | KeyCode.UpArrow],
@@ -185,7 +185,7 @@ registerEditorCommand(
     ),
     handler: (x) => x.next(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.focus,
       primary: KeyCode.DownArrow,
       secondary: [KeyMod.Alt | KeyCode.DownArrow],

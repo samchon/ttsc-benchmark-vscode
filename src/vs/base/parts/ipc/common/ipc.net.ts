@@ -110,7 +110,7 @@ export namespace SocketDiagnostics {
         id,
         label: socketDebugLabel,
         type,
-        data: data,
+        data,
       });
     }
   }

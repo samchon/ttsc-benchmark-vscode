@@ -728,8 +728,8 @@ export class NotebookEditorWidget
     const focus = this.viewModel.getFocus();
     this.viewModel.updateSelectionsState({
       kind: SelectionStateType.Index,
-      focus: focus,
-      selections: selections,
+      focus,
+      selections,
     });
   }
 
@@ -745,8 +745,8 @@ export class NotebookEditorWidget
     const selections = this.viewModel.getSelections();
     this.viewModel.updateSelectionsState({
       kind: SelectionStateType.Index,
-      focus: focus,
-      selections: selections,
+      focus,
+      selections,
     });
   }
 
@@ -2433,7 +2433,7 @@ export class NotebookEditorWidget
       cellId: model.id,
       cellHandle: model.handle,
       content: model.getText(),
-      offset: offset,
+      offset,
       visible: false,
       metadata: model.metadata,
     };
@@ -3567,7 +3567,7 @@ export class NotebookEditorWidget
         includeOutput: !!options.includeOutput,
         shouldGetSearchPreviewInfo,
         ownerID,
-        findIds: findIds,
+        findIds,
       });
 
       if (token.isCancellationRequested) {
@@ -4296,7 +4296,7 @@ export class NotebookEditorWidget
             editType: CellEditType.PartialInternalMetadata,
             index: cellIndex,
             internalMetadata: {
-              executionId: executionId,
+              executionId,
               renderDuration: renderDurationMap,
             },
           },

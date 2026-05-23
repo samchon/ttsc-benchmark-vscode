@@ -900,7 +900,7 @@ class ExtHostTreeView<T> extends Disposable {
           );
           if (extensionItem) {
             return {
-              extensionItem: extensionItem,
+              extensionItem,
               treeItem: await this._dataProvider.getTreeItem(extensionItem),
               newState: checkboxUpdate.newState
                 ? extHostTypes.TreeItemCheckboxState.Checked

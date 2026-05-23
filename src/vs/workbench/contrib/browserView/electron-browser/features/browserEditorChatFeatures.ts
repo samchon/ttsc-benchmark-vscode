@@ -400,7 +400,7 @@ export class BrowserEditorChatIntegration extends BrowserEditorContribution {
       id: "element-" + Date.now(),
       name: displayNameShort,
       fullName: displayNameFull,
-      value: value,
+      value,
       modelDescription:
         "Structured browser element context with HTML path, outer HTML, dimensions, and computed styles.",
       kind: "element",

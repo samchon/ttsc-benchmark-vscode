@@ -374,7 +374,7 @@ export class WorkbenchLanguageService extends LanguageService {
                 firstLine: ext.firstLine,
                 aliases: ext.aliases,
                 mimetypes: ext.mimetypes,
-                configuration: configuration,
+                configuration,
                 icon: ext.icon && {
                   light: joinPath(
                     extension.description.extensionLocation,

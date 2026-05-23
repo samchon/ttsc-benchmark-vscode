@@ -1450,7 +1450,7 @@ class GotoParentFoldAction extends FoldingAction<void> {
       const startLineNumber = getParentFoldLine(selectedLines[0], foldingModel);
       if (startLineNumber !== null) {
         editor.setSelection({
-          startLineNumber: startLineNumber,
+          startLineNumber,
           startColumn: 1,
           endLineNumber: startLineNumber,
           endColumn: 1,
@@ -1490,7 +1490,7 @@ class GotoPreviousFoldAction extends FoldingAction<void> {
       );
       if (startLineNumber !== null) {
         editor.setSelection({
-          startLineNumber: startLineNumber,
+          startLineNumber,
           startColumn: 1,
           endLineNumber: startLineNumber,
           endColumn: 1,
@@ -1524,7 +1524,7 @@ class GotoNextFoldAction extends FoldingAction<void> {
       const startLineNumber = getNextFoldLine(selectedLines[0], foldingModel);
       if (startLineNumber !== null) {
         editor.setSelection({
-          startLineNumber: startLineNumber,
+          startLineNumber,
           startColumn: 1,
           endLineNumber: startLineNumber,
           endColumn: 1,
@@ -1570,7 +1570,7 @@ class FoldRangeFromSelectionAction extends FoldingAction<void> {
         if (endLineNumber > selection.startLineNumber) {
           collapseRanges.push({
             startLineNumber: selection.startLineNumber,
-            endLineNumber: endLineNumber,
+            endLineNumber,
             type: undefined,
             isCollapsed: true,
             source: FoldSource.userDefined,

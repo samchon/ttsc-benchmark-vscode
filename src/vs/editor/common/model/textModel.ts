@@ -686,18 +686,18 @@ export class TextModel
     return {
       changes: [
         {
-          range: range,
-          rangeOffset: rangeOffset,
-          rangeLength: rangeLength,
-          text: text,
+          range,
+          rangeOffset,
+          rangeLength,
+          text,
         },
       ],
       eol: this._buffer.getEOL(),
-      isEolChange: isEolChange,
+      isEolChange,
       versionId: this.getVersionId(),
-      isUndoing: isUndoing,
-      isRedoing: isRedoing,
-      isFlush: isFlush,
+      isUndoing,
+      isRedoing,
+      isFlush,
       detailedReasons: [reason],
       detailedReasonsChangeLengths: [1],
     };
@@ -930,11 +930,11 @@ export class TextModel
         : this._options.bracketPairColorizationOptions;
 
     const newOpts = new model.TextModelResolvedOptions({
-      tabSize: tabSize,
-      indentSize: indentSize,
-      insertSpaces: insertSpaces,
+      tabSize,
+      indentSize,
+      insertSpaces,
       defaultEOL: this._options.defaultEOL,
-      trimAutoWhitespace: trimAutoWhitespace,
+      trimAutoWhitespace,
       bracketPairColorizationOptions,
     });
 
@@ -2380,11 +2380,7 @@ export class TextModel
         range: IRange,
         options: model.IModelDecorationOptions,
       ): string => {
-        return this._deltaDecorationsImpl(
-          ownerId,
-          [],
-          [{ range: range, options: options }],
-        )[0];
+        return this._deltaDecorationsImpl(ownerId, [], [{ range, options }])[0];
       },
       changeDecoration: (id: string, newRange: IRange): void => {
         this._changeDecorationImpl(ownerId, id, newRange);

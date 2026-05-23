@@ -145,8 +145,8 @@ class TextEditorEdit {
     const validRange = this._document.validateRange(range);
     this._collectedEdits.push({
       range: validRange,
-      text: text,
-      forceMoveMarkers: forceMoveMarkers,
+      text,
+      forceMoveMarkers,
     });
   }
 
@@ -269,7 +269,7 @@ export class ExtHostTextEditorOptions {
     this._warnOnError(
       "setTabSize",
       this._proxy.$trySetOptions(this._id, {
-        tabSize: tabSize,
+        tabSize,
       }),
     );
   }
@@ -314,7 +314,7 @@ export class ExtHostTextEditorOptions {
     this._warnOnError(
       "setIndentSize",
       this._proxy.$trySetOptions(this._id, {
-        indentSize: indentSize,
+        indentSize,
       }),
     );
   }
@@ -341,7 +341,7 @@ export class ExtHostTextEditorOptions {
     this._warnOnError(
       "setInsertSpaces",
       this._proxy.$trySetOptions(this._id, {
-        insertSpaces: insertSpaces,
+        insertSpaces,
       }),
     );
   }

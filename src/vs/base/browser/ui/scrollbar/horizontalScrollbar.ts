@@ -30,7 +30,7 @@ export class HorizontalScrollbar extends AbstractScrollbar {
     const scrollPosition = scrollable.getCurrentScrollPosition();
     super({
       lazyRender: options.lazyRender,
-      host: host,
+      host,
       scrollbarState: new ScrollbarState(
         options.horizontalHasArrows ? options.arrowSize : 0,
         options.horizontal === ScrollbarVisibility.Hidden
@@ -45,7 +45,7 @@ export class HorizontalScrollbar extends AbstractScrollbar {
       ),
       visibility: options.horizontal,
       extraScrollbarClassName: "horizontal",
-      scrollable: scrollable,
+      scrollable,
       scrollByPage: options.scrollByPage,
     });
 

@@ -169,7 +169,7 @@ export class SimplePagedScreenReaderStrategy implements IPagedScreenReaderStrate
     }
     return {
       value: pretext + text + posttext,
-      selection: selection,
+      selection,
       selectionStart,
       selectionEnd,
       startPositionWithinEditor: pretextRange.getStartPosition(),

@@ -681,8 +681,8 @@ export class LanguageConfigurationFileHandler extends Disposable {
     }
 
     const result: IndentationRule = {
-      increaseIndentPattern: increaseIndentPattern,
-      decreaseIndentPattern: decreaseIndentPattern,
+      increaseIndentPattern,
+      decreaseIndentPattern,
     };
 
     if (indentationRules.indentNextLinePattern) {

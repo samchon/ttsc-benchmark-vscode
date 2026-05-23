@@ -449,7 +449,7 @@ export class PortsAttributes extends Disposable {
         continue;
       }
       attributes.push({
-        key: key,
+        key,
         elevateIfNeeded: setting.elevateIfNeeded,
         onAutoForward: setting.onAutoForward,
         label: setting.label,
@@ -1260,7 +1260,7 @@ export class TunnelModel extends Disposable {
           {
             remoteHost: tunnel.remoteAddress.host,
             remotePort: tunnel.remoteAddress.port,
-            localAddress: localAddress,
+            localAddress,
             protocol: TunnelProtocol.Http,
             localUri: this.makeLocalUri(localAddress),
             closeable: false,

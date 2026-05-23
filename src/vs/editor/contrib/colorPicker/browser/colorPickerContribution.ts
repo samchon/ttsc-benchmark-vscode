@@ -99,7 +99,7 @@ CommandsRegistry.registerCommand(
     const [red, green, blue, alpha] = color;
     return _findColorData<IColorPresentation>(
       new ColorPresentationsCollector({
-        range: range,
+        range,
         color: { red, green, blue, alpha },
       }),
       colorProviderRegistry,

@@ -295,9 +295,7 @@ class LocalChatSessionItem implements IChatSessionItem {
       chatDetail.workingDirectory?.scheme === Schemas.file
         ? chatDetail.workingDirectory.fsPath
         : undefined;
-    this.metadata = workingDirectoryPath
-      ? { workingDirectoryPath: workingDirectoryPath }
-      : undefined;
+    this.metadata = workingDirectoryPath ? { workingDirectoryPath } : undefined;
   }
 
   isEqual(other: LocalChatSessionItem): boolean {

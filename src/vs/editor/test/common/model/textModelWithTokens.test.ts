@@ -67,7 +67,7 @@ suite("TextModelWithTokens", () => {
     disposables.add(languageService.registerLanguage({ id: languageId }));
     disposables.add(
       languageConfigurationService.register(languageId, {
-        brackets: brackets,
+        brackets,
       }),
     );
 
@@ -154,8 +154,8 @@ suite("TextModelWithTokens", () => {
           }
 
           const actual = model.bracketPairs.findPrevBracket({
-            lineNumber: lineNumber,
-            column: column,
+            lineNumber,
+            column,
           });
 
           assert.deepStrictEqual(
@@ -192,8 +192,8 @@ suite("TextModelWithTokens", () => {
           }
 
           const actual = model.bracketPairs.findNextBracket({
-            lineNumber: lineNumber,
-            column: column,
+            lineNumber,
+            column,
           });
 
           assert.deepStrictEqual(
@@ -924,7 +924,7 @@ suite("TextModel.getLineIndentGuide", () => {
     const model = disposables.add(
       instantiateTextModel(instantiationService, text, languageId),
     );
-    model.updateOptions({ indentSize: indentSize });
+    model.updateOptions({ indentSize });
 
     const actualIndents = model.guides.getLinesIndentGuides(
       1,

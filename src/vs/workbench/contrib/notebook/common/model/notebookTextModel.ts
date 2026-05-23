@@ -824,7 +824,7 @@ export class NotebookTextModel
       return [
         {
           editType: CellEditType.Output,
-          index: index,
+          index,
           outputs: b,
           append: false,
         },
@@ -989,7 +989,7 @@ export class NotebookTextModel
           this._pauseableEmitter.fire({
             rawEvents: [],
             versionId: this.versionId,
-            synchronous: synchronous,
+            synchronous,
             endSelectionState: endSelections,
           });
           this._notebookLoggingService.trace(
@@ -1382,7 +1382,7 @@ export class NotebookTextModel
         },
       ],
       versionId: this.versionId,
-      synchronous: synchronous,
+      synchronous,
       endSelectionState: undefined,
     });
   }
@@ -1499,7 +1499,7 @@ export class NotebookTextModel
         },
       ],
       versionId: this.versionId,
-      synchronous: synchronous,
+      synchronous,
       endSelectionState: endSelections,
     });
 
@@ -1531,7 +1531,7 @@ export class NotebookTextModel
         },
       ],
       versionId: this.versionId,
-      synchronous: synchronous,
+      synchronous,
       endSelectionState: endSelections,
     });
   }
@@ -1573,7 +1573,7 @@ export class NotebookTextModel
         },
       ],
       versionId: this.versionId,
-      synchronous: synchronous,
+      synchronous,
       endSelectionState: endSelections,
     });
   }
@@ -1916,7 +1916,7 @@ export class NotebookTextModel
           {
             kind: NotebookCellsChangeType.OutputItem,
             index: this._cells.indexOf(cell),
-            outputId: outputId,
+            outputId,
             outputItems: items,
             append: true,
             transient: this.transientOptions.transientOutputs,
@@ -1940,7 +1940,7 @@ export class NotebookTextModel
           {
             kind: NotebookCellsChangeType.OutputItem,
             index: this._cells.indexOf(cell),
-            outputId: outputId,
+            outputId,
             outputItems: items,
             append: false,
             transient: this.transientOptions.transientOutputs,
@@ -2017,7 +2017,7 @@ export class NotebookTextModel
         },
       ],
       versionId: this.versionId,
-      synchronous: synchronous,
+      synchronous,
       endSelectionState: endSelections,
     });
 
@@ -2145,7 +2145,7 @@ export class NotebookTextModel
       );
 
       if (matches.length > 0) {
-        results.push({ cell, matches: matches });
+        results.push({ cell, matches });
       }
     }
 

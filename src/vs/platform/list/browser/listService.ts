@@ -1742,7 +1742,7 @@ function workbenchTreeDataPreamble<
         getDefaultTreeFindMatchType(configurationService),
       horizontalScrolling,
       scrollByPage: Boolean(configurationService.getValue(scrollByPageKey)),
-      paddingBottom: paddingBottom,
+      paddingBottom,
       hideTwistiesOfChildlessElements: options.hideTwistiesOfChildlessElements,
       expandOnlyOnTwistieClick:
         options.expandOnlyOnTwistieClick ??

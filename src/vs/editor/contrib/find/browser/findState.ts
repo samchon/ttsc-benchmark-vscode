@@ -240,8 +240,8 @@ export class FindReplaceState<
     updateHistory: boolean = true,
   ): void {
     const changeEvent: FindReplaceStateChangedEvent = {
-      moveCursor: moveCursor,
-      updateHistory: updateHistory,
+      moveCursor,
+      updateHistory,
       searchString: false,
       replaceString: false,
       isRevealed: false,

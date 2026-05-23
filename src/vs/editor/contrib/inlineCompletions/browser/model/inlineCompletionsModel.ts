@@ -1732,7 +1732,7 @@ export class InlineCompletionsModel extends Disposable {
       const acceptedLength = text.length;
       completion.reportPartialAccept(
         acceptedLength,
-        { kind, acceptedLength: acceptedLength },
+        { kind, acceptedLength },
         {
           characters: acceptUntilIndexExclusive,
           ratio: acceptUntilIndexExclusive / ghostTextVal.length,
@@ -1956,7 +1956,7 @@ class FadeoutDecoration extends Disposable {
       observableCodeEditor(editor).setDecorations(
         constObservable(
           ranges.map<IModelDeltaDecoration>((range) => ({
-            range: range,
+            range,
             options: {
               description: "animation",
               className: "edits-fadeout-decoration",

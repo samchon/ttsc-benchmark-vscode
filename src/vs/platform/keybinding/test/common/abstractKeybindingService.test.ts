@@ -194,8 +194,8 @@ suite("AbstractKeybindingService", () => {
           ...args: unknown[]
         ): Promise<any> => {
           executeCommandCalls.push({
-            commandId: commandId,
-            args: args,
+            commandId,
+            args,
           });
           return Promise.resolve(undefined);
         },

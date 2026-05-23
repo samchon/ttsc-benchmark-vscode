@@ -111,7 +111,7 @@ suite("Multicursor selection", () => {
   test("issue #8817: Cursor position changes when you cancel multicursor", () => {
     withTestCodeEditor(
       ["var x = (3 * 5)", "var y = (3 * 5)", "var z = (3 * 5)"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       (editor) => {
         const findController = editor.registerAndInstantiateContribution(
           CommonFindController.ID,
@@ -149,7 +149,7 @@ suite("Multicursor selection", () => {
   test('issue #5400: "Select All Occurrences of Find Match" does not select all if find uses regex', () => {
     withTestCodeEditor(
       ["something", "someething", "someeething", "nothing"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       (editor) => {
         const findController = editor.registerAndInstantiateContribution(
           CommonFindController.ID,
@@ -191,7 +191,7 @@ suite("Multicursor selection", () => {
   test("AddSelectionToNextFindMatchAction can work with multiline", () => {
     withTestCodeEditor(
       ["", "qwe", "rty", "", "qwe", "", "rty", "qwe", "rty"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       (editor) => {
         const findController = editor.registerAndInstantiateContribution(
           CommonFindController.ID,
@@ -226,7 +226,7 @@ suite("Multicursor selection", () => {
   test("issue #6661: AddSelectionToNextFindMatchAction can work with touching ranges", () => {
     withTestCodeEditor(
       ["abcabc", "abc", "abcabc"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       (editor) => {
         const findController = editor.registerAndInstantiateContribution(
           CommonFindController.ID,
@@ -278,7 +278,7 @@ suite("Multicursor selection", () => {
   test("issue #23541: Multiline Ctrl+D does not work in CRLF files", () => {
     withTestCodeEditor(
       ["", "qwe", "rty", "", "qwe", "", "rty", "qwe", "rty"],
-      { serviceCollection: serviceCollection },
+      { serviceCollection },
       (editor) => {
         editor.getModel()!.setEOL(EndOfLineSequence.CRLF);
 
@@ -319,26 +319,22 @@ suite("Multicursor selection", () => {
       findController: CommonFindController,
     ) => void,
   ): void {
-    withTestCodeEditor(
-      text,
-      { serviceCollection: serviceCollection },
-      (editor) => {
-        const findController = editor.registerAndInstantiateContribution(
-          CommonFindController.ID,
-          CommonFindController,
+    withTestCodeEditor(text, { serviceCollection }, (editor) => {
+      const findController = editor.registerAndInstantiateContribution(
+        CommonFindController.ID,
+        CommonFindController,
+      );
+      const multiCursorSelectController =
+        editor.registerAndInstantiateContribution(
+          MultiCursorSelectionController.ID,
+          MultiCursorSelectionController,
         );
-        const multiCursorSelectController =
-          editor.registerAndInstantiateContribution(
-            MultiCursorSelectionController.ID,
-            MultiCursorSelectionController,
-          );
 
-        callback(editor, findController);
+      callback(editor, findController);
 
-        multiCursorSelectController.dispose();
-        findController.dispose();
-      },
-    );
+      multiCursorSelectController.dispose();
+      findController.dispose();
+    });
   }
 
   function testAddSelectionToNextFindMatchAction(

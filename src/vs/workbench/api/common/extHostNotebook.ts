@@ -785,7 +785,7 @@ export class ExtHostNotebookController implements ExtHostNotebookShape {
 
           if (inputMatches.length > 0 || outputMatches.length > 0) {
             const cellMatch: INotebookCellMatchNoModel = {
-              index: index,
+              index,
               contentResults: genericCellMatchesToTextSearchMatches(
                 inputMatches,
                 cellModel.inputTextBuffer,

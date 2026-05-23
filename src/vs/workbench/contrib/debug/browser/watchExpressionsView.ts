@@ -302,7 +302,7 @@ export class WatchExpressionsView
             this.tree.rerender(expression);
           }
         } else if (!expression && horizontalScrolling !== undefined) {
-          this.tree.updateOptions({ horizontalScrolling: horizontalScrolling });
+          this.tree.updateOptions({ horizontalScrolling });
           horizontalScrolling = undefined;
         }
       }),

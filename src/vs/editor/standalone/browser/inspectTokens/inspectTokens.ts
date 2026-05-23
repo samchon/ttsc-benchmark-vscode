@@ -354,8 +354,8 @@ class InspectTokensWidget extends Disposable implements IContentWidget {
     return {
       languageId:
         this._languageService.languageIdCodec.decodeLanguageId(languageId),
-      tokenType: tokenType,
-      fontStyle: fontStyle,
+      tokenType,
+      fontStyle,
       foreground: colorMap[foreground],
       background: colorMap[background],
     };

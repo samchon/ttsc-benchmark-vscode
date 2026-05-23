@@ -804,7 +804,7 @@ class WordHighlighter {
     }
 
     return this.model.getWordAtPosition({
-      lineNumber: lineNumber,
+      lineNumber,
       column: startColumn,
     });
   }

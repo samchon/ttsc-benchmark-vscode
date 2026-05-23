@@ -35,7 +35,7 @@ function createExtension(
     engines: { vscode: "*" },
     main: "main.js",
     extensionDependencies: deps,
-    extensionAffinity: extensionAffinity,
+    extensionAffinity,
     enabledApiProposals: extensionAffinity ? ["extensionAffinity"] : undefined,
   };
 }

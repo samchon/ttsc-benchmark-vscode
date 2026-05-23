@@ -242,8 +242,8 @@ export class AIFolderMatchWorkspaceRootImpl
     }
     this._onChange.fire({
       elements: [fileMatch],
-      added: added,
-      removed: removed,
+      added,
+      removed,
     });
   }
 

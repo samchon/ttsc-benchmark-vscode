@@ -3066,7 +3066,7 @@ abstract class MemoryBreakpointAction extends Action2 {
       src,
       canPersist: true,
       accessTypes: info.accessTypes,
-      accessType: accessType,
+      accessType,
       initialSessionData: { session, dataId: info.dataId },
     });
   }

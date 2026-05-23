@@ -1246,7 +1246,7 @@ registerEditorCommand(
       SuggestContext.HasFocusedSuggestion,
     ),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.textInputFocus,
       primary: KeyMod.Shift | KeyCode.Enter,
       secondary: [KeyMod.Shift | KeyCode.Tab],
@@ -1293,7 +1293,7 @@ registerEditorCommand(
     precondition: SuggestContext.Visible,
     handler: (x) => x.cancelSuggestWidget(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.textInputFocus,
       primary: KeyCode.Escape,
       secondary: [KeyMod.Shift | KeyCode.Escape],
@@ -1313,7 +1313,7 @@ registerEditorCommand(
     ),
     handler: (c) => c.selectNextSuggestion(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.textInputFocus,
       primary: KeyCode.DownArrow,
       secondary: [KeyMod.CtrlCmd | KeyCode.DownArrow],
@@ -1347,7 +1347,7 @@ registerEditorCommand(
     ),
     handler: (c) => c.selectNextPageSuggestion(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.textInputFocus,
       primary: KeyCode.PageDown,
       secondary: [KeyMod.CtrlCmd | KeyCode.PageDown],
@@ -1381,7 +1381,7 @@ registerEditorCommand(
     ),
     handler: (c) => c.selectPrevSuggestion(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.textInputFocus,
       primary: KeyCode.UpArrow,
       secondary: [KeyMod.CtrlCmd | KeyCode.UpArrow],
@@ -1408,7 +1408,7 @@ registerEditorCommand(
     ),
     handler: (c) => c.selectPrevPageSuggestion(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.textInputFocus,
       primary: KeyCode.PageUp,
       secondary: [KeyMod.CtrlCmd | KeyCode.PageUp],
@@ -1439,7 +1439,7 @@ registerEditorCommand(
     ),
     handler: (x) => x.focusSuggestion(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.textInputFocus,
       primary: KeyMod.CtrlCmd | KeyCode.Space,
       secondary: [KeyMod.CtrlCmd | KeyCode.KeyI],
@@ -1474,7 +1474,7 @@ registerEditorCommand(
     ),
     handler: (x) => x.toggleSuggestionDetails(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.textInputFocus,
       primary: KeyMod.CtrlCmd | KeyCode.Space,
       secondary: [KeyMod.CtrlCmd | KeyCode.KeyI],
@@ -1526,7 +1526,7 @@ registerEditorCommand(
     precondition: SuggestContext.Visible,
     handler: (x) => x.toggleSuggestionFocus(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.textInputFocus,
       primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.Space,
       mac: { primary: KeyMod.WinCtrl | KeyMod.Alt | KeyCode.Space },
@@ -1571,7 +1571,7 @@ registerEditorCommand(
     ),
     handler: (x) => x.acceptNextSuggestion(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.textInputFocus,
       primary: KeyCode.Tab,
     },
@@ -1590,7 +1590,7 @@ registerEditorCommand(
     ),
     handler: (x) => x.acceptPrevSuggestion(),
     kbOpts: {
-      weight: weight,
+      weight,
       kbExpr: EditorContextKeys.textInputFocus,
       primary: KeyMod.Shift | KeyCode.Tab,
     },

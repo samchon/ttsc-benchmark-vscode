@@ -95,7 +95,7 @@ export class ExceptionWidget extends ZoneWidget {
     const frameColor = theme.getColor(debugExceptionWidgetBorder);
     this.style({
       arrowColor: frameColor,
-      frameColor: frameColor,
+      frameColor,
     }); // style() will trigger _applyStyles
   }
 

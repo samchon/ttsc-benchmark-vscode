@@ -658,13 +658,13 @@ export class InternalModelContentChangeEvent {
     const isFlush = a.isFlush || b.isFlush;
     const isEolChange = a.isEolChange && b.isEolChange; // both must be true to not confuse listeners who skip such edits
     return {
-      changes: changes,
-      eol: eol,
-      isEolChange: isEolChange,
-      versionId: versionId,
-      isUndoing: isUndoing,
-      isRedoing: isRedoing,
-      isFlush: isFlush,
+      changes,
+      eol,
+      isEolChange,
+      versionId,
+      isUndoing,
+      isRedoing,
+      isFlush,
       detailedReasons: a.detailedReasons.concat(b.detailedReasons),
       detailedReasonsChangeLengths: a.detailedReasonsChangeLengths.concat(
         b.detailedReasonsChangeLengths,

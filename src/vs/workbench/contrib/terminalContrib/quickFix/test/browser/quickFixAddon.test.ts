@@ -898,7 +898,7 @@ suite("QuickFixAddon", () => {
           enabled: true,
           label: `Run: ${command}`,
           tooltip: `Run: ${command}`,
-          command: command,
+          command,
         };
       });
       setup(() => {
@@ -976,7 +976,7 @@ suite("QuickFixAddon", () => {
           enabled: true,
           label: `Run: ${command}`,
           tooltip: `Run: ${command}`,
-          command: command,
+          command,
         };
       });
       setup(() => {

@@ -1329,7 +1329,7 @@ class InstructionRenderer
         ),
         options: {
           preserveFocus: false,
-          selection: selection,
+          selection,
           revealIfOpened: true,
           selectionRevealType:
             TextEditorSelectionRevealType.CenterIfOutsideViewport,

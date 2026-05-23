@@ -31,17 +31,17 @@ export function createMonacoBaseAPI(): typeof monaco {
   return {
     editor: undefined!, // undefined override expected here
     languages: undefined!, // undefined override expected here
-    CancellationTokenSource: CancellationTokenSource,
-    Emitter: Emitter,
+    CancellationTokenSource,
+    Emitter,
     KeyCode: standaloneEnums.KeyCode,
-    KeyMod: KeyMod,
-    Position: Position,
-    Range: Range,
+    KeyMod,
+    Position,
+    Range,
     Selection: Selection as unknown as typeof monaco.Selection,
     SelectionDirection: standaloneEnums.SelectionDirection,
     MarkerSeverity: standaloneEnums.MarkerSeverity,
     MarkerTag: standaloneEnums.MarkerTag,
     Uri: URI as unknown as typeof monaco.Uri,
-    Token: Token,
+    Token,
   };
 }

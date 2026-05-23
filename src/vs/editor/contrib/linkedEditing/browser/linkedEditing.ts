@@ -462,7 +462,7 @@ export class LinkedEditingContribution
       }
 
       const decorations: IModelDeltaDecoration[] = ranges.map((range) => ({
-        range: range,
+        range,
         options: LinkedEditingContribution.DECORATION,
       }));
       this._visibleContextKey.set(true);

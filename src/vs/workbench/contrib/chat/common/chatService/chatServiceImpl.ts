@@ -972,7 +972,7 @@ export class ChatService extends Disposable implements IChatService {
             contrib: {},
             inputText: "",
             mode,
-            selectedModel: selectedModel,
+            selectedModel,
             selections: [],
             permissionLevel: storedPermissionLevel,
           },
@@ -989,7 +989,7 @@ export class ChatService extends Disposable implements IChatService {
       {
         initialData,
         location,
-        sessionResource: sessionResource,
+        sessionResource,
         canUseTools: false,
         transferEditingSession:
           providedSession.transferredState?.editingSession,
@@ -2905,7 +2905,7 @@ export class ChatService extends Disposable implements IChatService {
       {
         sessionResource: model.sessionResource,
         timestampInMilliseconds: Date.now(),
-        toWorkspace: toWorkspace,
+        toWorkspace,
       },
       model,
     );

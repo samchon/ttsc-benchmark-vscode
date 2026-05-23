@@ -860,7 +860,7 @@ class ViewsExtensionHandler implements IWorkbenchContribution {
           }
 
           const viewDescriptor: ICustomViewDescriptor = {
-            type: type,
+            type,
             ctorDescriptor:
               type === ViewType.Tree
                 ? new SyncDescriptor(TreeViewPane)
@@ -889,7 +889,7 @@ class ViewsExtensionHandler implements IWorkbenchContribution {
             collapsed:
               this.showCollapsed(container) ||
               initialVisibility === InitialVisibility.Collapsed,
-            order: order,
+            order,
             extensionId: extension.description.identifier,
             originalContainerId: key,
             group: item.group,

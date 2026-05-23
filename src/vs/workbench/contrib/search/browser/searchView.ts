@@ -1118,12 +1118,12 @@ export class SearchView extends ViewPane {
       this.instantiationService.createInstance(SearchWidget, container, {
         value: contentPattern,
         replaceValue: replaceText,
-        isRegex: isRegex,
-        isCaseSensitive: isCaseSensitive,
-        isWholeWords: isWholeWords,
-        searchHistory: searchHistory,
-        replaceHistory: replaceHistory,
-        preserveCase: preserveCase,
+        isRegex,
+        isCaseSensitive,
+        isWholeWords,
+        searchHistory,
+        replaceHistory,
+        preserveCase,
         inputBoxStyles: defaultInputBoxStyles,
         toggleStyles: defaultToggleStyles,
         notebookOptions: {
@@ -2493,7 +2493,7 @@ export class SearchView extends ViewPane {
     const content: IPatternInfo = {
       pattern: contentPattern,
       isRegExp: isRegex,
-      isCaseSensitive: isCaseSensitive,
+      isCaseSensitive,
       isWordMatch: isWholeWords,
       notebookInfo: {
         isInNotebookMarkdownInput,
@@ -3520,7 +3520,7 @@ export class SearchView extends ViewPane {
     try {
       editor = await this.editorService.openEditor(
         {
-          resource: resource,
+          resource,
           options,
         },
         sideBySide ? SIDE_GROUP : ACTIVE_GROUP,
@@ -3589,7 +3589,7 @@ export class SearchView extends ViewPane {
       : (<ISearchTreeFileMatch>element).resource;
     return this.editorService
       .openEditor({
-        resource: resource,
+        resource,
         options: {
           preserveFocus: false,
           pinned: true,

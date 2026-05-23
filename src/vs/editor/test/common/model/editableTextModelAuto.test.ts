@@ -137,9 +137,9 @@ function generateEdits(content: string): ITestModelEdit[] {
     const text = generateFile(true);
 
     result.push({
-      offset: offset,
-      length: length,
-      text: text,
+      offset,
+      length,
+      text,
     });
 
     maxOffset = offset;

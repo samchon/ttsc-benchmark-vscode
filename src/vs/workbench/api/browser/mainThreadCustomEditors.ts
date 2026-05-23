@@ -914,8 +914,8 @@ class MainThreadCustomEditorModel
     const path = `/${multibyteAwareBtoa(resource.with({ query: null, fragment: null }).toString(true))}`;
     return URI.from({
       scheme: Schemas.vscodeCustomEditor,
-      authority: authority,
-      path: path,
+      authority,
+      path,
       query: JSON.stringify(resource.toJSON()),
     });
   }

@@ -191,7 +191,7 @@ export class TaskService extends AbstractTaskService {
     const { config, hasParseErrors } = this._getConfiguration(workspaceFolder);
     if (hasParseErrors) {
       return Promise.resolve({
-        workspaceFolder: workspaceFolder,
+        workspaceFolder,
         hasErrors: true,
         config: undefined,
       });
@@ -200,7 +200,7 @@ export class TaskService extends AbstractTaskService {
       return Promise.resolve({ workspaceFolder, config, hasErrors: false });
     } else {
       return Promise.resolve({
-        workspaceFolder: workspaceFolder,
+        workspaceFolder,
         hasErrors: true,
         config: undefined,
       });

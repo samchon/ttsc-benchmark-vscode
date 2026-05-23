@@ -371,7 +371,7 @@ export class CommentService extends Disposable implements ICommentService {
             continue;
           }
           const evt: ICommentThreadChangedEvent = {
-            uniqueOwner: uniqueOwner,
+            uniqueOwner,
             owner: control.owner,
             ownerLabel: control.label,
             pending: this._continueOnComments.get(uniqueOwner) || [],

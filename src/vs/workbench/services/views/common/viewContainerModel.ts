@@ -1024,7 +1024,7 @@ export class ViewContainerModel
         return {
           index: i,
           visibleIndex,
-          viewDescriptorItem: viewDescriptorItem,
+          viewDescriptorItem,
         };
       }
       if (this.isViewDescriptorVisible(viewDescriptorItem)) {

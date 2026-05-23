@@ -472,7 +472,7 @@ export class CodeCellViewModel
         fontInfo: state.font ?? this._layoutInfo.fontInfo ?? null,
         editorHeight: this._layoutInfo.editorHeight,
         editorWidth,
-        chatHeight: chatHeight,
+        chatHeight,
         statusBarHeight: 0,
         outputContainerOffset,
         outputTotalHeight,
@@ -514,7 +514,7 @@ export class CodeCellViewModel
     ) {
       this._layoutInfo = {
         ...this._layoutInfo,
-        totalHeight: totalHeight,
+        totalHeight,
         layoutState: CellLayoutState.FromCache,
       };
     }

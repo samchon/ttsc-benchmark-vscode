@@ -24,7 +24,7 @@ suite("EditorWebWorker", () => {
       this.$acceptNewModel({
         url: uri,
         versionId: 1,
-        lines: lines,
+        lines,
         EOL: eol,
       });
       return this._getModel(uri)!;

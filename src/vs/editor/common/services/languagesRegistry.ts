@@ -228,7 +228,7 @@ export class LanguagesRegistry extends Disposable {
       }
       for (const extension of lang.extensions) {
         registerPlatformLanguageAssociation(
-          { id: langId, mime: primaryMime, extension: extension },
+          { id: langId, mime: primaryMime, extension },
           this._warnOnOverwrite,
         );
       }
@@ -237,7 +237,7 @@ export class LanguagesRegistry extends Disposable {
     if (Array.isArray(lang.filenames)) {
       for (const filename of lang.filenames) {
         registerPlatformLanguageAssociation(
-          { id: langId, mime: primaryMime, filename: filename },
+          { id: langId, mime: primaryMime, filename },
           this._warnOnOverwrite,
         );
         resolvedLanguage.filenames.push(filename);
@@ -333,7 +333,7 @@ export class LanguagesRegistry extends Disposable {
     for (const languageName in this._nameMap) {
       if (hasOwnProperty.call(this._nameMap, languageName)) {
         result.push({
-          languageName: languageName,
+          languageName,
           languageId: this._nameMap[languageName],
         });
       }

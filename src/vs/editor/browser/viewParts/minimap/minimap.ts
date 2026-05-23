@@ -857,7 +857,7 @@ class MinimapSamplingState {
     // so we need to recompute it again...
     const { minimapLineCount } =
       EditorLayoutInfoComputer.computeContainedMinimapLineCount({
-        viewLineCount: viewLineCount,
+        viewLineCount,
         scrollBeyondLastLine: options.scrollBeyondLastLine,
         paddingTop: options.paddingTop,
         paddingBottom: options.paddingBottom,
@@ -1315,8 +1315,8 @@ export class Minimap extends ViewPart implements IMinimapModel {
       scrollWidth: ctx.scrollWidth,
       scrollHeight: ctx.scrollHeight,
 
-      viewportStartLineNumber: viewportStartLineNumber,
-      viewportEndLineNumber: viewportEndLineNumber,
+      viewportStartLineNumber,
+      viewportEndLineNumber,
       viewportStartLineNumberVerticalOffset: ctx.getVerticalOffsetForLineNumber(
         viewportStartLineNumber,
       ),
@@ -1570,7 +1570,7 @@ export class Minimap extends ViewPart implements IMinimapModel {
   public setScrollTop(scrollTop: number): void {
     this._context.viewModel.viewLayout.setScrollPosition(
       {
-        scrollTop: scrollTop,
+        scrollTop,
       },
       ScrollType.Immediate,
     );

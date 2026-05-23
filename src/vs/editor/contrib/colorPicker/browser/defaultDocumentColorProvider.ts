@@ -52,15 +52,15 @@ export class DefaultDocumentColorProvider implements DocumentColorProvider {
     const colorPresentations: IColorPresentation[] = [];
     colorPresentations.push({
       label: rgb,
-      textEdit: { range: range, text: rgb },
+      textEdit: { range, text: rgb },
     });
     colorPresentations.push({
       label: hsl,
-      textEdit: { range: range, text: hsl },
+      textEdit: { range, text: hsl },
     });
     colorPresentations.push({
       label: hex,
-      textEdit: { range: range, text: hex },
+      textEdit: { range, text: hex },
     });
     return colorPresentations;
   }

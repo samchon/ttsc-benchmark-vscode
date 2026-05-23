@@ -761,7 +761,7 @@ export function parseCommaSeparatedList(
 
     result.push({
       type: "scalar",
-      value: value,
+      value,
       range: new Range(
         positionOffset.lineNumber,
         positionOffset.column + startPos,

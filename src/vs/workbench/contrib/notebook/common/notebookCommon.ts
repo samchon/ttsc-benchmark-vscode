@@ -776,7 +776,7 @@ export namespace CellUri {
         openIn: "notebookOutputEditor",
         notebook: notebook.toString(),
         cellIndex: String(cellIndex),
-        outputId: outputId,
+        outputId,
         outputIndex: String(outputIndex),
       }).toString(),
     });
@@ -801,7 +801,7 @@ export namespace CellUri {
     handle: number,
     scheme: string,
   ): URI {
-    return CellUri.generate(notebook, handle).with({ scheme: scheme });
+    return CellUri.generate(notebook, handle).with({ scheme });
   }
 
   export function parseCellPropertyUri(uri: URI, propertyScheme: string) {
@@ -809,7 +809,7 @@ export namespace CellUri {
       return undefined;
     }
 
-    return CellUri.parse(uri.with({ scheme: scheme }));
+    return CellUri.parse(uri.with({ scheme }));
   }
 }
 

@@ -56,9 +56,9 @@ function assertLink(text: string, extractedLink: string): void {
     {
       range: {
         startLineNumber: 1,
-        startColumn: startColumn,
+        startColumn,
         endLineNumber: 1,
-        endColumn: endColumn,
+        endColumn,
       },
       url: extractedLink.substring(startColumn - 1, endColumn - 1),
     },

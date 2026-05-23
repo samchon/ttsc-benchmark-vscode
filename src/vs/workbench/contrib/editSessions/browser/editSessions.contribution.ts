@@ -1342,8 +1342,8 @@ export class EditSessionsContribution
           workingChanges.push({
             type: ChangeType.Addition,
             fileType: FileType.File,
-            contents: contents,
-            relativeFilePath: relativeFilePath,
+            contents,
+            relativeFilePath,
           });
         } else {
           // Assume it's a deletion
@@ -1351,7 +1351,7 @@ export class EditSessionsContribution
             type: ChangeType.Deletion,
             fileType: FileType.File,
             contents: undefined,
-            relativeFilePath: relativeFilePath,
+            relativeFilePath,
           });
         }
       }
@@ -1675,7 +1675,7 @@ export class EditSessionsContribution
       if (remoteGroup !== undefined) {
         MenuRegistry.appendMenuItem(MenuId.StatusBarRemoteIndicatorMenu, {
           group: remoteGroup,
-          command: command,
+          command,
           when: command.precondition,
         });
       }

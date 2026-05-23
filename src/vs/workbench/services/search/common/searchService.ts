@@ -606,7 +606,7 @@ export class SearchService extends Disposable implements ISearchService {
           reason: query._reason,
           resultCount: fileSearchStats.resultCount,
           workspaceFolderCount: query.folderQueries.length,
-          endToEndTime: endToEndTime,
+          endToEndTime,
           sortingTime: fileSearchStats.sortingTime,
           cacheWasResolved: cacheStats.cacheWasResolved,
           cacheLookupTime: cacheStats.cacheLookupTime,
@@ -698,7 +698,7 @@ export class SearchService extends Disposable implements ISearchService {
           reason: query._reason,
           resultCount: fileSearchStats.resultCount,
           workspaceFolderCount: query.folderQueries.length,
-          endToEndTime: endToEndTime,
+          endToEndTime,
           sortingTime: fileSearchStats.sortingTime,
           fileWalkTime: searchEngineStats.fileWalkTime,
           directoriesWalked: searchEngineStats.directoriesWalked,
@@ -769,7 +769,7 @@ export class SearchService extends Disposable implements ISearchService {
       >("textSearchComplete", {
         reason: query._reason,
         workspaceFolderCount: query.folderQueries.length,
-        endToEndTime: endToEndTime,
+        endToEndTime,
         scheme,
         error: errorType,
       });

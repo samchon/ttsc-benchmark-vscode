@@ -458,7 +458,7 @@ export class WalkThroughPart extends EditorPane {
             div,
             options,
             {
-              telemetryData: telemetryData,
+              telemetryData,
             },
           );
           editor.setModel(model);

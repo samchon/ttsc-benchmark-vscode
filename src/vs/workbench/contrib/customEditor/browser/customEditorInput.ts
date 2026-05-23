@@ -91,7 +91,7 @@ export class CustomEditorInput extends LazilyResolvedWebviewEditorInput {
         init,
         webview,
         {
-          untitledDocumentData: untitledDocumentData,
+          untitledDocumentData,
           oldResource: options?.oldResource,
         },
       );

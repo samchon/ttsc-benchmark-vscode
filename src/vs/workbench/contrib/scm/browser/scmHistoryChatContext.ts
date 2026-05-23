@@ -439,7 +439,7 @@ registerAction2(
         id: historyItemChange.uri.toString(),
         name: `${basename(historyItemChange.modifiedUri)}`,
         value: historyItemChange.modifiedUri,
-        historyItem: historyItem,
+        historyItem,
         kind: "scmHistoryItemChange",
       } satisfies ISCMHistoryItemChangeVariableEntry);
     }

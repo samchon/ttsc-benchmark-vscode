@@ -541,7 +541,7 @@ export class WebClientServer {
         this._environmentService.args["default-workspace"],
       ),
       productConfiguration,
-      callbackRoute: callbackRoute,
+      callbackRoute,
     };
 
     const cookies = cookie.parse(req.headers.cookie || "");

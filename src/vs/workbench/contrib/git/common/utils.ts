@@ -121,7 +121,7 @@ function parseRemoteUrl(
       .replace(/^[\w\-]+-/, "") // Remove common ssh syntax: abc-github.com
       .replace(/-[\w\-]+$/, ""); // Remove common ssh syntax: github.com-abc
 
-    return { host: normalizedHost, rawHost, path: path };
+    return { host: normalizedHost, rawHost, path };
   } catch (err) {
     return undefined;
   }

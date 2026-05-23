@@ -952,7 +952,7 @@ export class CommentNode<T extends IRange | ICellRange> extends Disposable {
         action.run({
           thread: this.commentThread,
           commentUniqueId: this.comment.uniqueIdInThread,
-          text: text,
+          text,
           $mid: MarshalledId.CommentThreadNode,
         });
 
@@ -986,7 +986,7 @@ export class CommentNode<T extends IRange | ICellRange> extends Disposable {
         action.run({
           thread: this.commentThread,
           commentUniqueId: this.comment.uniqueIdInThread,
-          text: text,
+          text,
           $mid: MarshalledId.CommentThreadNode,
         });
 

@@ -427,7 +427,7 @@ export class LcsDiff {
 
     return {
       quitEarly: quitEarlyArr[0],
-      changes: changes,
+      changes,
     };
   }
 

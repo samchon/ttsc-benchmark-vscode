@@ -388,15 +388,15 @@ export class NotebookSearchService implements INotebookSearchService {
             return {
               cell: match.cell,
               index: match.index,
-              contentResults: contentResults,
-              webviewResults: webviewResults,
+              contentResults,
+              webviewResults,
             };
           },
         );
 
         const fileMatch: INotebookFileMatchWithModel = {
           resource: uri,
-          cellResults: cellResults,
+          cellResults,
         };
         localResults.set(uri, fileMatch);
       } else {

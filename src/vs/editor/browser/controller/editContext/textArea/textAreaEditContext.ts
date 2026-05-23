@@ -1052,9 +1052,9 @@ export class TextAreaEditContext extends AbstractEditContext {
 
         this._doRender({
           lastRenderPosition: null,
-          top: top,
-          left: left,
-          width: width,
+          top,
+          left,
+          width,
           height: lineHeight,
           useCover: false,
           color: (TokenizationRegistry.getColorMap() || [])[
@@ -1135,7 +1135,7 @@ export class TextAreaEditContext extends AbstractEditContext {
 
     this._doRender({
       lastRenderPosition: this._primaryCursorPosition,
-      top: top,
+      top,
       left: this._textAreaWrapping ? this._contentLeft : left,
       width: this._textAreaWidth,
       height: canUseZeroSizeTextarea ? 0 : 1,

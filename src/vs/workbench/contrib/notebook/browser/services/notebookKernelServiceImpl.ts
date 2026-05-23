@@ -549,10 +549,10 @@ export class NotebookKernelService
     const providers = this._kernelSourceActionProviders.get(viewType) ?? [];
     providers.push(provider);
     this._kernelSourceActionProviders.set(viewType, providers);
-    this._onDidChangeSourceActions.fire({ viewType: viewType });
+    this._onDidChangeSourceActions.fire({ viewType });
 
     const eventEmitterDisposable = provider.onDidChangeSourceActions?.(() => {
-      this._onDidChangeSourceActions.fire({ viewType: viewType });
+      this._onDidChangeSourceActions.fire({ viewType });
     });
 
     return toDisposable(() => {

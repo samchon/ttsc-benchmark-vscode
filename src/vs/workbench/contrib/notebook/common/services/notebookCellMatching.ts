@@ -122,11 +122,11 @@ export function matchCellBasedOnSimilarties(
         possibleOriginal: index,
       });
     } else {
-      originalIndexWithMostEdits.set(index, { dist: dist, modifiedIndex: i });
+      originalIndexWithMostEdits.set(index, { dist, modifiedIndex: i });
       results.push({
         modified: i,
         original: -1,
-        dist: dist,
+        dist,
         percentage,
         possibleOriginal: index,
       });

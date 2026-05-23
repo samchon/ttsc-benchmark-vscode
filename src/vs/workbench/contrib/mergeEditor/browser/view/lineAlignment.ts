@@ -205,13 +205,13 @@ function splitUpCommonEqualRangeMappings(
   ] as const) {
     for (const rangeMapping of rangeMappings) {
       events.push({
-        input: input,
+        input,
         start: true,
         inputPos: rangeMapping.inputRange.getStartPosition(),
         outputPos: rangeMapping.outputRange.getStartPosition(),
       });
       events.push({
-        input: input,
+        input,
         start: false,
         inputPos: rangeMapping.inputRange.getEndPosition(),
         outputPos: rangeMapping.outputRange.getEndPosition(),

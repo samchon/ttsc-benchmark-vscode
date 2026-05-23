@@ -283,7 +283,7 @@ export class ChatCompositeBar extends Disposable {
       }),
     );
 
-    this._tabs.push({ chat: chat, element: tab });
+    this._tabs.push({ chat, element: tab });
   }
 
   private _onTabClicked(chat: IChat): void {

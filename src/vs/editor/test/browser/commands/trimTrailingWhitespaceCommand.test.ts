@@ -49,7 +49,7 @@ function createInsertDeleteSingleEditOp(
       positionLineNumber,
       positionColumn,
     ),
-    text: text,
+    text,
   };
 }
 
@@ -70,7 +70,7 @@ function createSingleEditOp(
       positionLineNumber,
       positionColumn,
     ),
-    text: text,
+    text,
     forceMoveMarkers: false,
   };
 }

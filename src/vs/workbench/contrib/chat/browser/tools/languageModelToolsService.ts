@@ -1375,7 +1375,7 @@ export class LanguageModelToolsService
           chatSessionResource: dto.context?.sessionResource,
           chatInteractionId: dto.chatInteractionId,
           modelId: dto.modelId,
-          forceConfirmationReason: forceConfirmationReason,
+          forceConfirmationReason,
           workingDirectory: dto.context?.workingDirectory,
         },
         token,

@@ -90,7 +90,7 @@ export class ToggleColumnSelectionAction extends Action2 {
       );
       CoreNavigationCommands.ColumnSelect.runCoreEditorCommand(viewModel, {
         position: modelPosition,
-        viewPosition: viewPosition,
+        viewPosition,
         doColumnSelect: true,
         mouseColumn: visibleColumn + 1,
       });

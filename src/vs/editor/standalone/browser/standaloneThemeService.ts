@@ -214,7 +214,7 @@ class StandaloneTheme implements IStandaloneTheme {
     const foreground = TokenMetadata.getForeground(metadata);
     const fontStyle = TokenMetadata.getFontStyle(metadata);
     return {
-      foreground: foreground,
+      foreground,
       italic: Boolean(fontStyle & FontStyle.Italic),
       bold: Boolean(fontStyle & FontStyle.Bold),
       underline: Boolean(fontStyle & FontStyle.Underline),

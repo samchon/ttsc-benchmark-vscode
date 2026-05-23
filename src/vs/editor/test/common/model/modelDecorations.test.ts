@@ -52,7 +52,7 @@ function modelHasDecoration(
   modelHasDecorations(model, [
     {
       range: new Range(startLineNumber, startColumn, endLineNumber, endColumn),
-      className: className,
+      className,
     },
   ]);
 }
@@ -78,7 +78,7 @@ function addDecoration(
       new Range(startLineNumber, startColumn, endLineNumber, endColumn),
       {
         description: "test",
-        className: className,
+        className,
       },
     );
   })!;
@@ -118,9 +118,9 @@ function lineHasDecoration(
 ) {
   lineHasDecorations(model, lineNumber, [
     {
-      start: start,
-      end: end,
-      className: className,
+      start,
+      end,
+      className,
     },
   ]);
 }
@@ -508,7 +508,7 @@ suite("Decorations and editing", () => {
       [
         {
           range: decRange,
-          options: { description: "test", stickiness: stickiness },
+          options: { description: "test", stickiness },
         },
       ],
     )[0];
@@ -1653,7 +1653,7 @@ suite("deltaDecorations", () => {
     endColum: number,
   ): ILightWeightDecoration {
     return {
-      id: id,
+      id,
       range: new Range(startLineNumber, startColumn, endLineNumber, endColum),
     };
   }

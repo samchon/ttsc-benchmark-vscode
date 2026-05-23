@@ -992,7 +992,7 @@ export class WorkbenchThemeService
           name: themeData.extensionName,
           isBuiltin: themeData.extensionIsBuiltin,
           publisherDisplayName: themeData.extensionPublisher,
-          themeId: themeId,
+          themeId,
         });
         this.themeExtensionsActivated.set(key, true);
       }

@@ -426,7 +426,7 @@ suite("RipgrepTextSearchEngine", () => {
 
         const options: RipgrepTextSearchOptions = {
           folderOptions: {
-            includes: includes,
+            includes,
             excludes: [],
             useIgnoreFiles: {
               local: false,

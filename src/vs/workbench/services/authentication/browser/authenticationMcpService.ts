@@ -583,7 +583,7 @@ export class AuthenticationMcpService
       .map((session) => {
         return {
           label: session.account.label,
-          session: session,
+          session,
         };
       });
 

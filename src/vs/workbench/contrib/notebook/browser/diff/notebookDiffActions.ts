@@ -821,18 +821,18 @@ class ToggleRenderAction extends Action2 {
     private readonly toggleMetadata?: boolean,
   ) {
     super({
-      id: id,
+      id,
       title,
-      precondition: precondition,
+      precondition,
       menu: [
         {
           id: MenuId.EditorTitle,
           group: "notebook",
           when: precondition,
-          order: order,
+          order,
         },
       ],
-      toggled: toggled,
+      toggled,
     });
   }
 

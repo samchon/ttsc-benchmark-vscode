@@ -369,8 +369,8 @@ export class FolderMatchImpl
     if (!this._replacingAll) {
       this._onChange.fire({
         elements: [fileMatch],
-        added: added,
-        removed: removed,
+        added,
+        removed,
       });
     }
   }

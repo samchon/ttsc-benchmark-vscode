@@ -1326,7 +1326,7 @@ export class ViewDescriptorService
       disposables.add(this.registerResetViewContainerAction(viewContainer));
 
       const value = {
-        viewContainerModel: viewContainerModel,
+        viewContainerModel,
         disposables,
         dispose: () => disposables.dispose(),
       };

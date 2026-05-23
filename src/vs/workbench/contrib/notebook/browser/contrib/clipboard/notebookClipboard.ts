@@ -371,7 +371,7 @@ export function runCutCells(
         {
           kind: SelectionStateType.Index,
           focus: editor.getFocus(),
-          selections: selections,
+          selections,
         },
         () => ({
           kind: SelectionStateType.Index,
@@ -418,7 +418,7 @@ export function runCutCells(
       {
         kind: SelectionStateType.Index,
         focus: editor.getFocus(),
-        selections: selections,
+        selections,
       },
       () => ({
         kind: SelectionStateType.Index,

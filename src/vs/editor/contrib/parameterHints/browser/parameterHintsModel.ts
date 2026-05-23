@@ -219,8 +219,8 @@ export class ParameterHintsModel extends Disposable {
     const triggerContext = {
       triggerKind: context.triggerKind,
       triggerCharacter: context.triggerCharacter,
-      isRetrigger: isRetrigger,
-      activeSignatureHelp: activeSignatureHelp,
+      isRetrigger,
+      activeSignatureHelp,
     };
 
     if (!this.editor.hasModel()) {

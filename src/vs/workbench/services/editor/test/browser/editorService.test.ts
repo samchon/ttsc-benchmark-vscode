@@ -1081,7 +1081,7 @@ suite("EditorService", () => {
         // Open editors expects untyped or editor input with options, you cannot pass a typed editor input
         // without options
         if (!isEditorInputWithOptions(editor) && isEditorInput(editor)) {
-          editor = { editor: editor, options: {} };
+          editor = { editor, options: {} };
         }
         const panes = await service.openEditors([editor], group);
         return panes[0];

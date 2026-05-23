@@ -581,7 +581,7 @@ export class DevToolsLogger implements IObservableLogger {
       this._handleChange({
         instances: {
           [info.instanceId]: {
-            formattedValue: formattedValue,
+            formattedValue,
             recomputationCount: info.updateCount,
           },
         },

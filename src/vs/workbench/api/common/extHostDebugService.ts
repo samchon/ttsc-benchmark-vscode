@@ -939,7 +939,7 @@ export abstract class ExtHostDebugServiceBase
                   request.arguments.value,
                 );
                 response.body = {
-                  signature: signature,
+                  signature,
                 };
                 debugAdapter.sendResponse(response);
               } else {

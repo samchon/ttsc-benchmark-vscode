@@ -675,7 +675,7 @@ export class LiveTestResult extends Disposable implements ITestResult {
       result: this,
       reason: TestResultItemChangeReason.OwnStateChange,
       previousState: previousOwnComputed,
-      previousOwnDuration: previousOwnDuration,
+      previousOwnDuration,
     };
 
     entry.tasks[taskIndex].state = newState;

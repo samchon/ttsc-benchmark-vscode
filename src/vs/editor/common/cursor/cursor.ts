@@ -307,10 +307,10 @@ export class CursorsController extends Disposable {
       }
 
       desiredSelections.push({
-        selectionStartLineNumber: selectionStartLineNumber,
-        selectionStartColumn: selectionStartColumn,
-        positionLineNumber: positionLineNumber,
-        positionColumn: positionColumn,
+        selectionStartLineNumber,
+        selectionStartColumn,
+        positionLineNumber,
+        positionColumn,
       });
     }
 
@@ -1227,8 +1227,8 @@ export class CommandExecutor {
     }),
   ): Selection[] | null {
     const ctx: IExecContext = {
-      model: model,
-      selectionsBefore: selectionsBefore,
+      model,
+      selectionsBefore,
       trackedRanges: [],
       trackedRangesDirection: [],
     };
@@ -1401,8 +1401,8 @@ export class CommandExecutor {
       }
     }
     return {
-      operations: operations,
-      hadTrackedEditOperation: hadTrackedEditOperation,
+      operations,
+      hadTrackedEditOperation,
     };
   }
 
@@ -1430,9 +1430,9 @@ export class CommandExecutor {
           major: majorIdentifier,
           minor: operationMinor++,
         },
-        range: range,
-        text: text,
-        forceMoveMarkers: forceMoveMarkers,
+        range,
+        text,
+        forceMoveMarkers,
         isAutoWhitespaceEdit: command.insertsAutoWhitespace,
       });
     };
@@ -1483,9 +1483,9 @@ export class CommandExecutor {
     };
 
     const editOperationBuilder: editorCommon.IEditOperationBuilder = {
-      addEditOperation: addEditOperation,
-      addTrackedEditOperation: addTrackedEditOperation,
-      trackSelection: trackSelection,
+      addEditOperation,
+      addTrackedEditOperation,
+      trackSelection,
     };
 
     try {
@@ -1501,8 +1501,8 @@ export class CommandExecutor {
     }
 
     return {
-      operations: operations,
-      hadTrackedEditOperation: hadTrackedEditOperation,
+      operations,
+      hadTrackedEditOperation,
     };
   }
 

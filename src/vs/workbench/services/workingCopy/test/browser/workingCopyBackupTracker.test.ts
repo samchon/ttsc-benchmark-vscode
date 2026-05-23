@@ -157,7 +157,7 @@ suite("WorkingCopyBackupTracker (browser)", function () {
       accessor,
       part,
       tracker,
-      workingCopyBackupService: workingCopyBackupService,
+      workingCopyBackupService,
       instantiationService,
     };
   }

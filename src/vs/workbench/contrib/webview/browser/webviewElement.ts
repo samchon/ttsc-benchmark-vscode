@@ -397,7 +397,7 @@ export class WebviewElement
           const authority = decodeAuthority(entry.authority);
           const uri = URI.from({
             scheme: entry.scheme,
-            authority: authority,
+            authority,
             path: decodeURIComponent(entry.path), // This gets re-encoded
             query: entry.query ? decodeURIComponent(entry.query) : entry.query,
           });
@@ -917,7 +917,7 @@ export class WebviewElement
       options: {
         allowMultipleAPIAcquire:
           !!this._content.options.allowMultipleAPIAcquire,
-        allowScripts: allowScripts,
+        allowScripts,
         allowForms: this._content.options.allowForms ?? allowScripts, // For back compat, we allow forms by default when scripts are enabled
       },
       state: this._content.state,

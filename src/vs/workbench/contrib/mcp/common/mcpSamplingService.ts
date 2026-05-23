@@ -308,7 +308,7 @@ export class McpSamplingService
     if (isDuringToolCall) {
       const result = await this._dialogService.prompt({
         type: "question",
-        title: title,
+        title,
         message,
         buttons: Object.entries(buttons).map(([label, run]) => ({
           label,

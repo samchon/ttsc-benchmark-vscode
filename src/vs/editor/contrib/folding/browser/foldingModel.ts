@@ -177,9 +177,9 @@ export class FoldingModel implements IDisposable {
       const isCollapsed = newRegions.isCollapsed(index);
       const isManual = newRegions.getSource(index) !== FoldSource.provider;
       const decorationRange = {
-        startLineNumber: startLineNumber,
+        startLineNumber,
         startColumn: this._textModel.getLineMaxColumn(startLineNumber),
-        endLineNumber: endLineNumber,
+        endLineNumber,
         endColumn: this._textModel.getLineMaxColumn(endLineNumber) + 1,
       };
       newEditorDecorations.push({
@@ -264,7 +264,7 @@ export class FoldingModel implements IDisposable {
         endLineNumber: range.endLineNumber,
         isCollapsed: range.isCollapsed,
         source: range.source,
-        checksum: checksum,
+        checksum,
       });
     }
     return result.length > 0 ? result : undefined;

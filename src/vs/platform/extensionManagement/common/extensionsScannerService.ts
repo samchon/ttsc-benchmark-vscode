@@ -1494,7 +1494,7 @@ class ExtensionsScanner extends Disposable {
           const values = translationBundle.contents
             ? translationBundle.contents.package
             : undefined;
-          return { values: values, default: defaultPackageNLS };
+          return { values, default: defaultPackageNLS };
         }
       } catch (error) {
         return { values: undefined, default: defaultPackageNLS };

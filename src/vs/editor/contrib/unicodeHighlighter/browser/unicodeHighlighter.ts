@@ -411,7 +411,7 @@ class DocumentUnicodeHighlighter extends Disposable {
           // In this case, a banner is shown.
           for (const range of info.ranges) {
             decorations.push({
-              range: range,
+              range,
               options: Decorations.instance.getDecorationFromOptions(
                 this._options,
               ),
@@ -670,7 +670,7 @@ export class UnicodeHighlighterHoverParticipant implements IEditorHoverParticipa
       existedReason.add(reason);
 
       const adjustSettingsArgs: ShowExcludeOptionsArgs = {
-        codePoint: codePoint,
+        codePoint,
         reason: highlightInfo.reason,
         inComment: highlightInfo.inComment,
         inString: highlightInfo.inString,

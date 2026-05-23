@@ -729,7 +729,7 @@ export class DeleteLinesAction extends EditorAction {
         return {
           startLineNumber: s.startLineNumber,
           selectionStartColumn: s.selectionStartColumn,
-          endLineNumber: endLineNumber,
+          endLineNumber,
           positionColumn: s.positionColumn,
         };
       });

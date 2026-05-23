@@ -483,7 +483,7 @@ abstract class AbstractLineMatcher implements ILineMatcher {
         return {
           description: this.matcher,
           resource: this.getResource(data.file),
-          marker: marker,
+          marker,
         };
       }
     } catch (err) {
@@ -629,7 +629,7 @@ class SingleLineMatcher extends AbstractLineMatcher {
       }
       const match = this.getMarkerMatch(data);
       if (match) {
-        return { match: match, continue: false };
+        return { match, continue: false };
       }
     }
     return { match: null, continue: false };
@@ -2175,10 +2175,10 @@ export class ProblemMatcherParser extends Parser {
       }
     } else if (fileLocation && pattern) {
       result = {
-        owner: owner,
-        applyTo: applyTo,
-        fileLocation: fileLocation,
-        pattern: pattern,
+        owner,
+        applyTo,
+        fileLocation,
+        pattern,
       };
       if (source) {
         result.source = source;

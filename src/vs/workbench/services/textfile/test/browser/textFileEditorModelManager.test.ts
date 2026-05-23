@@ -534,7 +534,7 @@ suite("Files - TextFileEditorModelManager", () => {
     const resource: URI = toResource.call(this, "/path/index_something.txt");
 
     let model = disposables.add(
-      await manager.resolve(resource, { languageId: languageId }),
+      await manager.resolve(resource, { languageId }),
     );
     assert.strictEqual(model.textEditorModel!.getLanguageId(), languageId);
 

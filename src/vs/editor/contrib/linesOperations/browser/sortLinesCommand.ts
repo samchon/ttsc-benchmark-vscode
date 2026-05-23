@@ -112,8 +112,8 @@ function getSortData(
   }
 
   return {
-    startLineNumber: startLineNumber,
-    endLineNumber: endLineNumber,
+    startLineNumber,
+    endLineNumber,
     before: linesToSort,
     after: sorted,
   };

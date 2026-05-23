@@ -349,11 +349,11 @@ export class KeybindingEditorDecorationsRenderer extends Disposable {
 
     // icon + highlight + message decoration
     return {
-      range: range,
+      range,
       options: {
         description: "keybindings-widget",
         stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-        className: className,
+        className,
         hoverMessage: msg,
         overviewRuler: {
           color: overviewRulerColor,

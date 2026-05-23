@@ -101,7 +101,7 @@ namespace Configuration {
     return {
       extensionId: extensionId.value,
       taskType,
-      required: required,
+      required,
       properties: value.properties ? Objects.deepClone(value.properties) : {},
       when: value.when ? ContextKeyExpr.deserialize(value.when) : undefined,
     };

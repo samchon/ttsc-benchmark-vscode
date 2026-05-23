@@ -180,7 +180,7 @@ suite("SearchModel", () => {
       ): Promise<ISearchComplete> {
         return new Promise((resolve) => {
           queueMicrotask(() => {
-            resolve({ results: results, messages: [] });
+            resolve({ results, messages: [] });
           });
         });
       },

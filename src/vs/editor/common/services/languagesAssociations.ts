@@ -129,7 +129,7 @@ function toLanguageAssociationItem(
     extension: association.extension,
     filepattern: association.filepattern,
     firstline: association.firstline,
-    userConfigured: userConfigured,
+    userConfigured,
     filepatternParsed: association.filepattern
       ? parse(association.filepattern, { ignoreCase: true })
       : undefined,

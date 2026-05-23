@@ -2287,8 +2287,8 @@ export class ChatListItemRenderer
       const context: IChatContentPartRenderContext = {
         element,
         elementIndex: index,
-        contentIndex: contentIndex,
-        content: content,
+        contentIndex,
+        content,
         container: templateData.rowContainer,
         editorPool: this._editorPool,
         diffEditorPool: this._diffEditorPool,
@@ -2676,9 +2676,9 @@ export class ChatListItemRenderer
 
       const context: IChatContentPartRenderContext = {
         element,
-        elementIndex: elementIndex,
+        elementIndex,
         content: contentForThisTurn,
-        contentIndex: contentIndex,
+        contentIndex,
         container: templateData.rowContainer,
         editorPool: this._editorPool,
         diffEditorPool: this._diffEditorPool,

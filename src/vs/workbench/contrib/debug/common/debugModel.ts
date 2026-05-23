@@ -2541,7 +2541,7 @@ export class DebugModel extends Disposable implements IDebugModel {
       }
 
       this._onDidChangeBreakpoints.fire({
-        changed: changed,
+        changed,
         sessionOnly: false,
       });
     }
@@ -2584,7 +2584,7 @@ export class DebugModel extends Disposable implements IDebugModel {
       this.breakpointsActivated = true;
     }
 
-    this._onDidChangeBreakpoints.fire({ changed: changed, sessionOnly: false });
+    this._onDidChangeBreakpoints.fire({ changed, sessionOnly: false });
   }
 
   addFunctionBreakpoint(

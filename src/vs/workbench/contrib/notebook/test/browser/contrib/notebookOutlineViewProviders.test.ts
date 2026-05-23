@@ -135,8 +135,8 @@ suite("Notebook Outline View Providers", function () {
       IReference<INotebookCellOutlineDataSource>
     >() {
       override object: INotebookCellOutlineDataSource = {
-        entries: entries,
-        activeElement: activeElement,
+        entries,
+        activeElement,
       };
     })();
   }

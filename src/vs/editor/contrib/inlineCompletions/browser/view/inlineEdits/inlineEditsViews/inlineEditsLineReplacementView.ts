@@ -197,7 +197,7 @@ export class InlineEditsLineReplacementView
         lines.push(line);
       }
 
-      return { lines, requiredWidth: requiredWidth };
+      return { lines, requiredWidth };
     });
     this._layout = derived(this, (reader) => {
       const modifiedLines = this._modifiedLineElements.read(reader);

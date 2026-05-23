@@ -191,7 +191,7 @@ abstract class SubmitAction extends Action2 {
                       "Do you want to undo {0} edits?",
                       editsToUndo,
                     ),
-              message: message,
+              message,
               primaryButton: localize(
                 "chat.remove.confirmation.primaryButton",
                 "Yes",
@@ -530,7 +530,7 @@ class ToggleChatModeAction extends Action2 {
     >("chat.modeChange", {
       fromMode: getModeNameForTelemetry(currentMode),
       mode: getModeNameForTelemetry(switchToMode),
-      requestCount: requestCount,
+      requestCount,
       storage,
       extensionId,
       toolsCount,

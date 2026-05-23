@@ -23,11 +23,11 @@ function deserializeMapping(serializedMapping: ISerializedMapping) {
       const mask = Number(result[4]);
       const vkey = result.length === 6 ? result[5] : undefined;
       ret[key] = {
-        value: value,
-        vkey: vkey,
-        withShift: withShift,
-        withAltGr: withAltGr,
-        withShiftAltGr: withShiftAltGr,
+        value,
+        vkey,
+        withShift,
+        withAltGr,
+        withShiftAltGr,
         valueIsDeadKey: (mask & 1) > 0,
         withShiftIsDeadKey: (mask & 2) > 0,
         withAltGrIsDeadKey: (mask & 4) > 0,

@@ -253,9 +253,9 @@ suite("TextChangeCompressor", () => {
       const text = getRandomBuffer(true);
 
       result.push({
-        offset: offset,
-        length: length,
-        text: text,
+        offset,
+        length,
+        text,
       });
 
       maxOffset = offset;

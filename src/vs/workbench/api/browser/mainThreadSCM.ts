@@ -127,7 +127,7 @@ function toISCMHistoryItemRef(
     ? {
         ...historyItemRefDto,
         icon: getIconFromIconDto(historyItemRefDto.icon),
-        color: color,
+        color,
       }
     : undefined;
 }
@@ -843,8 +843,8 @@ class MainThreadSCMProvider implements ISCMProvider {
             (ThemeIcon.isThemeIcon(dark) ? dark : URI.revive(dark)) || icon;
 
           const decorations = {
-            icon: icon,
-            iconDark: iconDark,
+            icon,
+            iconDark,
             tooltip,
             strikeThrough,
             faded,

@@ -64,7 +64,7 @@ suite("Notebook Find", () => {
               cell?.deltaModelDecorations([], dec.decorations) ?? [];
 
             if (decorations.length > 0) {
-              ret.push({ ownerId: dec.ownerId, decorations: decorations });
+              ret.push({ ownerId: dec.ownerId, decorations });
             }
           });
 

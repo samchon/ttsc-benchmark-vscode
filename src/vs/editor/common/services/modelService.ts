@@ -252,14 +252,14 @@ export class ModelService extends Disposable implements IModelService {
     }
 
     return {
-      isForSimpleWidget: isForSimpleWidget,
-      tabSize: tabSize,
-      indentSize: indentSize,
-      insertSpaces: insertSpaces,
-      detectIndentation: detectIndentation,
+      isForSimpleWidget,
+      tabSize,
+      indentSize,
+      insertSpaces,
+      detectIndentation,
       defaultEOL: newDefaultEOL,
-      trimAutoWhitespace: trimAutoWhitespace,
-      largeFileOptimizations: largeFileOptimizations,
+      trimAutoWhitespace,
+      largeFileOptimizations,
       bracketPairColorizationOptions,
     };
   }
@@ -888,7 +888,7 @@ export class ModelService extends Disposable implements IModelService {
       model.isForSimpleWidget,
     );
     ModelService._setModelOptionsForModel(model, newOptions, oldOptions);
-    this._onModelModeChanged.fire({ model, oldLanguageId: oldLanguageId });
+    this._onModelModeChanged.fire({ model, oldLanguageId });
   }
 
   protected _getSHA1Computer(): ITextModelSHA1Computer {

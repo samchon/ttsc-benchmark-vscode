@@ -465,7 +465,7 @@ export class MarkupCell extends Disposable {
           {
             ...this.editorOptions,
             dimension: {
-              width: width,
+              width,
               height: editorHeight,
             },
             allowVariableLineHeights: false,
@@ -517,7 +517,7 @@ export class MarkupCell extends Disposable {
           const realContentHeight = this.editor!.getContentHeight();
           if (realContentHeight !== editorHeight) {
             this.editor!.layout({
-              width: width,
+              width,
               height: realContentHeight,
             });
             editorHeight = realContentHeight;

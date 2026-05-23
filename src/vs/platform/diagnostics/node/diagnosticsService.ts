@@ -282,8 +282,8 @@ export async function collectWorkspaceStats(
 
 function asSortedItems(items: Map<string, number>): WorkspaceStatItem[] {
   return Array.from(items.entries(), ([name, count]) => ({
-    name: name,
-    count: count,
+    name,
+    count,
   })).sort((a, b) => b.count - a.count);
 }
 

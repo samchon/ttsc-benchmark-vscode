@@ -175,9 +175,9 @@ export class RunSubagentTool extends Disposable implements IToolImpl {
         "tool.runSubagent.userDescription",
         "Run a task within an isolated subagent context to enable efficient organization of tasks and context window management.",
       ),
-      modelDescription: modelDescription,
+      modelDescription,
       source: ToolDataSource.Internal,
-      inputSchema: inputSchema,
+      inputSchema,
     };
     return runSubagentToolData;
   }
@@ -450,7 +450,7 @@ export class RunSubagentTool extends Disposable implements IToolImpl {
         message: args.prompt,
         variables: { variables: variableSet.asArray() },
         location: ChatAgentLocation.Chat,
-        subAgentInvocationId: subAgentInvocationId,
+        subAgentInvocationId,
         subAgentName: effectiveSubAgentName,
         userSelectedModelId: modeModelId,
         modelConfiguration: modeModelId

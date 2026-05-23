@@ -64,7 +64,7 @@ function _findHexColorInformation(range: IRange | undefined, hexValue: string) {
     return;
   }
   return {
-    range: range,
+    range,
     color: _toIColor(
       parsedHexColor.rgba.r,
       parsedHexColor.rgba.g,
@@ -86,7 +86,7 @@ function _findRGBColorInformation(
   const captureGroups = match.values();
   const parsedRegex = _parseCaptureGroups(captureGroups);
   return {
-    range: range,
+    range,
     color: _toIColor(
       parsedRegex[0],
       parsedRegex[1],
@@ -116,7 +116,7 @@ function _findHSLColorInformation(
     ),
   );
   return {
-    range: range,
+    range,
     color: _toIColor(
       colorEquivalent.rgba.r,
       colorEquivalent.rgba.g,

@@ -357,7 +357,7 @@ export class MarkupCellViewModel
     ) {
       this._layoutInfo = {
         ...this.layoutInfo,
-        totalHeight: totalHeight,
+        totalHeight,
         chatHeight: this._chatHeight,
         editorHeight: this._editorHeight,
         statusBarHeight: this._statusBarHeight,

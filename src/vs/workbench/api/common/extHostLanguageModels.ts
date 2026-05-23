@@ -217,7 +217,7 @@ export class ExtHostLanguageModels implements ExtHostLanguageModelsShape {
     provider: vscode.LanguageModelChatProvider,
   ): IDisposable {
     this._languageModelProviders.set(vendor, {
-      extension: extension,
+      extension,
       provider,
     });
     this._proxy.$registerLanguageModelProvider(vendor);

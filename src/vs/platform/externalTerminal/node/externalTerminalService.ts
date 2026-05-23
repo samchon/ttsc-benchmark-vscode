@@ -127,7 +127,7 @@ export class WindowsExternalTerminalService
 
       const options = {
         cwd: dir,
-        env: env,
+        env,
         windowsVerbatimArguments: true,
       };
 

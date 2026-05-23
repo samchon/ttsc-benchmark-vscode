@@ -132,8 +132,8 @@ export class MainThreadTextEditorProperties {
       tabSize: modelOptions.tabSize,
       indentSize: modelOptions.indentSize,
       originalIndentSize: modelOptions.originalIndentSize,
-      cursorStyle: cursorStyle,
-      lineNumbers: lineNumbers,
+      cursorStyle,
+      lineNumbers,
     };
   }
 
@@ -549,7 +549,7 @@ export class MainThreadTextEditor {
           lineNumbers = "off";
       }
       this._codeEditor.updateOptions({
-        lineNumbers: lineNumbers,
+        lineNumbers,
       });
     }
   }

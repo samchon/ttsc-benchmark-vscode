@@ -260,11 +260,11 @@ function createLineChange(
   charChanges?: ICharChange[],
 ): ILineChange {
   return {
-    originalStartLineNumber: originalStartLineNumber,
-    originalEndLineNumber: originalEndLineNumber,
-    modifiedStartLineNumber: modifiedStartLineNumber,
-    modifiedEndLineNumber: modifiedEndLineNumber,
-    charChanges: charChanges,
+    originalStartLineNumber,
+    originalEndLineNumber,
+    modifiedStartLineNumber,
+    modifiedEndLineNumber,
+    charChanges,
   };
 }
 
@@ -279,14 +279,14 @@ function createCharChange(
   modifiedEndColumn: number,
 ) {
   return {
-    originalStartLineNumber: originalStartLineNumber,
-    originalStartColumn: originalStartColumn,
-    originalEndLineNumber: originalEndLineNumber,
-    originalEndColumn: originalEndColumn,
-    modifiedStartLineNumber: modifiedStartLineNumber,
-    modifiedStartColumn: modifiedStartColumn,
-    modifiedEndLineNumber: modifiedEndLineNumber,
-    modifiedEndColumn: modifiedEndColumn,
+    originalStartLineNumber,
+    originalStartColumn,
+    originalEndLineNumber,
+    originalEndColumn,
+    modifiedStartLineNumber,
+    modifiedStartColumn,
+    modifiedEndLineNumber,
+    modifiedEndColumn,
   };
 }
 

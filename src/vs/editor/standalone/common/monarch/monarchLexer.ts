@@ -1111,8 +1111,8 @@ export class MonarchTokenizer
         }
 
         groupMatching = {
-          rule: rule,
-          matches: matches,
+          rule,
+          matches,
           groups: [],
         };
         for (let i = 0; i < result.length; i++) {

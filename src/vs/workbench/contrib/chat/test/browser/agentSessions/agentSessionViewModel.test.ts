@@ -610,7 +610,7 @@ suite("AgentSessions", () => {
 
         const controller = new StaticChatSessionItemController([
           {
-            resource: resource,
+            resource,
             label: "Test Session",
             timing: makeNewSessionTiming(),
           },

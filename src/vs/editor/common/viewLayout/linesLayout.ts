@@ -871,13 +871,13 @@ export class LinesLayout {
     }
 
     return {
-      bigNumbersDelta: bigNumbersDelta,
-      startLineNumber: startLineNumber,
-      endLineNumber: endLineNumber,
+      bigNumbersDelta,
+      startLineNumber,
+      endLineNumber,
       relativeVerticalOffset: linesOffsets,
-      centeredLineNumber: centeredLineNumber,
-      completelyVisibleStartLineNumber: completelyVisibleStartLineNumber,
-      completelyVisibleEndLineNumber: completelyVisibleEndLineNumber,
+      centeredLineNumber,
+      completelyVisibleStartLineNumber,
+      completelyVisibleEndLineNumber,
       lineHeight: this._lineHeightsManager.defaultLineHeight,
     };
   }
@@ -1030,7 +1030,7 @@ export class LinesLayout {
         id: this.getIdForWhitespaceIndex(i),
         afterLineNumber: this.getAfterLineNumberForWhitespaceIndex(i),
         verticalOffset: top,
-        height: height,
+        height,
       });
     }
 

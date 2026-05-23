@@ -63,7 +63,7 @@ export class FindMatchDecorationModel extends Disposable {
       ];
       const deltaDecoration: ICellModelDeltaDecorations = {
         ownerId: cell.handle,
-        decorations: decorations,
+        decorations,
       };
 
       this._currentMatchDecorations = {
@@ -108,7 +108,7 @@ export class FindMatchDecorationModel extends Disposable {
       index,
       this.ownerID,
     );
-    this._currentMatchDecorations = { kind: "output", index: index };
+    this._currentMatchDecorations = { kind: "output", index };
 
     this._currentMatchCellDecorations =
       this._notebookEditor.deltaCellDecorations(

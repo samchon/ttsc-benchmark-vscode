@@ -470,7 +470,7 @@ export class MainThreadWorkspace
   $registerEditSessionIdentityProvider(handle: number, scheme: string) {
     const disposable =
       this._editSessionIdentityService.registerEditSessionIdentityProvider({
-        scheme: scheme,
+        scheme,
         getEditSessionIdentifier: async (
           workspaceFolder: WorkspaceFolder,
           token: CancellationToken,
@@ -509,7 +509,7 @@ export class MainThreadWorkspace
 
   $registerCanonicalUriProvider(handle: number, scheme: string) {
     const disposable = this._canonicalUriService.registerCanonicalUriProvider({
-      scheme: scheme,
+      scheme,
       provideCanonicalUri: async (
         uri: UriComponents,
         targetScheme: string,

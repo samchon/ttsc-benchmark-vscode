@@ -98,7 +98,7 @@ export async function updateColorPresentations(
   const colorPresentations = await getColorPresentations(
     editorModel,
     {
-      range: range,
+      range,
       color: {
         red: color.rgba.r / 255,
         green: color.rgba.g / 255,

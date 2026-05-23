@@ -708,7 +708,7 @@ export abstract class AbstractExtensionService
       const host: IWorkspaceContainsActivationHost = {
         logService: this._logService,
         folders: workspace.folders.map((folder) => folder.uri),
-        forceUsingSearch: forceUsingSearch,
+        forceUsingSearch,
         exists: (uri) => this._fileService.exists(uri),
         checkExists: (folders, includes, token) =>
           this._instantiationService.invokeFunction((accessor) =>

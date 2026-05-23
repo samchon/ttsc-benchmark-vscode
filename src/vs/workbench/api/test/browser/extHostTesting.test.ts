@@ -448,7 +448,7 @@ suite("ExtHost Testing", () => {
         {
           op: TestDiffOpType.DocumentSynced,
           docv: undefined,
-          uri: uri,
+          uri,
         },
       ]);
 
@@ -535,7 +535,7 @@ suite("ExtHost Testing", () => {
         {
           op: TestDiffOpType.DocumentSynced,
           docv: undefined,
-          uri: uri,
+          uri,
         },
       ]);
 

@@ -26,7 +26,7 @@ export const nodeSocketFactory =
       debugLabel: string,
     ): Promise<ISocket> {
       return new Promise<ISocket>((resolve, reject) => {
-        const socket = net.createConnection({ host: host, port: port }, () => {
+        const socket = net.createConnection({ host, port }, () => {
           socket.removeListener("error", reject);
 
           socket.write(makeRawSocketHeaders(path, query, debugLabel));

@@ -871,14 +871,14 @@ export class PromptsService extends Disposable implements IPromptsService {
     name = name.replace(/[^\p{L}\d_\-\.:]+/gu, "-"); // replace spaces with dashes
     return {
       uri: promptPath.uri,
-      name: name,
+      name,
       source: promptPath.source,
       storage: promptPath.storage,
       type: promptPath.type,
       extension: promptPath.extension,
       pluginUri: promptPath.pluginUri,
       description: promptPath.description,
-      argumentHint: argumentHint,
+      argumentHint,
       userInvocable: userInvocable ?? true,
       sessionTypes: promptPath.sessionTypes,
     };

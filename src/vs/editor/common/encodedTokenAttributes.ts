@@ -191,7 +191,7 @@ export class TokenMetadata {
     const fontStyle = this.getFontStyle(metadata);
 
     return {
-      foreground: foreground,
+      foreground,
       italic: Boolean(fontStyle & FontStyle.Italic),
       bold: Boolean(fontStyle & FontStyle.Bold),
       underline: Boolean(fontStyle & FontStyle.Underline),

@@ -337,7 +337,7 @@ export class NotebookModelResolverServiceImpl implements INotebookEditorModelRes
 
     if (existingNotebook && existingNotebook.viewType !== viewType) {
       await this._onWillFailWithConflict.fireAsync(
-        { resource: resource, viewType },
+        { resource, viewType },
         CancellationToken.None,
       );
 

@@ -97,7 +97,7 @@ export async function changeCellToKind(
             {
               cellKind: kind,
               source: text,
-              language: language,
+              language,
               mime: mime ?? cell.mime,
               outputs: cell.model.outputs,
               metadata: cell.metadata,
@@ -151,7 +151,7 @@ export async function changeCellToKind(
           {
             cellKind: kind,
             source: text,
-            language: language,
+            language,
             mime: mime ?? cell.mime,
             outputs: cell.model.outputs,
             metadata: cell.metadata,
@@ -481,13 +481,13 @@ export async function copyCellRange(
       true,
       {
         kind: SelectionStateType.Index,
-        focus: focus,
-        selections: selections,
+        focus,
+        selections,
       },
       () => ({
         kind: SelectionStateType.Index,
-        focus: focus,
-        selections: selections,
+        focus,
+        selections,
       }),
       undefined,
       true,
@@ -520,8 +520,8 @@ export async function copyCellRange(
       true,
       {
         kind: SelectionStateType.Index,
-        focus: focus,
-        selections: selections,
+        focus,
+        selections,
       },
       () => ({
         kind: SelectionStateType.Index,
@@ -1020,11 +1020,11 @@ export function insertCellAtIndex(
         cells: [
           {
             cellKind: type,
-            language: language,
+            language,
             mime: undefined,
-            outputs: outputs,
-            metadata: metadata,
-            source: source,
+            outputs,
+            metadata,
+            source,
           },
         ],
       },

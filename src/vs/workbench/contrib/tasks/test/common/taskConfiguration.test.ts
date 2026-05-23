@@ -240,7 +240,7 @@ class CustomTaskBuilder {
         kind: Tasks.TaskSourceKind.Workspace,
         label: "workspace",
         config: {
-          workspaceFolder: workspaceFolder,
+          workspaceFolder,
           element: undefined,
           index: -1,
           file: ".vscode/tasks.json",
@@ -253,7 +253,7 @@ class CustomTaskBuilder {
       { reevaluateOnRerun: true },
       {
         identifier: name,
-        name: name,
+        name,
         isBackground: false,
         promptOnClose: true,
         problemMatchers: [],

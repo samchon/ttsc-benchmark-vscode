@@ -179,7 +179,7 @@ suite("ChatSubagentContentPart", () => {
       pastTenseMessage: undefined,
       source: ToolDataSource.Internal,
       toolId: options.toolId ?? RunSubagentTool.Id,
-      toolCallId: toolCallId,
+      toolCallId,
       subAgentInvocationId: options.subAgentInvocationId,
       state: observableValue("state", stateValue),
       toolSpecificDataKind: observableValue(

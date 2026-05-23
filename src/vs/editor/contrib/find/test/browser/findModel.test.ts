@@ -109,7 +109,7 @@ suite("FindModel", () => {
 
     const expectedState = {
       highlighted: highlighted ? [highlighted] : [],
-      findDecorations: findDecorations,
+      findDecorations,
     };
     assert.deepStrictEqual(_getFindState(editor), expectedState, "state");
   }

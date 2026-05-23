@@ -259,13 +259,13 @@ export class ExplorerService implements IExplorerService {
     let progressOptions;
     if (location === ProgressLocation.Window) {
       progressOptions = {
-        location: location,
+        location,
         title: options.progressLabel,
         cancellable: edit.length > 1,
       } satisfies IProgressOptions;
     } else {
       progressOptions = {
-        location: location,
+        location,
         title: options.progressLabel,
         cancellable: edit.length > 1,
         delay: 500,

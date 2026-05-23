@@ -963,7 +963,7 @@ class VisibleProgress {
     );
 
     progressService.withProgress(
-      { location: location, buttons: buttons },
+      { location, buttons },
       (progress) => {
         if (!this._isDisposed) {
           this._currentProgress = progress;
@@ -1196,7 +1196,7 @@ export class RemoteAgentConnectionStatusListener
             ReconnectReloadClassification
           >("remoteReconnectionReload", {
             remoteName: getRemoteName(environmentService.remoteAuthority),
-            reconnectionToken: reconnectionToken,
+            reconnectionToken,
             millisSinceLastIncomingData: Date.now() - lastIncomingDataTime,
             attempt: reconnectionAttempts,
           });

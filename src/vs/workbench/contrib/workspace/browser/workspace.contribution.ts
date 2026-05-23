@@ -1151,7 +1151,7 @@ export class WorkspaceTrustUXHandler
     return {
       name: localize("status.WorkspaceTrust", "Workspace Trust"),
       text: `$(shield) ${localize("untrusted", "Restricted Mode")}`,
-      ariaLabel: ariaLabel,
+      ariaLabel,
       tooltip: toolTip,
       command: MANAGE_TRUST_COMMAND_ID,
       kind: "prominent",
@@ -1516,7 +1516,7 @@ class WorkspaceTrustTelemetryContribution
       WorkspaceTrustStateChangedEventClassification
     >("workspaceTrustStateChanged", {
       workspaceId: this.workspaceContextService.getWorkspace().id,
-      isTrusted: isTrusted,
+      isTrusted,
     });
 
     if (isTrusted) {

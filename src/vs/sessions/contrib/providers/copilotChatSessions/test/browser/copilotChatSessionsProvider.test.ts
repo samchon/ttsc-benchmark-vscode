@@ -371,7 +371,7 @@ function createProviderForSendTests(
   });
   instantiationService.stub(IChatService, {
     acquireOrLoadSession: async () => undefined,
-    sendRequest: sendRequest,
+    sendRequest,
     removeHistoryEntry: async (resource: URI) => {
       model.removeSession(resource);
     },

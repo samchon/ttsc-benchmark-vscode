@@ -293,7 +293,7 @@ export class ViewZones extends ViewPart {
     );
 
     const myZone: IMyViewZone = {
-      whitespaceId: whitespaceId,
+      whitespaceId,
       delegate: zone,
       isInHiddenArea: props.isInHiddenArea,
       isVisible: false,

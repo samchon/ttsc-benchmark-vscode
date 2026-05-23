@@ -381,7 +381,7 @@ class MergeModelInterface extends Disposable {
     function applyRanges(textModel: ITextModel, ranges: LabeledRange[]): void {
       textModel.applyEdits(
         ranges.map(({ range, label }) => ({
-          range: range,
+          range,
           text: `⟦${textModel.getValueInRange(range)}⟧${label}`,
         })),
       );

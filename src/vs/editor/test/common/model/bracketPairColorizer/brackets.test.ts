@@ -197,7 +197,7 @@ function tokenToObject(token: Token | undefined, text: string): any {
     return undefined;
   }
   return {
-    text: text,
+    text,
     length: token.length,
     bracketId: token.bracketId,
     bracketIds: token.bracketIds,

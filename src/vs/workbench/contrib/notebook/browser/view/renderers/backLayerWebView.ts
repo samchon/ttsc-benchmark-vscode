@@ -332,8 +332,8 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
         this._sendMessageToWebview({
           __vscode_notebook_message: true,
           type: "customRendererMessage",
-          rendererId: rendererId,
-          message: message,
+          rendererId,
+          message,
         });
 
         return Promise.resolve(true);
@@ -1319,7 +1319,7 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
           return this.openerService.open(cell.uri, {
             fromUserGesture: true,
             fromWorkspace: true,
-            editorOptions: editorOptions,
+            editorOptions,
           });
         }
       }
@@ -1347,7 +1347,7 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
         return this.openerService.open(notebookResource.with({ fragment }), {
           fromUserGesture: true,
           fromWorkspace: true,
-          editorOptions: editorOptions,
+          editorOptions,
         });
       }
     }
@@ -1454,7 +1454,7 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
         lineNumber !== undefined && column !== undefined
           ? { startLineNumber: lineNumber, startColumn: column }
           : undefined;
-      const textEditorOptions: ITextEditorOptions = { selection: selection };
+      const textEditorOptions: ITextEditorOptions = { selection };
       match.group.openEditor(
         match.editor,
         selection ? textEditorOptions : undefined,
@@ -1694,7 +1694,7 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
 
     this._sendMessageToWebview({
       type: "view-scroll",
-      widgets: widgets,
+      widgets,
       markupCells: markupPreviews,
     });
   }
@@ -1918,7 +1918,7 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
         this.pendingWebviewIdleInsetMapping.set(content.source, {
           outputId: message.outputId,
           versionId: content.source.model.versionId,
-          cellInfo: cellInfo,
+          cellInfo,
           renderer,
           cachedCreation: message,
         });
@@ -1960,7 +1960,7 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
         type: "showOutput",
         cellId: cachedInset.cellInfo.cellId,
         outputId: cachedInset.outputId,
-        cellTop: cellTop,
+        cellTop,
         outputOffset: offset,
       });
       return;
@@ -1983,7 +1983,7 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
     this.insetMapping.set(content.source, {
       outputId: message.outputId,
       versionId: content.source.model.versionId,
-      cellInfo: cellInfo,
+      cellInfo,
       renderer,
       cachedCreation: message,
     });
@@ -2019,11 +2019,11 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
       type: "html",
       executionId: cellInfo.executionId,
       cellId: cellInfo.cellId,
-      cellTop: cellTop,
+      cellTop,
       outputOffset: offset,
       left: 0,
       requiredPreloads: [],
-      createOnIdle: createOnIdle,
+      createOnIdle,
     } as const;
 
     const transfer: ArrayBuffer[] = [];
@@ -2043,14 +2043,14 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
         content: {
           type: RenderOutputType.Extension,
           outputId: output.outputId,
-          metadata: metadata,
+          metadata,
           output: {
             mime: first.mime,
             valueBytes,
           },
           allOutputs: output.outputs.map((output) => ({ mime: output.mime })),
         },
-        initiallyHidden: initiallyHidden,
+        initiallyHidden,
       };
     } else {
       message = {
@@ -2060,7 +2060,7 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
           type: content.type,
           htmlContent: content.htmlContent,
         },
-        initiallyHidden: initiallyHidden,
+        initiallyHidden,
       };
     }
 
@@ -2121,7 +2121,7 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
         output: {
           mime: content.mimeType,
           valueBytes,
-          appended: appended,
+          appended,
         },
         allOutputs: output.outputs.map((output) => ({ mime: output.mime })),
       };
@@ -2132,7 +2132,7 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
         type: "showOutput",
         cellId: outputCache.cellInfo.cellId,
         outputId: outputCache.outputId,
-        cellTop: cellTop,
+        cellTop,
         outputOffset: offset,
         content: updatedContent,
       },
@@ -2271,8 +2271,8 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
 
     this._sendMessageToWebview({
       type: "focus-output",
-      cellOrOutputId: cellOrOutputId,
-      alternateId: alternateId,
+      cellOrOutputId,
+      alternateId,
     });
   }
 
@@ -2317,7 +2317,7 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
 
     this._sendMessageToWebview({
       type: "find",
-      query: query,
+      query,
       options,
     });
 
@@ -2461,7 +2461,7 @@ export class BackLayerWebView<T extends ICommonCellInfo> extends Themable {
 
     this._sendMessageToWebview({
       type: "preload",
-      resources: resources,
+      resources,
     });
   }
 

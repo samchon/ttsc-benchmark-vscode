@@ -459,11 +459,11 @@ class TrackedDocumentInfo extends Disposable {
 
         trigger,
         languageId: this._doc.document.languageId.get(),
-        statsUuid: statsUuid,
+        statsUuid,
         conversationId: repr.props.$$sessionId,
         requestId: repr.props.$$requestId,
         modifiedCount: value,
-        deltaModifiedCount: deltaModifiedCount,
+        deltaModifiedCount,
         totalModifiedCount: data.totalModifiedCharactersInFinalState,
       });
     }
@@ -588,7 +588,7 @@ class TrackedDocumentInfo extends Disposable {
     >("editTelemetry.editSources.stats", {
       mode,
       languageId: this._doc.document.languageId.get(),
-      statsUuid: statsUuid,
+      statsUuid,
       nesModifiedCount: data.nesModifiedCount,
       inlineCompletionsCopilotModifiedCount:
         data.inlineCompletionsCopilotModifiedCount,

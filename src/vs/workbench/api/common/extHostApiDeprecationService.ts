@@ -87,7 +87,7 @@ export class ExtHostApiDeprecationService implements IExtHostApiDeprecationServi
       DeprecationTelemetryMeta
     >("extHostDeprecatedApiUsage", {
       extensionId: extension.identifier.value,
-      apiId: apiId,
+      apiId,
       usageId: options?.usageId ?? "",
     });
   }

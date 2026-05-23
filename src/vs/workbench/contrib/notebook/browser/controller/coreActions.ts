@@ -391,12 +391,12 @@ function sendEntryTelemetry(
       telemetryService.publicLog2<
         WorkbenchActionExecutedEvent,
         WorkbenchActionExecutedClassification
-      >("workbenchActionExecuted", { id: id, from: context.source });
+      >("workbenchActionExecuted", { id, from: context.source });
     } else if (URI.isUri(context)) {
       telemetryService.publicLog2<
         WorkbenchActionExecutedEvent,
         WorkbenchActionExecutedClassification
-      >("workbenchActionExecuted", { id: id, from: "cellEditorContextMenu" });
+      >("workbenchActionExecuted", { id, from: "cellEditorContextMenu" });
     } else if (
       context &&
       "from" in context &&
@@ -405,7 +405,7 @@ function sendEntryTelemetry(
       telemetryService.publicLog2<
         WorkbenchActionExecutedEvent,
         WorkbenchActionExecutedClassification
-      >("workbenchActionExecuted", { id: id, from: "cellContainer" });
+      >("workbenchActionExecuted", { id, from: "cellContainer" });
     } else {
       const from = isCellToolbarContext(context)
         ? "cellToolbar"
@@ -415,7 +415,7 @@ function sendEntryTelemetry(
       telemetryService.publicLog2<
         WorkbenchActionExecutedEvent,
         WorkbenchActionExecutedClassification
-      >("workbenchActionExecuted", { id: id, from: from });
+      >("workbenchActionExecuted", { id, from });
     }
   }
 }

@@ -1233,8 +1233,8 @@ suite("SplitLinesCollection", () => {
     callback: (splitLinesCollection: ViewModelLinesFromProjectedModel) => void,
   ): void {
     const configuration = new TestConfiguration({
-      wordWrap: wordWrap,
-      wordWrapColumn: wordWrapColumn,
+      wordWrap,
+      wordWrapColumn,
       wrappingIndent: "indent",
     });
     const wrappingInfo = configuration.options.get(EditorOption.wrappingInfo);

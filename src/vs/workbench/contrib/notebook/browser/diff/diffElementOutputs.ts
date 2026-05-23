@@ -249,7 +249,7 @@ export class OutputElement extends Disposable {
         (mimeType, index): IMimeTypeRenderer => ({
           label: mimeType.mimeType,
           id: mimeType.mimeType,
-          index: index,
+          index,
           picked: index === currIndex,
           detail: this.generateRendererInfo(mimeType.rendererId),
           description:

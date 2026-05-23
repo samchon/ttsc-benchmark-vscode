@@ -38,7 +38,7 @@ suite("UndoRedoService", () => {
     let redoCall1 = 0;
     const element1: IUndoRedoElement = {
       type: UndoRedoElementType.Resource,
-      resource: resource,
+      resource,
       label: "typing 1",
       code: "typing",
       undo: () => {
@@ -77,7 +77,7 @@ suite("UndoRedoService", () => {
     let redoCall2 = 0;
     const element2: IUndoRedoElement = {
       type: UndoRedoElementType.Resource,
-      resource: resource,
+      resource,
       label: "typing 2",
       code: "typing",
       undo: () => {
@@ -113,7 +113,7 @@ suite("UndoRedoService", () => {
     let redoCall3 = 0;
     const element3: IUndoRedoElement = {
       type: UndoRedoElementType.Resource,
-      resource: resource,
+      resource,
       label: "typing 2",
       code: "typing",
       undo: () => {
@@ -268,7 +268,7 @@ suite("UndoRedoService", () => {
     // Push three elements
     const element1: IUndoRedoElement = {
       type: UndoRedoElementType.Resource,
-      resource: resource,
+      resource,
       label: "typing 1",
       code: "typing",
       undo: () => {},
@@ -276,7 +276,7 @@ suite("UndoRedoService", () => {
     };
     const element2: IUndoRedoElement = {
       type: UndoRedoElementType.Resource,
-      resource: resource,
+      resource,
       label: "typing 2",
       code: "typing",
       undo: () => {},
@@ -284,7 +284,7 @@ suite("UndoRedoService", () => {
     };
     const element3: IUndoRedoElement = {
       type: UndoRedoElementType.Resource,
-      resource: resource,
+      resource,
       label: "typing 3",
       code: "typing",
       undo: () => {},
@@ -300,7 +300,7 @@ suite("UndoRedoService", () => {
     // Push more elements after the snapshot
     const element4: IUndoRedoElement = {
       type: UndoRedoElementType.Resource,
-      resource: resource,
+      resource,
       label: "typing 4",
       code: "typing",
       undo: () => {},
@@ -308,7 +308,7 @@ suite("UndoRedoService", () => {
     };
     const element5: IUndoRedoElement = {
       type: UndoRedoElementType.Resource,
-      resource: resource,
+      resource,
       label: "typing 5",
       code: "typing",
       undo: () => {},

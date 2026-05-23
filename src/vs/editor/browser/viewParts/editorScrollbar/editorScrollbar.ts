@@ -82,11 +82,11 @@ export class EditorScrollbar extends ViewPart {
       handleMouseWheel: scrollbar.handleMouseWheel,
       alwaysConsumeMouseWheel: scrollbar.alwaysConsumeMouseWheel,
       arrowSize: scrollbar.arrowSize,
-      mouseWheelScrollSensitivity: mouseWheelScrollSensitivity,
-      fastScrollSensitivity: fastScrollSensitivity,
-      scrollPredominantAxis: scrollPredominantAxis,
+      mouseWheelScrollSensitivity,
+      fastScrollSensitivity,
+      scrollPredominantAxis,
       scrollByPage: scrollbar.scrollByPage,
-      inertialScroll: inertialScroll,
+      inertialScroll,
     };
 
     this.scrollbar = this._register(
@@ -233,9 +233,9 @@ export class EditorScrollbar extends ViewPart {
         horizontalScrollbarSize: scrollbar.horizontalScrollbarSize,
         scrollByPage: scrollbar.scrollByPage,
         handleMouseWheel: scrollbar.handleMouseWheel,
-        mouseWheelScrollSensitivity: mouseWheelScrollSensitivity,
-        fastScrollSensitivity: fastScrollSensitivity,
-        scrollPredominantAxis: scrollPredominantAxis,
+        mouseWheelScrollSensitivity,
+        fastScrollSensitivity,
+        scrollPredominantAxis,
       };
       this.scrollbar.updateOptions(newOpts);
     }

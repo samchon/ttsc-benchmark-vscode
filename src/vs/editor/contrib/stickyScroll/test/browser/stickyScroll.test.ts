@@ -217,7 +217,7 @@ suite("Sticky Scroll Tests", () => {
           envConfig: {
             outerHeight: 500,
           },
-          serviceCollection: serviceCollection,
+          serviceCollection,
         },
         async (editor, _viewModel, instantiationService) => {
           const languageService = instantiationService.get(

@@ -1124,7 +1124,7 @@ namespace CommandConfiguration {
         showReuseMessage: showReuseMessage!,
         clear: clear!,
         group,
-        close: close,
+        close,
         preserveTerminalName,
       };
     }
@@ -1202,7 +1202,7 @@ namespace CommandConfiguration {
         if (result) {
           return {
             value: result,
-            quoting: quoting,
+            quoting,
           };
         } else {
           return undefined;
@@ -1282,7 +1282,7 @@ namespace CommandConfiguration {
     }
 
     const result: Tasks.ICommandConfiguration = {
-      name: name,
+      name,
       runtime: runtime!,
       presentation: PresentationOptions.from(config, context)!,
     };
@@ -2936,10 +2936,10 @@ class ConfigurationParser {
         false,
         { reevaluateOnRerun: true },
         {
-          name: name,
+          name,
           identifier: name,
           group: Tasks.TaskGroup.Build,
-          isBackground: isBackground,
+          isBackground,
           problemMatchers: matchers,
         },
       );

@@ -1043,8 +1043,8 @@ class MessageIO {
     const method = buff.readShortString();
     const args = buff.readLongString();
     return {
-      rpcId: rpcId,
-      method: method,
+      rpcId,
+      method,
       args: JSON.parse(args),
     };
   }
@@ -1094,9 +1094,9 @@ class MessageIO {
       }
     }
     return {
-      rpcId: rpcId,
-      method: method,
-      args: args,
+      rpcId,
+      method,
+      args,
     };
   }
 

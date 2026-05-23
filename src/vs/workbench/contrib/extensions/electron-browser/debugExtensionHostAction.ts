@@ -133,7 +133,7 @@ export class DebugExtensionHostInDevToolsAction extends Action2 {
       .map((portInfo) => ({
         label: portInfo.devtoolsLabel ?? `${portInfo.host}:${portInfo.port}`,
         detail: `${portInfo.host}:${portInfo.port}`,
-        portInfo: portInfo,
+        portInfo,
       }));
 
     if (items.length === 1) {

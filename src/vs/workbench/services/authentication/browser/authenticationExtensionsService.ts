@@ -496,7 +496,7 @@ export class AuthenticationExtensionsService
       .map((session) => {
         return {
           label: session.account.label,
-          session: session,
+          session,
         };
       });
 

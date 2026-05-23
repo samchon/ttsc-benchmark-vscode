@@ -140,7 +140,7 @@ export class MainThreadLanguageFeatures
             .getLanguageConfiguration(languageId)
             .getWordDefinition();
           wordDefinitionDtos.push({
-            languageId: languageId,
+            languageId,
             regexSource: wordDefinition.source,
             regexFlags: wordDefinition.flags,
           });
@@ -605,7 +605,7 @@ export class MainThreadLanguageFeatures
       this._languageFeaturesService.multiDocumentHighlightProvider.register(
         selector,
         {
-          selector: selector,
+          selector,
           provideMultiDocumentHighlights: (
             model: ITextModel,
             position: EditorPosition,
@@ -1503,9 +1503,9 @@ export class MainThreadLanguageFeatures
               return documentColors.map((documentColor) => {
                 const [red, green, blue, alpha] = documentColor.color;
                 const color = {
-                  red: red,
-                  green: green,
-                  blue: blue,
+                  red,
+                  green,
+                  blue,
                   alpha,
                 };
 
@@ -2381,7 +2381,7 @@ class ExtensionBackedInlineCompletionsProvider
         feature: "inlineSuggestion",
         source: this.providerId,
         languageId: completions.languageId,
-        editDeltaInfo: editDeltaInfo,
+        editDeltaInfo,
         modeId: undefined,
         modelId: undefined,
         presentation: item.isInlineEdit

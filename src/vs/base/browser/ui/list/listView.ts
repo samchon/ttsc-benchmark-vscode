@@ -809,7 +809,7 @@ export class ListView<T> implements IListView<T> {
       }
     }
 
-    this.rangeMap.splice(index, 1, [{ size: size }]);
+    this.rangeMap.splice(index, 1, [{ size }]);
     this.items[index].size = size;
 
     this.render(

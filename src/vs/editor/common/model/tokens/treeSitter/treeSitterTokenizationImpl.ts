@@ -1068,7 +1068,7 @@ export class TreeSitterTokenizationImpl extends Disposable {
         }
 
         endOffsetsAndScopes.splice(position, 0, {
-          endOffset: endOffset,
+          endOffset,
           scopes: [...oldScopes, capture.name],
           bracket: brackets(capture, startOffset),
           encodedLanguageId: capture.encodedLanguageId,
@@ -1076,7 +1076,7 @@ export class TreeSitterTokenizationImpl extends Disposable {
         endOffsetsAndScopes[tokenIndex].bracket = oldBracket;
       } else {
         endOffsetsAndScopes[tokenIndex] = {
-          endOffset: endOffset,
+          endOffset,
           scopes: [baseScope, capture.name],
           bracket: brackets(capture, startOffset),
           encodedLanguageId: capture.encodedLanguageId,
@@ -1277,7 +1277,7 @@ export class TreeSitterTokenizationImpl extends Disposable {
       }
     | undefined {
     const lineOffset = this._textModel.getOffsetAt({
-      lineNumber: lineNumber,
+      lineNumber,
       column: 1,
     });
     const maxLine = this._textModel.getLineCount();

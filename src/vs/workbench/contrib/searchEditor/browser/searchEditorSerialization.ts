@@ -90,7 +90,7 @@ const matchToSearchResultFormat = (
       lineRange = rangeOnThisLine({});
     }
 
-    results.push({ lineNumber: lineNumber, line, ranges: [lineRange] });
+    results.push({ lineNumber, line, ranges: [lineRange] });
   });
 
   return results;

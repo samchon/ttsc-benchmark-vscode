@@ -1011,7 +1011,7 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
       id: command,
       args,
       when: fullWhen,
-      weight: weight,
+      weight,
       keybinding: KeybindingParser.parseKeybinding(keybinding),
       extensionId: extensionId.value,
       isBuiltinExtension: isBuiltin,

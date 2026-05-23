@@ -93,7 +93,7 @@ export class RemoteAuthorityResolverService
     const connectionToken = this._connectionTokens.get(authority);
     return {
       connectTo: request.value!.authority.connectTo,
-      connectionToken: connectionToken,
+      connectionToken,
     };
   }
 

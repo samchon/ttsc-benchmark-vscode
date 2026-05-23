@@ -138,7 +138,7 @@ export const getFileResults = (
             preview: previewRange,
           },
         ],
-        previewText: previewText,
+        previewText,
       };
 
       results.push(match);

@@ -231,12 +231,12 @@ class KeybindingsRegistryImpl implements IKeybindingsRegistry {
     when: ContextKeyExpression | null | undefined,
   ): IDisposable {
     const remove = this._coreKeybindings.push({
-      keybinding: keybinding,
+      keybinding,
       command: commandId,
-      commandArgs: commandArgs,
-      when: when,
-      weight1: weight1,
-      weight2: weight2,
+      commandArgs,
+      when,
+      weight1,
+      weight2,
       extensionId: null,
       isBuiltinExtension: false,
     });

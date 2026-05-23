@@ -247,7 +247,7 @@ export function guessIndentation(
   // console.log('tabSize: ' + tabSize + ', tabSizeScore: ' + tabSizeScore);
 
   return {
-    insertSpaces: insertSpaces,
-    tabSize: tabSize,
+    insertSpaces,
+    tabSize,
   };
 }

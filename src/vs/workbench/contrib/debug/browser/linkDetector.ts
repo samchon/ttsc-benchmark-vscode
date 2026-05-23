@@ -627,7 +627,7 @@ export class LinkDetector implements ILinkDetector {
         }
         const value = match[0];
         result.push({
-          value: value,
+          value,
           kind: kinds[regexIndex],
           captures: match.slice(1),
           index: baseIndex + match.index,

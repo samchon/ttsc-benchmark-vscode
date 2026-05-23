@@ -359,9 +359,9 @@ export class PieceTreeTextBuffer extends Disposable implements ITextBuffer {
         ),
         rangeLength: this.getValueLengthInRange(validatedRange),
         text: validText,
-        eolCount: eolCount,
-        firstLineLength: firstLineLength,
-        lastLineLength: lastLineLength,
+        eolCount,
+        firstLineLength,
+        lastLineLength,
         forceMoveMarkers: Boolean(op.forceMoveMarkers),
         isAutoWhitespaceEdit: op.isAutoWhitespaceEdit || false,
       };
@@ -419,7 +419,7 @@ export class PieceTreeTextBuffer extends Disposable implements ITextBuffer {
               }
             }
             newTrimAutoWhitespaceCandidates.push({
-              lineNumber: lineNumber,
+              lineNumber,
               oldContent: currentLineContent,
             });
           }
@@ -592,11 +592,11 @@ export class PieceTreeTextBuffer extends Disposable implements ITextBuffer {
         entireEditRange,
         EndOfLinePreference.TextDefined,
       ),
-      text: text,
-      eolCount: eolCount,
-      firstLineLength: firstLineLength,
-      lastLineLength: lastLineLength,
-      forceMoveMarkers: forceMoveMarkers,
+      text,
+      eolCount,
+      firstLineLength,
+      lastLineLength,
+      forceMoveMarkers,
       isAutoWhitespaceEdit: false,
     };
   }

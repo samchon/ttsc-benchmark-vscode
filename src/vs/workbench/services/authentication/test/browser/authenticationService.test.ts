@@ -324,7 +324,7 @@ suite("AuthenticationService", () => {
         id: "microsoft",
         label: "Microsoft",
         authorizationServers: [authorizationServer],
-        resourceServer: resourceServer,
+        resourceServer,
       });
       authenticationService.registerAuthenticationProvider(
         "microsoft",
@@ -354,7 +354,7 @@ suite("AuthenticationService", () => {
         id: "microsoft",
         label: "Microsoft",
         authorizationServers: [authorizationServer],
-        resourceServer: resourceServer,
+        resourceServer,
       });
       authenticationService.registerAuthenticationProvider(
         "microsoft",
@@ -412,7 +412,7 @@ suite("AuthenticationService", () => {
         id: "microsoft",
         label: "Microsoft",
         authorizationServers: [authorizationServer],
-        resourceServer: resourceServer,
+        resourceServer,
       });
       authenticationService.registerAuthenticationProvider(
         "microsoft",

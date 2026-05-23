@@ -941,9 +941,9 @@ export class SerializableGrid<T extends ISerializableView> extends Grid<T> {
       SerializableGrid.serializeNode(c, orthogonal(orientation)),
     );
     if (data.some((c) => c.visible !== false)) {
-      return { type: "branch", data: data, size };
+      return { type: "branch", data, size };
     }
-    return { type: "branch", data: data, size, visible: false };
+    return { type: "branch", data, size, visible: false };
   }
 
   /**

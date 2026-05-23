@@ -306,8 +306,8 @@ export class ChatAttachmentResolveService implements IChatAttachmentResolveServi
         name: fileName,
         data: dataBuffer.buffer,
         icon: Codicon.fileMedia,
-        resource: resource,
-        mimeType: mimeType,
+        resource,
+        mimeType,
         omittedState: isPartiallyOmitted
           ? OmittedState.Partial
           : OmittedState.NotOmitted,

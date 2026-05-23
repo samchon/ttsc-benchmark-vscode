@@ -716,8 +716,8 @@ suite("Debug - CallStack", () => {
     // Verify stopped session and stopped thread get focused
     assert.deepStrictEqual(toFocus, {
       stackFrame: undefined,
-      thread: thread,
-      session: session,
+      thread,
+      session,
     });
 
     toFocus = getStackFrameThreadAndSessionToFocus(
@@ -735,8 +735,8 @@ suite("Debug - CallStack", () => {
     toFocus = getStackFrameThreadAndSessionToFocus(model, undefined, thread);
     assert.deepStrictEqual(toFocus, {
       stackFrame: undefined,
-      thread: thread,
-      session: session,
+      thread,
+      session,
     });
 
     toFocus = getStackFrameThreadAndSessionToFocus(
@@ -747,7 +747,7 @@ suite("Debug - CallStack", () => {
     assert.deepStrictEqual(toFocus, {
       stackFrame: undefined,
       thread: runningThread,
-      session: session,
+      session,
     });
 
     const stackFrame = new StackFrame(
@@ -762,9 +762,9 @@ suite("Debug - CallStack", () => {
     );
     toFocus = getStackFrameThreadAndSessionToFocus(model, stackFrame);
     assert.deepStrictEqual(toFocus, {
-      stackFrame: stackFrame,
-      thread: thread,
-      session: session,
+      stackFrame,
+      thread,
+      session,
     });
   });
 });

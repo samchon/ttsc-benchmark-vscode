@@ -99,7 +99,7 @@ export class NotebookViewZones extends Disposable {
     }
     const top = this.listView.getWhitespacePosition(zoneWidget.whitespaceId);
     const height = zoneWidget.zone.heightInPx;
-    return { height: height, top: top };
+    return { height, top };
   }
 
   onCellsChanged(e: INotebookViewCellsUpdateEvent): void {
@@ -174,10 +174,10 @@ export class NotebookViewZones extends Disposable {
     );
     const isInHiddenArea = this._isInHiddenRanges(zone);
     const myZone: IZoneWidget = {
-      whitespaceId: whitespaceId,
-      zone: zone,
+      whitespaceId,
+      zone,
       domNode: createFastDomNode(zone.domNode),
-      isInHiddenArea: isInHiddenArea,
+      isInHiddenArea,
     };
 
     this._zones[whitespaceId] = myZone;
@@ -297,7 +297,7 @@ class ToggleNotebookViewZoneDeveloperAction extends Action2 {
           const viewZoneId = accessor.addZone({
             afterModelPosition: i,
             heightInPx: 200,
-            domNode: domNode,
+            domNode,
           });
           viewZoneIds.push(viewZoneId);
         }

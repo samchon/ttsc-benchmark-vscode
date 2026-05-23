@@ -200,7 +200,7 @@ export class CellDiagnostics
   private createMarkerData(message: string, location: IRange): IMarkerData {
     return {
       severity: 8,
-      message: message,
+      message,
       startLineNumber: location.startLineNumber + 1,
       startColumn: location.startColumn + 1,
       endLineNumber: location.endLineNumber + 1,

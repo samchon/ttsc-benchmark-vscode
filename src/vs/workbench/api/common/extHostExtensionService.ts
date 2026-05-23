@@ -977,7 +977,7 @@ export abstract class AbstractExtHostExtensionService
     this._activateById(desc.identifier, {
       startup: false,
       extensionId: desc.identifier,
-      activationEvent: activationEvent,
+      activationEvent,
     }).then(undefined, (err) => {
       this._logService.error(err);
     });

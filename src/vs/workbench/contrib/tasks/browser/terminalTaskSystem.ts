@@ -690,7 +690,7 @@ export class TerminalTaskSystem extends Disposable implements ITaskSystem {
         } catch (error) {
           // Do nothing.
         }
-        resolve({ success: true, task: task });
+        resolve({ success: true, task });
       });
       terminal.dispose();
     });
@@ -2142,7 +2142,7 @@ export class TerminalTaskSystem extends Disposable implements ITaskSystem {
           ? ThemeIcon.fromId(task.configurationProperties.icon.id)
           : undefined,
         color: task.configurationProperties.icon?.color || undefined,
-        executable: executable,
+        executable,
         args: args.map((a) => (Types.isString(a) ? a : a.value)),
         waitOnExit,
       };
@@ -2555,7 +2555,7 @@ export class TerminalTaskSystem extends Disposable implements ITaskSystem {
     }
     const terminalKey = terminal.instanceId.toString();
     const terminalData = {
-      terminal: terminal,
+      terminal,
       lastTask: taskKey,
       group,
       shellIntegrationNonce: terminal.shellLaunchConfig.shellIntegrationNonce,

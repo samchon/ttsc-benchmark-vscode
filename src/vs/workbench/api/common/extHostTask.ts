@@ -372,7 +372,7 @@ export namespace TaskDTO {
       source: {
         extensionId: extension.identifier.value,
         label: value.source,
-        scope: scope,
+        scope,
       },
       execution: execution!,
       isBackground: value.isBackground,
@@ -712,7 +712,7 @@ export abstract class ExtHostTaskBase
   ): Promise<void> {
     const execution = await this.getTaskExecution(value.id);
     this._onDidTaskProcessStarted.fire({
-      execution: execution,
+      execution,
       processId: value.processId,
     });
   }
@@ -726,7 +726,7 @@ export abstract class ExtHostTaskBase
   ): Promise<void> {
     const execution = await this.getTaskExecution(value.id);
     this._onDidTaskProcessEnded.fire({
-      execution: execution,
+      execution,
       exitCode: value.exitCode,
     });
   }

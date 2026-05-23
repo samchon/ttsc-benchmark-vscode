@@ -1474,7 +1474,7 @@ export class SetupAgent extends Disposable implements IChatAgentImplementation {
         }),
         text: requestModel.message.text,
       },
-      variableData: variableData,
+      variableData,
       timestamp: Date.now(),
       attempt: requestModel.attempt,
       modeInfo: requestModel.modeInfo,

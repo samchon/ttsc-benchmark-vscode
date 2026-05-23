@@ -258,8 +258,8 @@ namespace ProcessExecutionDTO {
       ? value.args.map((value) => (Types.isString(value) ? value : value.value))
       : [];
     const result: IProcessExecutionDTO = {
-      process: process,
-      args: args,
+      process,
+      args,
     };
     if (value.options) {
       result.options = ProcessExecutionOptionsDTO.from(value.options);
@@ -954,7 +954,7 @@ export class MainThreadTask extends Disposable implements MainThreadTaskShape {
         platform = Platform.platform;
     }
     this._taskService.registerTaskSystem(key, {
-      platform: platform,
+      platform,
       uriProvider: (path: string): URI => {
         return URI.from({
           scheme: info.scheme,

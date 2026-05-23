@@ -1066,7 +1066,7 @@ export function excludeToGlobPattern(
       return exclude.baseUri
         ? {
             baseUri: exclude.baseUri,
-            pattern: pattern,
+            pattern,
           }
         : pattern;
     }),

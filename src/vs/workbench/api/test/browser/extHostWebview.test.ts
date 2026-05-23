@@ -237,7 +237,7 @@ suite("ExtHostWebview", () => {
 
     const sourceUri = URI.from({
       scheme: "vscode-remote",
-      authority: authority,
+      authority,
       path: "/Users/cody/x.png",
     });
 
@@ -261,7 +261,7 @@ suite("ExtHostWebview", () => {
 
     const sourceUri = URI.from({
       scheme: "vscode-remote",
-      authority: authority,
+      authority,
       path: "/Users/cody/x.png",
     });
 

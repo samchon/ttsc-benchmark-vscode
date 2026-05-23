@@ -331,7 +331,7 @@ export class NotebookExecutionStateService
     }
 
     const newLastFailedCellInfo: IFailedCellInfo = {
-      cellHandle: cellHandle,
+      cellHandle,
       disposable: prevLastFailedCellInfo
         ? prevLastFailedCellInfo.disposable
         : this._getFailedCellListener(notebook),
@@ -356,12 +356,12 @@ export class NotebookExecutionStateService
       this._lastFailedCells.set(notebookURI, {
         cellHandle: lastFailedCellInfo.cellHandle,
         disposable: lastFailedCellInfo.disposable,
-        visible: visible,
+        visible,
       });
     }
 
     this._onDidChangeLastRunFailState.fire({
-      visible: visible,
+      visible,
       notebook: notebookURI,
     });
   }

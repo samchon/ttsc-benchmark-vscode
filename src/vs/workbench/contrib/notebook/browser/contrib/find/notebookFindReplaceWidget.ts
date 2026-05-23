@@ -1060,7 +1060,7 @@ export abstract class SimpleFindReplaceWidget extends Widget {
     const decorations: INotebookDeltaDecoration[] = [];
     for (const handle of cellHandles) {
       decorations.push({
-        handle: handle,
+        handle,
         options: {
           className: "nb-multiCellHighlight",
           outputClassName: "nb-multiCellHighlight",
@@ -1091,7 +1091,7 @@ export abstract class SimpleFindReplaceWidget extends Widget {
           ownerId: cell.handle,
           decorations: [
             {
-              range: range,
+              range,
               options: {
                 description: "text search range for notebook search scope",
                 isWholeLine: true,

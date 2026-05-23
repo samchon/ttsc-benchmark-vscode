@@ -394,7 +394,7 @@ export class GotoDefinitionAtPositionEditorContribution implements IEditorContri
     hoverMessage: MarkdownString | undefined,
   ): void {
     const newDecorations: IModelDeltaDecoration = {
-      range: range,
+      range,
       options: {
         description: "goto-definition-link",
         inlineClassName: "goto-definition-link",

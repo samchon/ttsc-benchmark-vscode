@@ -270,7 +270,7 @@ class IndentRulesMode extends Disposable {
     this._register(languageService.registerLanguage({ id: this.languageId }));
     this._register(
       languageConfigurationService.register(this.languageId, {
-        indentationRules: indentationRules,
+        indentationRules,
       }),
     );
   }

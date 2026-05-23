@@ -357,7 +357,7 @@ export class AddDynamicVariableAction extends Action2 {
       .getContrib<ChatDynamicVariableModel>(ChatDynamicVariableModel.ID)
       ?.addReference({
         id: context.id,
-        range: range,
+        range,
         isFile: true,
         data: variableData,
       });

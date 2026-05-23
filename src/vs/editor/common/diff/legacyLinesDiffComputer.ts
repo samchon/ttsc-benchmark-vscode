@@ -710,7 +710,7 @@ export class DiffComputer {
         );
       }
       return {
-        quitEarly: quitEarly,
+        quitEarly,
         changes: lineChanges,
       };
     }
@@ -834,7 +834,7 @@ export class DiffComputer {
     }
 
     return {
-      quitEarly: quitEarly,
+      quitEarly,
       changes: result,
     };
   }

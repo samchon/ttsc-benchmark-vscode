@@ -80,9 +80,9 @@ export function getEditOperation(
       forceMoveMarkers: boolean = false,
     ) => {
       operations.push({
-        range: range,
-        text: text,
-        forceMoveMarkers: forceMoveMarkers,
+        range,
+        text,
+        forceMoveMarkers,
       });
     },
 
@@ -92,9 +92,9 @@ export function getEditOperation(
       forceMoveMarkers: boolean = false,
     ) => {
       operations.push({
-        range: range,
-        text: text,
-        forceMoveMarkers: forceMoveMarkers,
+        range,
+        text,
+        forceMoveMarkers,
       });
     },
 

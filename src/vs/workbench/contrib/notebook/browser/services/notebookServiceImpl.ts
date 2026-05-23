@@ -1239,8 +1239,8 @@ export class NotebookService extends Disposable implements INotebookService {
         NotebookSetting.outputBackupSizeLimit,
       ) * 1024;
     const data: NotebookData = model.createSnapshot({
-      context: context,
-      outputSizeLimit: outputSizeLimit,
+      context,
+      outputSizeLimit,
       transientOptions: serializer.options,
     });
     const indentAmount = model.metadata.indentAmount;

@@ -2612,13 +2612,13 @@ export class AsyncIterableProducer<T> implements AsyncIterable<T> {
         emitOne: (value) =>
           this._producerConsumer.produce({
             ok: true,
-            value: { done: false, value: value },
+            value: { done: false, value },
           }),
         emitMany: (values) => {
           for (const value of values) {
             this._producerConsumer.produce({
               ok: true,
-              value: { done: false, value: value },
+              value: { done: false, value },
             });
           }
         },
@@ -2773,7 +2773,7 @@ export class AsyncIterableProducer<T> implements AsyncIterable<T> {
 
   private _finishError(error: Error): void {
     if (!this._producerConsumer.hasFinalValue) {
-      this._producerConsumer.produceFinal({ ok: false, error: error });
+      this._producerConsumer.produceFinal({ ok: false, error });
     }
     // Warning: this can cause to dropped errors.
   }

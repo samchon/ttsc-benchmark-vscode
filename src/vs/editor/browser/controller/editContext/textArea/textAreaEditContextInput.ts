@@ -111,7 +111,7 @@ class CompositionContext {
   public handleCompositionUpdate(text: string | null | undefined): ITypeData {
     text = text || "";
     const typeInput: ITypeData = {
-      text: text,
+      text,
       replacePrevCharCnt: this._lastTypeTextLength,
       replaceNextCharCnt: 0,
       positionDelta: 0,

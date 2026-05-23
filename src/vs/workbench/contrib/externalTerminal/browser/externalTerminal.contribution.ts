@@ -53,7 +53,7 @@ function registerOpenTerminalCommand(
   explorerKind: "integrated" | "external",
 ) {
   CommandsRegistry.registerCommand({
-    id: id,
+    id,
     handler: async (accessor, resource: URI) => {
       const configurationService = accessor.get(IConfigurationService);
       const fileService = accessor.get(IFileService);

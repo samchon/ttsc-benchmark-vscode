@@ -1646,7 +1646,7 @@ class SCMHistoryTreeDragAndDrop implements ITreeDragAndDrop<TreeElement> {
           historyItemParentId,
           historyItem.displayId,
         ),
-        historyItem: historyItem,
+        historyItem,
       });
     }
 

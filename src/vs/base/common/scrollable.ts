@@ -163,7 +163,7 @@ export class ScrollState implements IScrollDimensions, IScrollPosition {
     const scrollTopChanged = this.scrollTop !== previous.scrollTop;
 
     return {
-      inSmoothScrolling: inSmoothScrolling,
+      inSmoothScrolling,
       oldWidth: previous.width,
       oldScrollWidth: previous.scrollWidth,
       oldScrollLeft: previous.scrollLeft,
@@ -180,13 +180,13 @@ export class ScrollState implements IScrollDimensions, IScrollPosition {
       scrollHeight: this.scrollHeight,
       scrollTop: this.scrollTop,
 
-      widthChanged: widthChanged,
-      scrollWidthChanged: scrollWidthChanged,
-      scrollLeftChanged: scrollLeftChanged,
+      widthChanged,
+      scrollWidthChanged,
+      scrollLeftChanged,
 
-      heightChanged: heightChanged,
-      scrollHeightChanged: scrollHeightChanged,
-      scrollTopChanged: scrollTopChanged,
+      heightChanged,
+      scrollHeightChanged,
+      scrollTopChanged,
     };
   }
 }

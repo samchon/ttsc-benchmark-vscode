@@ -217,7 +217,7 @@ export class TokenizationFontDecorationProvider
         );
         const id = anno.decorationId;
         decorations.push({
-          id: id,
+          id,
           options: {
             description: "FontOptionDecoration",
             inlineClassName: className,

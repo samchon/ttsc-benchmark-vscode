@@ -263,7 +263,7 @@ export class ViewModel extends Disposable implements IViewModel {
     settingWatch: boolean,
   ) {
     this.selectedExpression = expression
-      ? { expression, settingWatch: settingWatch }
+      ? { expression, settingWatch }
       : undefined;
     this.expressionSelectedContextKey.set(!!expression);
     this._onDidSelectExpression.fire(this.selectedExpression);

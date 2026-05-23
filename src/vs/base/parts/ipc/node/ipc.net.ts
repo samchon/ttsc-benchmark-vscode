@@ -226,7 +226,7 @@ export class NodeSocket implements ISocket {
     const adapter = (hadError: boolean) => {
       listener({
         type: SocketCloseEventType.NodeSocketCloseEvent,
-        hadError: hadError,
+        hadError,
         error: undefined,
       });
     };

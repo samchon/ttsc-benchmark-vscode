@@ -403,7 +403,7 @@ export class NotebookViewModel
       const selectionHandles = this.selectionHandles;
 
       this._onDidChangeViewCells.fire({
-        synchronous: synchronous,
+        synchronous,
         splices: diffs,
       });
 
@@ -1226,7 +1226,7 @@ export class NotebookViewModel
         const cell = this._viewCells.find((cell) => cell.handle === ownerId);
         if (cell) {
           mapping.set(ownerId, {
-            cell: cell,
+            cell,
             oldDecorations: [],
             newDecorations: [],
           });
@@ -1247,7 +1247,7 @@ export class NotebookViewModel
 
         if (cell) {
           mapping.set(ownerId, {
-            cell: cell,
+            cell,
             oldDecorations: [],
             newDecorations: [],
           });
@@ -1267,7 +1267,7 @@ export class NotebookViewModel
         value.newDecorations,
       );
       ret.push({
-        ownerId: ownerId,
+        ownerId,
         decorations: cellRet,
       });
     });

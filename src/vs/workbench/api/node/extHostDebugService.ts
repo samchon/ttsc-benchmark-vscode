@@ -160,7 +160,7 @@ export class ExtHostDebugService extends ExtHostDebugServiceBase {
       if (!terminal) {
         const options: vscode.TerminalOptions = {
           shellPath: shell,
-          shellArgs: shellArgs,
+          shellArgs,
           cwd: args.cwd,
           name: terminalName,
           iconPath: new ThemeIcon("debug"),

@@ -153,7 +153,7 @@ suite("OutlineModel", function () {
       kind: SymbolKind.Boolean,
       tags: [],
       selectionRange: range,
-      range: range,
+      range,
     };
   }
 

@@ -601,7 +601,7 @@ registerAction2(
           MenuId.ChatInlineSymbolAnchorContext,
           MenuId.ChatInputSymbolAttachmentContext,
         ].map((id) => ({
-          id: id,
+          id,
           group: "navigation",
           order: 1,
         })),

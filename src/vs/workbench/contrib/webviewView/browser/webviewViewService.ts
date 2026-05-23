@@ -127,7 +127,7 @@ export class WebviewViewService
     }
 
     this._resolvers.set(viewType, resolver);
-    this._onNewResolverRegistered.fire({ viewType: viewType });
+    this._onNewResolverRegistered.fire({ viewType });
 
     const pending = this._awaitingRevival.get(viewType);
     if (pending) {

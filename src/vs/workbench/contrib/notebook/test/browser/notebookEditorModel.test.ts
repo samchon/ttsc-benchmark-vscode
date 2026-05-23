@@ -525,8 +525,8 @@ function mockNotebookService(
           NotebookSetting.outputBackupSizeLimit,
         ) ?? 1024;
       const data: NotebookData = notebook.createSnapshot({
-        context: context,
-        outputSizeLimit: outputSizeLimit,
+        context,
+        outputSizeLimit,
         transientOptions: serializer.options,
       });
       const bytes = await serializer.notebookToData(data);

@@ -2314,12 +2314,12 @@ export abstract class AbstractTaskService
         continue;
       }
       if (matcher.name === matcher.label) {
-        entries.push({ label: matcher.name, matcher: matcher });
+        entries.push({ label: matcher.name, matcher });
       } else {
         entries.push({
           label: matcher.label,
           description: `$${matcher.name}`,
-          matcher: matcher,
+          matcher,
         });
       }
     }

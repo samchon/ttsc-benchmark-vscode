@@ -74,14 +74,14 @@ export class BareFontInfo {
     }
 
     return new BareFontInfo({
-      pixelRatio: pixelRatio,
-      fontFamily: fontFamily,
-      fontWeight: fontWeight,
-      fontSize: fontSize,
-      fontFeatureSettings: fontFeatureSettings,
+      pixelRatio,
+      fontFamily,
+      fontWeight,
+      fontSize,
+      fontFeatureSettings,
       fontVariationSettings,
-      lineHeight: lineHeight,
-      letterSpacing: letterSpacing,
+      lineHeight,
+      letterSpacing,
     });
   }
 

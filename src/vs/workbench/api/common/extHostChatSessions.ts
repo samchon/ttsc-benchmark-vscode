@@ -584,7 +584,7 @@ export class ExtHostChatSessions
     };
 
     this._chatSessionItemControllers.set(controllerHandle, {
-      chatSessionType: chatSessionType,
+      chatSessionType,
       controller,
       extension,
       disposable: disposables,

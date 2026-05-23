@@ -118,7 +118,7 @@ export class LineCommentCommand implements ICommand {
     ) {
       lines[i] = {
         ignore: false,
-        commentStr: commentStr,
+        commentStr,
         commentStrOffset: 0,
         commentStrLength: commentStr.length,
       };
@@ -230,8 +230,8 @@ export class LineCommentCommand implements ICommand {
 
     return {
       supported: true,
-      shouldRemoveComments: shouldRemoveComments,
-      lines: lines,
+      shouldRemoveComments,
+      lines,
     };
   }
 

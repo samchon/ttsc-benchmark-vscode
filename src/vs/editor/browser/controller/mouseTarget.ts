@@ -473,8 +473,8 @@ export class HitTestContext {
       return {
         viewZoneId: viewZoneWhitespace.id,
         afterLineNumber: viewZoneWhitespace.afterLineNumber,
-        positionBefore: positionBefore,
-        positionAfter: positionAfter,
+        positionBefore,
+        positionAfter,
         position: position!,
       };
     }
@@ -813,7 +813,7 @@ function createEmptyContentDataInLines(
 ): IMouseTargetContentEmptyData {
   return {
     isAfterLines: false,
-    horizontalDistanceToText: horizontalDistanceToText,
+    horizontalDistanceToText,
   };
 }
 
@@ -1414,7 +1414,7 @@ export class MouseTargetFactory {
     }
 
     const points: OffsetColumn[] = [];
-    points.push({ offset: visibleRange.left, column: column });
+    points.push({ offset: visibleRange.left, column });
     if (column > 1) {
       const visibleRange = ctx.visibleRangeForPosition(lineNumber, column - 1);
       if (visibleRange) {

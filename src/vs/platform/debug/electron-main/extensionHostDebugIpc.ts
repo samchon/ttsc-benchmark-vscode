@@ -325,6 +325,6 @@ export class ElectronExtensionHostDebugBroadcastChannel<
 
     win.on("close", () => server.close());
 
-    return { rendererDebugAddr: wsUrl, success: true, port: port };
+    return { rendererDebugAddr: wsUrl, success: true, port };
   }
 }

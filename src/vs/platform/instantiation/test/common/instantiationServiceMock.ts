@@ -122,7 +122,7 @@ export class TestInstantiationService
     const service = typeof arg2 !== "string" ? arg2 : undefined;
     const serviceMock: IServiceMock<any> = {
       id: serviceIdentifier,
-      service: service,
+      service,
     };
     const property = typeof arg2 === "string" ? arg2 : arg3;
     const value = typeof arg2 === "string" ? arg3 : arg4;

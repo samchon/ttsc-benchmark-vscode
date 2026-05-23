@@ -341,7 +341,7 @@ export class MarkerNavigationWidget extends PeekViewWidget {
 
     this.style({
       arrowColor: frameColor,
-      frameColor: frameColor,
+      frameColor,
       headerBackgroundColor: headerBg,
       primaryHeadingColor: theme.getColor(peekViewTitleForeground),
       secondaryHeadingColor: theme.getColor(peekViewTitleInfoForeground),

@@ -104,10 +104,10 @@ export class ColumnSelection {
 
     return {
       viewStates: result,
-      reversed: reversed,
-      fromLineNumber: fromLineNumber,
+      reversed,
+      fromLineNumber,
       fromVisualColumn: fromVisibleColumn,
-      toLineNumber: toLineNumber,
+      toLineNumber,
       toVisualColumn: toVisibleColumn,
     };
   }

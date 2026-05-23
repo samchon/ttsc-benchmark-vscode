@@ -566,7 +566,7 @@ export function createScanner(
   }
 
   return {
-    setPosition: setPosition,
+    setPosition,
     getPosition: () => pos,
     scan: ignoreTrivia ? scanNextNonTrivia : scanNext,
     getToken: () => token,

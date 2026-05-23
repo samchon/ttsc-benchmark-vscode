@@ -551,10 +551,10 @@ suite("ExtHostDocumentData updates line mapping", () => {
     return {
       changes: [
         {
-          range: range,
+          range,
           rangeOffset: undefined!,
           rangeLength: undefined!,
-          text: text,
+          text,
         },
       ],
       eol: eol!,

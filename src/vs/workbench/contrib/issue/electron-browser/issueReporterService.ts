@@ -132,7 +132,7 @@ export class IssueReporter extends BaseIssueReporterService {
 
     this.addEventListener("issue-type", "change", (event: Event) => {
       const issueType = parseInt((<HTMLInputElement>event.target).value);
-      this.issueReporterModel.update({ issueType: issueType });
+      this.issueReporterModel.update({ issueType });
       if (
         issueType === IssueType.PerformanceIssue &&
         !this.receivedPerformanceInfo

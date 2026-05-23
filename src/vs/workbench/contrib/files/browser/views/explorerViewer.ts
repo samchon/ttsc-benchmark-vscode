@@ -3031,7 +3031,7 @@ function getIconLabelNameFromHTMLElement(
       const index = Number(element.getAttribute("data-icon-label-index"));
 
       if (isNumber(count) && isNumber(index)) {
-        return { element: element, count, index };
+        return { element, count, index };
       }
     }
 

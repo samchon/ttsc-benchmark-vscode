@@ -312,7 +312,7 @@ export class VariablesView extends ViewPane implements IDebugViewWithVariables {
 
           this.tree.rerender(variable);
         } else if (!e && horizontalScrolling !== undefined) {
-          this.tree.updateOptions({ horizontalScrolling: horizontalScrolling });
+          this.tree.updateOptions({ horizontalScrolling });
           horizontalScrolling = undefined;
         }
       }),

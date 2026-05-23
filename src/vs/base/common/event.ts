@@ -1972,7 +1972,7 @@ export class EventMultiplexer<T> implements IDisposable {
   }
 
   add(event: Event<T>): IDisposable {
-    const e = { event: event, listener: null };
+    const e = { event, listener: null };
     this.events.push(e);
 
     if (this.hasListeners) {

@@ -1575,8 +1575,8 @@ export namespace CursorMove {
     }
 
     return {
-      direction: direction,
-      unit: unit,
+      direction,
+      unit,
       select: !!args.select,
       value: args.value || 1,
       noHistory: !!args.noHistory,

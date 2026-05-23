@@ -72,7 +72,7 @@ suite("notebookCellDiagnostics", () => {
         notebook,
         affectsNotebook: () => true,
         affectsCell: () => true,
-        changed: changed,
+        changed,
       });
     }
   }

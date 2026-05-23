@@ -2046,7 +2046,7 @@ class InlineCompletionAdapter {
                 : undefined,
             command,
             gutterMenuLinkAction: action,
-            idx: idx,
+            idx,
             completeBracketPairs: this._isAdditionsProposedApiEnabled
               ? item.completeBracketPairs
               : false,

@@ -49,8 +49,8 @@ export class ExtensionMessageCollector {
 
   private _msg(type: Severity, message: string): void {
     this._messageHandler({
-      type: type,
-      message: message,
+      type,
+      message,
       extensionId: this._extension.identifier,
       extensionPointId: this._extensionPointId,
     });

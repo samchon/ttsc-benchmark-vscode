@@ -54,7 +54,7 @@ const createCodeActionsAutoSave = (description: string): IJSONSchema => {
       ),
     ],
     default: "explicit",
-    description: description,
+    description,
   };
 };
 
@@ -80,7 +80,7 @@ const createNotebookCodeActionsAutoSave = (
       ),
     ],
     default: "explicit",
-    description: description,
+    description,
   };
 };
 

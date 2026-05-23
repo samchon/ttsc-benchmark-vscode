@@ -319,7 +319,7 @@ class DebugSessionContextPick implements IChatContextPickerItem {
                 fullName: expression,
                 icon: Codicon.debug,
                 value: resultValue,
-                expression: expression,
+                expression,
                 type: resultType,
                 modelDescription: formatModelDescription(
                   expression,

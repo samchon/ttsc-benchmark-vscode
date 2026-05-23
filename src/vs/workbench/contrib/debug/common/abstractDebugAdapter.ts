@@ -93,7 +93,7 @@ export abstract class AbstractDebugAdapter implements IDebugAdapter {
     timeout?: number,
   ): number {
     const request: any = {
-      command: command,
+      command,
     };
     if (args && Object.keys(args).length > 0) {
       request.arguments = args;

@@ -635,7 +635,7 @@ async function restoreSnapshotWithConfirmationByRequestId(
                 "Do you want to undo {0} edits?",
                 editsToUndo,
               ),
-        message: message,
+        message,
         primaryButton: localize(
           "chat.remove.confirmation.primaryButton",
           "Yes",

@@ -490,7 +490,7 @@ function _createTestNotebookEditor(
       override setFocus(focus: ICellRange) {
         viewModel.updateSelectionsState({
           kind: SelectionStateType.Index,
-          focus: focus,
+          focus,
           selections: viewModel.getSelections(),
         });
       }
@@ -498,7 +498,7 @@ function _createTestNotebookEditor(
         viewModel.updateSelectionsState({
           kind: SelectionStateType.Index,
           focus: viewModel.getFocus(),
-          selections: selections,
+          selections,
         });
       }
       override getViewIndexByModelIndex(index: number) {

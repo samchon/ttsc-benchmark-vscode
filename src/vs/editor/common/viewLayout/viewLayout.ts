@@ -458,7 +458,7 @@ export class ViewLayout extends Disposable implements IViewLayout {
         firstLineNumberInViewport,
       );
     return {
-      scrollTop: scrollTop,
+      scrollTop,
       scrollTopWithoutViewZones: scrollTop - whitespaceAboveFirstLine,
       scrollLeft: currentScrollPosition.scrollLeft,
     };

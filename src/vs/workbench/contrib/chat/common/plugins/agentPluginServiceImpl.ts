@@ -393,7 +393,7 @@ export abstract class AbstractAgentPluginDiscovery
           );
         }
 
-        return { kind: "dirs", dirs: dirs } as const;
+        return { kind: "dirs", dirs } as const;
       });
 
       const changeTrigger = observableSignal("fileChange");

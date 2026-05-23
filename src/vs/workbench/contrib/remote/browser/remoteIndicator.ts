@@ -1126,8 +1126,8 @@ export class RemoteStatusIndicator
             notInstalledItems.push({
               type: "item",
               id: metadata.id,
-              label: label,
-              buttons: buttons,
+              label,
+              buttons,
             });
           }
         }

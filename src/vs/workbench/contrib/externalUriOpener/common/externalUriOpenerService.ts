@@ -272,7 +272,7 @@ export class ExternalUriOpenerService
       (opener): PickItem => {
         return {
           label: opener.label,
-          opener: opener,
+          opener,
         };
       },
     );

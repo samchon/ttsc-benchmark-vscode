@@ -195,7 +195,7 @@ export class TriggerInlineSuggestionAction extends EditorAction {
     await asyncTransaction(async (tx) => {
       /** @description triggerExplicitly from command */
       await controller?.model.get()?.trigger(tx, {
-        provider: provider,
+        provider,
         explicit: validatedArgs?.explicit ?? true,
         changeHint: validatedArgs?.changeHintData
           ? { data: validatedArgs.changeHintData }

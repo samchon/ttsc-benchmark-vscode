@@ -1053,8 +1053,8 @@ export function getTopLeftOffset(element: HTMLElement): IDomPosition {
   }
 
   return {
-    left: left,
-    top: top,
+    left,
+    top,
   };
 }
 

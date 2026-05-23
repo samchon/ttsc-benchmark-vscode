@@ -83,10 +83,10 @@ export class WordOperations {
   ): IFindWordResult {
     // console.log('WORD ==> ' + start + ' => ' + end + ':::: <<<' + lineContent.substring(start, end) + '>>>');
     return {
-      start: start,
-      end: end,
-      wordType: wordType,
-      nextCharClass: nextCharClass,
+      start,
+      end,
+      wordType,
+      nextCharClass,
     };
   }
 
@@ -99,7 +99,7 @@ export class WordOperations {
       start: intlWord.index,
       end: intlWord.index + intlWord.segment.length,
       wordType: WordType.Regular,
-      nextCharClass: nextCharClass,
+      nextCharClass,
     };
   }
 

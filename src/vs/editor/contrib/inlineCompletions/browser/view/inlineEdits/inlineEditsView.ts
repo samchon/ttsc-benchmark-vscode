@@ -629,7 +629,7 @@ export class InlineEditsView extends Disposable {
       newTextLineCount: inlineEdit.modifiedLineRange.length,
       editorType: model.editorType,
       longDistanceHint,
-      nextCursorPosition: nextCursorPosition,
+      nextCursorPosition,
       target: inlineEdit.inlineCompletion.originalTextRef,
     };
   });

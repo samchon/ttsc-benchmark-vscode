@@ -116,8 +116,8 @@ export class IframeUtils {
     }
 
     return {
-      top: top,
-      left: left,
+      top,
+      left,
     };
   }
 }

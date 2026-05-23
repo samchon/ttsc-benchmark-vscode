@@ -240,9 +240,9 @@ export class GlyphMarginWidgets extends ViewPart {
     const domNode = createFastDomNode(widget.getDomNode());
 
     this._widgets[widget.getId()] = {
-      widget: widget,
+      widget,
       preference: widget.getPosition(),
-      domNode: domNode,
+      domNode,
       renderInfo: null,
     };
 

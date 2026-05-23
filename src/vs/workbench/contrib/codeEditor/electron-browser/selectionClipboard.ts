@@ -180,7 +180,7 @@ class PasteSelectionClipboardAction extends EditorAction {
     const text = await clipboardService.readText("selection");
 
     editor.trigger("keyboard", Handler.Paste, {
-      text: text,
+      text,
       pasteOnNewLine: false,
       multicursorText: null,
     });

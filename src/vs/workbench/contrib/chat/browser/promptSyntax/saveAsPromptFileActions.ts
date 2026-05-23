@@ -93,10 +93,10 @@ function createOptions(
   languageId: string,
 ): Readonly<IAction2Options> {
   return {
-    id: id,
-    title: title,
+    id,
+    title,
     metadata: {
-      description: description,
+      description,
     },
     category: CHAT_CATEGORY,
     f1: false,

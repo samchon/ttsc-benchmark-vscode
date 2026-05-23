@@ -96,7 +96,7 @@ export class RemoteAuthorityResolverService
       resolverResult.authority.connectionToken;
     return {
       connectTo: resolverResult.authority.connectTo,
-      connectionToken: connectionToken,
+      connectionToken,
     };
   }
 

@@ -226,7 +226,7 @@ export class InlineEditsInsertionView
             return undefined;
           }
           return {
-            ghostText: ghostText,
+            ghostText,
             handleInlineCompletionShown: (data) => {
               // This is a no-op for the insertion view, as it is handled by the InlineEditsView.
             },

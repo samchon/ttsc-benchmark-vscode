@@ -3155,7 +3155,7 @@ export namespace LanguageModelChatMessage {
 
           return {
             type: "image_url",
-            value: value,
+            value,
           };
         } else {
           return {
@@ -3305,7 +3305,7 @@ export namespace LanguageModelChatMessage2 {
 
           return {
             type: "image_url",
-            value: value,
+            value,
           };
         } else {
           return {
@@ -3909,7 +3909,7 @@ export namespace ChatToolInvocationPart {
           value: isText
             ? VSBuffer.wrap(o.data).toString()
             : encodeBase64(VSBuffer.wrap(o.data)),
-          isText: isText,
+          isText,
         };
       }),
       isError: isError ?? false,
@@ -5049,7 +5049,7 @@ export namespace InlineCompletionEndOfLifeReason {
         : undefined;
       return {
         kind: types.InlineCompletionEndOfLifeReasonKind.Ignored,
-        supersededBy: supersededBy,
+        supersededBy,
         userTypingDisagreed: reason.userTypingDisagreed,
       };
     } else if (

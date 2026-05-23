@@ -1202,7 +1202,7 @@ export class ChatEditingModifiedNotebookEntry extends AbstractChatEditingModifie
     return {
       type: "insert" as const,
       originalCellIndex: undefined,
-      modifiedCellIndex: modifiedCellIndex,
+      modifiedCellIndex,
       keep,
       undo,
       modifiedModel: new ObservablePromise(this.resolveCellModel(cell.uri)),

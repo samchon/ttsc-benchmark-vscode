@@ -86,7 +86,7 @@ suite("ChatEditingSessionStorage", () => {
               command: "cmd",
               requestId: generateUuid(),
               result: undefined,
-              sessionResource: sessionResource,
+              sessionResource,
               modelId: undefined,
               modeId: undefined,
               applyCodeBlockSuggestionId: undefined,

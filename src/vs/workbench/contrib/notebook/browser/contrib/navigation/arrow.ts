@@ -303,7 +303,7 @@ registerAction2(
           : "editor";
       const focusEditorLine = newCell.textBuffer.getLineCount();
       await editor.focusNotebookCell(newCell, newFocusMode, {
-        focusEditorLine: focusEditorLine,
+        focusEditorLine,
       });
 
       const foundEditor: ICodeEditor | undefined = findTargetCellEditor(

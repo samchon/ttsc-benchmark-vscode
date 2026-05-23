@@ -179,7 +179,7 @@ function parseFormattedText(
         current = stack.pop()!;
       } else {
         const newCurrent: IFormatParseTree = {
-          type: type,
+          type,
           children: [],
         };
 

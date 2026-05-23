@@ -150,7 +150,7 @@ suite("TextEditorService", () => {
     input = disposables.add(
       service.createTextEditor({
         resource: toResource.call(this, "/index.html"),
-        languageId: languageId,
+        languageId,
       }),
     );
     assert(input instanceof FileEditorInput);
@@ -213,7 +213,7 @@ suite("TextEditorService", () => {
     input = disposables.add(
       service.createTextEditor({
         resource: undefined,
-        languageId: languageId,
+        languageId,
         options: { selection: { startLineNumber: 1, startColumn: 1 } },
       }),
     );

@@ -439,7 +439,7 @@ export function registerChatTitleActions() {
             [
               new ResourceNotebookCellEdit(notebookEditor.textModel.uri, {
                 editType: CellEditType.Replace,
-                index: index,
+                index,
                 count: 0,
                 cells: splitContents.map((content) => {
                   const kind =

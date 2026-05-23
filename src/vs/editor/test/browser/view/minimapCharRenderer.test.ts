@@ -112,8 +112,8 @@ suite("MinimapCharRenderer", () => {
   function createFakeImageData(width: number, height: number): ImageData {
     return {
       colorSpace: "srgb",
-      width: width,
-      height: height,
+      width,
+      height,
       data: new Uint8ClampedArray(width * height * Constants.RGBA_CHANNELS_CNT),
     };
   }

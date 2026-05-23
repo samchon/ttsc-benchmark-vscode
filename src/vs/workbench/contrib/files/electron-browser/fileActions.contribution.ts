@@ -142,7 +142,7 @@ appendToCommandPalette(
   {
     id: REVEAL_IN_OS_COMMAND_ID,
     title: REVEAL_IN_OS_LABEL,
-    category: category,
+    category,
   },
   REVEAL_IN_OS_WHEN_CONTEXT,
 );

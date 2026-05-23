@@ -179,7 +179,7 @@ registerAction2(
             !isAutoDetect && areKeyboardLayoutsEqual(currentLayout, layout);
           const layoutInfo = parseKeyboardLayoutDescription(layout);
           return {
-            layout: layout,
+            layout,
             label: [
               layoutInfo.label,
               layout && layout.isUserKeyboardLayout

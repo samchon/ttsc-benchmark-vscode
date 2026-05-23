@@ -306,7 +306,7 @@ class FileSearchEngine {
     ) {
       const basename = path.basename(this.filePattern);
       this.matchFile(onResult, {
-        base: base,
+        base,
         relativePath: this.filePattern,
         basename,
       });

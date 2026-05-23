@@ -649,7 +649,7 @@ export class NotebookMultiCursorController
 
     this.undoRedoService.pushElement({
       type: UndoRedoElementType.Workspace,
-      resources: resources,
+      resources,
       label: "Multi Cursor Edit",
       code: "multiCursorEdit",
       confirmBeforeUndo: false,
@@ -1062,11 +1062,11 @@ export class NotebookMultiCursorController
       };
 
       trackedMatch = {
-        cellViewModel: cellViewModel,
-        initialSelection: initialSelection,
+        cellViewModel,
+        initialSelection,
         matchSelections: selections,
-        editorConfig: editorConfig,
-        cursorConfig: cursorConfig,
+        editorConfig,
+        cursorConfig,
         decorationIds: [],
         undoRedoHistory: this.undoRedoService.getElements(cellViewModel.uri),
       };
@@ -1295,7 +1295,7 @@ export class NotebookMultiCursorController
     }
 
     return model.getWordAtPosition({
-      lineNumber: lineNumber,
+      lineNumber,
       column: startColumn,
     });
   }

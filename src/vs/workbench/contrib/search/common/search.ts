@@ -244,7 +244,7 @@ export function extractRangeFromFilter(
     // Line Number
     if (isNumber(startLineNumber)) {
       range = {
-        startLineNumber: startLineNumber,
+        startLineNumber,
         startColumn: 1,
         endLineNumber: startLineNumber,
         endColumn: 1,
@@ -255,7 +255,7 @@ export function extractRangeFromFilter(
       if (isNumber(startColumn)) {
         range = {
           startLineNumber: range.startLineNumber,
-          startColumn: startColumn,
+          startColumn,
           endLineNumber: range.endLineNumber,
           endColumn: startColumn,
         };

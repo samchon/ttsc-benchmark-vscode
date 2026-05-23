@@ -53,7 +53,7 @@ suite("CellOperations", () => {
         });
         const cell = viewModel.cellAt(1);
         assert.ok(cell);
-        await moveCellRange({ notebookEditor: editor, cell: cell }, "down");
+        await moveCellRange({ notebookEditor: editor, cell }, "down");
         assert.strictEqual(viewModel.cellAt(2)?.getText(), "var b = 1;");
         assert.strictEqual(cell, viewModel.cellAt(2));
       },

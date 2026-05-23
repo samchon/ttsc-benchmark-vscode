@@ -177,7 +177,7 @@ export class TerminalMultiLineLinkDetector implements ITerminalLinkDetector {
             startColumn: col ? parseInt(col) : 1,
           },
           disableTrimColon: true,
-          bufferRange: bufferRange,
+          bufferRange,
           type,
         };
         this._logService.trace(
@@ -272,7 +272,7 @@ export class TerminalMultiLineLinkDetector implements ITerminalLinkDetector {
               startColumn: 1,
               endLineNumber: parseInt(toFileLine) + parseInt(toFileCount),
             },
-            bufferRange: bufferRange,
+            bufferRange,
             type,
           };
           this._logService.trace(

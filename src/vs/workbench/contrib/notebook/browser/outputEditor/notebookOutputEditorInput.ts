@@ -127,8 +127,8 @@ export class NotebookOutputEditorInput extends EditorInput {
 
     return {
       notebookUri: this._notebookUri,
-      cellIndex: cellIndex,
-      outputIndex: outputIndex,
+      cellIndex,
+      outputIndex,
     };
   }
 

@@ -271,12 +271,12 @@ export class WindowsKeyboardMapper implements IKeyboardMapper {
           KeyCode.Unknown;
 
         const mapping: IScanCodeMapping = {
-          scanCode: scanCode,
-          keyCode: keyCode,
-          value: value,
-          withShift: withShift,
-          withAltGr: withAltGr,
-          withShiftAltGr: withShiftAltGr,
+          scanCode,
+          keyCode,
+          value,
+          withShift,
+          withAltGr,
+          withShiftAltGr,
         };
         this._codeInfo[scanCode] = mapping;
         this._scanCodeToKeyCode[scanCode] = keyCode;

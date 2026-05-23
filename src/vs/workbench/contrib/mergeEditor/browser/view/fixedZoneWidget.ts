@@ -35,7 +35,7 @@ export abstract class FixedZoneWidget extends Disposable {
 
     this.viewZoneId = viewZoneAccessor.addZone({
       domNode: document.createElement("div"),
-      afterLineNumber: afterLineNumber,
+      afterLineNumber,
       heightInPx: height,
       ordinal: 50000 + 1,
       onComputedHeight: (height) => {

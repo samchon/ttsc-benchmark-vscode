@@ -372,7 +372,7 @@ class StickyModelFromCandidateOutlineProvider extends StickyModelCandidateProvid
     );
 
     return {
-      stickyOutlineElement: stickyOutlineElement,
+      stickyOutlineElement,
       providerID: preferredProvider,
     };
   }

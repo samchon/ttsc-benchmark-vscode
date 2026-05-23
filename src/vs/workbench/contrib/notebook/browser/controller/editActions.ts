@@ -363,7 +363,7 @@ registerAction2(
             "confirmDeleteButtonMessage",
             "This cell is running, are you sure you want to delete it?",
           ),
-          primaryButton: primaryButton,
+          primaryButton,
           checkbox: {
             label: localize("doNotAskAgain", "Do not ask me again"),
           },

@@ -438,7 +438,7 @@ export class CommonFindController
     if (this._state.isRegex) {
       searchString = strings.escapeRegExpCharacters(searchString);
     }
-    this._state.change({ searchString: searchString }, false);
+    this._state.change({ searchString }, false);
   }
 
   public highlightFindOptions(ignoreWhenVisible: boolean = false): void {
@@ -1428,7 +1428,7 @@ StartFindReplaceAction.addImplementation(
       seedSearchStringFromGlobalClipboard:
         editor.getOption(EditorOption.find).seedSearchStringFromSelection !==
         "never",
-      shouldFocus: shouldFocus,
+      shouldFocus,
       shouldAnimate: true,
       updateSearchScope: false,
       loop: editor.getOption(EditorOption.find).loop,

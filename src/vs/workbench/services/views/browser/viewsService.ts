@@ -191,7 +191,7 @@ export class ViewsService extends Disposable implements IViewsService {
 
   private onViewsVisibilityChanged(view: IView, visible: boolean): void {
     this.getOrCreateActiveViewContextKey(view).set(visible);
-    this._onDidChangeViewVisibility.fire({ id: view.id, visible: visible });
+    this._onDidChangeViewVisibility.fire({ id: view.id, visible });
   }
 
   private onViewsRemoved(removed: IView[]): void {

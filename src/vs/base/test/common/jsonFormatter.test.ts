@@ -23,7 +23,7 @@ suite("JSON - formatter", () => {
 
     const edits = Formatter.format(content, range, {
       tabSize: 2,
-      insertSpaces: insertSpaces,
+      insertSpaces,
       eol: "\n",
     });
 

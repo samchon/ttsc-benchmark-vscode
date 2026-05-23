@@ -71,7 +71,7 @@ export class IssueWebReporter extends BaseIssueReporterService {
 
     this.addEventListener("issue-type", "change", (event: Event) => {
       const issueType = parseInt((<HTMLInputElement>event.target).value);
-      this.issueReporterModel.update({ issueType: issueType });
+      this.issueReporterModel.update({ issueType });
 
       // Resets placeholder
       // eslint-disable-next-line no-restricted-syntax

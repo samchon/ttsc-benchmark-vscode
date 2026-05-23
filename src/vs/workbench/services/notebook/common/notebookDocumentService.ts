@@ -118,12 +118,12 @@ export function extractCellOutputDetails(uri: URI):
 
   return {
     notebook: notebookUri,
-    openIn: openIn,
-    outputId: outputId,
-    outputIndex: outputIndex,
+    openIn,
+    outputId,
+    outputIndex,
     cellHandle: parsedCell?.handle,
     cellFragment: uri.fragment,
-    cellIndex: cellIndex,
+    cellIndex,
   };
 }
 

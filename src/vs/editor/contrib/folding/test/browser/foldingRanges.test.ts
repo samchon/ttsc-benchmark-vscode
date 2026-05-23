@@ -35,7 +35,7 @@ suite("FoldingRanges", () => {
     <FoldRange>{
       startLineNumber: from,
       endLineNumber: to,
-      type: type,
+      type,
       isCollapsed: collapsed || false,
       source,
     };

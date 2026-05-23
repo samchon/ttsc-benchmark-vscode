@@ -176,7 +176,7 @@ export class McpToolCallUI extends Disposable {
         },
         displayMode: "inline",
         availableDisplayModes: ["inline"],
-        locale: locale,
+        locale,
         platform: isWeb ? "web" : isMobile ? "mobile" : "desktop",
         deviceCapabilities: {
           touch: Gesture.isTouchDevice(),

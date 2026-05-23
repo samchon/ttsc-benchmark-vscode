@@ -287,7 +287,7 @@ export abstract class AbstractProblemCollector
   protected recordResourcesToClean(owner: string): void {
     const resourceSetToClean = this.getResourceSetToClean(owner);
     this.markerService
-      .read({ owner: owner })
+      .read({ owner })
       .forEach((marker) =>
         resourceSetToClean.set(marker.resource.toString(), marker.resource),
       );
@@ -566,7 +566,7 @@ export class WatchingProblemCollector
         const key: string = generateUuid();
         this.backgroundPatterns.push({
           key,
-          matcher: matcher,
+          matcher,
           begin: matcher.watching.beginsPattern,
           end: matcher.watching.endsPattern,
         });

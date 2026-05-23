@@ -850,8 +850,8 @@ export class AdditionalLinesWidget extends Disposable {
     domNode: HTMLElement,
   ): void {
     const id = changeAccessor.addZone({
-      afterLineNumber: afterLineNumber,
-      heightInLines: heightInLines,
+      afterLineNumber,
+      heightInLines,
       domNode,
       afterColumnAffinity: PositionAffinity.Right,
       onComputedHeight: (height: number) => {

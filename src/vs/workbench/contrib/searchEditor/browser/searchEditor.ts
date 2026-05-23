@@ -794,7 +794,7 @@ export class SearchEditor extends AbstractTextCodeEditor<SearchEditorViewState> 
 
     // If _options don't define focusResult field, then use the setting
     if (_options === undefined) {
-      _options = { focusResults: focusResults };
+      _options = { focusResults };
     } else if (_options.focusResults === undefined) {
       _options.focusResults = focusResults;
     }

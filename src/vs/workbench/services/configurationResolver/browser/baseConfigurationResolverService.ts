@@ -496,7 +496,7 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 
             const item: PickStringItem = {
               label: label ? `${label}: ${value}` : value,
-              value: value,
+              value,
             };
 
             const topValue =

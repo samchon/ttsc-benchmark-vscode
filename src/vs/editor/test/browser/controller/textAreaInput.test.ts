@@ -345,8 +345,8 @@ suite("TextAreaInput", () => {
     }
     return {
       value: text,
-      selectionStart: selectionStart,
-      selectionEnd: selectionEnd,
+      selectionStart,
+      selectionEnd,
       selectionDirection:
         browser.isFirefox ||
         OS === OperatingSystem.Windows ||

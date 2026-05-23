@@ -100,7 +100,7 @@ export class MainThreadUriOpeners
     metadata: RegisteredOpenerMetadata,
   ): IExternalUriOpener {
     return {
-      id: id,
+      id,
       label: metadata.label,
       canOpen: (uri, token) => {
         return this.proxy.$canOpenUri(id, uri, token);

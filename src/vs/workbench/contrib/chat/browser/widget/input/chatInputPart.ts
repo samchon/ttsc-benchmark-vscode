@@ -438,7 +438,7 @@ const emptyInputState = observableMemento<IChatModelInputState | undefined>({
         [ChatAgentLocation.Chat]: Boolean(oldIsDefault),
       };
       mixin(obj.selectedModel.metadata, {
-        isDefaultForLocation: isDefaultForLocation,
+        isDefaultForLocation,
       } satisfies Partial<ILanguageModelChatMetadata>);
       delete (obj.selectedModel.metadata as OldILanguageModelChatMetadata)
         .isDefault;
@@ -784,7 +784,7 @@ export class ChatInputPart
             isBuiltin: mode.isBuiltin,
           }
         : undefined,
-      modeId: modeId,
+      modeId,
       modeName: getModeNameForTelemetry(mode),
       applyCodeBlockSuggestionId: undefined,
       permissionLevel: this._currentPermissionLevel.get(),

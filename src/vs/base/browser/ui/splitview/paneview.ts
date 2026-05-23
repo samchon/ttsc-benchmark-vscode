@@ -675,7 +675,7 @@ export class PaneView extends Disposable {
     const disposables = new DisposableStore();
     pane.onDidChangeExpansionState(this.setupAnimation, this, disposables);
 
-    const paneItem = { pane: pane, disposable: disposables };
+    const paneItem = { pane, disposable: disposables };
     this.paneItems.splice(index, 0, paneItem);
     pane.orientation = this.orientation;
     pane.orthogonalSize = this.orthogonalSize;

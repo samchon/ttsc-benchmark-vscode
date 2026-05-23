@@ -3072,7 +3072,7 @@ export class RunInTerminalTool extends Disposable implements IToolImpl {
     return {
       toolResultMessage,
       toolMetadata: {
-        exitCode: exitCode,
+        exitCode,
         id: termId,
         terminalId: toolTerminal.instance.instanceId,
         cwd: endCwd?.toString(),

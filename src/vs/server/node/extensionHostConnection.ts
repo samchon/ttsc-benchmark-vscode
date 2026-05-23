@@ -145,8 +145,8 @@ class ConnectionData {
       initialDataChunk: (<Buffer>this.initialDataChunk.buffer).toString(
         "base64",
       ),
-      skipWebSocketFrames: skipWebSocketFrames,
-      permessageDeflate: permessageDeflate,
+      skipWebSocketFrames,
+      permessageDeflate,
       inflateBytes: (<Buffer>inflateBytes.buffer).toString("base64"),
     };
   }

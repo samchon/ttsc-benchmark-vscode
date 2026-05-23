@@ -408,9 +408,9 @@ export class ViewController {
     CoreNavigationCommands.ColumnSelect.runCoreEditorCommand(this.viewModel, {
       source: "mouse",
       position: this._convertViewToModelPosition(viewPosition),
-      viewPosition: viewPosition,
-      mouseColumn: mouseColumn,
-      doColumnSelect: doColumnSelect,
+      viewPosition,
+      mouseColumn,
+      doColumnSelect,
     });
   }
 
@@ -419,8 +419,8 @@ export class ViewController {
     CoreNavigationCommands.CreateCursor.runCoreEditorCommand(this.viewModel, {
       source: "mouse",
       position: this._convertViewToModelPosition(viewPosition),
-      viewPosition: viewPosition,
-      wholeLine: wholeLine,
+      viewPosition,
+      wholeLine,
     });
   }
 

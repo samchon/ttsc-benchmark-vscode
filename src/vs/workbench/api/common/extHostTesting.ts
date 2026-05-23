@@ -1738,7 +1738,7 @@ export class TestRunProfileImpl
     }
 
     this.#initialPublish = {
-      profileId: profileId,
+      profileId,
       controllerId,
       tag: _tag ? Convert.TestTag.namespace(this.controllerId, _tag.id) : null,
       label: _label,

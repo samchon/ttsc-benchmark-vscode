@@ -734,7 +734,7 @@ export function createMonacoEditorAPI(): typeof monaco.editor {
     setModelMarkers: <any>setModelMarkers,
     // eslint-disable-next-line local/code-no-any-casts
     getModelMarkers: <any>getModelMarkers,
-    removeAllMarkers: removeAllMarkers,
+    removeAllMarkers,
     // eslint-disable-next-line local/code-no-any-casts
     onDidChangeMarkers: <any>onDidChangeMarkers,
     // eslint-disable-next-line local/code-no-any-casts
@@ -762,10 +762,10 @@ export function createMonacoEditorAPI(): typeof monaco.editor {
     defineTheme: <any>defineTheme,
     // eslint-disable-next-line local/code-no-any-casts
     setTheme: <any>setTheme,
-    remeasureFonts: remeasureFonts,
-    registerCommand: registerCommand,
+    remeasureFonts,
+    registerCommand,
 
-    registerLinkOpener: registerLinkOpener,
+    registerLinkOpener,
     // eslint-disable-next-line local/code-no-any-casts
     registerEditorOpener: <any>registerEditorOpener,
 
@@ -820,7 +820,7 @@ export function createMonacoEditorAPI(): typeof monaco.editor {
     createMultiFileDiffEditor: <any>createMultiFileDiffEditor,
 
     // vars
-    EditorType: EditorType,
+    EditorType,
     // eslint-disable-next-line local/code-no-any-casts
     EditorOptions: <any>EditorOptions,
   };

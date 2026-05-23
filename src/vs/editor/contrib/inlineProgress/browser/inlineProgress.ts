@@ -172,7 +172,7 @@ export class InlineProgressManager extends Disposable {
       const range = Range.fromPositions(position);
       const decorationIds = this._currentDecorations.set([
         {
-          range: range,
+          range,
           options: inlineProgressDecoration,
         },
       ]);

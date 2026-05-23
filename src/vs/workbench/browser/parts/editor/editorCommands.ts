@@ -1536,7 +1536,7 @@ function registerCloseEditorCommands() {
         }
 
         editorReplacementsInGroup.push({
-          editor: editor,
+          editor,
           replacement: resolvedEditor.editor,
           forceReplaceDirty,
           options: resolvedEditor.options,

@@ -423,7 +423,7 @@ export class ExtensionRunningLocationTracker {
     return {
       runningLocation: result,
       maxLocalProcessAffinity: maxAffinity,
-      maxLocalWebWorkerAffinity: maxLocalWebWorkerAffinity,
+      maxLocalWebWorkerAffinity,
     };
   }
 

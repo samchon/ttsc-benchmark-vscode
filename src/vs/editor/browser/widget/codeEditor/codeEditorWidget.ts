@@ -1611,9 +1611,9 @@ export class CodeEditorWidget
     const cursorState = this._modelData.viewModel.saveCursorState();
     const viewState = this._modelData.viewModel.saveState();
     return {
-      cursorState: cursorState,
-      viewState: viewState,
-      contributionsState: contributionsState,
+      cursorState,
+      viewState,
+      contributionsState,
     };
   }
 
@@ -1694,9 +1694,9 @@ export class CodeEditorWidget
 
     try {
       this._onWillTriggerEditorOperationEvent.fire({
-        source: source,
-        handlerId: handlerId,
-        payload: payload,
+        source,
+        handlerId,
+        payload,
       });
       this._beginUpdate();
 
@@ -2264,7 +2264,7 @@ export class CodeEditorWidget
 
   public addContentWidget(widget: editorBrowser.IContentWidget): void {
     const widgetData: IContentWidgetData = {
-      widget: widget,
+      widget,
       position: widget.getPosition(),
     };
 
@@ -2305,7 +2305,7 @@ export class CodeEditorWidget
 
   public addOverlayWidget(widget: editorBrowser.IOverlayWidget): void {
     const widgetData: IOverlayWidgetData = {
-      widget: widget,
+      widget,
       position: widget.getPosition(),
     };
 
@@ -2343,7 +2343,7 @@ export class CodeEditorWidget
 
   public addGlyphMarginWidget(widget: editorBrowser.IGlyphMarginWidget): void {
     const widgetData: IGlyphMarginWidgetData = {
-      widget: widget,
+      widget,
       position: widget.getPosition(),
     };
 
@@ -2431,8 +2431,8 @@ export class CodeEditorWidget
       this.getScrollLeft();
     const height = this.getLineHeightForPosition(position);
     return {
-      top: top,
-      left: left,
+      top,
+      left,
       height,
     };
   }

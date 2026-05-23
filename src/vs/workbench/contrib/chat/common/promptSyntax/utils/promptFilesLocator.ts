@@ -659,7 +659,7 @@ export class PromptFilesLocator {
             );
             result.push({
               uri,
-              searchRoot: searchRoot,
+              searchRoot,
               filePattern,
               source: sourceFolder.source,
               storage: sourceFolder.storage,
@@ -689,7 +689,7 @@ export class PromptFilesLocator {
             );
             result.push({
               uri,
-              searchRoot: searchRoot,
+              searchRoot,
               filePattern,
               source: sourceFolder.source,
               storage: sourceFolder.storage,
@@ -708,7 +708,7 @@ export class PromptFilesLocator {
               );
               result.push({
                 uri: absolutePath,
-                searchRoot: searchRoot,
+                searchRoot,
                 filePattern,
                 source: sourceFolder.source,
                 storage: sourceFolder.storage,

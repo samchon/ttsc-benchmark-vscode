@@ -1129,7 +1129,7 @@ export function createMonacoLanguagesAPI(): typeof monaco.languages {
     // provider methods
     // eslint-disable-next-line local/code-no-any-casts
     setLanguageConfiguration: <any>setLanguageConfiguration,
-    setColorMap: setColorMap,
+    setColorMap,
     // eslint-disable-next-line local/code-no-any-casts
     registerTokensProviderFactory: <any>registerTokensProviderFactory,
     // eslint-disable-next-line local/code-no-any-casts

@@ -235,10 +235,10 @@ export namespace EditorScroll_ {
     const revealCursor = !!args.revealCursor;
 
     return {
-      direction: direction,
-      unit: unit,
-      value: value,
-      revealCursor: revealCursor,
+      direction,
+      unit,
+      value,
+      revealCursor,
       select: !!args.select,
     };
   }
@@ -2549,7 +2549,7 @@ const columnSelectionCondition = ContextKeyExpr.and(
 );
 function registerColumnSelection(id: string, keybinding: number): void {
   KeybindingsRegistry.registerKeybindingRule({
-    id: id,
+    id,
     primary: keybinding,
     when: columnSelectionCondition,
     weight: CORE_WEIGHT + 1,
@@ -2853,7 +2853,7 @@ class EditorHandlerCommand extends Command {
 
   constructor(id: string, handlerId: string, metadata?: ICommandMetadata) {
     super({
-      id: id,
+      id,
       precondition: undefined,
       metadata,
     });

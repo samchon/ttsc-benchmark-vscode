@@ -284,7 +284,7 @@ export class PromptBodyAutocompletion implements CompletionItemProvider {
         label: `${label}:`,
         kind: CompletionItemKind.Keyword,
         insertText: `${label}:`,
-        range: range,
+        range,
         command: { id: "editor.action.triggerSuggest", title: "Suggest" },
       });
     });

@@ -301,8 +301,8 @@ export class ChatToolInvocation implements IChatToolInvocation {
     this._state.set(
       {
         type: IChatToolInvocation.StateKind.Cancelled,
-        reason: reason,
-        reasonMessage: reasonMessage,
+        reason,
+        reasonMessage,
         parameters: this.parameters,
         confirmationMessages: this.confirmationMessages,
       },

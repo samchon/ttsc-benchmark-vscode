@@ -80,7 +80,7 @@ function createChannelFactoryFromDebugChannel(host: IHost): {
     };
   };
   return {
-    channel: channel,
+    channel,
     handler: {
       handleRequest: (data: any) => {
         if (data.type === "notification") {

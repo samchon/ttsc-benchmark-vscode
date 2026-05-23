@@ -328,8 +328,8 @@ export class MultiDiffEditorWidgetImpl extends Disposable {
         }
 
         this._scrollableElement.setScrollDimensions({
-          width: width,
-          height: height,
+          width,
+          height,
           scrollHeight: totalHeight,
           scrollWidth,
         });

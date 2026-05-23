@@ -164,7 +164,7 @@ class CodeLensContentWidget implements IContentWidget {
       .getModel()
       .getLineFirstNonWhitespaceColumn(line);
     this._widgetPosition = {
-      position: { lineNumber: line, column: column },
+      position: { lineNumber: line, column },
       preference: [ContentWidgetPositionPreference.ABOVE],
     };
   }

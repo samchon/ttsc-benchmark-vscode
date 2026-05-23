@@ -694,8 +694,8 @@ export class NotebookTextDiffEditor
           updateItems.push({
             cell,
             output: key,
-            cellTop: cellTop,
-            outputOffset: outputOffset,
+            cellTop,
+            outputOffset,
             forceDisplay: false,
           });
         }

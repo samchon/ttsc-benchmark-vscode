@@ -778,7 +778,7 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
         );
         const replayed = await this._replayOperations(prev, operations);
         return {
-          uri: uri,
+          uri,
           epoch: operation.epoch,
           content: replayed.exists ? replayed.content : "",
           requestId: operation.requestId,

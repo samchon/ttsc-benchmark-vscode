@@ -61,7 +61,7 @@ export class TMGrammarFactory extends Disposable {
     this._languageToScope = new Map<string, string>();
     this._grammarRegistry = this._register(
       new vscodeTextmate.Registry({
-        onigLib: onigLib,
+        onigLib,
         loadGrammar: async (scopeName: string) => {
           const grammarDefinition =
             this._scopeRegistry.getGrammarDefinition(scopeName);
@@ -196,10 +196,10 @@ export class TMGrammarFactory extends Disposable {
     }
 
     return {
-      languageId: languageId,
-      grammar: grammar,
+      languageId,
+      grammar,
       initialState: this._initialState,
-      containsEmbeddedLanguages: containsEmbeddedLanguages,
+      containsEmbeddedLanguages,
       sourceExtensionId: grammarDefinition.sourceExtensionId,
     };
   }

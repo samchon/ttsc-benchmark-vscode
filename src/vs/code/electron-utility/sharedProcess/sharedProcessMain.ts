@@ -1141,8 +1141,8 @@ class SharedProcessMain extends Disposable implements IClientConnectionFilter {
           platformId: releaseInfo.id,
           platformVersionId: releaseInfo.version_id,
           platformIdLike: releaseInfo.id_like,
-          desktopEnvironment: desktopEnvironment,
-          displayProtocol: displayProtocol,
+          desktopEnvironment,
+          displayProtocol,
           codeDisplayProtocol: codeSessionType,
         });
       }

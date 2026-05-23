@@ -28,7 +28,7 @@ function getMockTheme(type: ColorScheme): IColorTheme {
   const theme = {
     selector: "",
     label: "",
-    type: type,
+    type,
     getColor: (colorId: ColorIdentifier): Color | undefined =>
       themingRegistry.resolveDefaultColor(colorId, theme),
     defines: () => true,

@@ -119,12 +119,12 @@ export function normalizeVersion(
   }
 
   return {
-    majorBase: majorBase,
-    majorMustEqual: majorMustEqual,
-    minorBase: minorBase,
-    minorMustEqual: minorMustEqual,
-    patchBase: patchBase,
-    patchMustEqual: patchMustEqual,
+    majorBase,
+    majorMustEqual,
+    minorBase,
+    minorMustEqual,
+    patchBase,
+    patchMustEqual,
     isMinimum: version.hasGreaterEquals,
     notBefore,
   };

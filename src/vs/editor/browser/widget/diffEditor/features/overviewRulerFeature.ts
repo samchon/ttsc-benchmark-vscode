@@ -238,13 +238,13 @@ export class OverviewRulerFeature extends Disposable {
                 2 * OverviewRulerFeature.ONE_OVERVIEW_WIDTH;
               originalOverviewRuler.setLayout({
                 top: 0,
-                height: height,
+                height,
                 right: freeSpace + OverviewRulerFeature.ONE_OVERVIEW_WIDTH,
                 width: OverviewRulerFeature.ONE_OVERVIEW_WIDTH,
               });
               modifiedOverviewRuler.setLayout({
                 top: 0,
-                height: height,
+                height,
                 right: 0,
                 width: OverviewRulerFeature.ONE_OVERVIEW_WIDTH,
               });

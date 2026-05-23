@@ -725,7 +725,7 @@ export class MainThreadChatAgents2
     }
 
     this._agents.set(handle, {
-      id: id,
+      id,
       extensionId: extension,
       dispose: () => disposable.dispose(),
       hasFollowups: metadata.hasFollowups,

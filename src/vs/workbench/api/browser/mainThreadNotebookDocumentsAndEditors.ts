@@ -80,7 +80,7 @@ class NotebookAndEditorState {
       removedDocuments: documentDelta.removed.map((e) => e.uri),
       addedEditors: editorDelta.added,
       removedEditors: editorDelta.removed.map((removed) => removed.getId()),
-      newActiveEditor: newActiveEditor,
+      newActiveEditor,
       visibleEditors:
         visibleEditorDelta.added.length === 0 &&
         visibleEditorDelta.removed.length === 0

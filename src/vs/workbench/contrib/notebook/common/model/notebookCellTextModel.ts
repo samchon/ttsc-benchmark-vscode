@@ -540,7 +540,7 @@ export class NotebookCellTextModel extends Disposable implements ICell {
       output.appendData(items);
     } else {
       output.replaceData({
-        outputId: outputId,
+        outputId,
         outputs: items,
         metadata: output.metadata,
       });

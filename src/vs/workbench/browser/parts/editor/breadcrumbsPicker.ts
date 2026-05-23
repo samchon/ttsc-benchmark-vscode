@@ -341,7 +341,7 @@ class FileRenderer implements ITreeRenderer<
     templateData.setFile(resource, {
       fileKind,
       hidePath: true,
-      fileDecorations: fileDecorations,
+      fileDecorations,
       matches: createMatches(node.filterData),
       extraClasses: ["picker-item"],
     });

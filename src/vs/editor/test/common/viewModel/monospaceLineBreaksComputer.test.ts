@@ -31,7 +31,7 @@ function parseAnnotatedText(annotatedText: string): {
       indices[text.length - 1] = currentLineIndex;
     }
   }
-  return { text: text, indices: indices };
+  return { text, indices };
 }
 
 function toAnnotatedText(

@@ -1221,8 +1221,8 @@ export class ViewModel extends Disposable implements IViewModel {
 
     return {
       scrollLeft: compatViewState.scrollLeft,
-      firstPosition: firstPosition,
-      firstPositionDeltaTop: firstPositionDeltaTop,
+      firstPosition,
+      firstPositionDeltaTop,
     };
   }
 
@@ -1245,7 +1245,7 @@ export class ViewModel extends Disposable implements IViewModel {
       state.firstPositionDeltaTop;
     return {
       scrollLeft: state.scrollLeft,
-      scrollTop: scrollTop,
+      scrollTop,
     };
   }
 
