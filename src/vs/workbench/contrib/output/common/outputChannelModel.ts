@@ -293,9 +293,7 @@ class FileContentProvider extends Disposable implements IContentProvider {
     return this.logEntries;
   }
 
-  async getContent(
-    donotConsumeLogEntries?: boolean,
-  ): Promise<{
+  async getContent(donotConsumeLogEntries?: boolean): Promise<{
     readonly name: string;
     readonly content: string;
     readonly consume: () => void;

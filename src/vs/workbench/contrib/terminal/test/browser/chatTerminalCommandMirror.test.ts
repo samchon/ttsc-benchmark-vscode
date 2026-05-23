@@ -436,9 +436,7 @@ suite("Workbench - ChatTerminalCommandMirror", () => {
       cols: number = 80,
     ): {
       readonly length: number;
-      getLine(
-        y: number,
-      ):
+      getLine(y: number):
         | {
             readonly length: number;
             getCell(x: number): { getChars(): string } | undefined;

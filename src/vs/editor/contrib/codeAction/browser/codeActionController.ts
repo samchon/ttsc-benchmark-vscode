@@ -582,12 +582,10 @@ export class CodeActionController
             currentDecorations.set(decorations);
             const diagnostic = diagnostics[0];
             if (diagnostic.startLineNumber && diagnostic.startColumn) {
-              const selectionText = this._editor
-                .getModel()
-                ?.getWordAtPosition({
-                  lineNumber: diagnostic.startLineNumber,
-                  column: diagnostic.startColumn,
-                })?.word;
+              const selectionText = this._editor.getModel()?.getWordAtPosition({
+                lineNumber: diagnostic.startLineNumber,
+                column: diagnostic.startColumn,
+              })?.word;
               aria.status(
                 localize(
                   "editingNewSelection",

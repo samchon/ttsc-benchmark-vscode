@@ -424,22 +424,20 @@ suite("NativeExtensionsScanerService Test", () => {
     await aSystemExtension(
       anExtensionManifest({ name: "name", publisher: "pub", version: "1.0.1" }),
     );
-    await instantiationService
-      .get(IFileService)
-      .writeFile(
-        joinPath(
-          instantiationService.get(INativeEnvironmentService).userHome,
-          ".vscode-oss-dev",
-          "extensions",
-          "control.json",
-        ),
-        VSBuffer.fromString(
-          JSON.stringify({
-            "pub.name2": "disabled",
-            "pub.name": extensionLocation.fsPath,
-          }),
-        ),
-      );
+    await instantiationService.get(IFileService).writeFile(
+      joinPath(
+        instantiationService.get(INativeEnvironmentService).userHome,
+        ".vscode-oss-dev",
+        "extensions",
+        "control.json",
+      ),
+      VSBuffer.fromString(
+        JSON.stringify({
+          "pub.name2": "disabled",
+          "pub.name": extensionLocation.fsPath,
+        }),
+      ),
+    );
     const testObject: IExtensionsScannerService = disposables.add(
       instantiationService.createInstance(ExtensionsScannerService),
     );
@@ -493,16 +491,14 @@ suite("NativeExtensionsScanerService Test", () => {
         VSBuffer.fromString(JSON.stringify({ displayName: "Hello World" })),
       );
     const nlsLocation = joinPath(extensionLocation, "package.en.json");
-    await instantiationService
-      .get(IFileService)
-      .writeFile(
-        nlsLocation,
-        VSBuffer.fromString(
-          JSON.stringify({
-            contents: { package: { displayName: "Hello World EN" } },
-          }),
-        ),
-      );
+    await instantiationService.get(IFileService).writeFile(
+      nlsLocation,
+      VSBuffer.fromString(
+        JSON.stringify({
+          contents: { package: { displayName: "Hello World EN" } },
+        }),
+      ),
+    );
     const testObject: IExtensionsScannerService = disposables.add(
       instantiationService.createInstance(ExtensionsScannerService),
     );
@@ -534,16 +530,14 @@ suite("NativeExtensionsScanerService Test", () => {
         VSBuffer.fromString(JSON.stringify({ displayName: "Hello World" })),
       );
     const nlsLocation = joinPath(extensionLocation, "package.en.json");
-    await instantiationService
-      .get(IFileService)
-      .writeFile(
-        nlsLocation,
-        VSBuffer.fromString(
-          JSON.stringify({
-            contents: { package: { displayName: "Hello World EN" } },
-          }),
-        ),
-      );
+    await instantiationService.get(IFileService).writeFile(
+      nlsLocation,
+      VSBuffer.fromString(
+        JSON.stringify({
+          contents: { package: { displayName: "Hello World EN" } },
+        }),
+      ),
+    );
     const testObject: IExtensionsScannerService = disposables.add(
       instantiationService.createInstance(ExtensionsScannerService),
     );

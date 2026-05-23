@@ -1120,17 +1120,15 @@ suite("ExtensionsViews Tests", () => {
     assets: any = {},
   ): IGalleryExtension {
     const targetPlatform = getTargetPlatform(platform, arch);
-    const galleryExtension = <IGalleryExtension>(
-      Object.create({
-        name,
-        publisher: "pub",
-        version: "1.0.0",
-        allTargetPlatforms: [targetPlatform],
-        properties: {},
-        assets: {},
-        ...properties,
-      })
-    );
+    const galleryExtension = <IGalleryExtension>Object.create({
+      name,
+      publisher: "pub",
+      version: "1.0.0",
+      allTargetPlatforms: [targetPlatform],
+      properties: {},
+      assets: {},
+      ...properties,
+    });
     galleryExtension.properties = {
       ...galleryExtension.properties,
       dependencies: [],

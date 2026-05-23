@@ -248,8 +248,7 @@ export class UserDataAutoSyncService
         }
         this.autoSync.clear();
       } else if (message && this.userDataSyncEnablementService.isEnabled()) {
-
-      /* log message when auto sync is not disabled by user */
+        /* log message when auto sync is not disabled by user */
         this.logService.info(message);
       }
     }

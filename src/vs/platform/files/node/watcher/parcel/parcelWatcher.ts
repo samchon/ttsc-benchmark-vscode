@@ -663,9 +663,7 @@ export class ParcelWatcher
     }
   }
 
-  private async normalizePath(
-    request: IRecursiveWatchRequest,
-  ): Promise<{
+  private async normalizePath(request: IRecursiveWatchRequest): Promise<{
     realPath: string;
     realPathDiffers: boolean;
     realPathLength: number;

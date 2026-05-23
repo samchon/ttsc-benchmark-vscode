@@ -782,12 +782,10 @@ class PreferencesActionsContribution
             if (editorPane instanceof SettingsEditor2) {
               editorPane.focusSearch(`@tag:usesOnlineServices`);
             } else {
-              accessor
-                .get(IPreferencesService)
-                .openSettings({
-                  jsonEditor: false,
-                  query: "@tag:usesOnlineServices",
-                });
+              accessor.get(IPreferencesService).openSettings({
+                jsonEditor: false,
+                query: "@tag:usesOnlineServices",
+              });
             }
           }
         },
@@ -835,12 +833,10 @@ class PreferencesActionsContribution
             });
           }
           run(accessor: ServicesAccessor) {
-            accessor
-              .get(IPreferencesService)
-              .openWorkspaceSettings({
-                jsonEditor: false,
-                query: `@tag:${REQUIRE_TRUSTED_WORKSPACE_SETTING_TAG}`,
-              });
+            accessor.get(IPreferencesService).openWorkspaceSettings({
+              jsonEditor: false,
+              query: `@tag:${REQUIRE_TRUSTED_WORKSPACE_SETTING_TAG}`,
+            });
           }
         },
       ),
@@ -2009,13 +2005,11 @@ class SettingsEditorTitleContribution
             run(accessor: ServicesAccessor, ...args: unknown[]) {
               const sanitizedArgs = sanitizeOpenSettingsArgs(args[0]);
               const groupId = getEditorGroupFromArguments(accessor, args)?.id;
-              return accessor
-                .get(IPreferencesService)
-                .openUserSettings({
-                  jsonEditor: false,
-                  ...sanitizedArgs,
-                  groupId,
-                });
+              return accessor.get(IPreferencesService).openUserSettings({
+                jsonEditor: false,
+                ...sanitizedArgs,
+                groupId,
+              });
             }
           },
         );

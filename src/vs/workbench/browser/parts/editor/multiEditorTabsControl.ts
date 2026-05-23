@@ -1313,7 +1313,7 @@ export class MultiEditorTabsControl extends EditorTabsControl {
       if (
         isMouseEvent(e) &&
         (e.button !== 0 /* middle/right mouse button */ ||
-          (isMacintosh && e.ctrlKey) /* macOS context menu */)
+          (isMacintosh && e.ctrlKey)) /* macOS context menu */
       ) {
         if (e.button === 1) {
           e.preventDefault(); // required to prevent auto-scrolling (https://github.com/microsoft/vscode/issues/16690)
@@ -1411,7 +1411,7 @@ export class MultiEditorTabsControl extends EditorTabsControl {
         if (
           isMouseEvent(e) &&
           (e.button !== 0 /* middle/right mouse button */ ||
-            (isMacintosh && e.ctrlKey) /* macOS context menu */)
+            (isMacintosh && e.ctrlKey)) /* macOS context menu */
         ) {
           return;
         }

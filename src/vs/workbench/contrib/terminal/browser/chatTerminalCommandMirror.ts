@@ -63,9 +63,7 @@ function getChatTerminalBackgroundColor(
 export function computeMaxBufferColumnWidth(
   buffer: {
     readonly length: number;
-    getLine(
-      y: number,
-    ):
+    getLine(y: number):
       | {
           readonly length: number;
           getCell(x: number): { getChars(): string } | undefined;

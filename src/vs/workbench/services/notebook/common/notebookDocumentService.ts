@@ -78,9 +78,7 @@ export function generateMetadataUri(notebook: URI): URI {
   return notebook.with({ scheme: Schemas.vscodeNotebookMetadata, fragment });
 }
 
-export function extractCellOutputDetails(
-  uri: URI,
-):
+export function extractCellOutputDetails(uri: URI):
   | {
       notebook: URI;
       openIn: string;

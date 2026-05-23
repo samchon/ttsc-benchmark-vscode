@@ -174,9 +174,7 @@ export class ClaudeToolCallRegistry {
    * drift / replay). The `info` field may be `undefined` if the
    * tool block never reached `content_block_stop`.
    */
-  lookup(
-    toolUseId: string,
-  ):
+  lookup(toolUseId: string):
     | {
         readonly turnId: string;
         readonly toolName: string;

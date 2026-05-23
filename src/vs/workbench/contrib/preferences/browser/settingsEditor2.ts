@@ -3031,7 +3031,7 @@ export class SettingsEditor2 extends EditorPane {
       return;
     }
     const listHeight =
-      dimension.height - (72 + 11 + 14) /* header height + editor padding */;
+      dimension.height - (72 + 11 + 14); /* header height + editor padding */
 
     this.splitView.el.style.height = `${listHeight}px`;
 

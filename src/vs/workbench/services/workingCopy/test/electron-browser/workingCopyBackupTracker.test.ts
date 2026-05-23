@@ -202,9 +202,7 @@ suite("WorkingCopyBackupTracker (native)", function () {
     disposables.clear();
   });
 
-  async function createTracker(
-    autoSaveEnabled = false,
-  ): Promise<{
+  async function createTracker(autoSaveEnabled = false): Promise<{
     accessor: TestServiceAccessor;
     part: EditorPart;
     tracker: TestWorkingCopyBackupTracker;

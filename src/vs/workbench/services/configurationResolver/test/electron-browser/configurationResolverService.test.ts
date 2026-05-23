@@ -449,13 +449,11 @@ suite("Configuration Resolver Service", () => {
 
   test("supports extensionDir", async () => {
     const getExtension = stub(extensionService, "getExtension");
-    getExtension
-      .withArgs("publisher.extId")
-      .returns(
-        Promise.resolve({
-          extensionLocation: URI.file("/some/path"),
-        } as IExtensionDescription),
-      );
+    getExtension.withArgs("publisher.extId").returns(
+      Promise.resolve({
+        extensionLocation: URI.file("/some/path"),
+      } as IExtensionDescription),
+    );
 
     assert.strictEqual(
       await configurationResolverService!.resolveAsync(

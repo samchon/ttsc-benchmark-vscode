@@ -270,9 +270,7 @@ export interface IMarkdownVulnerability {
   readonly description: string;
   readonly range: IRange;
 }
-export function extractCodeblockUrisFromText(
-  text: string,
-):
+export function extractCodeblockUrisFromText(text: string):
   | {
       uri: URI;
       isEdit?: boolean;

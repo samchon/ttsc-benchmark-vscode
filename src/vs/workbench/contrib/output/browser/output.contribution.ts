@@ -911,10 +911,11 @@ class OutputContribution extends Disposable implements IWorkbenchContribution {
                   ),
                 );
               }
-              entry = <IQuickPickItem | undefined>(
-                await quickInputService.pick(entries, {
+              entry = <IQuickPickItem | undefined>await quickInputService.pick(
+                entries,
+                {
                   placeHolder: nls.localize("selectlogFile", "Select Log File"),
-                })
+                },
               );
             }
             if (entry?.id) {

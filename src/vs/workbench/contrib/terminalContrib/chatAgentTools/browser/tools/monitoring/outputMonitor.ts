@@ -418,9 +418,7 @@ export class OutputMonitor extends Disposable implements IOutputMonitor {
     });
   }
 
-  private async _handleIdleState(
-    token: CancellationToken,
-  ): Promise<{
+  private async _handleIdleState(token: CancellationToken): Promise<{
     resources?: ILinkLocation[];
     shouldContinuePolling: boolean;
     output?: string;

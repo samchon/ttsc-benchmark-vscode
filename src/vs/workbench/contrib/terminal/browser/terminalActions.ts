@@ -2127,9 +2127,7 @@ export function refreshTerminalActions(
             );
           }
           options = { config };
-          function isSimpleArgs(
-            obj: unknown,
-          ): obj is {
+          function isSimpleArgs(obj: unknown): obj is {
             profileName: string;
             location?: "view" | "editor" | unknown;
           } {

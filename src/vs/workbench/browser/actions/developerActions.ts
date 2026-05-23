@@ -561,9 +561,7 @@ class ToggleScreencastModeAction extends Action2 {
     ToggleScreencastModeAction.disposable = disposables;
   }
 
-  private _isKbFound(
-    resolutionResult: ResolutionResult,
-  ): resolutionResult is {
+  private _isKbFound(resolutionResult: ResolutionResult): resolutionResult is {
     kind: ResultKind.KbFound;
     commandId: string | null;
     commandArgs: unknown;

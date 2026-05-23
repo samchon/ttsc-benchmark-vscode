@@ -1268,9 +1268,7 @@ export class TreeSitterTokenizationImpl extends Disposable {
     };
   }
 
-  private _tokenizeEncoded(
-    lineNumber: number,
-  ):
+  private _tokenizeEncoded(lineNumber: number):
     | {
         result: EndOffsetToken[];
         captureTime: number;

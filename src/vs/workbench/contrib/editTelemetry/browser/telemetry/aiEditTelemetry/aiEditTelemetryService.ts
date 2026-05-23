@@ -87,6 +87,5 @@ export interface IEditTelemetryCodeAcceptedData extends IEditTelemetryBaseData {
 }
 
 export interface IEditTelemetryCodeRejectedData extends IEditTelemetryBaseData {
-  rejectionMethod: /** User explicitly rejected/undid the suggestion (when presentation is `highlightedEdit`) or pressed Escape (when feature is `inlineSuggestion`) */
-  "reject";
+  rejectionMethod /** User explicitly rejected/undid the suggestion (when presentation is `highlightedEdit`) or pressed Escape (when feature is `inlineSuggestion`) */: "reject";
 }

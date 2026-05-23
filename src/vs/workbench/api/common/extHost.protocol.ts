@@ -5619,7 +5619,7 @@ export type NotebookRawContentEventDto =
   | notebookCommon.NotebookCellsChangeInternalMetadataEvent
   // | notebookCommon.NotebookDocumentChangeMetadataEvent
   | notebookCommon.NotebookCellContentChangeEvent;
-  // | notebookCommon.NotebookDocumentUnknownChangeEvent
+// | notebookCommon.NotebookDocumentUnknownChangeEvent
 
 export type NotebookCellsChangedEventDto = {
   readonly rawEvents: NotebookRawContentEventDto[];
@@ -5900,9 +5900,7 @@ export interface MainThreadMcpShape {
     options?: IMcpAuthenticationOptions,
   ): Promise<string | undefined>;
   $logMcpAuthSetup(data: IAuthMetadataSource): void;
-  $startMcpGateway(
-    chatSessionResource?: UriComponents,
-  ): Promise<
+  $startMcpGateway(chatSessionResource?: UriComponents): Promise<
     | {
         servers: { label: string; address: UriComponents }[];
         gatewayId: string;

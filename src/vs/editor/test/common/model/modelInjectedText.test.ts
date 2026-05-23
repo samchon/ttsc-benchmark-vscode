@@ -116,12 +116,10 @@ suite("Editor Model - Injected Text Events", () => {
       null,
     );
     assert.deepStrictEqual(
-      thisModel
-        .getAllDecorations(undefined)
-        .map((d) => ({
-          description: d.options.description,
-          range: d.range.toString(),
-        })),
+      thisModel.getAllDecorations(undefined).map((d) => ({
+        description: d.options.description,
+        range: d.range.toString(),
+      })),
       [
         {
           description: "test1",

@@ -212,9 +212,7 @@ export class ChatSetupController extends Disposable {
     return success;
   }
 
-  private async signIn(
-    options: IChatSetupControllerOptions,
-  ): Promise<{
+  private async signIn(options: IChatSetupControllerOptions): Promise<{
     defaultAccount: IDefaultAccount | undefined;
     entitlement: ChatEntitlement | undefined;
   }> {

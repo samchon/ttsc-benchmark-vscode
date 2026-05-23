@@ -220,9 +220,7 @@ suite("Tree Sitter TokenizationFeature", function () {
   }
 
   let nameNumber = 1;
-  async function getModelAndPrepTree(
-    content: string,
-  ): Promise<{
+  async function getModelAndPrepTree(content: string): Promise<{
     model: ITextModel;
     treeSitterTree: TreeSitterTree;
     tokenizationImpl: TreeSitterTokenizationImpl;

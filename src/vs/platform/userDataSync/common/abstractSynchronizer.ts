@@ -891,8 +891,7 @@ export abstract class AbstractSynchroniser
           mergeState: MergeState.Accepted,
         });
       } else {
-
-      /* Changed -> Apply ? (Merge ? Conflict | Accept) : Preview */
+        /* Changed -> Apply ? (Merge ? Conflict | Accept) : Preview */
         /* Merge */
         const mergeResult = merge
           ? await this.getMergeResult(resourcePreviewResult, token)

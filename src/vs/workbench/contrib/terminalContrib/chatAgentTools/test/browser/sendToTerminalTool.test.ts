@@ -82,9 +82,7 @@ suite("SendToTerminalTool", () => {
     } as unknown as IToolInvocation;
   }
 
-  function createMockExecution(
-    output: string,
-  ): IActiveTerminalExecution & {
+  function createMockExecution(output: string): IActiveTerminalExecution & {
     sentTexts: {
       text: string;
       shouldExecute: boolean;

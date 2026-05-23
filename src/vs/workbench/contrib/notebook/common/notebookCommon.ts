@@ -782,9 +782,7 @@ export namespace CellUri {
     });
   }
 
-  export function parseCellOutputUri(
-    uri: URI,
-  ):
+  export function parseCellOutputUri(uri: URI):
     | {
         notebook: URI;
         openIn: string;

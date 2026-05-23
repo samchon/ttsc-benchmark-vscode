@@ -99,7 +99,6 @@ export default defineConfig(
 			'local/code-no-localization-template-literals': 'error',
 			'local/code-no-icons-in-localized-strings': 'warn',
 			'local/code-no-http-import': ['warn', { target: 'src/vs/**' }],
-			'local/code-no-deep-import-of-internal': ['error', { '.*Internal': true, 'searchExtTypesInternal': false }],
 			'local/code-layering': [
 				'warn',
 				{

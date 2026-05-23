@@ -526,9 +526,7 @@ export class McpResourcePickHelper extends Disposable {
     }
   }
 
-  public getPicks(
-    token?: CancellationToken,
-  ): IObservable<{
+  public getPicks(token?: CancellationToken): IObservable<{
     picks: Map<IMcpServer, (IMcpResourceTemplate | IMcpResource)[]>;
     isBusy: boolean;
   }> {

@@ -354,9 +354,7 @@ export function toHookType(rawHookTypeId: string): HookType | undefined {
  * - powershell -> windows
  * This is an internal helper - use resolveHookCommand for the full resolution.
  */
-function normalizeHookCommand(
-  raw: Record<string, unknown>,
-):
+function normalizeHookCommand(raw: Record<string, unknown>):
   | {
       command?: string;
       windows?: string;

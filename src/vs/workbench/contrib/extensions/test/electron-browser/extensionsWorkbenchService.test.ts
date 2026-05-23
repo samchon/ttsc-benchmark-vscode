@@ -3236,18 +3236,16 @@ suite("ExtensionsWorkbenchServiceTest", () => {
     assets: IGalleryExtensionAssets = noAssets,
   ): IGalleryExtension {
     const targetPlatform = getTargetPlatform(platform, arch);
-    const galleryExtension = <IGalleryExtension>(
-      Object.create({
-        name,
-        publisher: "pub",
-        version: "1.0.0",
-        allTargetPlatforms: [targetPlatform],
-        properties: {},
-        assets: {},
-        isSigned: true,
-        ...properties,
-      })
-    );
+    const galleryExtension = <IGalleryExtension>Object.create({
+      name,
+      publisher: "pub",
+      version: "1.0.0",
+      allTargetPlatforms: [targetPlatform],
+      properties: {},
+      assets: {},
+      isSigned: true,
+      ...properties,
+    });
     galleryExtension.properties = {
       ...galleryExtension.properties,
       dependencies: [],

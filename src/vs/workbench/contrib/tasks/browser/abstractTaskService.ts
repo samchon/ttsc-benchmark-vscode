@@ -5059,9 +5059,7 @@ export abstract class AbstractTaskService
     this._progressService.withProgress(options, () => promise);
   }
 
-  private async _getGlobTasks(
-    taskGroupId: string,
-  ): Promise<{
+  private async _getGlobTasks(taskGroupId: string): Promise<{
     globGroupTasks: (Task | ConfiguringTask)[];
     globTasksDetected: boolean;
   }> {
@@ -6060,20 +6058,23 @@ export abstract class AbstractTaskService
         { resource: folder.uri },
       );
       const globalConfig = {
-        windows: <ICommandUpgrade>(
-          this._configurationService.getValue(TasksSchemaProperties.Windows, {
+        windows: <ICommandUpgrade>this._configurationService.getValue(
+          TasksSchemaProperties.Windows,
+          {
             resource: folder.uri,
-          })
+          },
         ),
-        osx: <ICommandUpgrade>(
-          this._configurationService.getValue(TasksSchemaProperties.Osx, {
+        osx: <ICommandUpgrade>this._configurationService.getValue(
+          TasksSchemaProperties.Osx,
+          {
             resource: folder.uri,
-          })
+          },
         ),
-        linux: <ICommandUpgrade>(
-          this._configurationService.getValue(TasksSchemaProperties.Linux, {
+        linux: <ICommandUpgrade>this._configurationService.getValue(
+          TasksSchemaProperties.Linux,
+          {
             resource: folder.uri,
-          })
+          },
         ),
       };
       tasks.get(folder).forEach((task) => {

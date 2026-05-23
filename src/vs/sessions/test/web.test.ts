@@ -401,26 +401,24 @@ class MockChatAgentContribution
     if (!this._sessionHistory.has(key)) {
       this._sessionHistory.set(key, []);
     }
-    this._sessionHistory
-      .get(key)!
-      .push(
-        { type: "request", prompt: message, participant: "copilot" },
-        {
-          type: "response",
-          parts: [
-            {
-              kind: "markdownContent",
-              content: {
-                value: responseText,
-                isTrusted: false,
-                supportThemeIcons: false,
-                supportHtml: false,
-              },
+    this._sessionHistory.get(key)!.push(
+      { type: "request", prompt: message, participant: "copilot" },
+      {
+        type: "response",
+        parts: [
+          {
+            kind: "markdownContent",
+            content: {
+              value: responseText,
+              isTrusted: false,
+              supportThemeIcons: false,
+              supportHtml: false,
             },
-          ],
-          participant: "copilot",
-        },
-      );
+          },
+        ],
+        participant: "copilot",
+      },
+    );
 
     // Build file changes for the session list (used by ChangesViewPane for background sessions)
     const changes: IChatSessionFileChange[] | undefined = fileEdits?.map(

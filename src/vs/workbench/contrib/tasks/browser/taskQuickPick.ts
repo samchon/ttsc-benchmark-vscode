@@ -298,9 +298,7 @@ export class TaskQuickPick extends Disposable {
     };
   }
 
-  public async getTopLevelEntries(
-    defaultEntry?: ITaskQuickPickEntry,
-  ): Promise<{
+  public async getTopLevelEntries(defaultEntry?: ITaskQuickPickEntry): Promise<{
     entries: QuickPickInput<ITaskTwoLevelQuickPickEntry>[];
     isSingleConfigured?: Task | ConfiguringTask;
   }> {

@@ -42,9 +42,7 @@ import type { SubagentRegistry } from "./claudeSubagentRegistry.js";
  * promotion (see `claudeAgent.ts` materialize path).
  */
 export interface IRematerializer {
-  (
-    reason: "restart" | "recover",
-  ): Promise<{
+  (reason: "restart" | "recover"): Promise<{
     readonly warm: WarmQuery;
     readonly abortController: AbortController;
   }>;

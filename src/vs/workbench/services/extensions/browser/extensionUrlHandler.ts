@@ -395,8 +395,7 @@ class ExtensionUrlHandler implements IExtensionUrlHandler, IURLHandler {
     if (extension) {
       await this.handleURL(uri, { ...options, trusted: true });
     } else {
-
-    /* Extension cannot be added and require window reload */
+      /* Extension cannot be added and require window reload */
       const result = await this.dialogService.confirm({
         message: localize(
           "reloadAndHandle",

@@ -492,9 +492,7 @@ export class McpAddConfigurationCommand {
     return targetPick?.target;
   }
 
-  private async getAssistedConfig(
-    type: AssistedConfigurationType,
-  ): Promise<
+  private async getAssistedConfig(type: AssistedConfigurationType): Promise<
     | {
         name?: string;
         server: Omit<IMcpStdioServerConfiguration, "type">;

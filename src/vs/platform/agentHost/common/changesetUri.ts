@@ -185,9 +185,7 @@ export function buildChangesetUri(sessionUri: URI, changesetId: string): URI {
  * Parses a changeset URI back into `(sessionUri, changesetId, kind)`,
  * or returns `undefined` if `uri` is not a changeset URI we recognise.
  */
-export function parseChangesetUri(
-  uri: URI,
-):
+export function parseChangesetUri(uri: URI):
   | {
       sessionUri: URI;
       changesetId: string;

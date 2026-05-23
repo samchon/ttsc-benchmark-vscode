@@ -2420,9 +2420,7 @@ export class CopilotAgent extends Disposable implements IAgent {
     }
   }
 
-  private async _readSessionMetadata(
-    session: URI,
-  ): Promise<{
+  private async _readSessionMetadata(session: URI): Promise<{
     model?: ModelSelection;
     agent?: AgentSelection;
     workingDirectory?: URI;
@@ -2452,9 +2450,7 @@ export class CopilotAgent extends Disposable implements IAgent {
     }
   }
 
-  private async _readStoredSessionMetadata(
-    session: URI,
-  ): Promise<
+  private async _readStoredSessionMetadata(session: URI): Promise<
     | {
         model?: ModelSelection;
         agent?: AgentSelection;

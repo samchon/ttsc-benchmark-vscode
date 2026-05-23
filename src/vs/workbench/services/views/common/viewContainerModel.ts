@@ -1007,9 +1007,7 @@ export class ViewContainerModel
     throw new Error(`view descriptor ${id} not found`);
   }
 
-  private findAndIgnoreIfNotFound(
-    id: string,
-  ):
+  private findAndIgnoreIfNotFound(id: string):
     | {
         index: number;
         visibleIndex: number;

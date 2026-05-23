@@ -467,14 +467,12 @@ suite("SnippetController", () => {
 
       assert.strictEqual(editor.getSelections()!.length, 1);
       assert.ok(
-        editor
-          .getSelection()!
-          .equalsRange({
-            startLineNumber: 2,
-            startColumn: 8,
-            endColumn: 8,
-            endLineNumber: 2,
-          }),
+        editor.getSelection()!.equalsRange({
+          startLineNumber: 2,
+          startColumn: 8,
+          endColumn: 8,
+          endLineNumber: 2,
+        }),
       );
     });
   });
@@ -489,14 +487,12 @@ suite("SnippetController", () => {
 
         assert.strictEqual(editor.getSelections()!.length, 1);
         assert.ok(
-          editor
-            .getSelection()!
-            .equalsRange({
-              startLineNumber: 1,
-              startColumn: 27,
-              endLineNumber: 1,
-              endColumn: 27,
-            }),
+          editor.getSelection()!.equalsRange({
+            startLineNumber: 1,
+            startColumn: 27,
+            endLineNumber: 1,
+            endColumn: 27,
+          }),
         );
         assert.strictEqual(
           editor.getModel()!.getValue(),
@@ -516,14 +512,12 @@ suite("SnippetController", () => {
 
         assert.strictEqual(editor.getSelections()!.length, 1);
         assert.ok(
-          editor
-            .getSelection()!
-            .equalsRange({
-              startLineNumber: 2,
-              startColumn: 2,
-              endLineNumber: 2,
-              endColumn: 2,
-            }),
+          editor.getSelection()!.equalsRange({
+            startLineNumber: 2,
+            startColumn: 2,
+            endLineNumber: 2,
+            endColumn: 2,
+          }),
           editor.getSelection()!.toString(),
         );
         assert.strictEqual(
@@ -544,14 +538,12 @@ suite("SnippetController", () => {
 
         assert.strictEqual(editor.getSelections()!.length, 1);
         assert.ok(
-          editor
-            .getSelection()!
-            .equalsRange({
-              startLineNumber: 2,
-              startColumn: 1,
-              endLineNumber: 2,
-              endColumn: 1,
-            }),
+          editor.getSelection()!.equalsRange({
+            startLineNumber: 2,
+            startColumn: 1,
+            endLineNumber: 2,
+            endColumn: 1,
+          }),
           editor.getSelection()!.toString(),
         );
         assert.strictEqual(
@@ -573,14 +565,12 @@ suite("SnippetController", () => {
         assert.strictEqual(editor.getModel()!.getValue(), "after");
         assert.strictEqual(editor.getSelections()!.length, 1);
         assert.ok(
-          editor
-            .getSelection()!
-            .equalsRange({
-              startLineNumber: 1,
-              startColumn: 4,
-              endLineNumber: 1,
-              endColumn: 4,
-            }),
+          editor.getSelection()!.equalsRange({
+            startLineNumber: 1,
+            startColumn: 4,
+            endLineNumber: 1,
+            endColumn: 4,
+          }),
           editor.getSelection()!.toString(),
         );
       },
@@ -662,14 +652,12 @@ suite("SnippetController", () => {
         controller.insert(codeSnippet, { overwriteBefore: 2 });
 
         assert.ok(
-          editor
-            .getSelection()!
-            .equalsRange({
-              startLineNumber: 1,
-              startColumn: 10,
-              endLineNumber: 1,
-              endColumn: 10,
-            }),
+          editor.getSelection()!.equalsRange({
+            startLineNumber: 1,
+            startColumn: 10,
+            endLineNumber: 1,
+            endColumn: 10,
+          }),
         );
       },
       ["af", "\taf"],

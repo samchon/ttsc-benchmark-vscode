@@ -358,9 +358,7 @@ export class ModelLineProjectionData {
     };
   }
 
-  private getInjectedTextAtOffset(
-    offsetInInputWithInjections: number,
-  ):
+  private getInjectedTextAtOffset(offsetInInputWithInjections: number):
     | {
         injectedTextIndex: number;
         offsetInInputWithInjections: number;

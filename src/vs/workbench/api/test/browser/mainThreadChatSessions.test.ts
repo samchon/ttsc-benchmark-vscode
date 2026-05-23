@@ -1604,14 +1604,12 @@ suite("MainThreadChatSessions", function () {
 
     const resolveStub = asSinonMethodStub(proxy.$resolveChatSessionItem);
     resolveStub.onFirstCall().resolves(undefined);
-    resolveStub
-      .onSecondCall()
-      .resolves({
-        resource,
-        label: "Session A",
-        timing,
-        badge: "resolved",
-      } satisfies Dto<IChatSessionItem>);
+    resolveStub.onSecondCall().resolves({
+      resource,
+      label: "Session A",
+      timing,
+      badge: "resolved",
+    } satisfies Dto<IChatSessionItem>);
 
     // First resolve returns undefined and should be cached.
     const result1 = await chatSessionsService.resolveChatSessionItem(

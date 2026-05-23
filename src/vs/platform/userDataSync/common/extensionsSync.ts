@@ -657,9 +657,7 @@ export class LocalExtensionsProvider {
     @IProductService private readonly productService: IProductService,
   ) {}
 
-  async getLocalExtensions(
-    profile: IUserDataProfile,
-  ): Promise<{
+  async getLocalExtensions(profile: IUserDataProfile): Promise<{
     localExtensions: ILocalSyncExtension[];
     ignoredExtensions: string[];
   }> {

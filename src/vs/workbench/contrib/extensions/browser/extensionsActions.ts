@@ -4113,9 +4113,7 @@ export abstract class AbstractConfigureRecommendedExtensionsAction extends Actio
     return Promise.resolve(undefined);
   }
 
-  private getOrCreateExtensionsFile(
-    extensionsFileResource: URI,
-  ): Promise<{
+  private getOrCreateExtensionsFile(extensionsFileResource: URI): Promise<{
     created: boolean;
     extensionsFileResource: URI;
     content: string;
