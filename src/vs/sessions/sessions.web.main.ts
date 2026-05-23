@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-
 // #######################################################################
 // ###                                                                 ###
 // ### !!! PLEASE ADD COMMON IMPORTS INTO SESSIONS.COMMON.MAIN.TS !!!  ###
@@ -16,20 +15,17 @@ import "./sessions.common.main.js";
 
 //#endregion
 
-
 //#region --- workbench parts
 
 import "../workbench/browser/parts/dialogs/dialog.web.contribution.js";
 
 //#endregion
 
-
 //#region --- sessions (web main) — sessions-specific web bootstrap
 
 import "./browser/web.main.js";
 
 //#endregion
-
 
 //#region --- workbench services (browser equivalents of the electron services)
 
@@ -72,7 +68,10 @@ import "../workbench/services/auxiliaryWindow/browser/auxiliaryWindowService.js"
 import "../workbench/services/power/browser/powerService.js";
 import "../platform/sandbox/browser/sandboxHelperService.js";
 
-import { InstantiationType, registerSingleton } from "../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../platform/instantiation/common/extensions.js";
 import { IAccessibilityService } from "../platform/accessibility/common/accessibility.js";
 import { IContextMenuService } from "../platform/contextview/browser/contextView.js";
 import { ContextMenuService } from "../platform/contextview/browser/contextMenuService.js";
@@ -80,7 +79,10 @@ import { IExtensionTipsService } from "../platform/extensionManagement/common/ex
 import { ExtensionTipsService } from "../platform/extensionManagement/common/extensionTipsService.js";
 import { IWorkbenchExtensionManagementService } from "../workbench/services/extensionManagement/common/extensionManagement.js";
 import { ExtensionManagementService } from "../workbench/services/extensionManagement/common/extensionManagementService.js";
-import { UserDataSyncMachinesService, IUserDataSyncMachinesService } from "../platform/userDataSync/common/userDataSyncMachines.js";
+import {
+  UserDataSyncMachinesService,
+  IUserDataSyncMachinesService,
+} from "../platform/userDataSync/common/userDataSyncMachines.js";
 import {
   IUserDataSyncStoreService,
   IUserDataSyncService,
@@ -91,14 +93,23 @@ import {
 import { UserDataSyncStoreService } from "../platform/userDataSync/common/userDataSyncStoreService.js";
 import { UserDataSyncLocalStoreService } from "../platform/userDataSync/common/userDataSyncLocalStoreService.js";
 import { UserDataSyncService } from "../platform/userDataSync/common/userDataSyncService.js";
-import { IUserDataSyncAccountService, UserDataSyncAccountService } from "../platform/userDataSync/common/userDataSyncAccount.js";
+import {
+  IUserDataSyncAccountService,
+  UserDataSyncAccountService,
+} from "../platform/userDataSync/common/userDataSyncAccount.js";
 import { UserDataAutoSyncService } from "../platform/userDataSync/common/userDataAutoSyncService.js";
 import { AccessibilityService } from "../platform/accessibility/browser/accessibilityService.js";
 import { ICustomEndpointTelemetryService } from "../platform/telemetry/common/telemetry.js";
 import { NullEndpointTelemetryService } from "../platform/telemetry/common/telemetryUtils.js";
 import "./services/title/browser/titleService.js";
-import { ITimerService, TimerService } from "../workbench/services/timer/browser/timerService.js";
-import { IDiagnosticsService, NullDiagnosticsService } from "../platform/diagnostics/common/diagnostics.js";
+import {
+  ITimerService,
+  TimerService,
+} from "../workbench/services/timer/browser/timerService.js";
+import {
+  IDiagnosticsService,
+  NullDiagnosticsService,
+} from "../platform/diagnostics/common/diagnostics.js";
 import { ILanguagePackService } from "../platform/languagePacks/common/languagePacks.js";
 import { WebLanguagePacksService } from "../platform/languagePacks/browser/languagePacks.js";
 import {
@@ -229,7 +240,6 @@ registerSingleton(
 );
 
 //#endregion
-
 
 //#region --- workbench contributions (browser versions)
 

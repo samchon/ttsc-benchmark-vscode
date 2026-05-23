@@ -36,26 +36,30 @@ import { ManageAccountsAction } from "./actions/manageAccountsAction.js";
 const codeExchangeProxyCommand = CommandsRegistry.registerCommand(
   "workbench.getCodeExchangeProxyEndpoints",
   function (accessor, _) {
-    const environmentService = accessor.get(IBrowserWorkbenchEnvironmentService);
+    const environmentService = accessor.get(
+      IBrowserWorkbenchEnvironmentService,
+    );
     return environmentService.options?.codeExchangeProxyEndpoints;
   },
 );
 
-class AuthenticationDataRenderer extends Disposable implements IExtensionFeatureTableRenderer {
+class AuthenticationDataRenderer
+  extends Disposable
+  implements IExtensionFeatureTableRenderer
+{
+  readonly type = "table";
 
-	readonly type = "table";
+  shouldRender(manifest: IExtensionManifest): boolean {
+    return !!manifest.contributes?.authentication;
+  }
 
-	shouldRender(manifest: IExtensionManifest): boolean {
-		return !!manifest.contributes?.authentication;
-	}
+  render(manifest: IExtensionManifest): IRenderedData<ITableData> {
+    const authentication = manifest.contributes?.authentication || [];
+    if (!authentication.length) {
+      return { data: { headers: [], rows: [] }, dispose: () => {} };
+    }
 
-	render(manifest: IExtensionManifest): IRenderedData<ITableData> {
-		const authentication = manifest.contributes?.authentication || [];
-		if (!authentication.length) {
-			return { data: { headers: [], rows: [] }, dispose: () => { } };
-		}
-
-		const headers = [
+    const headers = [
       localize("authenticationlabel", "Label"),
       localize("authenticationid", "ID"),
       localize(
@@ -64,69 +68,75 @@ class AuthenticationDataRenderer extends Disposable implements IExtensionFeature
       ),
     ];
 
-		const rows: IRowData[][] = authentication
-			.sort((a, b) => a.label.localeCompare(b.label))
-			.map(auth => {
-				return [
-					auth.label,
-					auth.id,
-					(auth.authorizationServerGlobs ?? []).join(",\n"),
-				];
-			});
+    const rows: IRowData[][] = authentication
+      .sort((a, b) => a.label.localeCompare(b.label))
+      .map((auth) => {
+        return [
+          auth.label,
+          auth.id,
+          (auth.authorizationServerGlobs ?? []).join(",\n"),
+        ];
+      });
 
-		return {
-			data: {
-				headers,
-				rows,
-			},
-			dispose: () => { },
-		};
-	}
+    return {
+      data: {
+        headers,
+        rows,
+      },
+      dispose: () => {},
+    };
+  }
 }
 
-const extensionFeature = Registry.as<IExtensionFeaturesRegistry>(Extensions.ExtensionFeaturesRegistry).registerExtensionFeature({
-	id: "authentication",
-	label: localize("authentication", "Authentication"),
-	access: {
-		canToggle: false,
-	},
-	renderer: new SyncDescriptor(AuthenticationDataRenderer),
+const extensionFeature = Registry.as<IExtensionFeaturesRegistry>(
+  Extensions.ExtensionFeaturesRegistry,
+).registerExtensionFeature({
+  id: "authentication",
+  label: localize("authentication", "Authentication"),
+  access: {
+    canToggle: false,
+  },
+  renderer: new SyncDescriptor(AuthenticationDataRenderer),
 });
 
-class AuthenticationContribution extends Disposable implements IWorkbenchContribution {
-	static ID = "workbench.contrib.authentication";
+class AuthenticationContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static ID = "workbench.contrib.authentication";
 
-	constructor() {
-		super();
-		this._register(codeExchangeProxyCommand);
-		this._register(extensionFeature);
+  constructor() {
+    super();
+    this._register(codeExchangeProxyCommand);
+    this._register(extensionFeature);
 
-		this._registerActions();
-	}
+    this._registerActions();
+  }
 
-	private _registerActions(): void {
-		this._register(registerAction2(ManageAccountsAction));
-		this._register(registerAction2(SignOutOfAccountAction));
-		this._register(registerAction2(ManageTrustedExtensionsForAccountAction));
-		this._register(registerAction2(ManageAccountPreferencesForExtensionAction));
-		this._register(registerAction2(ManageTrustedMcpServersForAccountAction));
-		this._register(registerAction2(ManageAccountPreferencesForMcpServerAction));
-		this._register(registerAction2(RemoveDynamicAuthenticationProvidersAction));
-	}
+  private _registerActions(): void {
+    this._register(registerAction2(ManageAccountsAction));
+    this._register(registerAction2(SignOutOfAccountAction));
+    this._register(registerAction2(ManageTrustedExtensionsForAccountAction));
+    this._register(registerAction2(ManageAccountPreferencesForExtensionAction));
+    this._register(registerAction2(ManageTrustedMcpServersForAccountAction));
+    this._register(registerAction2(ManageAccountPreferencesForMcpServerAction));
+    this._register(registerAction2(RemoveDynamicAuthenticationProvidersAction));
+  }
 }
 
 class AuthenticationUsageContribution implements IWorkbenchContribution {
-	static ID = "workbench.contrib.authenticationUsage";
+  static ID = "workbench.contrib.authenticationUsage";
 
-	constructor(
-		@IAuthenticationUsageService private readonly _authenticationUsageService: IAuthenticationUsageService,
-	) {
-		this._initializeExtensionUsageCache();
-	}
+  constructor(
+    @IAuthenticationUsageService
+    private readonly _authenticationUsageService: IAuthenticationUsageService,
+  ) {
+    this._initializeExtensionUsageCache();
+  }
 
-	private async _initializeExtensionUsageCache() {
-		await this._authenticationUsageService.initializeExtensionUsageCache();
-	}
+  private async _initializeExtensionUsageCache() {
+    await this._authenticationUsageService.initializeExtensionUsageCache();
+  }
 }
 
 // class AuthenticationExtensionsContribution extends Disposable implements IWorkbenchContribution {

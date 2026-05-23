@@ -7,27 +7,27 @@ import { URI } from "../../../../base/common/uri.js";
 import { VSBuffer } from "../../../../base/common/buffer.js";
 
 export interface ICarouselImage {
-	readonly id: string;
-	readonly name: string;
-	readonly mimeType: string;
-	/** In-memory image data. Omit when the image can be loaded lazily from `uri`. */
-	readonly data?: VSBuffer;
-	readonly uri?: URI;
-	readonly source?: string;
-	readonly caption?: string;
+  readonly id: string;
+  readonly name: string;
+  readonly mimeType: string;
+  /** In-memory image data. Omit when the image can be loaded lazily from `uri`. */
+  readonly data?: VSBuffer;
+  readonly uri?: URI;
+  readonly source?: string;
+  readonly caption?: string;
 }
 
 export interface ICarouselSection {
-	readonly title: string;
-	readonly images: ReadonlyArray<ICarouselImage>;
+  readonly title: string;
+  readonly images: ReadonlyArray<ICarouselImage>;
 }
 
 export interface IImageCarouselCollection {
-	readonly id: string;
-	readonly title: string;
-	readonly sections: ReadonlyArray<ICarouselSection>;
+  readonly id: string;
+  readonly title: string;
+  readonly sections: ReadonlyArray<ICarouselSection>;
 }
 
 export function isVideoMimeType(mimeType: string): boolean {
-	return mimeType.startsWith("video/");
+  return mimeType.startsWith("video/");
 }

@@ -14,8 +14,8 @@ export const ipcBrowserViewGroupChannelName = "browserViewGroup";
  * Fired when a browser view is added to or removed from a group.
  */
 export interface IBrowserViewGroupViewEvent {
-	/** The ID of the browser view that was added or removed. */
-	readonly viewId: string;
+  /** The ID of the browser view that was added or removed. */
+  readonly viewId: string;
 }
 
 /**
@@ -24,16 +24,16 @@ export interface IBrowserViewGroupViewEvent {
  * This interface is shared between the main-process entity and remote proxies.
  */
 export interface IBrowserViewGroup extends IDisposable {
-	readonly id: string;
+  readonly id: string;
 
-	readonly onDidAddView: Event<IBrowserViewGroupViewEvent>;
-	readonly onDidRemoveView: Event<IBrowserViewGroupViewEvent>;
-	readonly onDidDestroy: Event<void>;
-	readonly onCDPMessage: Event<CDPResponse | CDPEvent>;
+  readonly onDidAddView: Event<IBrowserViewGroupViewEvent>;
+  readonly onDidRemoveView: Event<IBrowserViewGroupViewEvent>;
+  readonly onDidDestroy: Event<void>;
+  readonly onCDPMessage: Event<CDPResponse | CDPEvent>;
 
-	addView(viewId: string): Promise<void>;
-	removeView(viewId: string): Promise<void>;
-	sendCDPMessage(msg: CDPRequest): Promise<void>;
+  addView(viewId: string): Promise<void>;
+  removeView(viewId: string): Promise<void>;
+  sendCDPMessage(msg: CDPRequest): Promise<void>;
 }
 
 /**
@@ -46,46 +46,45 @@ export interface IBrowserViewGroup extends IDisposable {
  * The main-process implementation is {@link BrowserViewGroupMainService}.
  */
 export interface IBrowserViewGroupService {
+  // Dynamic events - one per group instance, keyed by group ID.
+  onDynamicDidAddView(groupId: string): Event<IBrowserViewGroupViewEvent>;
+  onDynamicDidRemoveView(groupId: string): Event<IBrowserViewGroupViewEvent>;
+  onDynamicDidDestroy(groupId: string): Event<void>;
+  onDynamicCDPMessage(groupId: string): Event<CDPResponse | CDPEvent>;
 
-	// Dynamic events - one per group instance, keyed by group ID.
-	onDynamicDidAddView(groupId: string): Event<IBrowserViewGroupViewEvent>;
-	onDynamicDidRemoveView(groupId: string): Event<IBrowserViewGroupViewEvent>;
-	onDynamicDidDestroy(groupId: string): Event<void>;
-	onDynamicCDPMessage(groupId: string): Event<CDPResponse | CDPEvent>;
+  /**
+   * Create a new browser view group.
+   * @param owner The owner of the group's lifecycle.
+   * @returns The id of the newly created group.
+   */
+  createGroup(owner: IBrowserViewOwner): Promise<string>;
 
-	/**
-	 * Create a new browser view group.
-	 * @param owner The owner of the group's lifecycle.
-	 * @returns The id of the newly created group.
-	 */
-	createGroup(owner: IBrowserViewOwner): Promise<string>;
+  /**
+   * Destroy a browser view group.
+   * Views in the group are **not** destroyed - they are simply detached.
+   * @param groupId The group identifier.
+   */
+  destroyGroup(groupId: string): Promise<void>;
 
-	/**
-	 * Destroy a browser view group.
-	 * Views in the group are **not** destroyed - they are simply detached.
-	 * @param groupId The group identifier.
-	 */
-	destroyGroup(groupId: string): Promise<void>;
+  /**
+   * Add a browser view to a group.
+   * A view can belong to multiple groups simultaneously.
+   * @param groupId The group identifier.
+   * @param viewId The browser view identifier.
+   */
+  addViewToGroup(groupId: string, viewId: string): Promise<void>;
 
-	/**
-	 * Add a browser view to a group.
-	 * A view can belong to multiple groups simultaneously.
-	 * @param groupId The group identifier.
-	 * @param viewId The browser view identifier.
-	 */
-	addViewToGroup(groupId: string, viewId: string): Promise<void>;
+  /**
+   * Remove a browser view from a group.
+   * @param groupId The group identifier.
+   * @param viewId The browser view identifier.
+   */
+  removeViewFromGroup(groupId: string, viewId: string): Promise<void>;
 
-	/**
-	 * Remove a browser view from a group.
-	 * @param groupId The group identifier.
-	 * @param viewId The browser view identifier.
-	 */
-	removeViewFromGroup(groupId: string, viewId: string): Promise<void>;
-
-	/**
-	 * Send a CDP message to a group's browser proxy.
-	 * @param groupId The group identifier.
-	 * @param message The CDP request.
-	 */
-	sendCDPMessage(groupId: string, message: CDPRequest): Promise<void>;
+  /**
+   * Send a CDP message to a group's browser proxy.
+   * @param groupId The group identifier.
+   * @param message The CDP request.
+   */
+  sendCDPMessage(groupId: string, message: CDPRequest): Promise<void>;
 }

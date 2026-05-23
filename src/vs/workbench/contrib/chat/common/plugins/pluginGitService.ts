@@ -7,9 +7,8 @@ import { CancellationToken } from "../../../../../base/common/cancellation.js";
 import { URI } from "../../../../../base/common/uri.js";
 import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
 
-export const IPluginGitService = createDecorator<IPluginGitService>(
-  "pluginGitService",
-);
+export const IPluginGitService =
+  createDecorator<IPluginGitService>("pluginGitService");
 
 /**
  * Abstracts git operations used by the agent plugin system.
@@ -34,13 +33,23 @@ export const IPluginGitService = createDecorator<IPluginGitService>(
  * variant of `CustomizationRef`. That work is not yet implemented.
  */
 export interface IPluginGitService {
-	readonly _serviceBrand: undefined;
+  readonly _serviceBrand: undefined;
 
-	cloneRepository(cloneUrl: string, targetDir: URI, ref?: string, token?: CancellationToken): Promise<void>;
-	pull(repoDir: URI, token?: CancellationToken): Promise<boolean>;
-	checkout(repoDir: URI, treeish: string, detached?: boolean, token?: CancellationToken): Promise<void>;
-	revParse(repoDir: URI, ref: string): Promise<string>;
-	fetch(repoDir: URI, token?: CancellationToken): Promise<void>;
-	fetchRepository(repoDir: URI, token?: CancellationToken): Promise<void>;
-	revListCount(repoDir: URI, fromRef: string, toRef: string): Promise<number>;
+  cloneRepository(
+    cloneUrl: string,
+    targetDir: URI,
+    ref?: string,
+    token?: CancellationToken,
+  ): Promise<void>;
+  pull(repoDir: URI, token?: CancellationToken): Promise<boolean>;
+  checkout(
+    repoDir: URI,
+    treeish: string,
+    detached?: boolean,
+    token?: CancellationToken,
+  ): Promise<void>;
+  revParse(repoDir: URI, ref: string): Promise<string>;
+  fetch(repoDir: URI, token?: CancellationToken): Promise<void>;
+  fetchRepository(repoDir: URI, token?: CancellationToken): Promise<void>;
+  revListCount(repoDir: URI, fromRef: string, toRef: string): Promise<number>;
 }

@@ -5,7 +5,11 @@
 
 import assert from "assert";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
-import { isISubmenuItem, MenuId, MenuRegistry } from "../../../../../platform/actions/common/actions.js";
+import {
+  isISubmenuItem,
+  MenuId,
+  MenuRegistry,
+} from "../../../../../platform/actions/common/actions.js";
 
 // Side-effect import to trigger module-level menu registrations.
 // Only import runScriptAction which registers the Run dropdown submenu;
@@ -22,7 +26,11 @@ suite("RunScriptContribution", () => {
   test("contributes run dropdown to TitleBarSessionMenu", () => {
     const items = MenuRegistry.getMenuItems(titleBarSessionMenu);
 
-    const runAction = items.find(item => isISubmenuItem(item) && item.submenu.id === "AgentSessionsRunScriptDropdown");
+    const runAction = items.find(
+      (item) =>
+        isISubmenuItem(item) &&
+        item.submenu.id === "AgentSessionsRunScriptDropdown",
+    );
 
     assert.ok(
       runAction,

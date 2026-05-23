@@ -15,7 +15,10 @@ export const searchDetailsIcon = registerIcon(
 export const searchActivityBarIcon = registerIcon(
   "search-see-more",
   Codicon.goToSearch,
-  localize("searchSeeMoreIcon", "Icon to view more context in the search view."),
+  localize(
+    "searchSeeMoreIcon",
+    "Icon to view more context in the search view.",
+  ),
 );
 
 export const searchShowContextIcon = registerIcon(
@@ -74,7 +77,10 @@ export const searchCollapseAllIcon = registerIcon(
 export const searchExpandAllIcon = registerIcon(
   "search-expand-results",
   Codicon.expandAll,
-  localize("searchExpandAllIcon", "Icon for expand results in the search view."),
+  localize(
+    "searchExpandAllIcon",
+    "Icon for expand results in the search view.",
+  ),
 );
 export const searchShowAsTree = registerIcon(
   "search-tree",

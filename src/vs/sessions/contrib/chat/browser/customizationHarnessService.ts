@@ -34,44 +34,45 @@ const LOCAL_HARNESS_SESSION_TYPE = "local";
  * register directly via `registerExternalHarness()`.
  */
 export class SessionsCustomizationHarnessService extends CustomizationHarnessServiceBase {
+  private _localHarnessRegistration: IDisposable | undefined;
 
-	private _localHarnessRegistration: IDisposable | undefined;
-
-	constructor(
-		@IPromptsService promptsService: IPromptsService,
-		@ISessionsManagementService private readonly sessionsManagementService: ISessionsManagementService,
-	) {
-		const localExtras = [
+  constructor(
+    @IPromptsService promptsService: IPromptsService,
+    @ISessionsManagementService
+    private readonly sessionsManagementService: ISessionsManagementService,
+  ) {
+    const localExtras = [
       AICustomizationSources.extension,
       AICustomizationSources.builtin,
     ];
-		const localHarness = createVSCodeHarnessDescriptor(localExtras);
+    const localHarness = createVSCodeHarnessDescriptor(localExtras);
 
-		super([], SessionType.Local, promptsService);
+    super([], SessionType.Local, promptsService);
 
-		const sync = () => this._syncLocalHarness(
-      localHarness,
-      this._hasLocalSessionType(),
-    );
+    const sync = () =>
+      this._syncLocalHarness(localHarness, this._hasLocalSessionType());
 
-		this.sessionsManagementService.onDidChangeSessionTypes(sync);
+    this.sessionsManagementService.onDidChangeSessionTypes(sync);
 
-		// Initial sync
-		sync();
-	}
+    // Initial sync
+    sync();
+  }
 
-	private _hasLocalSessionType(): boolean {
-		return this.sessionsManagementService.getAllSessionTypes().some(
-      t => t.id === LOCAL_HARNESS_SESSION_TYPE,
-    );
-	}
+  private _hasLocalSessionType(): boolean {
+    return this.sessionsManagementService
+      .getAllSessionTypes()
+      .some((t) => t.id === LOCAL_HARNESS_SESSION_TYPE);
+  }
 
-	private _syncLocalHarness(descriptor: IHarnessDescriptor, enabled: boolean): void {
-		if (enabled && !this._localHarnessRegistration) {
-			this._localHarnessRegistration = this.registerExternalHarness(descriptor);
-		} else if (!enabled && this._localHarnessRegistration) {
-			this._localHarnessRegistration.dispose();
-			this._localHarnessRegistration = undefined;
-		}
-	}
+  private _syncLocalHarness(
+    descriptor: IHarnessDescriptor,
+    enabled: boolean,
+  ): void {
+    if (enabled && !this._localHarnessRegistration) {
+      this._localHarnessRegistration = this.registerExternalHarness(descriptor);
+    } else if (!enabled && this._localHarnessRegistration) {
+      this._localHarnessRegistration.dispose();
+      this._localHarnessRegistration = undefined;
+    }
+  }
 }

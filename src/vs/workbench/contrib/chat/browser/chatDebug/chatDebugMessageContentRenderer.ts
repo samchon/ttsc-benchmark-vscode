@@ -13,7 +13,10 @@ import {
   IChatDebugAgentResponseEvent,
   IChatDebugEventMessageContent,
 } from "../../common/chatDebugService.js";
-import { renderSection, tokenizeContent } from "./chatDebugToolCallContentRenderer.js";
+import {
+  renderSection,
+  tokenizeContent,
+} from "./chatDebugToolCallContentRenderer.js";
 
 const $ = DOM.$;
 
@@ -21,12 +24,17 @@ const $ = DOM.$;
  * Render a user message event with collapsible prompt sections.
  * JSON content in sections is syntax-highlighted.
  */
-export async function renderUserMessageContent(event: IChatDebugUserMessageEvent, languageService: ILanguageService, clipboardService?: IClipboardService, scrollable?: { scanDomNode(): void }): Promise<{ element: HTMLElement; disposables: DisposableStore }> {
-	const disposables = new DisposableStore();
-	const container = $("div.chat-debug-message-content");
-	container.tabIndex = 0;
+export async function renderUserMessageContent(
+  event: IChatDebugUserMessageEvent,
+  languageService: ILanguageService,
+  clipboardService?: IClipboardService,
+  scrollable?: { scanDomNode(): void },
+): Promise<{ element: HTMLElement; disposables: DisposableStore }> {
+  const disposables = new DisposableStore();
+  const container = $("div.chat-debug-message-content");
+  container.tabIndex = 0;
 
-	DOM.append(
+  DOM.append(
     container,
     $(
       "div.chat-debug-message-content-title",
@@ -34,17 +42,17 @@ export async function renderUserMessageContent(event: IChatDebugUserMessageEvent
       localize("chatDebug.userMessage", "User Message"),
     ),
   );
-	DOM.append(
+  DOM.append(
     container,
     $("div.chat-debug-message-content-summary", undefined, event.message),
   );
 
-	if (event.sections.length > 0) {
-		const sectionsContainer = DOM.append(
+  if (event.sections.length > 0) {
+    const sectionsContainer = DOM.append(
       container,
       $("div.chat-debug-message-sections"),
     );
-		DOM.append(
+    DOM.append(
       sectionsContainer,
       $(
         "div.chat-debug-message-sections-label",
@@ -57,12 +65,12 @@ export async function renderUserMessageContent(event: IChatDebugUserMessageEvent
       ),
     );
 
-		for (const section of event.sections) {
-			const { plainText, tokenizedHtml } = await tokenizeContent(
+    for (const section of event.sections) {
+      const { plainText, tokenizedHtml } = await tokenizeContent(
         section.content,
         languageService,
       );
-			renderSection(
+      renderSection(
         sectionsContainer,
         section.name,
         plainText,
@@ -72,22 +80,27 @@ export async function renderUserMessageContent(event: IChatDebugUserMessageEvent
         clipboardService,
         scrollable,
       );
-		}
-	}
+    }
+  }
 
-	return { element: container, disposables };
+  return { element: container, disposables };
 }
 
 /**
  * Render an agent response event with collapsible response sections.
  * JSON content in sections is syntax-highlighted.
  */
-export async function renderAgentResponseContent(event: IChatDebugAgentResponseEvent, languageService: ILanguageService, clipboardService?: IClipboardService, scrollable?: { scanDomNode(): void }): Promise<{ element: HTMLElement; disposables: DisposableStore }> {
-	const disposables = new DisposableStore();
-	const container = $("div.chat-debug-message-content");
-	container.tabIndex = 0;
+export async function renderAgentResponseContent(
+  event: IChatDebugAgentResponseEvent,
+  languageService: ILanguageService,
+  clipboardService?: IClipboardService,
+  scrollable?: { scanDomNode(): void },
+): Promise<{ element: HTMLElement; disposables: DisposableStore }> {
+  const disposables = new DisposableStore();
+  const container = $("div.chat-debug-message-content");
+  container.tabIndex = 0;
 
-	DOM.append(
+  DOM.append(
     container,
     $(
       "div.chat-debug-message-content-title",
@@ -95,17 +108,17 @@ export async function renderAgentResponseContent(event: IChatDebugAgentResponseE
       localize("chatDebug.agentResponse", "Agent Response"),
     ),
   );
-	DOM.append(
+  DOM.append(
     container,
     $("div.chat-debug-message-content-summary", undefined, event.message),
   );
 
-	if (event.sections.length > 0) {
-		const sectionsContainer = DOM.append(
+  if (event.sections.length > 0) {
+    const sectionsContainer = DOM.append(
       container,
       $("div.chat-debug-message-sections"),
     );
-		DOM.append(
+    DOM.append(
       sectionsContainer,
       $(
         "div.chat-debug-message-sections-label",
@@ -118,12 +131,12 @@ export async function renderAgentResponseContent(event: IChatDebugAgentResponseE
       ),
     );
 
-		for (const section of event.sections) {
-			const { plainText, tokenizedHtml } = await tokenizeContent(
+    for (const section of event.sections) {
+      const { plainText, tokenizedHtml } = await tokenizeContent(
         section.content,
         languageService,
       );
-			renderSection(
+      renderSection(
         sectionsContainer,
         section.name,
         plainText,
@@ -133,81 +146,90 @@ export async function renderAgentResponseContent(event: IChatDebugAgentResponseE
         clipboardService,
         scrollable,
       );
-		}
-	}
+    }
+  }
 
-	return { element: container, disposables };
+  return { element: container, disposables };
 }
 
 /**
  * Convert a user message or agent response event to plain text for clipboard / editor output.
  */
-export function messageEventToPlainText(event: IChatDebugUserMessageEvent | IChatDebugAgentResponseEvent): string {
-	const lines: string[] = [];
-	const label = event.kind === "userMessage" ? localize(
-    "chatDebug.userMessage",
-    "User Message",
-  ) : localize("chatDebug.agentResponse", "Agent Response");
-	lines.push(`${label}: ${event.message}`);
-	lines.push("");
+export function messageEventToPlainText(
+  event: IChatDebugUserMessageEvent | IChatDebugAgentResponseEvent,
+): string {
+  const lines: string[] = [];
+  const label =
+    event.kind === "userMessage"
+      ? localize("chatDebug.userMessage", "User Message")
+      : localize("chatDebug.agentResponse", "Agent Response");
+  lines.push(`${label}: ${event.message}`);
+  lines.push("");
 
-	for (const section of event.sections) {
-		lines.push(`--- ${section.name} ---`);
-		lines.push(section.content);
-		lines.push("");
-	}
+  for (const section of event.sections) {
+    lines.push(`--- ${section.name} ---`);
+    lines.push(section.content);
+    lines.push("");
+  }
 
-	return lines.join("\n");
+  return lines.join("\n");
 }
 
 /**
  * Render a resolved message content (from resolveChatDebugLogEvent) with collapsible sections.
  * JSON content in sections is syntax-highlighted.
  */
-export async function renderResolvedMessageContent(content: IChatDebugEventMessageContent, languageService: ILanguageService, clipboardService?: IClipboardService, scrollable?: { scanDomNode(): void }): Promise<{ element: HTMLElement; disposables: DisposableStore }> {
-	const disposables = new DisposableStore();
-	const container = $("div.chat-debug-message-content");
-	container.tabIndex = 0;
+export async function renderResolvedMessageContent(
+  content: IChatDebugEventMessageContent,
+  languageService: ILanguageService,
+  clipboardService?: IClipboardService,
+  scrollable?: { scanDomNode(): void },
+): Promise<{ element: HTMLElement; disposables: DisposableStore }> {
+  const disposables = new DisposableStore();
+  const container = $("div.chat-debug-message-content");
+  container.tabIndex = 0;
 
-	const title = content.type === "user"
-		? localize("chatDebug.userMessage", "User Message")
-		: localize("chatDebug.agentResponse", "Agent Response");
-	DOM.append(
+  const title =
+    content.type === "user"
+      ? localize("chatDebug.userMessage", "User Message")
+      : localize("chatDebug.agentResponse", "Agent Response");
+  DOM.append(
     container,
     $("div.chat-debug-message-content-title", undefined, title),
   );
-	DOM.append(
+  DOM.append(
     container,
     $("div.chat-debug-message-content-summary", undefined, content.message),
   );
 
-	if (content.sections.length > 0) {
-		const sectionsContainer = DOM.append(
+  if (content.sections.length > 0) {
+    const sectionsContainer = DOM.append(
       container,
       $("div.chat-debug-message-sections"),
     );
-		const label = content.type === "user"
-			? localize(
-          "chatDebug.promptSections",
-          "Prompt Sections ({0})",
-          content.sections.length,
-        )
-			: localize(
-          "chatDebug.responseSections",
-          "Response Sections ({0})",
-          content.sections.length,
-        );
-		DOM.append(
+    const label =
+      content.type === "user"
+        ? localize(
+            "chatDebug.promptSections",
+            "Prompt Sections ({0})",
+            content.sections.length,
+          )
+        : localize(
+            "chatDebug.responseSections",
+            "Response Sections ({0})",
+            content.sections.length,
+          );
+    DOM.append(
       sectionsContainer,
       $("div.chat-debug-message-sections-label", undefined, label),
     );
 
-		for (const section of content.sections) {
-			const { plainText, tokenizedHtml } = await tokenizeContent(
+    for (const section of content.sections) {
+      const { plainText, tokenizedHtml } = await tokenizeContent(
         section.content,
         languageService,
       );
-			renderSection(
+      renderSection(
         sectionsContainer,
         section.name,
         plainText,
@@ -217,28 +239,31 @@ export async function renderResolvedMessageContent(content: IChatDebugEventMessa
         clipboardService,
         scrollable,
       );
-		}
-	}
+    }
+  }
 
-	return { element: container, disposables };
+  return { element: container, disposables };
 }
 
 /**
  * Convert a resolved message content to plain text.
  */
-export function resolvedMessageToPlainText(content: IChatDebugEventMessageContent): string {
-	const lines: string[] = [];
-	const label = content.type === "user"
-		? localize("chatDebug.userMessage", "User Message")
-		: localize("chatDebug.agentResponse", "Agent Response");
-	lines.push(`${label}: ${content.message}`);
-	lines.push("");
+export function resolvedMessageToPlainText(
+  content: IChatDebugEventMessageContent,
+): string {
+  const lines: string[] = [];
+  const label =
+    content.type === "user"
+      ? localize("chatDebug.userMessage", "User Message")
+      : localize("chatDebug.agentResponse", "Agent Response");
+  lines.push(`${label}: ${content.message}`);
+  lines.push("");
 
-	for (const section of content.sections) {
-		lines.push(`--- ${section.name} ---`);
-		lines.push(section.content);
-		lines.push("");
-	}
+  for (const section of content.sections) {
+    lines.push(`--- ${section.name} ---`);
+    lines.push(section.content);
+    lines.push("");
+  }
 
-	return lines.join("\n");
+  return lines.join("\n");
 }

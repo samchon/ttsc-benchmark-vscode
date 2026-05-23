@@ -18,34 +18,39 @@ import type {
  * where SSH is not available.
  */
 export class NullSSHRemoteAgentHostService implements ISSHRemoteAgentHostService {
-	declare readonly _serviceBrand: undefined;
-	readonly onDidChangeConnections = Event.None;
-	readonly onDidReportConnectProgress: Event<ISSHConnectProgress> = Event.None;
-	readonly connections: readonly ISSHAgentHostConnection[] = [];
+  declare readonly _serviceBrand: undefined;
+  readonly onDidChangeConnections = Event.None;
+  readonly onDidReportConnectProgress: Event<ISSHConnectProgress> = Event.None;
+  readonly connections: readonly ISSHAgentHostConnection[] = [];
 
-	async connect(_config: ISSHAgentHostConfig): Promise<ISSHAgentHostConnection> {
-		throw new Error("SSH connections are not supported in the browser.");
-	}
+  async connect(
+    _config: ISSHAgentHostConfig,
+  ): Promise<ISSHAgentHostConnection> {
+    throw new Error("SSH connections are not supported in the browser.");
+  }
 
-	async disconnect(_host: string): Promise<void> { }
+  async disconnect(_host: string): Promise<void> {}
 
-	async listSSHConfigHosts(): Promise<string[]> {
-		return [];
-	}
+  async listSSHConfigHosts(): Promise<string[]> {
+    return [];
+  }
 
-	async ensureUserSSHConfig(): Promise<URI> {
-		throw new Error("SSH is not supported in the browser.");
-	}
+  async ensureUserSSHConfig(): Promise<URI> {
+    throw new Error("SSH is not supported in the browser.");
+  }
 
-	async listSSHConfigFiles(): Promise<URI[]> {
-		return [];
-	}
+  async listSSHConfigFiles(): Promise<URI[]> {
+    return [];
+  }
 
-	async resolveSSHConfig(_host: string): Promise<ISSHResolvedConfig> {
-		throw new Error("SSH is not supported in the browser.");
-	}
+  async resolveSSHConfig(_host: string): Promise<ISSHResolvedConfig> {
+    throw new Error("SSH is not supported in the browser.");
+  }
 
-	async reconnect(_sshConfigHost: string, _name: string): Promise<ISSHAgentHostConnection> {
-		throw new Error("SSH connections are not supported in the browser.");
-	}
+  async reconnect(
+    _sshConfigHost: string,
+    _name: string,
+  ): Promise<ISSHAgentHostConnection> {
+    throw new Error("SSH connections are not supported in the browser.");
+  }
 }

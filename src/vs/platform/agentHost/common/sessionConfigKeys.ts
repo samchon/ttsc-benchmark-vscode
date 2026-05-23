@@ -16,16 +16,16 @@
  * property names in their `resolveSessionConfig` response.
  */
 export const enum SessionConfigKey {
-	/** `'autoApprove'` — tool auto-approval level. */
-	AutoApprove = "autoApprove",
-	/** `'permissions'` — per-tool session allow/deny lists. */
-	Permissions = "permissions",
-	/** `'isolation'` — `'folder'` or `'worktree'`. */
-	Isolation = "isolation",
-	/** `'branch'` — base branch to work from. */
-	Branch = "branch",
-	/** `'mode'` — agent execution mode (interactive / plan). */
-	Mode = "mode",
+  /** `'autoApprove'` — tool auto-approval level. */
+  AutoApprove = "autoApprove",
+  /** `'permissions'` — per-tool session allow/deny lists. */
+  Permissions = "permissions",
+  /** `'isolation'` — `'folder'` or `'worktree'`. */
+  Isolation = "isolation",
+  /** `'branch'` — base branch to work from. */
+  Branch = "branch",
+  /** `'mode'` — agent execution mode (interactive / plan). */
+  Mode = "mode",
 }
 
 /**

@@ -11,16 +11,18 @@ export const ILocaleService = createDecorator<ILocaleService>(
 );
 
 export interface ILocaleService {
-	readonly _serviceBrand: undefined;
-	setLocale(languagePackItem: ILanguagePackItem, skipDialog?: boolean): Promise<void>;
-	clearLocalePreference(): Promise<void>;
+  readonly _serviceBrand: undefined;
+  setLocale(
+    languagePackItem: ILanguagePackItem,
+    skipDialog?: boolean,
+  ): Promise<void>;
+  clearLocalePreference(): Promise<void>;
 }
 
-export const IActiveLanguagePackService = createDecorator<IActiveLanguagePackService>(
-  "activeLanguageService",
-);
+export const IActiveLanguagePackService =
+  createDecorator<IActiveLanguagePackService>("activeLanguageService");
 
 export interface IActiveLanguagePackService {
-	readonly _serviceBrand: undefined;
-	getExtensionIdProvidingCurrentLocale(): Promise<string | undefined>;
+  readonly _serviceBrand: undefined;
+  getExtensionIdProvidingCurrentLocale(): Promise<string | undefined>;
 }

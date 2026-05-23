@@ -17,13 +17,19 @@ import {
   TestServiceAccessor,
   workbenchInstantiationService,
 } from "../../../../test/electron-browser/workbenchTestServices.js";
-import { IWorkingCopyFileService, WorkingCopyFileService } from "../../../workingCopy/common/workingCopyFileService.js";
+import {
+  IWorkingCopyFileService,
+  WorkingCopyFileService,
+} from "../../../workingCopy/common/workingCopyFileService.js";
 import { WorkingCopyService } from "../../../workingCopy/common/workingCopyService.js";
 import { UriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentityService.js";
 import { InMemoryFileSystemProvider } from "../../../../../platform/files/common/inMemoryFilesystemProvider.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import { TextFileEditorModel } from "../../common/textFileEditorModel.js";
-import { ensureNoDisposablesAreLeakedInTestSuite, toResource } from "../../../../../base/test/common/utils.js";
+import {
+  ensureNoDisposablesAreLeakedInTestSuite,
+  toResource,
+} from "../../../../../base/test/common/utils.js";
 
 suite("Files - NativeTextFileService", function () {
   const disposables = new DisposableStore();
@@ -32,7 +38,10 @@ suite("Files - NativeTextFileService", function () {
   let instantiationService: IInstantiationService;
 
   setup(() => {
-    instantiationService = workbenchInstantiationService(undefined, disposables);
+    instantiationService = workbenchInstantiationService(
+      undefined,
+      disposables,
+    );
 
     const logService = new NullLogService();
     const fileService = disposables.add(new FileService(logService));
@@ -54,7 +63,11 @@ suite("Files - NativeTextFileService", function () {
       ),
     );
 
-    service = disposables.add(instantiationService.createChild(collection).createInstance(TestNativeTextFileServiceWithEncodingOverrides));
+    service = disposables.add(
+      instantiationService
+        .createChild(collection)
+        .createInstance(TestNativeTextFileServiceWithEncodingOverrides),
+    );
     disposables.add(<TextFileEditorModelManager>service.files);
   });
 
@@ -63,12 +76,19 @@ suite("Files - NativeTextFileService", function () {
   });
 
   test("shutdown joins on pending saves", async function () {
-    const model: TextFileEditorModel = disposables.add(instantiationService.createInstance(TextFileEditorModel, toResource.call(this, "/path/index_async.txt"), "utf8", undefined));
+    const model: TextFileEditorModel = disposables.add(
+      instantiationService.createInstance(
+        TextFileEditorModel,
+        toResource.call(this, "/path/index_async.txt"),
+        "utf8",
+        undefined,
+      ),
+    );
 
     await model.resolve();
 
     let pendingSaveAwaited = false;
-    model.save().then(() => pendingSaveAwaited = true);
+    model.save().then(() => (pendingSaveAwaited = true));
 
     const accessor = instantiationService.createInstance(TestServiceAccessor);
     accessor.lifecycleService.fireShutdown();

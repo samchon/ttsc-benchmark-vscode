@@ -30,15 +30,16 @@ const acknowledgementsLabel = escape(
     "I acknowledge that my VS Code version is not updated and this issue may be closed.",
   ),
 );
-const reviewGuidanceLabel = localize( // intentionally not escaped because of its embedded tags
-	{
-		key: "reviewGuidanceLabel",
-		comment: [
-			'{Locked="<a href=\"https://github.com/microsoft/vscode/wiki/Submitting-Bugs-and-Suggestions\" target=\"_blank\">"}',
-			'{Locked="</a>"}',
-		],
-	},
-	'Before you report an issue here please <a href="https://github.com/microsoft/vscode/wiki/Submitting-Bugs-and-Suggestions" target="_blank">review the guidance we provide</a>. Please complete the form in English.',
+const reviewGuidanceLabel = localize(
+  // intentionally not escaped because of its embedded tags
+  {
+    key: "reviewGuidanceLabel",
+    comment: [
+      '{Locked="<a href=\"https://github.com/microsoft/vscode/wiki/Submitting-Bugs-and-Suggestions\" target=\"_blank\">"}',
+      '{Locked="</a>"}',
+    ],
+  },
+  'Before you report an issue here please <a href="https://github.com/microsoft/vscode/wiki/Submitting-Bugs-and-Suggestions" target="_blank">review the guidance we provide</a>. Please complete the form in English.',
 );
 
 export default (): string => `
@@ -66,8 +67,16 @@ export default (): string => `
 				<!-- To be dynamically filled -->
 			</select>
 			<div id="issue-source-empty-error" class="validation-error hidden" role="alert">${escape(localize("issueSourceEmptyValidation", "An issue source is required."))}</div>
-			<div id="problem-source-help-text" class="instructions hidden">${escape(localize("disableExtensionsLabelText", "Try to reproduce the problem after {0}. If the problem only reproduces when extensions are active, it is likely an issue with an extension."))
-		.replace("{0}", () => `<span tabIndex=0 role="button" id="disableExtensions" class="workbenchCommand">${escape(localize("disableExtensions", "disabling all extensions and reloading the window"))}</span>`)}
+			<div id="problem-source-help-text" class="instructions hidden">${escape(
+        localize(
+          "disableExtensionsLabelText",
+          "Try to reproduce the problem after {0}. If the problem only reproduces when extensions are active, it is likely an issue with an extension.",
+        ),
+      ).replace(
+        "{0}",
+        () =>
+          `<span tabIndex=0 role="button" id="disableExtensions" class="workbenchCommand">${escape(localize("disableExtensions", "disabling all extensions and reloading the window"))}</span>`,
+      )}
 			</div>
 
 			<div id="extension-selection">
@@ -75,8 +84,16 @@ export default (): string => `
 				<select id="extension-selector" class="inline-form-control">
 					<!-- To be dynamically filled -->
 				</select>
-				<div id="extension-selection-validation-error" class="validation-error hidden" role="alert">${escape(localize("extensionWithNonstandardBugsUrl", "The issue reporter is unable to create issues for this extension. Please visit {0} to report an issue."))
-		.replace("{0}", () => `<span tabIndex=0 role="button" id="extensionBugsLink" class="workbenchCommand"><!-- To be dynamically filled --></span>`)}</div>
+				<div id="extension-selection-validation-error" class="validation-error hidden" role="alert">${escape(
+          localize(
+            "extensionWithNonstandardBugsUrl",
+            "The issue reporter is unable to create issues for this extension. Please visit {0} to report an issue.",
+          ),
+        ).replace(
+          "{0}",
+          () =>
+            `<span tabIndex=0 role="button" id="extensionBugsLink" class="workbenchCommand"><!-- To be dynamically filled --></span>`,
+        )}</div>
 				<div id="extension-selection-validation-error-no-url" class="validation-error hidden" role="alert">
 					${escape(localize("extensionWithNoBugsUrl", "The issue reporter is unable to create issues for this extension, as it does not specify a URL for reporting issues. Please check the marketplace page of this extension to see if other instructions are available."))}
 				</div>

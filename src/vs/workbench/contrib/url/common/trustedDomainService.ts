@@ -12,8 +12,8 @@ export const ITrustedDomainService = createDecorator<ITrustedDomainService>(
 );
 
 export interface ITrustedDomainService {
-	_serviceBrand: undefined;
-	readonly onDidChangeTrustedDomains: Event<void>;
-	isValid(resource: URI): boolean;
-	readonly trustedDomains: string[];
+  _serviceBrand: undefined;
+  readonly onDidChangeTrustedDomains: Event<void>;
+  isValid(resource: URI): boolean;
+  readonly trustedDomains: string[];
 }

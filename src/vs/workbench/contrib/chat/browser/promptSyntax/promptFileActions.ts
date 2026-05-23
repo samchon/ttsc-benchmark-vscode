@@ -16,18 +16,17 @@ import {
   SaveAsPromptFileAction,
 } from "./saveAsPromptFileActions.js";
 
-
 /**
  * Helper to register all actions related to reusable prompt files.
  */
 export function registerPromptActions(): void {
-	registerRunPromptActions();
-	registerAttachPromptActions();
-	registerSkillActions();
-	registerHookActions();
-	registerAction2(SaveAsPromptFileAction);
-	registerAction2(SaveAsInstructionsFileAction);
-	registerAction2(SaveAsAgentFileAction);
-	registerAgentActions();
-	registerNewPromptFileActions();
+  registerRunPromptActions();
+  registerAttachPromptActions();
+  registerSkillActions();
+  registerHookActions();
+  registerAction2(SaveAsPromptFileAction);
+  registerAction2(SaveAsInstructionsFileAction);
+  registerAction2(SaveAsAgentFileAction);
+  registerAgentActions();
+  registerNewPromptFileActions();
 }

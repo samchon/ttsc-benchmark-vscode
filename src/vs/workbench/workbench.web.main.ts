@@ -3,13 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-
 // #######################################################################
 // ###                                                                 ###
 // ### !!! PLEASE ADD COMMON IMPORTS INTO WORKBENCH.COMMON.MAIN.TS !!! ###
 // ###                                                                 ###
 // #######################################################################
-
 
 //#region --- workbench common
 
@@ -17,20 +15,17 @@ import "./workbench.common.main.js";
 
 //#endregion
 
-
 //#region --- workbench parts
 
 import "./browser/parts/dialogs/dialog.web.contribution.js";
 
 //#endregion
 
-
 //#region --- workbench (web main)
 
 import "./browser/web.main.js";
 
 //#endregion
-
 
 //#region --- workbench services
 
@@ -73,7 +68,10 @@ import "./services/auxiliaryWindow/browser/auxiliaryWindowService.js";
 import "./services/power/browser/powerService.js";
 import "../platform/sandbox/browser/sandboxHelperService.js";
 
-import { InstantiationType, registerSingleton } from "../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../platform/instantiation/common/extensions.js";
 import { IAccessibilityService } from "../platform/accessibility/common/accessibility.js";
 import { IContextMenuService } from "../platform/contextview/browser/contextView.js";
 import { ContextMenuService } from "../platform/contextview/browser/contextMenuService.js";
@@ -81,7 +79,10 @@ import { IExtensionTipsService } from "../platform/extensionManagement/common/ex
 import { ExtensionTipsService } from "../platform/extensionManagement/common/extensionTipsService.js";
 import { IWorkbenchExtensionManagementService } from "./services/extensionManagement/common/extensionManagement.js";
 import { ExtensionManagementService } from "./services/extensionManagement/common/extensionManagementService.js";
-import { UserDataSyncMachinesService, IUserDataSyncMachinesService } from "../platform/userDataSync/common/userDataSyncMachines.js";
+import {
+  UserDataSyncMachinesService,
+  IUserDataSyncMachinesService,
+} from "../platform/userDataSync/common/userDataSyncMachines.js";
 import {
   IUserDataSyncStoreService,
   IUserDataSyncService,
@@ -92,15 +93,24 @@ import {
 import { UserDataSyncStoreService } from "../platform/userDataSync/common/userDataSyncStoreService.js";
 import { UserDataSyncLocalStoreService } from "../platform/userDataSync/common/userDataSyncLocalStoreService.js";
 import { UserDataSyncService } from "../platform/userDataSync/common/userDataSyncService.js";
-import { IUserDataSyncAccountService, UserDataSyncAccountService } from "../platform/userDataSync/common/userDataSyncAccount.js";
+import {
+  IUserDataSyncAccountService,
+  UserDataSyncAccountService,
+} from "../platform/userDataSync/common/userDataSyncAccount.js";
 import { UserDataAutoSyncService } from "../platform/userDataSync/common/userDataAutoSyncService.js";
 import { AccessibilityService } from "../platform/accessibility/browser/accessibilityService.js";
 import { ICustomEndpointTelemetryService } from "../platform/telemetry/common/telemetry.js";
 import { NullEndpointTelemetryService } from "../platform/telemetry/common/telemetryUtils.js";
 import { ITitleService } from "./services/title/browser/titleService.js";
 import { BrowserTitleService } from "./browser/parts/titlebar/titlebarPart.js";
-import { ITimerService, TimerService } from "./services/timer/browser/timerService.js";
-import { IDiagnosticsService, NullDiagnosticsService } from "../platform/diagnostics/common/diagnostics.js";
+import {
+  ITimerService,
+  TimerService,
+} from "./services/timer/browser/timerService.js";
+import {
+  IDiagnosticsService,
+  NullDiagnosticsService,
+} from "../platform/diagnostics/common/diagnostics.js";
 import { ILanguagePackService } from "../platform/languagePacks/common/languagePacks.js";
 import { WebLanguagePacksService } from "../platform/languagePacks/browser/languagePacks.js";
 import {
@@ -114,7 +124,10 @@ import { WorkbenchMcpGalleryManifestService } from "./services/mcp/browser/mcpGa
 import { UserDataSyncResourceProviderService } from "../platform/userDataSync/common/userDataSyncResourceProvider.js";
 import { IAgentHostService } from "../platform/agentHost/common/agentService.js";
 import { EditorRemoteAgentHostServiceClient } from "./services/agentHost/browser/editorRemoteAgentHostServiceClient.js";
-import { IRemoteAgentHostService, NullRemoteAgentHostService } from "../platform/agentHost/common/remoteAgentHostService.js";
+import {
+  IRemoteAgentHostService,
+  NullRemoteAgentHostService,
+} from "../platform/agentHost/common/remoteAgentHostService.js";
 import {
   BrowserAgentHostDebugLogsExportService,
   IAgentHostDebugLogsExportService,
@@ -165,7 +178,11 @@ registerSingleton(
   UserDataSyncResourceProviderService,
   InstantiationType.Delayed,
 );
-registerSingleton(IUserDataAutoSyncService, UserDataAutoSyncService, InstantiationType.Eager /* Eager to start auto sync */);
+registerSingleton(
+  IUserDataAutoSyncService,
+  UserDataAutoSyncService,
+  InstantiationType.Eager /* Eager to start auto sync */,
+);
 registerSingleton(ITitleService, BrowserTitleService, InstantiationType.Eager);
 registerSingleton(
   IExtensionTipsService,
@@ -220,7 +237,6 @@ registerSingleton(
 );
 
 //#endregion
-
 
 //#region --- workbench contributions
 

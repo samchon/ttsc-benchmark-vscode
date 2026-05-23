@@ -5,7 +5,10 @@
 
 import { Codicon } from "../../../../base/common/codicons.js";
 import { localize } from "../../../../nls.js";
-import { registerColor, textLinkForeground } from "../../../../platform/theme/common/colorRegistry.js";
+import {
+  registerColor,
+  textLinkForeground,
+} from "../../../../platform/theme/common/colorRegistry.js";
 import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
 
 export const extensionDefaultIcon = registerIcon(

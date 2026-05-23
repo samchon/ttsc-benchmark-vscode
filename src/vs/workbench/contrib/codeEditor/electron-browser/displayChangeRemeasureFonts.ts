@@ -15,16 +15,16 @@ import {
 } from "../../../common/contributions.js";
 import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
 
-class DisplayChangeRemeasureFonts extends Disposable implements IWorkbenchContribution {
+class DisplayChangeRemeasureFonts
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  private readonly _delayer = this._register(new ThrottledDelayer(2000));
 
-	private readonly _delayer = this._register(new ThrottledDelayer(2000));
+  constructor(@INativeHostService nativeHostService: INativeHostService) {
+    super();
 
-	constructor(
-		@INativeHostService nativeHostService: INativeHostService,
-	) {
-		super();
-
-		this._register(
+    this._register(
       nativeHostService.onDidChangeDisplay(() => {
         this._delayer.trigger(() => {
           FontMeasurements.clearAllFontInfos();
@@ -32,10 +32,12 @@ class DisplayChangeRemeasureFonts extends Disposable implements IWorkbenchContri
         });
       }),
     );
-	}
+  }
 }
 
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(
   DisplayChangeRemeasureFonts,
   LifecyclePhase.Eventually,
 );

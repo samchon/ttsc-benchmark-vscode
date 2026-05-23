@@ -17,7 +17,10 @@ import {
   ExtHostProgressShape,
   ExtHostContext,
 } from "../common/extHost.protocol.js";
-import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import {
+  extHostNamedCustomer,
+  IExtHostContext,
+} from "../../services/extensions/common/extHostCustomers.js";
 import { ICommandService } from "../../../platform/commands/common/commands.js";
 import { localize } from "../../../nls.js";
 import { onUnexpectedExternalError } from "../../../base/common/errors.js";
@@ -26,82 +29,93 @@ import { NotificationPriority } from "../../../platform/notification/common/noti
 
 @extHostNamedCustomer(MainContext.MainThreadProgress)
 export class MainThreadProgress implements MainThreadProgressShape {
-
-	private static readonly URGENT_PROGRESS_SOURCES = [
+  private static readonly URGENT_PROGRESS_SOURCES = [
     "vscode.github-authentication",
     "vscode.microsoft-authentication",
   ];
 
-	private readonly _progressService: IProgressService;
-	private _progress = new Map<number, { resolve: () => void; progress: IProgress<IProgressStep> }>();
-	private readonly _proxy: ExtHostProgressShape;
+  private readonly _progressService: IProgressService;
+  private _progress = new Map<
+    number,
+    { resolve: () => void; progress: IProgress<IProgressStep> }
+  >();
+  private readonly _proxy: ExtHostProgressShape;
 
-	constructor(
-		extHostContext: IExtHostContext,
-		@IProgressService progressService: IProgressService,
-		@ICommandService private readonly _commandService: ICommandService,
-	) {
-		this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostProgress);
-		this._progressService = progressService;
-	}
+  constructor(
+    extHostContext: IExtHostContext,
+    @IProgressService progressService: IProgressService,
+    @ICommandService private readonly _commandService: ICommandService,
+  ) {
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostProgress);
+    this._progressService = progressService;
+  }
 
-	dispose(): void {
-		this._progress.forEach(handle => handle.resolve());
-		this._progress.clear();
-	}
+  dispose(): void {
+    this._progress.forEach((handle) => handle.resolve());
+    this._progress.clear();
+  }
 
-	async $startProgress(handle: number, options: IProgressOptions, extensionId?: string): Promise<void> {
-		const task = this._createTask(handle);
+  async $startProgress(
+    handle: number,
+    options: IProgressOptions,
+    extensionId?: string,
+  ): Promise<void> {
+    const task = this._createTask(handle);
 
-		if (options.location === ProgressLocation.Notification && extensionId) {
-			const sourceIsUrgent = MainThreadProgress.URGENT_PROGRESS_SOURCES.includes(
-        extensionId,
+    if (options.location === ProgressLocation.Notification && extensionId) {
+      const sourceIsUrgent =
+        MainThreadProgress.URGENT_PROGRESS_SOURCES.includes(extensionId);
+      const notificationOptions: IProgressNotificationOptions = {
+        ...options,
+        priority: sourceIsUrgent
+          ? NotificationPriority.URGENT
+          : NotificationPriority.DEFAULT,
+        location: ProgressLocation.Notification,
+        secondaryActions: [
+          toAction({
+            id: extensionId,
+            label: localize("manageExtension", "Manage Extension"),
+            run: () =>
+              this._commandService.executeCommand(
+                "_extensions.manage",
+                extensionId,
+              ),
+          }),
+        ],
+      };
+
+      options = notificationOptions;
+    }
+
+    try {
+      this._progressService.withProgress(options, task, () =>
+        this._proxy.$acceptProgressCanceled(handle),
       );
-			const notificationOptions: IProgressNotificationOptions = {
-				...options,
-				priority: sourceIsUrgent ? NotificationPriority.URGENT : NotificationPriority.DEFAULT,
-				location: ProgressLocation.Notification,
-				secondaryActions: [toAction({
-					id: extensionId,
-					label: localize("manageExtension", "Manage Extension"),
-					run: () => this._commandService.executeCommand("_extensions.manage", extensionId),
-				})],
-			};
+    } catch (err) {
+      // the withProgress-method will throw synchronously when invoked with bad options
+      // which is then an enternal/extension error
+      onUnexpectedExternalError(err);
+    }
+  }
 
-			options = notificationOptions;
-		}
+  $progressReport(handle: number, message: IProgressStep): void {
+    const entry = this._progress.get(handle);
+    entry?.progress.report(message);
+  }
 
-		try {
-			this._progressService.withProgress(
-        options,
-        task,
-        () => this._proxy.$acceptProgressCanceled(handle),
-      );
-		} catch (err) {
-			// the withProgress-method will throw synchronously when invoked with bad options
-			// which is then an enternal/extension error
-			onUnexpectedExternalError(err);
-		}
-	}
+  $progressEnd(handle: number): void {
+    const entry = this._progress.get(handle);
+    if (entry) {
+      entry.resolve();
+      this._progress.delete(handle);
+    }
+  }
 
-	$progressReport(handle: number, message: IProgressStep): void {
-		const entry = this._progress.get(handle);
-		entry?.progress.report(message);
-	}
-
-	$progressEnd(handle: number): void {
-		const entry = this._progress.get(handle);
-		if (entry) {
-			entry.resolve();
-			this._progress.delete(handle);
-		}
-	}
-
-	private _createTask(handle: number) {
-		return (progress: IProgress<IProgressStep>) => {
-			return new Promise<void>(resolve => {
+  private _createTask(handle: number) {
+    return (progress: IProgress<IProgressStep>) => {
+      return new Promise<void>((resolve) => {
         this._progress.set(handle, { resolve, progress });
       });
-		};
-	}
+    };
+  }
 }

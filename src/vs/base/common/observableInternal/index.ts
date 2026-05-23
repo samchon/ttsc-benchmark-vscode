@@ -76,9 +76,7 @@ export {
   observableSignal,
 } from "./observables/observableSignal.js";
 export { observableFromEventOpts } from "./observables/observableFromEvent.js";
-export {
-  observableSignalFromEvent,
-} from "./observables/observableSignalFromEvent.js";
+export { observableSignalFromEvent } from "./observables/observableSignalFromEvent.js";
 export {
   asyncTransaction,
   globalTransaction,
@@ -108,7 +106,10 @@ export { ObservableMap } from "./map.js";
 export { DebugLocation } from "./debugLocation.js";
 
 import { addLogger, setLogObservableFn } from "./logging/logging.js";
-import { ConsoleObservableLogger, logObservableToConsole } from "./logging/consoleObservableLogger.js";
+import {
+  ConsoleObservableLogger,
+  logObservableToConsole,
+} from "./logging/consoleObservableLogger.js";
 import { DevToolsLogger } from "./logging/debugger/devToolsLogger.js";
 import { env } from "../process.js";
 import { _setDebugGetObservableGraph } from "./observables/baseObservable.js";
@@ -118,15 +119,13 @@ _setDebugGetObservableGraph(debugGetObservableGraph);
 setLogObservableFn(logObservableToConsole);
 
 // Remove "//" in the next line to enable logging
-const enableLogging = false
-	// || Boolean("true") // done "weirdly" so that a lint warning prevents you from pushing this
-	;
-
+const enableLogging = false;
+// || Boolean("true") // done "weirdly" so that a lint warning prevents you from pushing this
 if (enableLogging) {
-	addLogger(new ConsoleObservableLogger());
+  addLogger(new ConsoleObservableLogger());
 }
 
 if (env && env["VSCODE_DEV_DEBUG_OBSERVABLES"]) {
-	// To debug observables you also need the extension "ms-vscode.debug-value-editor"
-	addLogger(DevToolsLogger.getInstance());
+  // To debug observables you also need the extension "ms-vscode.debug-value-editor"
+  addLogger(DevToolsLogger.getInstance());
 }

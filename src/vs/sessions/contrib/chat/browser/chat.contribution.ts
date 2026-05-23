@@ -7,7 +7,10 @@ import { Codicon } from "../../../../base/common/codicons.js";
 import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
 import { ServicesAccessor } from "../../../../editor/browser/editorExtensions.js";
 import { localize, localize2 } from "../../../../nls.js";
-import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import {
+  Action2,
+  registerAction2,
+} from "../../../../platform/actions/common/actions.js";
 import {
   IWorkbenchContribution,
   registerWorkbenchContribution2,
@@ -23,15 +26,27 @@ import {
 import { Registry } from "../../../../platform/registry/common/platform.js";
 import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
 import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
-import { IsNewChatInSessionContext, IsNewChatSessionContext } from "../../../common/contextkeys.js";
+import {
+  IsNewChatInSessionContext,
+  IsNewChatSessionContext,
+} from "../../../common/contextkeys.js";
 import { BranchChatSessionAction } from "./branchChatSessionAction.js";
 import { RunScriptContribution } from "./runScriptAction.js";
 import "./nullInlineChatSessionService.js";
 import "./nullChatTipService.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
-import { ISessionsTasksService, SessionsTasksService } from "./sessionsTasksService.js";
-import { ISessionTaskRunnerRegistry, SessionTaskRunnerRegistry } from "./sessionTaskRunner.js";
+import {
+  ISessionsTasksService,
+  SessionsTasksService,
+} from "./sessionsTasksService.js";
+import {
+  ISessionTaskRunnerRegistry,
+  SessionTaskRunnerRegistry,
+} from "./sessionTaskRunner.js";
 import { RegisterDefaultSessionTaskRunnersContribution } from "./registerDefaultSessionTaskRunners.js";
 import { AgenticPromptsService } from "./promptsService.js";
 import { IPromptsService } from "../../../../workbench/contrib/chat/common/promptSyntax/service/promptsService.js";
@@ -39,10 +54,16 @@ import { IAICustomizationWorkspaceService } from "../../../../workbench/contrib/
 import { ICustomizationHarnessService } from "../../../../workbench/contrib/chat/common/customizationHarnessService.js";
 import { SessionsAICustomizationWorkspaceService } from "./aiCustomizationWorkspaceService.js";
 import { SessionsCustomizationHarnessService } from "./customizationHarnessService.js";
-import { ChatViewContainerId, ChatViewId } from "../../../../workbench/contrib/chat/browser/chat.js";
+import {
+  ChatViewContainerId,
+  ChatViewId,
+} from "../../../../workbench/contrib/chat/browser/chat.js";
 import { CHAT_CATEGORY } from "../../../../workbench/contrib/chat/browser/actions/chatActions.js";
 import { NewChatViewPane, SessionsViewId } from "./newChatViewPane.js";
-import { NewChatInSessionViewPane, NewChatInSessionViewId } from "./newChatInSessionViewPane.js";
+import {
+  NewChatInSessionViewPane,
+  NewChatInSessionViewId,
+} from "./newChatInSessionViewPane.js";
 import { ViewPaneContainer } from "../../../../workbench/browser/parts/views/viewPaneContainer.js";
 import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
 import { ChatViewPane } from "../../../../workbench/contrib/chat/browser/widgetHosts/viewPane/chatViewPane.js";
@@ -53,30 +74,28 @@ import { SessionsOpenerParticipantContribution } from "./sessionsOpenerParticipa
 import { WorktreeCreatedTaskDispatcher } from "./worktreeCreatedTaskDispatcher.js";
 import "../../sessions/browser/mobile/mobileOverlayContribution.js";
 
-
 class NewChatInSessionsWindowAction extends Action2 {
+  constructor() {
+    super({
+      id: "workbench.action.sessions.newChat",
+      title: localize2("chat.newEdits.label", "New Chat"),
+      category: CHAT_CATEGORY,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib + 2,
+        primary: KeyMod.CtrlCmd | KeyCode.KeyN,
+        secondary: [KeyMod.CtrlCmd | KeyCode.KeyL],
+        mac: {
+          primary: KeyMod.CtrlCmd | KeyCode.KeyN,
+          secondary: [KeyMod.WinCtrl | KeyCode.KeyL],
+        },
+      },
+    });
+  }
 
-	constructor() {
-		super({
-			id: "workbench.action.sessions.newChat",
-			title: localize2("chat.newEdits.label", "New Chat"),
-			category: CHAT_CATEGORY,
-			keybinding: {
-				weight: KeybindingWeight.WorkbenchContrib + 2,
-				primary: KeyMod.CtrlCmd | KeyCode.KeyN,
-				secondary: [KeyMod.CtrlCmd | KeyCode.KeyL],
-				mac: {
-					primary: KeyMod.CtrlCmd | KeyCode.KeyN,
-					secondary: [KeyMod.WinCtrl | KeyCode.KeyL],
-				},
-			},
-		});
-	}
-
-	override run(accessor: ServicesAccessor): void {
-		const sessionsManagementService = accessor.get(ISessionsManagementService);
-		sessionsManagementService.openNewSessionView();
-	}
+  override run(accessor: ServicesAccessor): void {
+    const sessionsManagementService = accessor.get(ISessionsManagementService);
+    sessionsManagementService.openNewSessionView();
+  }
 }
 
 registerAction2(NewChatInSessionsWindowAction);
@@ -92,76 +111,91 @@ const chatViewIcon = registerIcon(
 );
 
 class RegisterChatViewContainerContribution implements IWorkbenchContribution {
+  static ID = "sessions.registerChatViewContainer";
 
-	static ID = "sessions.registerChatViewContainer";
-
-	constructor() {
-		const viewContainerRegistry = Registry.as<IViewContainersRegistry>(
+  constructor() {
+    const viewContainerRegistry = Registry.as<IViewContainersRegistry>(
       ViewExtensions.ViewContainersRegistry,
     );
-		const viewsRegistry = Registry.as<IViewsRegistry>(
+    const viewsRegistry = Registry.as<IViewsRegistry>(
       ViewExtensions.ViewsRegistry,
     );
-		let chatViewContainer = viewContainerRegistry.get(ChatViewContainerId);
-		if (chatViewContainer) {
-			const view = viewsRegistry.getView(ChatViewId);
-			if (view) {
-				viewsRegistry.deregisterViews([view], chatViewContainer);
-			}
-			viewContainerRegistry.deregisterViewContainer(chatViewContainer);
-		}
+    let chatViewContainer = viewContainerRegistry.get(ChatViewContainerId);
+    if (chatViewContainer) {
+      const view = viewsRegistry.getView(ChatViewId);
+      if (view) {
+        viewsRegistry.deregisterViews([view], chatViewContainer);
+      }
+      viewContainerRegistry.deregisterViewContainer(chatViewContainer);
+    }
 
-		chatViewContainer = viewContainerRegistry.registerViewContainer({
-      id: ChatViewContainerId,
-      title: localize2("chat.viewContainer.label", "Chat"),
-      icon: chatViewIcon,
-      ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [ChatViewContainerId, { mergeViewWithContainerWhenSingleView: true }]),
-      storageId: ChatViewContainerId,
-      hideIfEmpty: true,
-      order: 1,
-      windowEnablement: WindowEnablement.Sessions,
-    }, ViewContainerLocation.ChatBar, {
-      isDefault: true,
-      doNotRegisterOpenCommand: true,
-    });
+    chatViewContainer = viewContainerRegistry.registerViewContainer(
+      {
+        id: ChatViewContainerId,
+        title: localize2("chat.viewContainer.label", "Chat"),
+        icon: chatViewIcon,
+        ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [
+          ChatViewContainerId,
+          { mergeViewWithContainerWhenSingleView: true },
+        ]),
+        storageId: ChatViewContainerId,
+        hideIfEmpty: true,
+        order: 1,
+        windowEnablement: WindowEnablement.Sessions,
+      },
+      ViewContainerLocation.ChatBar,
+      { isDefault: true, doNotRegisterOpenCommand: true },
+    );
 
-		viewsRegistry.registerViews([{
-			id: ChatViewId,
-			containerIcon: chatViewContainer.icon,
-			containerTitle: chatViewContainer.title.value,
-			singleViewPaneContainerTitle: chatViewContainer.title.value,
-			name: localize2("chat.viewContainer.label", "Chat"),
-			canToggleVisibility: false,
-			canMoveView: false,
-			ctorDescriptor: new SyncDescriptor(ChatViewPane),
-			when: ContextKeyExpr.and(IsNewChatSessionContext.negate(), IsNewChatInSessionContext.negate()),
-			windowEnablement: WindowEnablement.Sessions,
-		}, {
-			id: SessionsViewId,
-			containerIcon: chatViewContainer.icon,
-			containerTitle: chatViewContainer.title.value,
-			singleViewPaneContainerTitle: chatViewContainer.title.value,
-			name: localize2("sessions.newChat.view", "New Session"),
-			canToggleVisibility: false,
-			canMoveView: false,
-			ctorDescriptor: new SyncDescriptor(NewChatViewPane),
-			when: IsNewChatSessionContext,
-			windowEnablement: WindowEnablement.Sessions,
-		}, {
-			id: NewChatInSessionViewId,
-			containerIcon: chatViewContainer.icon,
-			containerTitle: chatViewContainer.title.value,
-			singleViewPaneContainerTitle: chatViewContainer.title.value,
-			name: localize2("sessions.newChatInSession.view", "New Chat"),
-			canToggleVisibility: false,
-			canMoveView: false,
-			ctorDescriptor: new SyncDescriptor(NewChatInSessionViewPane),
-			when: ContextKeyExpr.and(IsNewChatSessionContext.negate(), IsNewChatInSessionContext),
-			windowEnablement: WindowEnablement.Sessions,
-		}], chatViewContainer);
-	}
+    viewsRegistry.registerViews(
+      [
+        {
+          id: ChatViewId,
+          containerIcon: chatViewContainer.icon,
+          containerTitle: chatViewContainer.title.value,
+          singleViewPaneContainerTitle: chatViewContainer.title.value,
+          name: localize2("chat.viewContainer.label", "Chat"),
+          canToggleVisibility: false,
+          canMoveView: false,
+          ctorDescriptor: new SyncDescriptor(ChatViewPane),
+          when: ContextKeyExpr.and(
+            IsNewChatSessionContext.negate(),
+            IsNewChatInSessionContext.negate(),
+          ),
+          windowEnablement: WindowEnablement.Sessions,
+        },
+        {
+          id: SessionsViewId,
+          containerIcon: chatViewContainer.icon,
+          containerTitle: chatViewContainer.title.value,
+          singleViewPaneContainerTitle: chatViewContainer.title.value,
+          name: localize2("sessions.newChat.view", "New Session"),
+          canToggleVisibility: false,
+          canMoveView: false,
+          ctorDescriptor: new SyncDescriptor(NewChatViewPane),
+          when: IsNewChatSessionContext,
+          windowEnablement: WindowEnablement.Sessions,
+        },
+        {
+          id: NewChatInSessionViewId,
+          containerIcon: chatViewContainer.icon,
+          containerTitle: chatViewContainer.title.value,
+          singleViewPaneContainerTitle: chatViewContainer.title.value,
+          name: localize2("sessions.newChatInSession.view", "New Chat"),
+          canToggleVisibility: false,
+          canMoveView: false,
+          ctorDescriptor: new SyncDescriptor(NewChatInSessionViewPane),
+          when: ContextKeyExpr.and(
+            IsNewChatSessionContext.negate(),
+            IsNewChatInSessionContext,
+          ),
+          windowEnablement: WindowEnablement.Sessions,
+        },
+      ],
+      chatViewContainer,
+    );
+  }
 }
-
 
 // register actions
 registerAction2(BranchChatSessionAction);

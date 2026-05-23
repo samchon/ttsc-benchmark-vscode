@@ -37,11 +37,19 @@ suite("Extension Identifier Pattern", () => {
       "pub.extension-name-1.0.1",
     );
     assert.strictEqual(
-      new ExtensionKey({ id: "pub.extension-name" }, "1.0.1", TargetPlatform.UNDEFINED).toString(),
+      new ExtensionKey(
+        { id: "pub.extension-name" },
+        "1.0.1",
+        TargetPlatform.UNDEFINED,
+      ).toString(),
       "pub.extension-name-1.0.1",
     );
     assert.strictEqual(
-      new ExtensionKey({ id: "pub.extension-name" }, "1.0.1", TargetPlatform.WIN32_X64).toString(),
+      new ExtensionKey(
+        { id: "pub.extension-name" },
+        "1.0.1",
+        TargetPlatform.WIN32_X64,
+      ).toString(),
       `pub.extension-name-1.0.1-${TargetPlatform.WIN32_X64}`,
     );
   });

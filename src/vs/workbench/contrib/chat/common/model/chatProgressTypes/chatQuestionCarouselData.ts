@@ -5,7 +5,11 @@
 
 import { DeferredPromise } from "../../../../../../base/common/async.js";
 import { IMarkdownString } from "../../../../../../base/common/htmlContent.js";
-import { IChatQuestion, IChatQuestionAnswers, IChatQuestionCarousel } from "../../chatService/chatService.js";
+import {
+  IChatQuestion,
+  IChatQuestionAnswers,
+  IChatQuestionCarousel,
+} from "../../chatService/chatService.js";
 import { ToolDataSource } from "../../tools/languageModelToolsService.js";
 
 /**
@@ -14,46 +18,48 @@ import { ToolDataSource } from "../../tools/languageModelToolsService.js";
  * completion so only serialisable data is persisted.
  */
 export class ChatQuestionCarouselData implements IChatQuestionCarousel {
-	public readonly kind = "questionCarousel" as const;
-	public readonly completion = new DeferredPromise<{ answers: IChatQuestionAnswers | undefined }>();
-	public draftAnswers: IChatQuestionAnswers | undefined;
-	public draftCurrentIndex: number | undefined;
-	public draftCollapsed: boolean | undefined;
-	/**
-	 * Set to `true` when the carousel was dismissed because the user typed
-	 * directly in the associated terminal instead of using the carousel UI.
-	 */
-	public dismissedByTerminalInput?: boolean;
+  public readonly kind = "questionCarousel" as const;
+  public readonly completion = new DeferredPromise<{
+    answers: IChatQuestionAnswers | undefined;
+  }>();
+  public draftAnswers: IChatQuestionAnswers | undefined;
+  public draftCurrentIndex: number | undefined;
+  public draftCollapsed: boolean | undefined;
+  /**
+   * Set to `true` when the carousel was dismissed because the user typed
+   * directly in the associated terminal instead of using the carousel UI.
+   */
+  public dismissedByTerminalInput?: boolean;
 
-	/**
-	 * Marks the carousel as dismissed with the given answers and clears draft
-	 * state. Safe to call multiple times — subsequent calls are no-ops.
-	 */
-	dismiss(answers: IChatQuestionAnswers | undefined): void {
-		if (this.isUsed) {
-			return;
-		}
-		this.data = answers ?? {};
-		this.isUsed = true;
-		this.draftAnswers = undefined;
-		this.draftCurrentIndex = undefined;
-		this.draftCollapsed = undefined;
-		void this.completion.complete({ answers });
-	}
+  /**
+   * Marks the carousel as dismissed with the given answers and clears draft
+   * state. Safe to call multiple times — subsequent calls are no-ops.
+   */
+  dismiss(answers: IChatQuestionAnswers | undefined): void {
+    if (this.isUsed) {
+      return;
+    }
+    this.data = answers ?? {};
+    this.isUsed = true;
+    this.draftAnswers = undefined;
+    this.draftCurrentIndex = undefined;
+    this.draftCollapsed = undefined;
+    void this.completion.complete({ answers });
+  }
 
-	constructor(
-		public questions: IChatQuestion[],
-		public allowSkip: boolean,
-		public resolveId?: string,
-		public data?: IChatQuestionAnswers,
-		public isUsed?: boolean,
-		public message?: string | IMarkdownString,
-		public source?: ToolDataSource,
-		public terminalId?: string,
-	) { }
+  constructor(
+    public questions: IChatQuestion[],
+    public allowSkip: boolean,
+    public resolveId?: string,
+    public data?: IChatQuestionAnswers,
+    public isUsed?: boolean,
+    public message?: string | IMarkdownString,
+    public source?: ToolDataSource,
+    public terminalId?: string,
+  ) {}
 
-	toJSON(): IChatQuestionCarousel {
-		return {
+  toJSON(): IChatQuestionCarousel {
+    return {
       kind: this.kind,
       questions: this.questions,
       allowSkip: this.allowSkip,
@@ -64,5 +70,5 @@ export class ChatQuestionCarouselData implements IChatQuestionCarousel {
       source: this.source,
       terminalId: this.terminalId,
     };
-	}
+  }
 }

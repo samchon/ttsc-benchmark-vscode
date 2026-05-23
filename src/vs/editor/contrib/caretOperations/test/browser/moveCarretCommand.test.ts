@@ -8,9 +8,13 @@ import { Selection } from "../../../../common/core/selection.js";
 import { MoveCaretCommand } from "../../browser/moveCaretCommand.js";
 import { testCommand } from "../../../../test/browser/testCommand.js";
 
-
-function testMoveCaretLeftCommand(lines: string[], selection: Selection, expectedLines: string[], expectedSelection: Selection): void {
-	testCommand(
+function testMoveCaretLeftCommand(
+  lines: string[],
+  selection: Selection,
+  expectedLines: string[],
+  expectedSelection: Selection,
+): void {
+  testCommand(
     lines,
     null,
     selection,
@@ -20,8 +24,13 @@ function testMoveCaretLeftCommand(lines: string[], selection: Selection, expecte
   );
 }
 
-function testMoveCaretRightCommand(lines: string[], selection: Selection, expectedLines: string[], expectedSelection: Selection): void {
-	testCommand(
+function testMoveCaretRightCommand(
+  lines: string[],
+  selection: Selection,
+  expectedLines: string[],
+  expectedSelection: Selection,
+): void {
+  testCommand(
     lines,
     null,
     selection,

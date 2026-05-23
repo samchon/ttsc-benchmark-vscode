@@ -7,7 +7,8 @@ import { createCommandUri } from "../../../../../base/common/htmlContent.js";
 import { escape } from "../../../../../base/common/strings.js";
 import { localize } from "../../../../../nls.js";
 
-const createSetProfileCommandUri = (profile: string) => createCommandUri("notebook.setProfile", { profile }).toString();
+const createSetProfileCommandUri = (profile: string) =>
+  createCommandUri("notebook.setProfile", { profile }).toString();
 const imageSize = 400;
 
 export default () => `

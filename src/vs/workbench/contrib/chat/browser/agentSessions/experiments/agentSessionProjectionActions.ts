@@ -26,39 +26,47 @@ import { ChatConfiguration } from "../../../common/constants.js";
 //#region Enter Agent Session Projection
 
 export class EnterAgentSessionProjectionAction extends Action2 {
-	static readonly ID = "agentSession.enterAgentSessionProjection";
+  static readonly ID = "agentSession.enterAgentSessionProjection";
 
-	constructor() {
-		super({
-			id: EnterAgentSessionProjectionAction.ID,
-			title: localize2("enterAgentSessionProjection", "Enter Agent Session Projection"),
-			category: CHAT_CATEGORY,
-			f1: false,
-			precondition: ContextKeyExpr.and(
-				ChatContextKeys.enabled,
-				ContextKeyExpr.has(`config.${ChatConfiguration.AgentSessionProjectionEnabled}`),
-				inAgentSessionProjection.negate(),
-			),
-		});
-	}
+  constructor() {
+    super({
+      id: EnterAgentSessionProjectionAction.ID,
+      title: localize2(
+        "enterAgentSessionProjection",
+        "Enter Agent Session Projection",
+      ),
+      category: CHAT_CATEGORY,
+      f1: false,
+      precondition: ContextKeyExpr.and(
+        ChatContextKeys.enabled,
+        ContextKeyExpr.has(
+          `config.${ChatConfiguration.AgentSessionProjectionEnabled}`,
+        ),
+        inAgentSessionProjection.negate(),
+      ),
+    });
+  }
 
-	override async run(accessor: ServicesAccessor, context?: IAgentSession | IMarshalledAgentSessionContext): Promise<void> {
-		const projectionService = accessor.get(IAgentSessionProjectionService);
-		const agentSessionsService = accessor.get(IAgentSessionsService);
+  override async run(
+    accessor: ServicesAccessor,
+    context?: IAgentSession | IMarshalledAgentSessionContext,
+  ): Promise<void> {
+    const projectionService = accessor.get(IAgentSessionProjectionService);
+    const agentSessionsService = accessor.get(IAgentSessionsService);
 
-		let session: IAgentSession | undefined;
-		if (context) {
-			if (isMarshalledAgentSessionContext(context)) {
-				session = agentSessionsService.getSession(context.session.resource);
-			} else {
-				session = context;
-			}
-		}
+    let session: IAgentSession | undefined;
+    if (context) {
+      if (isMarshalledAgentSessionContext(context)) {
+        session = agentSessionsService.getSession(context.session.resource);
+      } else {
+        session = context;
+      }
+    }
 
-		if (session) {
-			await projectionService.enterProjection(session);
-		}
-	}
+    if (session) {
+      await projectionService.enterProjection(session);
+    }
+  }
 }
 
 //#endregion
@@ -66,30 +74,33 @@ export class EnterAgentSessionProjectionAction extends Action2 {
 //#region Exit Agent Session Projection
 
 export class ExitAgentSessionProjectionAction extends Action2 {
-	static readonly ID = "agentSession.exitAgentSessionProjection";
+  static readonly ID = "agentSession.exitAgentSessionProjection";
 
-	constructor() {
-		super({
-			id: ExitAgentSessionProjectionAction.ID,
-			title: localize2("exitAgentSessionProjection", "Exit Agent Session Projection"),
-			category: CHAT_CATEGORY,
-			f1: true,
-			precondition: ContextKeyExpr.and(
-				ChatContextKeys.enabled,
-				inAgentSessionProjection,
-			),
-			keybinding: {
-				weight: KeybindingWeight.WorkbenchContrib,
-				primary: KeyCode.Escape,
-				when: inAgentSessionProjection,
-			},
-		});
-	}
+  constructor() {
+    super({
+      id: ExitAgentSessionProjectionAction.ID,
+      title: localize2(
+        "exitAgentSessionProjection",
+        "Exit Agent Session Projection",
+      ),
+      category: CHAT_CATEGORY,
+      f1: true,
+      precondition: ContextKeyExpr.and(
+        ChatContextKeys.enabled,
+        inAgentSessionProjection,
+      ),
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyCode.Escape,
+        when: inAgentSessionProjection,
+      },
+    });
+  }
 
-	override async run(accessor: ServicesAccessor): Promise<void> {
-		const projectionService = accessor.get(IAgentSessionProjectionService);
-		await projectionService.exitProjection();
-	}
+  override async run(accessor: ServicesAccessor): Promise<void> {
+    const projectionService = accessor.get(IAgentSessionProjectionService);
+    await projectionService.exitProjection();
+  }
 }
 
 //#endregion
@@ -97,8 +108,8 @@ export class ExitAgentSessionProjectionAction extends Action2 {
 //#region Toggle Agent Quick Input
 
 export class ToggleUnifiedAgentsBarAction extends ToggleTitleBarConfigAction {
-	constructor() {
-		super(
+  constructor() {
+    super(
       ChatConfiguration.UnifiedAgentsBar,
       localize("toggle.agentQuickInput", "Agent Quick Input"),
       localize(
@@ -113,7 +124,7 @@ export class ToggleUnifiedAgentsBarAction extends ToggleTitleBarConfigAction {
         ContextKeyExpr.has("config.window.commandCenter"),
       ),
     );
-	}
+  }
 }
 
 //#endregion

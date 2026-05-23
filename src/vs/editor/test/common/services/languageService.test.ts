@@ -13,10 +13,14 @@ suite("LanguageService", () => {
 
   test("LanguageSelection does not leak a disposable", () => {
     const languageService = new LanguageService();
-    const languageSelection1 = languageService.createById(PLAINTEXT_LANGUAGE_ID);
+    const languageSelection1 = languageService.createById(
+      PLAINTEXT_LANGUAGE_ID,
+    );
     assert.strictEqual(languageSelection1.languageId, PLAINTEXT_LANGUAGE_ID);
-    const languageSelection2 = languageService.createById(PLAINTEXT_LANGUAGE_ID);
-    const listener = languageSelection2.onDidChange(() => { });
+    const languageSelection2 = languageService.createById(
+      PLAINTEXT_LANGUAGE_ID,
+    );
+    const listener = languageSelection2.onDidChange(() => {});
     assert.strictEqual(languageSelection2.languageId, PLAINTEXT_LANGUAGE_ID);
     listener.dispose();
     languageService.dispose();

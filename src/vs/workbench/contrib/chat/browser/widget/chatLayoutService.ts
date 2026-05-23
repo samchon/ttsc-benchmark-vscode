@@ -11,29 +11,34 @@ import { IChatLayoutService } from "../../common/widget/chatLayoutService.js";
 
 const FONT_SIZE = 13;
 
-export class ChatLayoutService extends Disposable implements IChatLayoutService {
-	declare readonly _serviceBrand: undefined;
+export class ChatLayoutService
+  extends Disposable
+  implements IChatLayoutService
+{
+  declare readonly _serviceBrand: undefined;
 
-	readonly fontFamily: IObservable<string | null>;
-	readonly fontSize: IObservable<number>;
+  readonly fontFamily: IObservable<string | null>;
+  readonly fontSize: IObservable<number>;
 
-	constructor(@IConfigurationService configurationService: IConfigurationService) {
-		super();
+  constructor(
+    @IConfigurationService configurationService: IConfigurationService,
+  ) {
+    super();
 
-		const chatFontFamily = observableConfigValue<string>(
+    const chatFontFamily = observableConfigValue<string>(
       "chat.fontFamily",
       "default",
       configurationService,
     );
-		this.fontFamily = derived(reader => {
+    this.fontFamily = derived((reader) => {
       const fontFamily = chatFontFamily.read(reader);
       return fontFamily === "default" ? null : fontFamily;
     });
 
-		this.fontSize = observableConfigValue<number>(
+    this.fontSize = observableConfigValue<number>(
       "chat.fontSize",
       FONT_SIZE,
       configurationService,
     );
-	}
+  }
 }

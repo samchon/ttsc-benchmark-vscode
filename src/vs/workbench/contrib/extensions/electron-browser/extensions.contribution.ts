@@ -9,17 +9,27 @@ import { registerAction2 } from "../../../../platform/actions/common/actions.js"
 import { IExtensionRecommendationNotificationService } from "../../../../platform/extensionRecommendations/common/extensionRecommendations.js";
 import { ExtensionRecommendationNotificationServiceChannel } from "../../../../platform/extensionRecommendations/common/extensionRecommendationsIpc.js";
 import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
 import { ISharedProcessService } from "../../../../platform/ipc/electron-browser/services.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
-import { EditorPaneDescriptor, IEditorPaneRegistry } from "../../../browser/editor.js";
+import {
+  EditorPaneDescriptor,
+  IEditorPaneRegistry,
+} from "../../../browser/editor.js";
 import {
   IWorkbenchContribution,
   IWorkbenchContributionsRegistry,
   Extensions as WorkbenchExtensions,
 } from "../../../common/contributions.js";
-import { EditorExtensions, IEditorFactoryRegistry, IEditorSerializer } from "../../../common/editor.js";
+import {
+  EditorExtensions,
+  IEditorFactoryRegistry,
+  IEditorSerializer,
+} from "../../../common/editor.js";
 import { EditorInput } from "../../../common/editor/editorInput.js";
 import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
 import { RuntimeExtensionsInput } from "../common/runtimeExtensionsInput.js";
@@ -30,7 +40,10 @@ import {
   DebugExtensionHostAndRendererAction,
 } from "./debugExtensionHostAction.js";
 import { ExtensionHostProfileService } from "./extensionProfileService.js";
-import { CleanUpExtensionsFolderAction, OpenExtensionsFolderAction } from "./extensionsActions.js";
+import {
+  CleanUpExtensionsFolderAction,
+  OpenExtensionsFolderAction,
+} from "./extensionsActions.js";
 import { ExtensionsAutoProfiler } from "./extensionsAutoProfiler.js";
 import {
   InstallRemoteExtensionsContribution,
@@ -54,7 +67,9 @@ registerSingleton(
 );
 
 // Running Extensions Editor
-Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane(
+Registry.as<IEditorPaneRegistry>(
+  EditorExtensions.EditorPane,
+).registerEditorPane(
   EditorPaneDescriptor.create(
     RuntimeExtensionsEditor,
     RuntimeExtensionsEditor.ID,
@@ -64,43 +79,47 @@ Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane
 );
 
 class RuntimeExtensionsInputSerializer implements IEditorSerializer {
-	canSerialize(editorInput: EditorInput): boolean {
-		return true;
-	}
-	serialize(editorInput: EditorInput): string {
-		return "";
-	}
-	deserialize(instantiationService: IInstantiationService): EditorInput {
-		return RuntimeExtensionsInput.instance;
-	}
+  canSerialize(editorInput: EditorInput): boolean {
+    return true;
+  }
+  serialize(editorInput: EditorInput): string {
+    return "";
+  }
+  deserialize(instantiationService: IInstantiationService): EditorInput {
+    return RuntimeExtensionsInput.instance;
+  }
 }
 
-Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory).registerEditorSerializer(
+Registry.as<IEditorFactoryRegistry>(
+  EditorExtensions.EditorFactory,
+).registerEditorSerializer(
   RuntimeExtensionsInput.ID,
   RuntimeExtensionsInputSerializer,
 );
 
-
 // Global actions
 
-class ExtensionsContributions extends Disposable implements IWorkbenchContribution {
+class ExtensionsContributions
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  constructor(
+    @IExtensionRecommendationNotificationService
+    extensionRecommendationNotificationService: IExtensionRecommendationNotificationService,
+    @ISharedProcessService sharedProcessService: ISharedProcessService,
+  ) {
+    super();
 
-	constructor(
-		@IExtensionRecommendationNotificationService extensionRecommendationNotificationService: IExtensionRecommendationNotificationService,
-		@ISharedProcessService sharedProcessService: ISharedProcessService,
-	) {
-		super();
-
-		sharedProcessService.registerChannel(
+    sharedProcessService.registerChannel(
       "extensionRecommendationNotification",
       new ExtensionRecommendationNotificationServiceChannel(
         extensionRecommendationNotificationService,
       ),
     );
 
-		this._register(registerAction2(OpenExtensionsFolderAction));
-		this._register(registerAction2(CleanUpExtensionsFolderAction));
-	}
+    this._register(registerAction2(OpenExtensionsFolderAction));
+    this._register(registerAction2(CleanUpExtensionsFolderAction));
+  }
 }
 
 const workbenchRegistry = Registry.as<IWorkbenchContributionsRegistry>(

@@ -19,16 +19,15 @@ import {
 import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
 
 export abstract class AbstractEditorCommandsQuickAccessProvider extends AbstractCommandsQuickAccessProvider {
-
-	constructor(
-		options: ICommandsQuickAccessOptions,
-		instantiationService: IInstantiationService,
-		keybindingService: IKeybindingService,
-		commandService: ICommandService,
-		telemetryService: ITelemetryService,
-		dialogService: IDialogService,
-	) {
-		super(
+  constructor(
+    options: ICommandsQuickAccessOptions,
+    instantiationService: IInstantiationService,
+    keybindingService: IKeybindingService,
+    commandService: ICommandService,
+    telemetryService: ITelemetryService,
+    dialogService: IDialogService,
+  ) {
+    super(
       options,
       instantiationService,
       keybindingService,
@@ -36,40 +35,40 @@ export abstract class AbstractEditorCommandsQuickAccessProvider extends Abstract
       telemetryService,
       dialogService,
     );
-	}
+  }
 
-	/**
-	 * Subclasses to provide the current active editor control.
-	 */
-	protected abstract activeTextEditorControl: IEditor | undefined;
+  /**
+   * Subclasses to provide the current active editor control.
+   */
+  protected abstract activeTextEditorControl: IEditor | undefined;
 
-	protected getCodeEditorCommandPicks(): ICommandQuickPick[] {
-		const activeTextEditorControl = this.activeTextEditorControl;
-		if (!activeTextEditorControl) {
-			return [];
-		}
+  protected getCodeEditorCommandPicks(): ICommandQuickPick[] {
+    const activeTextEditorControl = this.activeTextEditorControl;
+    if (!activeTextEditorControl) {
+      return [];
+    }
 
-		const editorCommandPicks: ICommandQuickPick[] = [];
-		for (const editorAction of activeTextEditorControl.getSupportedActions()) {
-			let commandDescription: undefined | ILocalizedString;
-			if (editorAction.metadata?.description) {
-				if (isLocalizedString(editorAction.metadata.description)) {
-					commandDescription = editorAction.metadata.description;
-				} else {
-					commandDescription = {
+    const editorCommandPicks: ICommandQuickPick[] = [];
+    for (const editorAction of activeTextEditorControl.getSupportedActions()) {
+      let commandDescription: undefined | ILocalizedString;
+      if (editorAction.metadata?.description) {
+        if (isLocalizedString(editorAction.metadata.description)) {
+          commandDescription = editorAction.metadata.description;
+        } else {
+          commandDescription = {
             original: editorAction.metadata.description,
             value: editorAction.metadata.description,
           };
-				}
-			}
-			editorCommandPicks.push({
+        }
+      }
+      editorCommandPicks.push({
         commandId: editorAction.id,
         commandAlias: editorAction.alias,
         commandDescription,
         label: stripIcons(editorAction.label) || editorAction.id,
       });
-		}
+    }
 
-		return editorCommandPicks;
-	}
+    return editorCommandPicks;
+  }
 }

@@ -7,10 +7,16 @@ import { coalesce } from "../../../../../base/common/arrays.js";
 import { CancellationToken } from "../../../../../base/common/cancellation.js";
 import { Codicon } from "../../../../../base/common/codicons.js";
 import { Emitter } from "../../../../../base/common/event.js";
-import { Disposable, DisposableResourceMap } from "../../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  DisposableResourceMap,
+} from "../../../../../base/common/lifecycle.js";
 import { ResourceMap, ResourceSet } from "../../../../../base/common/map.js";
 import { equals } from "../../../../../base/common/objects.js";
-import { autorun, observableSignalFromEvent } from "../../../../../base/common/observable.js";
+import {
+  autorun,
+  observableSignalFromEvent,
+} from "../../../../../base/common/observable.js";
 import { isEqual } from "../../../../../base/common/resources.js";
 import { URI } from "../../../../../base/common/uri.js";
 import { IWorkbenchContribution } from "../../../../common/contributions.js";
@@ -33,246 +39,275 @@ import {
 import { IChatModel } from "../../common/model/chatModel.js";
 import { getChatSessionType } from "../../common/model/chatUri.js";
 import { getInProgressSessionDescription } from "../chatSessions/chatSessionDescription.js";
-import { chatResponseStateToSessionStatus, getSessionStatusForModel } from "../chatSessions/chatSessions.contribution.js";
+import {
+  chatResponseStateToSessionStatus,
+  getSessionStatusForModel,
+} from "../chatSessions/chatSessions.contribution.js";
 import { Schemas } from "../../../../../base/common/network.js";
 
-export class LocalAgentsSessionsController extends Disposable implements IChatSessionItemController, IWorkbenchContribution {
+export class LocalAgentsSessionsController
+  extends Disposable
+  implements IChatSessionItemController, IWorkbenchContribution
+{
+  static readonly ID = "workbench.contrib.localAgentsSessionsController";
 
-	static readonly ID = "workbench.contrib.localAgentsSessionsController";
+  readonly chatSessionType = localChatSessionType;
 
-	readonly chatSessionType = localChatSessionType;
-
-	readonly _onDidChangeChatSessionItems = this._register(
+  readonly _onDidChangeChatSessionItems = this._register(
     new Emitter<IChatSessionItemsDelta>(),
   );
-	readonly onDidChangeChatSessionItems = this._onDidChangeChatSessionItems.event;
+  readonly onDidChangeChatSessionItems =
+    this._onDidChangeChatSessionItems.event;
 
-	private readonly _modelListeners = this._register(
+  private readonly _modelListeners = this._register(
     new DisposableResourceMap(),
   );
 
-	private _isDisposed = false;
+  private _isDisposed = false;
 
-	constructor(
-		@IChatService private readonly chatService: IChatService,
-		@IChatSessionsService private readonly chatSessionsService: IChatSessionsService,
-	) {
-		super();
+  constructor(
+    @IChatService private readonly chatService: IChatService,
+    @IChatSessionsService
+    private readonly chatSessionsService: IChatSessionsService,
+  ) {
+    super();
 
-		this._register(
+    this._register(
       this.chatSessionsService.registerChatSessionItemController(
         this.chatSessionType,
         this,
       ),
     );
 
-		this.registerListeners();
-	}
+    this.registerListeners();
+  }
 
-	override dispose(): void {
-		this._isDisposed = true;
-		super.dispose();
-	}
+  override dispose(): void {
+    this._isDisposed = true;
+    super.dispose();
+  }
 
-	private _items = new ResourceMap<LocalChatSessionItem>();
-	get items(): readonly IChatSessionItem[] {
-		return Array.from(this._items.values());
-	}
+  private _items = new ResourceMap<LocalChatSessionItem>();
+  get items(): readonly IChatSessionItem[] {
+    return Array.from(this._items.values());
+  }
 
-	async refresh(token: CancellationToken): Promise<void> {
-		const newItems = await this.provideChatSessionItems(token);
+  async refresh(token: CancellationToken): Promise<void> {
+    const newItems = await this.provideChatSessionItems(token);
 
-		const newResources = new ResourceSet(newItems.map(i => i.resource));
-		const addedOrUpdated: LocalChatSessionItem[] = [];
-		const removed: URI[] = [];
+    const newResources = new ResourceSet(newItems.map((i) => i.resource));
+    const addedOrUpdated: LocalChatSessionItem[] = [];
+    const removed: URI[] = [];
 
-		for (const item of newItems) {
-			if (!this._items.has(item.resource)) {
-				addedOrUpdated.push(item);
-			}
-		}
-		for (const resource of this._items.keys()) {
-			if (!newResources.has(resource)) {
-				removed.push(resource);
-			}
-		}
+    for (const item of newItems) {
+      if (!this._items.has(item.resource)) {
+        addedOrUpdated.push(item);
+      }
+    }
+    for (const resource of this._items.keys()) {
+      if (!newResources.has(resource)) {
+        removed.push(resource);
+      }
+    }
 
-		this._items.clear();
-		for (const item of newItems) {
-			this._items.set(item.resource, item);
-		}
+    this._items.clear();
+    for (const item of newItems) {
+      this._items.set(item.resource, item);
+    }
 
-		if (addedOrUpdated.length > 0 || removed.length > 0) {
-			this._onDidChangeChatSessionItems.fire({
+    if (addedOrUpdated.length > 0 || removed.length > 0) {
+      this._onDidChangeChatSessionItems.fire({
         ...(addedOrUpdated.length > 0 ? { addedOrUpdated } : undefined),
         ...(removed.length > 0 ? { removed } : undefined),
       });
-		}
-	}
+    }
+  }
 
-	private registerListeners(): void {
-		const addModelListeners = async (model: IChatModel) => {
-			if (getChatSessionType(model.sessionResource) !== this.chatSessionType) {
-				return;
-			}
+  private registerListeners(): void {
+    const addModelListeners = async (model: IChatModel) => {
+      if (getChatSessionType(model.sessionResource) !== this.chatSessionType) {
+        return;
+      }
 
-			await this.refresh(CancellationToken.None);
-			if (this._isDisposed) {
-				return;
-			}
+      await this.refresh(CancellationToken.None);
+      if (this._isDisposed) {
+        return;
+      }
 
-			this.tryUpdateLiveSessionItem(model);
+      this.tryUpdateLiveSessionItem(model);
 
-			const requestChangeListener = model.lastRequestObs.map(
-        last => last?.response && observableSignalFromEvent("chatSessions.modelRequestChangeListener", last.response.onDidChange),
+      const requestChangeListener = model.lastRequestObs.map(
+        (last) =>
+          last?.response &&
+          observableSignalFromEvent(
+            "chatSessions.modelRequestChangeListener",
+            last.response.onDidChange,
+          ),
       );
-			const modelChangeListener = observableSignalFromEvent(
+      const modelChangeListener = observableSignalFromEvent(
         "chatSessions.modelChangeListener",
         model.onDidChange,
       );
-			this._modelListeners.set(
+      this._modelListeners.set(
         model.sessionResource,
-        autorun(reader => {
+        autorun((reader) => {
           requestChangeListener.read(reader)?.read(reader);
           modelChangeListener.read(reader);
 
           this.tryUpdateLiveSessionItem(model);
         }),
       );
-		};
+    };
 
-		this._register(
-      this.chatService.onDidCreateModel(model => addModelListeners(model)),
+    this._register(
+      this.chatService.onDidCreateModel((model) => addModelListeners(model)),
     );
-		for (const model of this.chatService.chatModels.get()) {
-			addModelListeners(model);
-		}
+    for (const model of this.chatService.chatModels.get()) {
+      addModelListeners(model);
+    }
 
-		this._register(this.chatService.onDidDisposeSession(e => {
-			for (const sessionResource of e.sessionResources) {
-				this._modelListeners.deleteAndDispose(sessionResource);
-			}
+    this._register(
+      this.chatService.onDidDisposeSession((e) => {
+        for (const sessionResource of e.sessionResources) {
+          this._modelListeners.deleteAndDispose(sessionResource);
+        }
 
-			const removedSessionResources = e.sessionResources.filter(resource => getChatSessionType(resource) === this.chatSessionType);
-			if (removedSessionResources.length) {
-				for (const resource of removedSessionResources) {
-					this._items.delete(resource);
-				}
-				this._onDidChangeChatSessionItems.fire({ removed: removedSessionResources });
-			}
-		}));
-	}
+        const removedSessionResources = e.sessionResources.filter(
+          (resource) => getChatSessionType(resource) === this.chatSessionType,
+        );
+        if (removedSessionResources.length) {
+          for (const resource of removedSessionResources) {
+            this._items.delete(resource);
+          }
+          this._onDidChangeChatSessionItems.fire({
+            removed: removedSessionResources,
+          });
+        }
+      }),
+    );
+  }
 
-	private async tryUpdateLiveSessionItem(model: IChatModel): Promise<void> {
-		const existing = this._items.get(model.sessionResource);
-		if (!existing) {
-			return;
-		}
+  private async tryUpdateLiveSessionItem(model: IChatModel): Promise<void> {
+    const existing = this._items.get(model.sessionResource);
+    if (!existing) {
+      return;
+    }
 
-		const updated = new LocalChatSessionItem(
+    const updated = new LocalChatSessionItem(
       await chatModelToChatDetail(model),
       model,
     );
-		if (existing.isEqual(updated)) {
-			return;
-		}
+    if (existing.isEqual(updated)) {
+      return;
+    }
 
-		this._items.set(existing.resource, updated);
-		this._onDidChangeChatSessionItems.fire({ addedOrUpdated: [updated] });
-	}
+    this._items.set(existing.resource, updated);
+    this._onDidChangeChatSessionItems.fire({ addedOrUpdated: [updated] });
+  }
 
-	private async provideChatSessionItems(token: CancellationToken): Promise<LocalChatSessionItem[]> {
-		const sessions: LocalChatSessionItem[] = [];
-		const sessionsByResource = new ResourceSet();
+  private async provideChatSessionItems(
+    token: CancellationToken,
+  ): Promise<LocalChatSessionItem[]> {
+    const sessions: LocalChatSessionItem[] = [];
+    const sessionsByResource = new ResourceSet();
 
-		for (const sessionDetail of await this.chatService.getLiveSessionItems()) {
-			const editorSession = this.toChatSessionItem(sessionDetail);
-			if (!editorSession) {
-				continue;
-			}
+    for (const sessionDetail of await this.chatService.getLiveSessionItems()) {
+      const editorSession = this.toChatSessionItem(sessionDetail);
+      if (!editorSession) {
+        continue;
+      }
 
-			sessionsByResource.add(sessionDetail.sessionResource);
-			sessions.push(editorSession);
-		}
+      sessionsByResource.add(sessionDetail.sessionResource);
+      sessions.push(editorSession);
+    }
 
-		if (!token.isCancellationRequested) {
-			const history = await this.getHistoryItems();
-			sessions.push(
-        ...history.filter(historyItem => !sessionsByResource.has(historyItem.resource)),
+    if (!token.isCancellationRequested) {
+      const history = await this.getHistoryItems();
+      sessions.push(
+        ...history.filter(
+          (historyItem) => !sessionsByResource.has(historyItem.resource),
+        ),
       );
-		}
+    }
 
-		return sessions;
-	}
+    return sessions;
+  }
 
-	private async getHistoryItems(): Promise<LocalChatSessionItem[]> {
-		try {
-			const historyItems = await this.chatService.getHistorySessionItems();
+  private async getHistoryItems(): Promise<LocalChatSessionItem[]> {
+    try {
+      const historyItems = await this.chatService.getHistorySessionItems();
 
-			return coalesce(
-        historyItems.map(history => this.toChatSessionItem(history)),
+      return coalesce(
+        historyItems.map((history) => this.toChatSessionItem(history)),
       );
-		} catch (error) {
-			return [];
-		}
-	}
+    } catch (error) {
+      return [];
+    }
+  }
 
-	private toChatSessionItem(chat: IChatDetail): LocalChatSessionItem | undefined {
-		const model = this.chatService.getSession(chat.sessionResource);
+  private toChatSessionItem(
+    chat: IChatDetail,
+  ): LocalChatSessionItem | undefined {
+    const model = this.chatService.getSession(chat.sessionResource);
 
-		if (model) {
-			if (!model.hasRequests) {
-				return undefined; // ignore sessions without requests
-			}
-		} else if (chat.isActive) {
-			// Sessions that are active but don't have a chat model are ultimately untitled with no requests
-			return undefined;
-		}
+    if (model) {
+      if (!model.hasRequests) {
+        return undefined; // ignore sessions without requests
+      }
+    } else if (chat.isActive) {
+      // Sessions that are active but don't have a chat model are ultimately untitled with no requests
+      return undefined;
+    }
 
-		return new LocalChatSessionItem(chat, model);
-	}
+    return new LocalChatSessionItem(chat, model);
+  }
 }
 
 class LocalChatSessionItem implements IChatSessionItem {
-	readonly resource: URI;
-	readonly iconPath = Codicon.chatSparkle;
+  readonly resource: URI;
+  readonly iconPath = Codicon.chatSparkle;
 
-	readonly label: string;
-	readonly description: string | undefined;
-	readonly status: ChatSessionStatus | undefined;
-	readonly timing: IChatSessionTiming;
-	readonly changes: IChatSessionItem["changes"];
-	readonly metadata: IChatSessionItemMetadata | undefined;
+  readonly label: string;
+  readonly description: string | undefined;
+  readonly status: ChatSessionStatus | undefined;
+  readonly timing: IChatSessionTiming;
+  readonly changes: IChatSessionItem["changes"];
+  readonly metadata: IChatSessionItemMetadata | undefined;
 
-	constructor(chatDetail: IChatDetail, model: IChatModel | undefined) {
-		this.resource = chatDetail.sessionResource;
-		this.label = chatDetail.title;
-		this.description = model ? getInProgressSessionDescription(
-      model,
-    ) : undefined;
-		this.status = (model && getSessionStatusForModel(
-      model,
-    )) ?? chatResponseStateToSessionStatus(chatDetail.lastResponseState);
-		this.timing = convertLegacyChatSessionTiming(chatDetail.timing);
-		this.changes = chatDetail.stats ? {
-      insertions: chatDetail.stats.added,
-      deletions: chatDetail.stats.removed,
-      files: chatDetail.stats.fileCount,
-    } : undefined;
-		const workingDirectoryPath = chatDetail.workingDirectory?.scheme === Schemas.file ? chatDetail.workingDirectory.fsPath : undefined;
-		this.metadata = workingDirectoryPath ? {
-      workingDirectoryPath: workingDirectoryPath,
-    } : undefined;
-	}
+  constructor(chatDetail: IChatDetail, model: IChatModel | undefined) {
+    this.resource = chatDetail.sessionResource;
+    this.label = chatDetail.title;
+    this.description = model
+      ? getInProgressSessionDescription(model)
+      : undefined;
+    this.status =
+      (model && getSessionStatusForModel(model)) ??
+      chatResponseStateToSessionStatus(chatDetail.lastResponseState);
+    this.timing = convertLegacyChatSessionTiming(chatDetail.timing);
+    this.changes = chatDetail.stats
+      ? {
+          insertions: chatDetail.stats.added,
+          deletions: chatDetail.stats.removed,
+          files: chatDetail.stats.fileCount,
+        }
+      : undefined;
+    const workingDirectoryPath =
+      chatDetail.workingDirectory?.scheme === Schemas.file
+        ? chatDetail.workingDirectory.fsPath
+        : undefined;
+    this.metadata = workingDirectoryPath ? { workingDirectoryPath } : undefined;
+  }
 
-	isEqual(other: LocalChatSessionItem): boolean {
-		return isEqual(this.resource, other.resource)
-			&& this.label === other.label
-			&& this.description === other.description
-			&& this.status === other.status
-			&& this.timing.created === other.timing.created
-			&& this.timing.lastRequestStarted === other.timing.lastRequestStarted
-			&& this.timing.lastRequestEnded === other.timing.lastRequestEnded
-			&& equals(this.changes, other.changes);
-	}
+  isEqual(other: LocalChatSessionItem): boolean {
+    return (
+      isEqual(this.resource, other.resource) &&
+      this.label === other.label &&
+      this.description === other.description &&
+      this.status === other.status &&
+      this.timing.created === other.timing.created &&
+      this.timing.lastRequestStarted === other.timing.lastRequestStarted &&
+      this.timing.lastRequestEnded === other.timing.lastRequestEnded &&
+      equals(this.changes, other.changes)
+    );
+  }
 }

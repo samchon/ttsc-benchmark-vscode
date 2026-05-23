@@ -5,7 +5,10 @@
 
 import assert from "assert";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../base/test/common/utils.js";
-import { isIMenuItem, MenuRegistry } from "../../../platform/actions/common/actions.js";
+import {
+  isIMenuItem,
+  MenuRegistry,
+} from "../../../platform/actions/common/actions.js";
 import { Menus } from "../../browser/menus.js";
 
 // Import layout actions to trigger menu registration
@@ -18,7 +21,9 @@ suite("Sessions - Layout Actions", () => {
     const items = MenuRegistry.getMenuItems(Menus.TitleBarRightLayout);
     const menuItems = items.filter(isIMenuItem);
 
-    const toggleAlwaysOnTop = menuItems.find(item => item.command.id === "workbench.action.toggleWindowAlwaysOnTop");
+    const toggleAlwaysOnTop = menuItems.find(
+      (item) => item.command.id === "workbench.action.toggleWindowAlwaysOnTop",
+    );
 
     assert.ok(
       toggleAlwaysOnTop,

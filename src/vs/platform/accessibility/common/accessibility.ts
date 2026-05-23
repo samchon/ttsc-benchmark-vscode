@@ -12,31 +12,31 @@ export const IAccessibilityService = createDecorator<IAccessibilityService>(
 );
 
 export interface IAccessibilityService {
-	readonly _serviceBrand: undefined;
+  readonly _serviceBrand: undefined;
 
-	readonly onDidChangeScreenReaderOptimized: Event<void>;
-	readonly onDidChangeReducedMotion: Event<void>;
-	readonly onDidChangeReducedTransparency: Event<void>;
+  readonly onDidChangeScreenReaderOptimized: Event<void>;
+  readonly onDidChangeReducedMotion: Event<void>;
+  readonly onDidChangeReducedTransparency: Event<void>;
 
-	alwaysUnderlineAccessKeys(): Promise<boolean>;
-	isScreenReaderOptimized(): boolean;
-	isMotionReduced(): boolean;
-	isTransparencyReduced(): boolean;
-	getAccessibilitySupport(): AccessibilitySupport;
-	setAccessibilitySupport(accessibilitySupport: AccessibilitySupport): void;
-	alert(message: string): void;
-	status(message: string): void;
+  alwaysUnderlineAccessKeys(): Promise<boolean>;
+  isScreenReaderOptimized(): boolean;
+  isMotionReduced(): boolean;
+  isTransparencyReduced(): boolean;
+  getAccessibilitySupport(): AccessibilitySupport;
+  setAccessibilitySupport(accessibilitySupport: AccessibilitySupport): void;
+  alert(message: string): void;
+  status(message: string): void;
 }
 
 export const enum AccessibilitySupport {
-	/**
-	 * This should be the browser case where it is not known if a screen reader is attached or no.
-	 */
-	Unknown = 0,
+  /**
+   * This should be the browser case where it is not known if a screen reader is attached or no.
+   */
+  Unknown = 0,
 
-	Disabled = 1,
+  Disabled = 1,
 
-	Enabled = 2
+  Enabled = 2,
 }
 
 export const CONTEXT_ACCESSIBILITY_MODE_ENABLED = new RawContextKey<boolean>(
@@ -45,18 +45,23 @@ export const CONTEXT_ACCESSIBILITY_MODE_ENABLED = new RawContextKey<boolean>(
 );
 
 export interface IAccessibilityInformation {
-	label: string;
-	role?: string;
+  label: string;
+  role?: string;
 }
 
-export function isAccessibilityInformation(obj: unknown): obj is IAccessibilityInformation {
-	if (!obj || typeof obj !== "object") {
-		return false;
-	}
+export function isAccessibilityInformation(
+  obj: unknown,
+): obj is IAccessibilityInformation {
+  if (!obj || typeof obj !== "object") {
+    return false;
+  }
 
-	const candidate = obj as Partial<IAccessibilityInformation>;
-	return typeof candidate.label === "string"
-		&& (typeof candidate.role === "undefined" || typeof candidate.role === "string");
+  const candidate = obj as Partial<IAccessibilityInformation>;
+  return (
+    typeof candidate.label === "string" &&
+    (typeof candidate.role === "undefined" ||
+      typeof candidate.role === "string")
+  );
 }
 
 export const ACCESSIBLE_VIEW_SHOWN_STORAGE_PREFIX = "ACCESSIBLE_VIEW_SHOWN_";

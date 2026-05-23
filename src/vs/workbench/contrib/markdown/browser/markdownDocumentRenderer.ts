@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { sanitizeHtml } from "../../../../base/browser/domSanitize.js";
-import { allowedMarkdownHtmlAttributes, allowedMarkdownHtmlTags } from "../../../../base/browser/markdownRenderer.js";
+import {
+  allowedMarkdownHtmlAttributes,
+  allowedMarkdownHtmlTags,
+} from "../../../../base/browser/markdownRenderer.js";
 import { raceCancellationError } from "../../../../base/common/async.js";
 import { CancellationToken } from "../../../../base/common/cancellation.js";
 import * as marked from "../../../../base/common/marked/marked.js";
@@ -162,56 +165,61 @@ const defaultAllowedLinkProtocols = Object.freeze([
   Schemas.https,
 ]);
 
-function sanitize(documentContent: string, sanitizerConfig: MarkdownDocumentSanitizerConfig | undefined): TrustedHTML {
-	return sanitizeHtml(documentContent, {
-		allowedLinkProtocols: {
-			override: sanitizerConfig?.allowedLinkProtocols?.override ?? defaultAllowedLinkProtocols,
-		},
-		allowRelativeLinkPaths: sanitizerConfig?.allowRelativeLinkPaths,
-		allowedMediaProtocols: sanitizerConfig?.allowedMediaProtocols,
-		allowRelativeMediaPaths: sanitizerConfig?.allowRelativeMediaPaths,
-		allowedTags: {
-			override: allowedMarkdownHtmlTags,
-			augment: sanitizerConfig?.allowedTags?.augment,
-		},
-		allowedAttributes: {
-			override: [
-				...allowedMarkdownHtmlAttributes,
-				"name",
-				"id",
-				"class",
-				"role",
-				"tabindex",
-				"placeholder",
-			],
-			augment: sanitizerConfig?.allowedAttributes?.augment ?? [],
-		},
-	});
+function sanitize(
+  documentContent: string,
+  sanitizerConfig: MarkdownDocumentSanitizerConfig | undefined,
+): TrustedHTML {
+  return sanitizeHtml(documentContent, {
+    allowedLinkProtocols: {
+      override:
+        sanitizerConfig?.allowedLinkProtocols?.override ??
+        defaultAllowedLinkProtocols,
+    },
+    allowRelativeLinkPaths: sanitizerConfig?.allowRelativeLinkPaths,
+    allowedMediaProtocols: sanitizerConfig?.allowedMediaProtocols,
+    allowRelativeMediaPaths: sanitizerConfig?.allowRelativeMediaPaths,
+    allowedTags: {
+      override: allowedMarkdownHtmlTags,
+      augment: sanitizerConfig?.allowedTags?.augment,
+    },
+    allowedAttributes: {
+      override: [
+        ...allowedMarkdownHtmlAttributes,
+        "name",
+        "id",
+        "class",
+        "role",
+        "tabindex",
+        "placeholder",
+      ],
+      augment: sanitizerConfig?.allowedAttributes?.augment ?? [],
+    },
+  });
 }
 
 interface MarkdownDocumentSanitizerConfig {
-	readonly allowedLinkProtocols?: {
-		readonly override: readonly string[] | "*";
-	};
-	readonly allowRelativeLinkPaths?: boolean;
+  readonly allowedLinkProtocols?: {
+    readonly override: readonly string[] | "*";
+  };
+  readonly allowRelativeLinkPaths?: boolean;
 
-	readonly allowedMediaProtocols?: {
-		readonly override: readonly string[] | "*";
-	};
-	readonly allowRelativeMediaPaths?: boolean;
+  readonly allowedMediaProtocols?: {
+    readonly override: readonly string[] | "*";
+  };
+  readonly allowRelativeMediaPaths?: boolean;
 
-	readonly allowedTags?: {
-		readonly augment: readonly string[];
-	};
+  readonly allowedTags?: {
+    readonly augment: readonly string[];
+  };
 
-	readonly allowedAttributes?: {
-		readonly augment: readonly string[];
-	};
+  readonly allowedAttributes?: {
+    readonly augment: readonly string[];
+  };
 }
 
 interface IRenderMarkdownDocumentOptions {
-	readonly sanitizerConfig?: MarkdownDocumentSanitizerConfig;
-	readonly markedExtensions?: readonly marked.MarkedExtension[];
+  readonly sanitizerConfig?: MarkdownDocumentSanitizerConfig;
+  readonly markedExtensions?: readonly marked.MarkedExtension[];
 }
 
 /**
@@ -221,116 +229,127 @@ interface IRenderMarkdownDocumentOptions {
  * markdown renderer.
  */
 export async function renderMarkdownDocument(
-	text: string,
-	extensionService: IExtensionService,
-	languageService: ILanguageService,
-	options?: IRenderMarkdownDocumentOptions,
-	token: CancellationToken = CancellationToken.None,
+  text: string,
+  extensionService: IExtensionService,
+  languageService: ILanguageService,
+  options?: IRenderMarkdownDocumentOptions,
+  token: CancellationToken = CancellationToken.None,
 ): Promise<TrustedHTML> {
-	const m = new marked.Marked(
-		MarkedHighlight.markedHighlight({
-			async: true,
-			async highlight(code: string, lang: string): Promise<string> {
-				if (typeof lang !== "string") {
-					return escape(code);
-				}
+  const m = new marked.Marked(
+    MarkedHighlight.markedHighlight({
+      async: true,
+      async highlight(code: string, lang: string): Promise<string> {
+        if (typeof lang !== "string") {
+          return escape(code);
+        }
 
-				await extensionService.whenInstalledExtensionsRegistered();
-				if (token?.isCancellationRequested) {
-					return "";
-				}
+        await extensionService.whenInstalledExtensionsRegistered();
+        if (token?.isCancellationRequested) {
+          return "";
+        }
 
-				const languageId = languageService.getLanguageIdByLanguageName(lang) ?? languageService.getLanguageIdByLanguageName(lang.split(/\s+|:|,|(?!^)\{|\?]/, 1)[0]);
-				return tokenizeToString(languageService, code, languageId);
-			},
-		}),
-		markedGfmHeadingIdPlugin(),
-		...(options?.markedExtensions ?? []),
-	);
+        const languageId =
+          languageService.getLanguageIdByLanguageName(lang) ??
+          languageService.getLanguageIdByLanguageName(
+            lang.split(/\s+|:|,|(?!^)\{|\?]/, 1)[0],
+          );
+        return tokenizeToString(languageService, code, languageId);
+      },
+    }),
+    markedGfmHeadingIdPlugin(),
+    ...(options?.markedExtensions ?? []),
+  );
 
-	const raw = await raceCancellationError(
+  const raw = await raceCancellationError(
     m.parse(text, { async: true }),
     token ?? CancellationToken.None,
   );
-	return sanitize(raw, options?.sanitizerConfig);
+  return sanitize(raw, options?.sanitizerConfig);
 }
 
 namespace MarkedHighlight {
-	// Copied from https://github.com/markedjs/marked-highlight/blob/main/src/index.js
+  // Copied from https://github.com/markedjs/marked-highlight/blob/main/src/index.js
 
-	export function markedHighlight(options: marked.MarkedOptions & { highlight: (code: string, lang: string) => string | Promise<string> }): marked.MarkedExtension {
-		if (typeof options === "function") {
-			options = {
+  export function markedHighlight(
+    options: marked.MarkedOptions & {
+      highlight: (code: string, lang: string) => string | Promise<string>;
+    },
+  ): marked.MarkedExtension {
+    if (typeof options === "function") {
+      options = {
         highlight: options,
       };
-		}
+    }
 
-		if (!options || typeof options.highlight !== "function") {
-			throw new Error("Must provide highlight function");
-		}
+    if (!options || typeof options.highlight !== "function") {
+      throw new Error("Must provide highlight function");
+    }
 
-		return {
-			async: !!options.async,
-			walkTokens(token: marked.Token): Promise<void> | void {
-				if (token.type !== "code") {
-					return;
-				}
+    return {
+      async: !!options.async,
+      walkTokens(token: marked.Token): Promise<void> | void {
+        if (token.type !== "code") {
+          return;
+        }
 
-				if (options.async) {
-					return Promise.resolve(options.highlight(token.text, token.lang)).then(updateToken(token));
-				}
+        if (options.async) {
+          return Promise.resolve(
+            options.highlight(token.text, token.lang),
+          ).then(updateToken(token));
+        }
 
-				const code = options.highlight(token.text, token.lang);
-				if (code instanceof Promise) {
-					throw new Error("markedHighlight is not set to async but the highlight function is async. Set the async option to true on markedHighlight to await the async highlight function.");
-				}
-				updateToken(token)(code);
-			},
-			renderer: {
-				code({ text, lang, escaped }: marked.Tokens.Code) {
-					const classAttr = lang
-						? ` class="language-${escape(lang)}"`
-						: "";
-					text = text.replace(/\n$/, "");
-					return `<pre><code${classAttr}>${escaped ? text : escape(text, true)}\n</code></pre>`;
-				},
-			},
-		};
-	}
+        const code = options.highlight(token.text, token.lang);
+        if (code instanceof Promise) {
+          throw new Error(
+            "markedHighlight is not set to async but the highlight function is async. Set the async option to true on markedHighlight to await the async highlight function.",
+          );
+        }
+        updateToken(token)(code);
+      },
+      renderer: {
+        code({ text, lang, escaped }: marked.Tokens.Code) {
+          const classAttr = lang ? ` class="language-${escape(lang)}"` : "";
+          text = text.replace(/\n$/, "");
+          return `<pre><code${classAttr}>${escaped ? text : escape(text, true)}\n</code></pre>`;
+        },
+      },
+    };
+  }
 
-	function updateToken(token: any) {
-		return (code: string) => {
-			if (typeof code === "string" && code !== token.text) {
-				token.escaped = true;
-				token.text = code;
-			}
-		};
-	}
+  function updateToken(token: any) {
+    return (code: string) => {
+      if (typeof code === "string" && code !== token.text) {
+        token.escaped = true;
+        token.text = code;
+      }
+    };
+  }
 
-	// copied from marked helpers
-	const escapeTest = /[&<>"']/;
-	const escapeReplace = new RegExp(escapeTest.source, "g");
-	const escapeTestNoEncode = /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/;
-	const escapeReplaceNoEncode = new RegExp(escapeTestNoEncode.source, "g");
-	const escapeReplacement: Record<string, string> = {
+  // copied from marked helpers
+  const escapeTest = /[&<>"']/;
+  const escapeReplace = new RegExp(escapeTest.source, "g");
+  const escapeTestNoEncode =
+    /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/;
+  const escapeReplaceNoEncode = new RegExp(escapeTestNoEncode.source, "g");
+  const escapeReplacement: Record<string, string> = {
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
     [`'`]: "&#39;",
   };
-	const getEscapeReplacement = (ch: string) => escapeReplacement[ch];
-	function escape(html: string, encode?: boolean) {
-		if (encode) {
-			if (escapeTest.test(html)) {
-				return html.replace(escapeReplace, getEscapeReplacement);
-			}
-		} else {
-			if (escapeTestNoEncode.test(html)) {
-				return html.replace(escapeReplaceNoEncode, getEscapeReplacement);
-			}
-		}
+  const getEscapeReplacement = (ch: string) => escapeReplacement[ch];
+  function escape(html: string, encode?: boolean) {
+    if (encode) {
+      if (escapeTest.test(html)) {
+        return html.replace(escapeReplace, getEscapeReplacement);
+      }
+    } else {
+      if (escapeTestNoEncode.test(html)) {
+        return html.replace(escapeReplaceNoEncode, getEscapeReplacement);
+      }
+    }
 
-		return html;
-	}
+    return html;
+  }
 }

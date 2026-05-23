@@ -8,66 +8,77 @@ import * as performance from "../../../../base/common/performance.js";
 import { URI, UriComponents, UriDto } from "../../../../base/common/uri.js";
 import { IChannel } from "../../../../base/parts/ipc/common/ipc.js";
 import { IRemoteAgentEnvironment } from "../../../../platform/remote/common/remoteAgentEnvironment.js";
-import { IDiagnosticInfoOptions, IDiagnosticInfo } from "../../../../platform/diagnostics/common/diagnostics.js";
-import { ITelemetryData, TelemetryLevel } from "../../../../platform/telemetry/common/telemetry.js";
+import {
+  IDiagnosticInfoOptions,
+  IDiagnosticInfo,
+} from "../../../../platform/diagnostics/common/diagnostics.js";
+import {
+  ITelemetryData,
+  TelemetryLevel,
+} from "../../../../platform/telemetry/common/telemetry.js";
 import { IExtensionHostExitInfo } from "./remoteAgentService.js";
 import { revive } from "../../../../base/common/marshalling.js";
 import { IUserDataProfile } from "../../../../platform/userDataProfile/common/userDataProfile.js";
 import { ProtocolConstants } from "../../../../base/parts/ipc/common/ipc.net.js";
 
 export interface IGetEnvironmentDataArguments {
-	remoteAuthority: string;
-	profile?: string;
+  remoteAuthority: string;
+  profile?: string;
 }
 
 export interface IGetExtensionHostExitInfoArguments {
-	remoteAuthority: string;
-	reconnectionToken: string;
+  remoteAuthority: string;
+  reconnectionToken: string;
 }
 
 export interface IRemoteAgentEnvironmentDTO {
-	pid: number;
-	connectionToken: string;
-	appRoot: UriComponents;
-	execPath: string;
-	tmpDir: UriComponents;
-	settingsPath: UriComponents;
-	mcpResource: UriComponents;
-	logsPath: UriComponents;
-	extensionHostLogsPath: UriComponents;
-	globalStorageHome: UriComponents;
-	workspaceStorageHome: UriComponents;
-	localHistoryHome: UriComponents;
-	userHome: UriComponents;
-	os: platform.OperatingSystem;
-	arch: string;
-	marks: performance.PerformanceMark[];
-	useHostProxy: boolean;
-	profiles: {
-		all: UriDto<IUserDataProfile[]>;
-		home: UriComponents;
-	};
-	isUnsupportedGlibc: boolean;
-	reconnectionGraceTime?: number;
+  pid: number;
+  connectionToken: string;
+  appRoot: UriComponents;
+  execPath: string;
+  tmpDir: UriComponents;
+  settingsPath: UriComponents;
+  mcpResource: UriComponents;
+  logsPath: UriComponents;
+  extensionHostLogsPath: UriComponents;
+  globalStorageHome: UriComponents;
+  workspaceStorageHome: UriComponents;
+  localHistoryHome: UriComponents;
+  userHome: UriComponents;
+  os: platform.OperatingSystem;
+  arch: string;
+  marks: performance.PerformanceMark[];
+  useHostProxy: boolean;
+  profiles: {
+    all: UriDto<IUserDataProfile[]>;
+    home: UriComponents;
+  };
+  isUnsupportedGlibc: boolean;
+  reconnectionGraceTime?: number;
 }
 
 export class RemoteExtensionEnvironmentChannelClient {
-
-	static async getEnvironmentData(channel: IChannel, remoteAuthority: string, profile: string | undefined): Promise<IRemoteAgentEnvironment> {
-		const args: IGetEnvironmentDataArguments = {
+  static async getEnvironmentData(
+    channel: IChannel,
+    remoteAuthority: string,
+    profile: string | undefined,
+  ): Promise<IRemoteAgentEnvironment> {
+    const args: IGetEnvironmentDataArguments = {
       remoteAuthority,
       profile,
     };
 
-		const data = await channel.call<IRemoteAgentEnvironmentDTO>(
+    const data = await channel.call<IRemoteAgentEnvironmentDTO>(
       "getEnvironmentData",
       args,
     );
-		const reconnectionGraceTime = (typeof data.reconnectionGraceTime === "number" && data.reconnectionGraceTime >= 0)
-			? data.reconnectionGraceTime
-			: ProtocolConstants.ReconnectionGraceTime;
+    const reconnectionGraceTime =
+      typeof data.reconnectionGraceTime === "number" &&
+      data.reconnectionGraceTime >= 0
+        ? data.reconnectionGraceTime
+        : ProtocolConstants.ReconnectionGraceTime;
 
-		return {
+    return {
       pid: data.pid,
       connectionToken: data.connectionToken,
       appRoot: URI.revive(data.appRoot),
@@ -89,36 +100,50 @@ export class RemoteExtensionEnvironmentChannelClient {
       isUnsupportedGlibc: data.isUnsupportedGlibc,
       reconnectionGraceTime,
     };
-	}
+  }
 
-	static async getExtensionHostExitInfo(channel: IChannel, remoteAuthority: string, reconnectionToken: string): Promise<IExtensionHostExitInfo | null> {
-		const args: IGetExtensionHostExitInfoArguments = {
+  static async getExtensionHostExitInfo(
+    channel: IChannel,
+    remoteAuthority: string,
+    reconnectionToken: string,
+  ): Promise<IExtensionHostExitInfo | null> {
+    const args: IGetExtensionHostExitInfoArguments = {
       remoteAuthority,
       reconnectionToken,
     };
-		return channel.call<IExtensionHostExitInfo | null>(
+    return channel.call<IExtensionHostExitInfo | null>(
       "getExtensionHostExitInfo",
       args,
     );
-	}
+  }
 
-	static getDiagnosticInfo(channel: IChannel, options: IDiagnosticInfoOptions): Promise<IDiagnosticInfo> {
-		return channel.call<IDiagnosticInfo>("getDiagnosticInfo", options);
-	}
+  static getDiagnosticInfo(
+    channel: IChannel,
+    options: IDiagnosticInfoOptions,
+  ): Promise<IDiagnosticInfo> {
+    return channel.call<IDiagnosticInfo>("getDiagnosticInfo", options);
+  }
 
-	static updateTelemetryLevel(channel: IChannel, telemetryLevel: TelemetryLevel): Promise<void> {
-		return channel.call<void>("updateTelemetryLevel", { telemetryLevel });
-	}
+  static updateTelemetryLevel(
+    channel: IChannel,
+    telemetryLevel: TelemetryLevel,
+  ): Promise<void> {
+    return channel.call<void>("updateTelemetryLevel", { telemetryLevel });
+  }
 
-	static logTelemetry(channel: IChannel, eventName: string, data: ITelemetryData): Promise<void> {
-		return channel.call<void>("logTelemetry", { eventName, data });
-	}
+  static logTelemetry(
+    channel: IChannel,
+    eventName: string,
+    data: ITelemetryData,
+  ): Promise<void> {
+    return channel.call<void>("logTelemetry", { eventName, data });
+  }
 
-	static flushTelemetry(channel: IChannel): Promise<void> {
-		return channel.call<void>("flushTelemetry");
-	}
+  static flushTelemetry(channel: IChannel): Promise<void> {
+    return channel.call<void>("flushTelemetry");
+  }
 
-	static async ping(channel: IChannel): Promise<void> {
-		await channel.call<void>("ping");
-	}
+  static async ping(channel: IChannel): Promise<void> {
+    await channel.call<void>("ping");
+  }
 }

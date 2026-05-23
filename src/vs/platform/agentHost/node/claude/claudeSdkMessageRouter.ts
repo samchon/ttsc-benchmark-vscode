@@ -12,7 +12,10 @@ import { ILogService } from "../../../log/common/log.js";
 import { AgentSignal } from "../../common/agentService.js";
 import { ISessionDatabase } from "../../common/sessionDataService.js";
 import { ClaudeFileEditObserver } from "./claudeFileEditObserver.js";
-import { ClaudeMapperState, mapSDKMessageToAgentSignals } from "./claudeMapSessionEvents.js";
+import {
+  ClaudeMapperState,
+  mapSDKMessageToAgentSignals,
+} from "./claudeMapSessionEvents.js";
 import type { SubagentRegistry } from "./claudeSubagentRegistry.js";
 
 /**
@@ -29,51 +32,51 @@ import type { SubagentRegistry } from "./claudeSubagentRegistry.js";
  * forwards into every mapper invocation.
  */
 export class ClaudeSdkMessageRouter extends Disposable {
-
-	private readonly _onDidProduceSignal = this._register(
+  private readonly _onDidProduceSignal = this._register(
     new Emitter<AgentSignal>(),
   );
-	readonly onDidProduceSignal: Event<AgentSignal> = this._onDidProduceSignal.event;
+  readonly onDidProduceSignal: Event<AgentSignal> =
+    this._onDidProduceSignal.event;
 
-	private readonly _editObserver: ClaudeFileEditObserver;
-	private readonly _mapperState = new ClaudeMapperState();
+  private readonly _editObserver: ClaudeFileEditObserver;
+  private readonly _mapperState = new ClaudeMapperState();
 
-	private _clientId: string | undefined;
+  private _clientId: string | undefined;
 
-	constructor(
-		private readonly _sessionUri: URI,
-		dbRef: IReference<ISessionDatabase>,
-		private readonly _subagents: SubagentRegistry,
-		clientId: string | undefined = undefined,
-		@IInstantiationService instantiationService: IInstantiationService,
-		@ILogService private readonly _logService: ILogService,
-	) {
-		super();
-		this._clientId = clientId;
-		this._editObserver = this._register(
+  constructor(
+    private readonly _sessionUri: URI,
+    dbRef: IReference<ISessionDatabase>,
+    private readonly _subagents: SubagentRegistry,
+    clientId: string | undefined = undefined,
+    @IInstantiationService instantiationService: IInstantiationService,
+    @ILogService private readonly _logService: ILogService,
+  ) {
+    super();
+    this._clientId = clientId;
+    this._editObserver = this._register(
       instantiationService.createInstance(
         ClaudeFileEditObserver,
         _sessionUri.toString(),
         dbRef,
       ),
     );
-	}
+  }
 
-	setClientId(clientId: string | undefined): void {
-		this._clientId = clientId;
-	}
+  setClientId(clientId: string | undefined): void {
+    this._clientId = clientId;
+  }
 
-	async handle(message: SDKMessage, turnId: string | undefined): Promise<void> {
-		if (message.type === "assistant") {
-			this._editObserver.observeAssistant(message);
-		} else if (message.type === "user" && turnId !== undefined) {
-			await this._editObserver.observeUser(message, turnId, this._mapperState);
-		}
-		if (turnId === undefined) {
-			return;
-		}
-		try {
-			const signals = mapSDKMessageToAgentSignals(
+  async handle(message: SDKMessage, turnId: string | undefined): Promise<void> {
+    if (message.type === "assistant") {
+      this._editObserver.observeAssistant(message);
+    } else if (message.type === "user" && turnId !== undefined) {
+      await this._editObserver.observeUser(message, turnId, this._mapperState);
+    }
+    if (turnId === undefined) {
+      return;
+    }
+    try {
+      const signals = mapSDKMessageToAgentSignals(
         message,
         this._sessionUri,
         turnId,
@@ -82,13 +85,13 @@ export class ClaudeSdkMessageRouter extends Disposable {
         this._subagents,
         this._clientId,
       );
-			for (const signal of signals) {
-				this._onDidProduceSignal.fire(signal);
-			}
-		} catch (mapperErr) {
-			this._logService.warn(
+      for (const signal of signals) {
+        this._onDidProduceSignal.fire(signal);
+      }
+    } catch (mapperErr) {
+      this._logService.warn(
         `[ClaudeSdkMessageRouter] mapper threw, skipping message: ${mapperErr}`,
       );
-		}
-	}
+    }
+  }
 }

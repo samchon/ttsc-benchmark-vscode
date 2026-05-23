@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from "assert";
-import { migrateThemeSettingsId, ThemeSettingDefaults } from "../../common/workbenchThemeService.js";
+import {
+  migrateThemeSettingsId,
+  ThemeSettingDefaults,
+} from "../../common/workbenchThemeService.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
 
 suite("WorkbenchThemeService", () => {
@@ -13,18 +16,24 @@ suite("WorkbenchThemeService", () => {
   suite("migrateThemeSettingsId", () => {
     test("migrates Default-prefixed theme IDs", () => {
       assert.deepStrictEqual(
-        ["Default Dark Modern", "Default Light Modern", "Default Dark+", "Default Light+"].map(
-          migrateThemeSettingsId,
-        ),
+        [
+          "Default Dark Modern",
+          "Default Light Modern",
+          "Default Dark+",
+          "Default Light+",
+        ].map(migrateThemeSettingsId),
         ["Dark Modern", "Light Modern", "Dark+", "Light+"],
       );
     });
 
     test("migrates Experimental theme IDs to VS Code themes", () => {
       assert.deepStrictEqual(
-        ["Experimental Dark", "Experimental Light", "VS Code Dark", "VS Code Light"].map(
-          migrateThemeSettingsId,
-        ),
+        [
+          "Experimental Dark",
+          "Experimental Light",
+          "VS Code Dark",
+          "VS Code Light",
+        ].map(migrateThemeSettingsId),
         [
           ThemeSettingDefaults.COLOR_THEME_DARK,
           ThemeSettingDefaults.COLOR_THEME_LIGHT,

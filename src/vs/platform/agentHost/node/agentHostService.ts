@@ -11,7 +11,7 @@ import { IAgentHostStarter } from "../common/agent.js";
 import { AgentHostIpcChannels } from "../common/agentService.js";
 
 enum Constants {
-	MaxRestarts = 5,
+  MaxRestarts = 5,
 }
 
 /**
@@ -21,84 +21,89 @@ enum Constants {
  * relay any agent service calls.
  */
 export class AgentHostProcessManager extends Disposable {
+  private _started = false;
+  private _wasQuitRequested = false;
+  private _restartCount = 0;
 
-	private _started = false;
-	private _wasQuitRequested = false;
-	private _restartCount = 0;
+  constructor(
+    private readonly _starter: IAgentHostStarter,
+    @ILogService private readonly _logService: ILogService,
+    @ILoggerService private readonly _loggerService: ILoggerService,
+  ) {
+    super();
 
-	constructor(
-		private readonly _starter: IAgentHostStarter,
-		@ILogService private readonly _logService: ILogService,
-		@ILoggerService private readonly _loggerService: ILoggerService,
-	) {
-		super();
+    this._register(this._starter);
 
-		this._register(this._starter);
-
-		// Start lazily when the first window asks for a connection
-		if (this._starter.onRequestConnection) {
-			this._register(
-        Event.once(this._starter.onRequestConnection)(
-          () => this._ensureStarted(),
+    // Start lazily when the first window asks for a connection
+    if (this._starter.onRequestConnection) {
+      this._register(
+        Event.once(this._starter.onRequestConnection)(() =>
+          this._ensureStarted(),
         ),
       );
-		}
+    }
 
-		if (this._starter.onWillShutdown) {
-			this._register(
-        this._starter.onWillShutdown(() => this._wasQuitRequested = true),
+    if (this._starter.onWillShutdown) {
+      this._register(
+        this._starter.onWillShutdown(() => (this._wasQuitRequested = true)),
       );
-		}
-	}
+    }
+  }
 
-	private _ensureStarted(): void {
-		if (!this._started) {
-			this._start();
-		}
-	}
+  private _ensureStarted(): void {
+    if (!this._started) {
+      this._start();
+    }
+  }
 
-	private async _start(): Promise<void> {
-		this._started = true;
-		try {
-			const connection = await this._starter.start();
+  private async _start(): Promise<void> {
+    this._started = true;
+    try {
+      const connection = await this._starter.start();
 
-			if (this._store.isDisposed) {
-				connection.store.dispose();
-				return;
-			}
+      if (this._store.isDisposed) {
+        connection.store.dispose();
+        return;
+      }
 
-			this._logService.info("AgentHostProcessManager: agent host started");
+      this._logService.info("AgentHostProcessManager: agent host started");
 
-			// Connect logger channel so agent host logs appear in the output channel
-			this._register(
+      // Connect logger channel so agent host logs appear in the output channel
+      this._register(
         new RemoteLoggerChannelClient(
           this._loggerService,
           connection.client.getChannel(AgentHostIpcChannels.Logger),
         ),
       );
 
-			// Handle unexpected exit
-			this._register(connection.onDidProcessExit(e => {
-				if (!this._wasQuitRequested && !this._store.isDisposed) {
-					if (this._restartCount <= Constants.MaxRestarts) {
-						this._logService.error(`AgentHostProcessManager: agent host terminated unexpectedly with code ${e.code}`);
-						this._restartCount++;
-						this._started = false;
-						connection.store.dispose();
-						this._start();
-					} else {
-						this._logService.error(`AgentHostProcessManager: agent host terminated with code ${e.code}, giving up after ${Constants.MaxRestarts} restarts`);
-					}
-				}
-			}));
+      // Handle unexpected exit
+      this._register(
+        connection.onDidProcessExit((e) => {
+          if (!this._wasQuitRequested && !this._store.isDisposed) {
+            if (this._restartCount <= Constants.MaxRestarts) {
+              this._logService.error(
+                `AgentHostProcessManager: agent host terminated unexpectedly with code ${e.code}`,
+              );
+              this._restartCount++;
+              this._started = false;
+              connection.store.dispose();
+              this._start();
+            } else {
+              this._logService.error(
+                `AgentHostProcessManager: agent host terminated with code ${e.code}, giving up after ${Constants.MaxRestarts} restarts`,
+              );
+            }
+          }
+        }),
+      );
 
-			this._register(toDisposable(() => connection.store.dispose()));
-		} catch (error) {
-			this._started = false;
-			this._logService.error(
+      this._register(toDisposable(() => connection.store.dispose()));
+    } catch (error) {
+      this._started = false;
+      this._logService.error(
         "AgentHostProcessManager: failed to start agent host",
         error,
       );
-		}
-	}
+    }
+  }
 }

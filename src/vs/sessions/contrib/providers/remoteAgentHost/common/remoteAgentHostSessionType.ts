@@ -28,6 +28,9 @@ import { type AgentProvider } from "../../../../../platform/agentHost/common/age
  *   `agentHostAuthority`.
  * @param agentProvider Agent provider name (e.g. `'copilot'`).
  */
-export function remoteAgentHostSessionTypeId(connectionAuthority: string, agentProvider: AgentProvider): string {
-	return `remote-${connectionAuthority}-${agentProvider}`;
+export function remoteAgentHostSessionTypeId(
+  connectionAuthority: string,
+  agentProvider: AgentProvider,
+): string {
+  return `remote-${connectionAuthority}-${agentProvider}`;
 }

@@ -10,7 +10,7 @@ import { Color, RGBA } from "../../../../base/common/color.js";
 export const embeddedEditorBackground = registerColor(
   "walkThrough.embeddedEditorBackground",
   {
-    dark: new Color(new RGBA(0, 0, 0, .4)),
+    dark: new Color(new RGBA(0, 0, 0, 0.4)),
     light: "#f4f4f4",
     hcDark: null,
     hcLight: null,

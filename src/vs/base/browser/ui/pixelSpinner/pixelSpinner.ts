@@ -7,14 +7,14 @@ import { h } from "../../dom.js";
 import "./pixelSpinner.css";
 
 export interface IPixelSpinnerOptions {
-	/**
-	 * Accessible label for the spinner. When provided, the spinner is given
-	 * `role="status"` and `aria-label` so screen readers announce a busy state.
-	 * When omitted (the default), the spinner is purely decorative and is marked
-	 * `aria-hidden="true"` — appropriate when a surrounding element already
-	 * conveys the busy state.
-	 */
-	readonly ariaLabel?: string;
+  /**
+   * Accessible label for the spinner. When provided, the spinner is given
+   * `role="status"` and `aria-label` so screen readers announce a busy state.
+   * When omitted (the default), the spinner is purely decorative and is marked
+   * `aria-hidden="true"` — appropriate when a surrounding element already
+   * conveys the busy state.
+   */
+  readonly ariaLabel?: string;
 }
 
 /**
@@ -29,17 +29,20 @@ export interface IPixelSpinnerOptions {
  * @param options Optional spinner configuration.
  * @returns The spinner root element.
  */
-export function createPixelSpinner(parent?: HTMLElement, options?: IPixelSpinnerOptions): HTMLElement {
-	const root = h("span.monaco-pixel-spinner").root;
-	if (options?.ariaLabel) {
-		root.setAttribute("role", "status");
-		root.setAttribute("aria-label", options.ariaLabel);
-	} else {
-		root.setAttribute("aria-hidden", "true");
-	}
-	for (let i = 0; i < 6; i++) {
-		root.appendChild(h("span.monaco-pixel-spinner-dot").root);
-	}
-	parent?.appendChild(root);
-	return root;
+export function createPixelSpinner(
+  parent?: HTMLElement,
+  options?: IPixelSpinnerOptions,
+): HTMLElement {
+  const root = h("span.monaco-pixel-spinner").root;
+  if (options?.ariaLabel) {
+    root.setAttribute("role", "status");
+    root.setAttribute("aria-label", options.ariaLabel);
+  } else {
+    root.setAttribute("aria-hidden", "true");
+  }
+  for (let i = 0; i < 6; i++) {
+    root.appendChild(h("span.monaco-pixel-spinner-dot").root);
+  }
+  parent?.appendChild(root);
+  return root;
 }

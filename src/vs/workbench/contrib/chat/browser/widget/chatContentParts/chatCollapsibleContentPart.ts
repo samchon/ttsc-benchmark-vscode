@@ -6,16 +6,30 @@
 import { $ } from "../../../../../../base/browser/dom.js";
 import { ButtonWithIcon } from "../../../../../../base/browser/ui/button/button.js";
 import { HoverStyle } from "../../../../../../base/browser/ui/hover/hover.js";
-import { IMarkdownString, MarkdownString } from "../../../../../../base/common/htmlContent.js";
-import { Disposable, IDisposable, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
-import { autorun, IObservable, observableValue } from "../../../../../../base/common/observable.js";
+import {
+  IMarkdownString,
+  MarkdownString,
+} from "../../../../../../base/common/htmlContent.js";
+import {
+  Disposable,
+  IDisposable,
+  MutableDisposable,
+} from "../../../../../../base/common/lifecycle.js";
+import {
+  autorun,
+  IObservable,
+  observableValue,
+} from "../../../../../../base/common/observable.js";
 import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
 import { IHoverService } from "../../../../../../platform/hover/browser/hover.js";
 import { observableConfigValue } from "../../../../../../platform/observable/common/platformObservableUtils.js";
 import { AccessibilityWorkbenchSettingId } from "../../../../accessibility/browser/accessibilityConfiguration.js";
 import { IChatRendererContent } from "../../../common/model/chatViewModel.js";
 import { ChatTreeItem } from "../../chat.js";
-import { IChatContentPart, IChatContentPartRenderContext } from "./chatContentParts.js";
+import {
+  IChatContentPart,
+  IChatContentPartRenderContext,
+} from "./chatContentParts.js";
 import { renderFileWidgets } from "./chatInlineAnchorWidget.js";
 import { IChatMarkdownAnchorService } from "./chatMarkdownAnchorService.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
@@ -23,65 +37,66 @@ import { IMarkdownRenderer } from "../../../../../../platform/markdown/browser/m
 import { IRenderedMarkdown } from "../../../../../../base/browser/markdownRenderer.js";
 import { ThemeIcon } from "../../../../../../base/common/themables.js";
 
-
-export abstract class ChatCollapsibleContentPart extends Disposable implements IChatContentPart {
-
-	private _domNode?: HTMLElement;
-	private readonly _renderedTitleWithWidgets = this._register(
+export abstract class ChatCollapsibleContentPart
+  extends Disposable
+  implements IChatContentPart
+{
+  private _domNode?: HTMLElement;
+  private readonly _renderedTitleWithWidgets = this._register(
     new MutableDisposable<IRenderedMarkdown>(),
   );
 
-	protected readonly hasFollowingContent: boolean;
-	protected _isExpanded = observableValue<boolean>(this, false);
-	protected _collapseButton: ButtonWithIcon | undefined;
+  protected readonly hasFollowingContent: boolean;
+  protected _isExpanded = observableValue<boolean>(this, false);
+  protected _collapseButton: ButtonWithIcon | undefined;
 
-	private readonly _overrideIcon = observableValue<ThemeIcon | undefined>(
+  private readonly _overrideIcon = observableValue<ThemeIcon | undefined>(
     this,
     undefined,
   );
-	protected readonly _showCheckmarks: IObservable<boolean>;
-	private _contentElement?: HTMLElement;
-	private _contentInitialized = false;
+  protected readonly _showCheckmarks: IObservable<boolean>;
+  private _contentElement?: HTMLElement;
+  private _contentInitialized = false;
 
-	public get icon(): ThemeIcon | undefined {
-		return this._overrideIcon.get();
-	}
+  public get icon(): ThemeIcon | undefined {
+    return this._overrideIcon.get();
+  }
 
-	public set icon(value: ThemeIcon | undefined) {
-		this._overrideIcon.set(value, undefined);
-	}
+  public set icon(value: ThemeIcon | undefined) {
+    this._overrideIcon.set(value, undefined);
+  }
 
-	protected readonly element: ChatTreeItem;
+  protected readonly element: ChatTreeItem;
 
-	constructor(
-		private title: IMarkdownString | string,
-		context: IChatContentPartRenderContext,
-		private readonly hoverMessage: IMarkdownString | undefined,
-		@IHoverService protected readonly hoverService: IHoverService,
-		@IConfigurationService configurationService: IConfigurationService,
-	) {
-		super();
-		this.element = context.element;
-		this.hasFollowingContent = context.contentIndex + 1 < context.content.length;
-		this._showCheckmarks = observableConfigValue(
+  constructor(
+    private title: IMarkdownString | string,
+    context: IChatContentPartRenderContext,
+    private readonly hoverMessage: IMarkdownString | undefined,
+    @IHoverService protected readonly hoverService: IHoverService,
+    @IConfigurationService configurationService: IConfigurationService,
+  ) {
+    super();
+    this.element = context.element;
+    this.hasFollowingContent =
+      context.contentIndex + 1 < context.content.length;
+    this._showCheckmarks = observableConfigValue(
       AccessibilityWorkbenchSettingId.ShowChatCheckmarks,
       false,
       configurationService,
     );
-	}
+  }
 
-	get domNode(): HTMLElement {
-		this._domNode ??= this.init();
-		return this._domNode;
-	}
+  get domNode(): HTMLElement {
+    this._domNode ??= this.init();
+    return this._domNode;
+  }
 
-	protected init(): HTMLElement {
-		const referencesLabel = this.title;
+  protected init(): HTMLElement {
+    const referencesLabel = this.title;
 
+    const buttonElement = $(".chat-used-context-label", undefined);
 
-		const buttonElement = $(".chat-used-context-label", undefined);
-
-		const collapseButton = this._register(
+    const collapseButton = this._register(
       new ButtonWithIcon(buttonElement, {
         buttonBackground: undefined,
         buttonBorder: undefined,
@@ -93,134 +108,157 @@ export abstract class ChatCollapsibleContentPart extends Disposable implements I
         buttonSeparator: undefined,
       }),
     );
-		this._collapseButton = collapseButton;
-		this._domNode = $(".chat-used-context", undefined, buttonElement);
-		collapseButton.label = referencesLabel;
+    this._collapseButton = collapseButton;
+    this._domNode = $(".chat-used-context", undefined, buttonElement);
+    collapseButton.label = referencesLabel;
 
-		// Add hover chevron indicator on the right (decorative, hide from screen readers)
-		const hoverChevron = $(
+    // Add hover chevron indicator on the right (decorative, hide from screen readers)
+    const hoverChevron = $(
       "span.chat-collapsible-hover-chevron.codicon.codicon-chevron-right",
       { "aria-hidden": "true" },
     );
-		collapseButton.element.appendChild(hoverChevron);
+    collapseButton.element.appendChild(hoverChevron);
 
-		if (this.hoverMessage) {
-			this._register(
+    if (this.hoverMessage) {
+      this._register(
         this.hoverService.setupDelayedHover(collapseButton.iconElement, {
           content: this.hoverMessage,
           style: HoverStyle.Pointer,
         }),
       );
-		}
+    }
 
-		this._register(
+    this._register(
       collapseButton.onDidClick(() => {
         const value = this._isExpanded.get();
         this._isExpanded.set(!value, undefined);
       }),
     );
 
-		// Initialize the expanded state based on the subclass's isExpanded() method
-		this._isExpanded.set(this.isExpanded(), undefined);
+    // Initialize the expanded state based on the subclass's isExpanded() method
+    this._isExpanded.set(this.isExpanded(), undefined);
 
-		this._register(autorun(r => {
-			const expanded = this._isExpanded.read(r);
-			const overrideIcon = this._overrideIcon.read(r);
-			const showCheckmarks = this._showCheckmarks.read(r);
+    this._register(
+      autorun((r) => {
+        const expanded = this._isExpanded.read(r);
+        const overrideIcon = this._overrideIcon.read(r);
+        const showCheckmarks = this._showCheckmarks.read(r);
 
-			if (overrideIcon) {
-				collapseButton.icon = overrideIcon;
-			}
+        if (overrideIcon) {
+          collapseButton.icon = overrideIcon;
+        }
 
-			this._domNode?.classList.toggle("show-checkmarks", showCheckmarks);
+        this._domNode?.classList.toggle("show-checkmarks", showCheckmarks);
 
-			// Update hover chevron direction
-			hoverChevron.classList.toggle("codicon-chevron-right", !expanded);
-			hoverChevron.classList.toggle("codicon-chevron-down", expanded);
+        // Update hover chevron direction
+        hoverChevron.classList.toggle("codicon-chevron-right", !expanded);
+        hoverChevron.classList.toggle("codicon-chevron-down", expanded);
 
-			this._domNode?.classList.toggle("chat-used-context-collapsed", !expanded);
-			this.updateAriaLabel(collapseButton.element, typeof referencesLabel === "string" ? referencesLabel : referencesLabel.value, expanded);
+        this._domNode?.classList.toggle(
+          "chat-used-context-collapsed",
+          !expanded,
+        );
+        this.updateAriaLabel(
+          collapseButton.element,
+          typeof referencesLabel === "string"
+            ? referencesLabel
+            : referencesLabel.value,
+          expanded,
+        );
 
-			// Lazy initialization: render content only when expanded for the first time
-			if ((expanded || this.shouldInitEarly()) && !this._contentInitialized) {
-				this._contentInitialized = true;
-				this._contentElement = this.initContent();
-				this._domNode?.appendChild(this._contentElement);
-			}
-		}));
+        // Lazy initialization: render content only when expanded for the first time
+        if ((expanded || this.shouldInitEarly()) && !this._contentInitialized) {
+          this._contentInitialized = true;
+          this._contentElement = this.initContent();
+          this._domNode?.appendChild(this._contentElement);
+        }
+      }),
+    );
 
-		return this._domNode;
-	}
+    return this._domNode;
+  }
 
-	protected abstract initContent(): HTMLElement;
+  protected abstract initContent(): HTMLElement;
 
-	protected shouldInitEarly(): boolean {
-		return false;
-	}
+  protected shouldInitEarly(): boolean {
+    return false;
+  }
 
-	abstract hasSameContent(other: IChatRendererContent, followingContent: IChatRendererContent[], element: ChatTreeItem): boolean;
+  abstract hasSameContent(
+    other: IChatRendererContent,
+    followingContent: IChatRendererContent[],
+    element: ChatTreeItem,
+  ): boolean;
 
-	private updateAriaLabel(element: HTMLElement, label: string, expanded?: boolean): void {
-		element.ariaLabel = label;
-		element.ariaExpanded = String(expanded);
-	}
+  private updateAriaLabel(
+    element: HTMLElement,
+    label: string,
+    expanded?: boolean,
+  ): void {
+    element.ariaLabel = label;
+    element.ariaExpanded = String(expanded);
+  }
 
-	addDisposable(disposable: IDisposable): void {
-		this._register(disposable);
-	}
+  addDisposable(disposable: IDisposable): void {
+    this._register(disposable);
+  }
 
-	get expanded(): IObservable<boolean> {
-		return this._isExpanded;
-	}
+  get expanded(): IObservable<boolean> {
+    return this._isExpanded;
+  }
 
-	protected isExpanded(): boolean {
-		return this._isExpanded.get();
-	}
+  protected isExpanded(): boolean {
+    return this._isExpanded.get();
+  }
 
-	protected setExpanded(value: boolean): void {
-		this._isExpanded.set(value, undefined);
-	}
+  protected setExpanded(value: boolean): void {
+    this._isExpanded.set(value, undefined);
+  }
 
-	protected setTitle(title: string): void {
-		this.title = title;
-		if (this._collapseButton) {
-			this._collapseButton.label = title;
-			this.updateAriaLabel(
+  protected setTitle(title: string): void {
+    this.title = title;
+    if (this._collapseButton) {
+      this._collapseButton.label = title;
+      this.updateAriaLabel(
         this._collapseButton.element,
         title,
         this.isExpanded(),
       );
-		}
-	}
+    }
+  }
 
+  // Render collapsible dropdown title with widgets
+  protected setTitleWithWidgets(
+    content: MarkdownString,
+    instantiationService: IInstantiationService,
+    chatMarkdownAnchorService: IChatMarkdownAnchorService,
+    chatContentMarkdownRenderer: IMarkdownRenderer,
+  ): void {
+    if (this._store.isDisposed || !this._collapseButton) {
+      return;
+    }
 
-	// Render collapsible dropdown title with widgets
-	protected setTitleWithWidgets(content: MarkdownString, instantiationService: IInstantiationService, chatMarkdownAnchorService: IChatMarkdownAnchorService, chatContentMarkdownRenderer: IMarkdownRenderer): void {
-		if (this._store.isDisposed || !this._collapseButton) {
-			return;
-		}
+    const result = chatContentMarkdownRenderer.render(content);
+    result.element.classList.add("collapsible-title-content");
 
-		const result = chatContentMarkdownRenderer.render(content);
-		result.element.classList.add("collapsible-title-content");
-
-		renderFileWidgets(
+    renderFileWidgets(
       result.element,
       instantiationService,
       chatMarkdownAnchorService,
       this._store,
     );
 
-		const labelElement = this._collapseButton.labelElement;
-		labelElement.textContent = "";
-		labelElement.appendChild(result.element);
+    const labelElement = this._collapseButton.labelElement;
+    labelElement.textContent = "";
+    labelElement.appendChild(result.element);
 
-		const textContent = result.element.textContent || "";
-		this.updateAriaLabel(
+    const textContent = result.element.textContent || "";
+    this.updateAriaLabel(
       this._collapseButton.element,
       textContent,
       this.isExpanded(),
     );
 
-		this._renderedTitleWithWidgets.value = result;
-	}
+    this._renderedTitleWithWidgets.value = result;
+  }
 }

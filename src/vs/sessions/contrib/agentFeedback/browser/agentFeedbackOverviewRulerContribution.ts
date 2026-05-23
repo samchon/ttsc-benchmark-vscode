@@ -5,8 +5,14 @@
 
 import { Disposable } from "../../../../base/common/lifecycle.js";
 import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
-import { IEditorContribution, IEditorDecorationsCollection } from "../../../../editor/common/editorCommon.js";
-import { EditorContributionInstantiation, registerEditorContribution } from "../../../../editor/browser/editorExtensions.js";
+import {
+  IEditorContribution,
+  IEditorDecorationsCollection,
+} from "../../../../editor/common/editorCommon.js";
+import {
+  EditorContributionInstantiation,
+  registerEditorContribution,
+} from "../../../../editor/browser/editorExtensions.js";
 import { overviewRulerInfo } from "../../../../editor/common/core/editorColorRegistry.js";
 import { OverviewRulerLane } from "../../../../editor/common/model.js";
 import { themeColorFromId } from "../../../../platform/theme/common/themeService.js";
@@ -27,89 +33,94 @@ const overviewRulerAgentFeedbackForeground = registerColor(
   ),
 );
 
-export class AgentFeedbackOverviewRulerContribution extends Disposable implements IEditorContribution {
+export class AgentFeedbackOverviewRulerContribution
+  extends Disposable
+  implements IEditorContribution
+{
+  static readonly ID = "agentFeedback.overviewRulerContribution";
 
-	static readonly ID = "agentFeedback.overviewRulerContribution";
+  private readonly _decorations: IEditorDecorationsCollection;
+  private _sessionResource: URI | undefined;
 
-	private readonly _decorations: IEditorDecorationsCollection;
-	private _sessionResource: URI | undefined;
+  constructor(
+    private readonly _editor: ICodeEditor,
+    @IAgentFeedbackService
+    private readonly _agentFeedbackService: IAgentFeedbackService,
+    @IChatEditingService
+    private readonly _chatEditingService: IChatEditingService,
+    @ISessionsManagementService
+    private readonly _sessionsManagementService: ISessionsManagementService,
+  ) {
+    super();
 
-	constructor(
-		private readonly _editor: ICodeEditor,
-		@IAgentFeedbackService private readonly _agentFeedbackService: IAgentFeedbackService,
-		@IChatEditingService private readonly _chatEditingService: IChatEditingService,
-		@ISessionsManagementService private readonly _sessionsManagementService: ISessionsManagementService,
-	) {
-		super();
+    this._decorations = this._editor.createDecorationsCollection();
 
-		this._decorations = this._editor.createDecorationsCollection();
-
-		this._store.add(
-      this._agentFeedbackService.onDidChangeFeedback(
-        () => this._updateDecorations(),
+    this._store.add(
+      this._agentFeedbackService.onDidChangeFeedback(() =>
+        this._updateDecorations(),
       ),
     );
-		this._store.add(
+    this._store.add(
       this._editor.onDidChangeModel(() => {
         this._resolveSession();
         this._updateDecorations();
       }),
     );
 
-		this._resolveSession();
-		this._updateDecorations();
-	}
+    this._resolveSession();
+    this._updateDecorations();
+  }
 
-	private _resolveSession(): void {
-		const model = this._editor.getModel();
-		if (!model) {
-			this._sessionResource = undefined;
-			return;
-		}
-		this._sessionResource = getSessionForResource(
+  private _resolveSession(): void {
+    const model = this._editor.getModel();
+    if (!model) {
+      this._sessionResource = undefined;
+      return;
+    }
+    this._sessionResource = getSessionForResource(
       model.uri,
       this._chatEditingService,
       this._sessionsManagementService,
     );
-	}
+  }
 
-	private _updateDecorations(): void {
-		if (!this._sessionResource) {
-			this._decorations.clear();
-			return;
-		}
+  private _updateDecorations(): void {
+    if (!this._sessionResource) {
+      this._decorations.clear();
+      return;
+    }
 
-		const model = this._editor.getModel();
-		if (!model) {
-			this._decorations.clear();
-			return;
-		}
+    const model = this._editor.getModel();
+    if (!model) {
+      this._decorations.clear();
+      return;
+    }
 
-		const feedbackItems = this._agentFeedbackService.getFeedback(
+    const feedbackItems = this._agentFeedbackService.getFeedback(
       this._sessionResource,
     );
-		const modelUri = model.uri.toString();
+    const modelUri = model.uri.toString();
 
-		this._decorations.set(
-			feedbackItems
-				.filter(item => item.resourceUri.toString() === modelUri)
-				.map(item => ({
-					range: item.range,
-					options: {
-						description: "agent-feedback-overview-ruler",
-						overviewRuler: {
-							color: themeColorFromId(overviewRulerAgentFeedbackForeground),
-							position: OverviewRulerLane.Center,
-						},
-					},
-				})),
-		);
-	}
+    this._decorations.set(
+      feedbackItems
+        .filter((item) => item.resourceUri.toString() === modelUri)
+        .map((item) => ({
+          range: item.range,
+          options: {
+            description: "agent-feedback-overview-ruler",
+            overviewRuler: {
+              color: themeColorFromId(overviewRulerAgentFeedbackForeground),
+              position: OverviewRulerLane.Center,
+            },
+          },
+        })),
+    );
+  }
 
-	override dispose(): void {
-		this._decorations.clear();
-		super.dispose();
-	}
+  override dispose(): void {
+    this._decorations.clear();
+    super.dispose();
+  }
 }
 
 registerEditorContribution(

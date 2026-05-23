@@ -6,7 +6,10 @@
 import * as dom from "../../../../../../../base/browser/dom.js";
 import { renderAsPlaintext } from "../../../../../../../base/browser/markdownRenderer.js";
 import { status } from "../../../../../../../base/browser/ui/aria/aria.js";
-import { IMarkdownString, MarkdownString } from "../../../../../../../base/common/htmlContent.js";
+import {
+  IMarkdownString,
+  MarkdownString,
+} from "../../../../../../../base/common/htmlContent.js";
 import { stripIcons } from "../../../../../../../base/common/iconLabels.js";
 import { autorun } from "../../../../../../../base/common/observable.js";
 import { IMarkdownRenderer } from "../../../../../../../platform/markdown/browser/markdownRenderer.js";
@@ -26,99 +29,126 @@ import { BaseChatToolInvocationSubPart } from "./chatToolInvocationSubPart.js";
 import { shouldShimmerForTool } from "./chatToolPartUtilities.js";
 
 export class ChatToolProgressSubPart extends BaseChatToolInvocationSubPart {
-	public readonly domNode: HTMLElement;
+  public readonly domNode: HTMLElement;
 
-	public override readonly codeblocks: IChatCodeBlockInfo[] = [];
+  public override readonly codeblocks: IChatCodeBlockInfo[] = [];
 
-	constructor(
-		toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized,
-		private readonly context: IChatContentPartRenderContext,
-		private readonly renderer: IMarkdownRenderer,
-		private readonly announcedToolProgressKeys: Set<string> | undefined,
-		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@IConfigurationService private readonly configurationService: IConfigurationService,
-	) {
-		super(toolInvocation);
+  constructor(
+    toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized,
+    private readonly context: IChatContentPartRenderContext,
+    private readonly renderer: IMarkdownRenderer,
+    private readonly announcedToolProgressKeys: Set<string> | undefined,
+    @IInstantiationService
+    private readonly instantiationService: IInstantiationService,
+    @IConfigurationService
+    private readonly configurationService: IConfigurationService,
+  ) {
+    super(toolInvocation);
 
-		this.domNode = this.createProgressPart();
-	}
+    this.domNode = this.createProgressPart();
+  }
 
-	private createProgressPart(): HTMLElement {
-		const isComplete = IChatToolInvocation.isComplete(this.toolInvocation);
+  private createProgressPart(): HTMLElement {
+    const isComplete = IChatToolInvocation.isComplete(this.toolInvocation);
 
-		if (isComplete && this.toolIsConfirmed && (this.toolInvocation.pastTenseMessage || this.toolInvocation.invocationMessage)) {
-			const key = this.getAnnouncementKey("complete");
-			const completionContent = this.toolInvocation.pastTenseMessage ?? this.toolInvocation.invocationMessage;
-			// Don't render anything if there's no meaningful content
-			if (!this.hasMeaningfulContent(completionContent)) {
-				return document.createElement("div");
-			}
-			const shouldAnnounce = this.toolInvocation.kind === "toolInvocation" && this.hasMeaningfulContent(
-        completionContent,
-      ) ? this.computeShouldAnnounce(key) : false;
-			const part = this.renderProgressContent(
+    if (
+      isComplete &&
+      this.toolIsConfirmed &&
+      (this.toolInvocation.pastTenseMessage ||
+        this.toolInvocation.invocationMessage)
+    ) {
+      const key = this.getAnnouncementKey("complete");
+      const completionContent =
+        this.toolInvocation.pastTenseMessage ??
+        this.toolInvocation.invocationMessage;
+      // Don't render anything if there's no meaningful content
+      if (!this.hasMeaningfulContent(completionContent)) {
+        return document.createElement("div");
+      }
+      const shouldAnnounce =
+        this.toolInvocation.kind === "toolInvocation" &&
+        this.hasMeaningfulContent(completionContent)
+          ? this.computeShouldAnnounce(key)
+          : false;
+      const part = this.renderProgressContent(
         completionContent!,
         shouldAnnounce,
       );
-			this._register(part);
-			return part.domNode;
-		} else {
-			const container = document.createElement("div");
-			this._register(autorun(reader => {
-				let progressContent: IMarkdownString | string | undefined;
-				const key = this.getAnnouncementKey("progress");
+      this._register(part);
+      return part.domNode;
+    } else {
+      const container = document.createElement("div");
+      this._register(
+        autorun((reader) => {
+          let progressContent: IMarkdownString | string | undefined;
+          const key = this.getAnnouncementKey("progress");
 
-				if (this.toolInvocation.kind === "toolInvocation") {
-					const state = this.toolInvocation.state.read(reader);
+          if (this.toolInvocation.kind === "toolInvocation") {
+            const state = this.toolInvocation.state.read(reader);
 
-					// Handle cancelled state with reason message
-					if (state.type === IChatToolInvocation.StateKind.Cancelled && state.reasonMessage) {
-						progressContent = state.reasonMessage;
-					} else if (state.type === IChatToolInvocation.StateKind.Executing) {
-						const progressMessage = state.progress.read(reader)?.message;
-						progressContent = this.hasMeaningfulContent(progressMessage) ? progressMessage : this.toolInvocation.invocationMessage;
-					} else {
-						progressContent = this.toolInvocation.invocationMessage;
-					}
-				} else {
-					progressContent = this.toolInvocation.invocationMessage;
-				}
+            // Handle cancelled state with reason message
+            if (
+              state.type === IChatToolInvocation.StateKind.Cancelled &&
+              state.reasonMessage
+            ) {
+              progressContent = state.reasonMessage;
+            } else if (state.type === IChatToolInvocation.StateKind.Executing) {
+              const progressMessage = state.progress.read(reader)?.message;
+              progressContent = this.hasMeaningfulContent(progressMessage)
+                ? progressMessage
+                : this.toolInvocation.invocationMessage;
+            } else {
+              progressContent = this.toolInvocation.invocationMessage;
+            }
+          } else {
+            progressContent = this.toolInvocation.invocationMessage;
+          }
 
-				// Don't render anything if there's no meaningful content
-				if (!this.hasMeaningfulContent(progressContent)) {
-					dom.clearNode(container);
-					return;
-				}
-				const shouldAnnounce = this.toolInvocation.kind === "toolInvocation" && this.hasMeaningfulContent(progressContent) ? this.computeShouldAnnounce(key) : false;
-				const part = reader.store.add(this.renderProgressContent(progressContent!, shouldAnnounce));
-				dom.reset(container, part.domNode);
-			}));
-			return container;
-		}
-	}
+          // Don't render anything if there's no meaningful content
+          if (!this.hasMeaningfulContent(progressContent)) {
+            dom.clearNode(container);
+            return;
+          }
+          const shouldAnnounce =
+            this.toolInvocation.kind === "toolInvocation" &&
+            this.hasMeaningfulContent(progressContent)
+              ? this.computeShouldAnnounce(key)
+              : false;
+          const part = reader.store.add(
+            this.renderProgressContent(progressContent!, shouldAnnounce),
+          );
+          dom.reset(container, part.domNode);
+        }),
+      );
+      return container;
+    }
+  }
 
-	private get toolIsConfirmed() {
-		const c = IChatToolInvocation.executionConfirmedOrDenied(
+  private get toolIsConfirmed() {
+    const c = IChatToolInvocation.executionConfirmedOrDenied(
       this.toolInvocation,
     );
-		return !!c && c.type !== ToolConfirmKind.Denied;
-	}
+    return !!c && c.type !== ToolConfirmKind.Denied;
+  }
 
-	private renderProgressContent(content: IMarkdownString | string, shouldAnnounce: boolean) {
-		if (typeof content === "string") {
-			content = new MarkdownString().appendText(content);
-		}
+  private renderProgressContent(
+    content: IMarkdownString | string,
+    shouldAnnounce: boolean,
+  ) {
+    if (typeof content === "string") {
+      content = new MarkdownString().appendText(content);
+    }
 
-		const progressMessage: IChatProgressMessage = {
+    const progressMessage: IChatProgressMessage = {
       kind: "progressMessage",
       content,
     };
 
-		if (shouldAnnounce) {
-			this.provideScreenReaderStatus(content);
-		}
+    if (shouldAnnounce) {
+      this.provideScreenReaderStatus(content);
+    }
 
-		return this.instantiationService.createInstance(
+    return this.instantiationService.createInstance(
       ChatProgressContentPart,
       progressMessage,
       this.renderer,
@@ -129,41 +159,46 @@ export class ChatToolProgressSubPart extends BaseChatToolInvocationSubPart {
       this.toolInvocation,
       shouldShimmerForTool(this.toolInvocation),
     );
-	}
+  }
 
-	private getAnnouncementKey(kind: "progress" | "complete"): string {
-		return `${kind}:${this.toolInvocation.toolCallId}`;
-	}
+  private getAnnouncementKey(kind: "progress" | "complete"): string {
+    return `${kind}:${this.toolInvocation.toolCallId}`;
+  }
 
-	private computeShouldAnnounce(key: string): boolean {
-		if (!this.announcedToolProgressKeys) {
-			return false;
-		}
-		if (!this.configurationService.getValue(
-      AccessibilityWorkbenchSettingId.VerboseChatProgressUpdates,
-    )) {
-			return false;
-		}
-		if (this.announcedToolProgressKeys.has(key)) {
-			return false;
-		}
-		this.announcedToolProgressKeys.add(key);
-		return true;
-	}
+  private computeShouldAnnounce(key: string): boolean {
+    if (!this.announcedToolProgressKeys) {
+      return false;
+    }
+    if (
+      !this.configurationService.getValue(
+        AccessibilityWorkbenchSettingId.VerboseChatProgressUpdates,
+      )
+    ) {
+      return false;
+    }
+    if (this.announcedToolProgressKeys.has(key)) {
+      return false;
+    }
+    this.announcedToolProgressKeys.add(key);
+    return true;
+  }
 
-	private provideScreenReaderStatus(content: IMarkdownString | string): void {
-		const message = typeof content === "string" ? content : stripIcons(
-      renderAsPlaintext(content, { useLinkFormatter: true }),
-    );
-		status(message);
-	}
+  private provideScreenReaderStatus(content: IMarkdownString | string): void {
+    const message =
+      typeof content === "string"
+        ? content
+        : stripIcons(renderAsPlaintext(content, { useLinkFormatter: true }));
+    status(message);
+  }
 
-	private hasMeaningfulContent(content: IMarkdownString | string | undefined): boolean {
-		if (!content) {
-			return false;
-		}
+  private hasMeaningfulContent(
+    content: IMarkdownString | string | undefined,
+  ): boolean {
+    if (!content) {
+      return false;
+    }
 
-		const text = typeof content === "string" ? content : content.value;
-		return text.trim().length > 0;
-	}
+    const text = typeof content === "string" ? content : content.value;
+    return text.trim().length > 0;
+  }
 }

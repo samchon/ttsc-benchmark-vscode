@@ -9,77 +9,80 @@ import { IInstantiationService } from "../../../../../../platform/instantiation/
 import { IChatRendererDelegate } from "../chatListRenderer.js";
 import { ChatEditorOptions } from "../chatOptions.js";
 import { CodeBlockPart, CodeCompareBlockPart } from "./codeBlockPart.js";
-import { ResourcePool, KeyedResourcePool, IDisposableReference } from "./chatCollections.js";
+import {
+  ResourcePool,
+  KeyedResourcePool,
+  IDisposableReference,
+} from "./chatCollections.js";
 import { createSingleCallFunction } from "../../../../../../base/common/functional.js";
 
 export class EditorPool extends Disposable {
+  private readonly _pool: KeyedResourcePool<CodeBlockPart>;
 
-	private readonly _pool: KeyedResourcePool<CodeBlockPart>;
+  inUse(): Iterable<CodeBlockPart> {
+    return this._pool.inUse;
+  }
 
-	inUse(): Iterable<CodeBlockPart> {
-		return this._pool.inUse;
-	}
-
-	constructor(
-		options: ChatEditorOptions,
-		delegate: IChatRendererDelegate,
-		overflowWidgetsDomNode: HTMLElement | undefined,
-		private readonly isSimpleWidget: boolean = false,
-		@IInstantiationService instantiationService: IInstantiationService,
-	) {
-		super();
-		this._pool = this._register(
-      new KeyedResourcePool(() => {
-        return instantiationService.createInstance(
-          CodeBlockPart,
-          options,
-          MenuId.ChatCodeBlock,
-          delegate,
-          overflowWidgetsDomNode,
-          this.isSimpleWidget,
-        );
-      }, {
-        maxIdleSize: 2,
-      }),
+  constructor(
+    options: ChatEditorOptions,
+    delegate: IChatRendererDelegate,
+    overflowWidgetsDomNode: HTMLElement | undefined,
+    private readonly isSimpleWidget: boolean = false,
+    @IInstantiationService instantiationService: IInstantiationService,
+  ) {
+    super();
+    this._pool = this._register(
+      new KeyedResourcePool(
+        () => {
+          return instantiationService.createInstance(
+            CodeBlockPart,
+            options,
+            MenuId.ChatCodeBlock,
+            delegate,
+            overflowWidgetsDomNode,
+            this.isSimpleWidget,
+          );
+        },
+        { maxIdleSize: 2 },
+      ),
     );
-	}
+  }
 
-	get(key: string): IDisposableReference<CodeBlockPart> {
-		const codeBlock = this._pool.get(key);
-		let stale = false;
-		return {
-			object: codeBlock,
-			isStale: () => stale,
-			dispose: createSingleCallFunction(() => {
-				codeBlock.reset();
-				stale = true;
-				this._pool.release(codeBlock, key);
-			}),
-		};
-	}
+  get(key: string): IDisposableReference<CodeBlockPart> {
+    const codeBlock = this._pool.get(key);
+    let stale = false;
+    return {
+      object: codeBlock,
+      isStale: () => stale,
+      dispose: createSingleCallFunction(() => {
+        codeBlock.reset();
+        stale = true;
+        this._pool.release(codeBlock, key);
+      }),
+    };
+  }
 
-	clear(): void {
-		this._pool.clear();
-	}
+  clear(): void {
+    this._pool.clear();
+  }
 }
 
 export class DiffEditorPool extends Disposable {
+  private readonly _pool: ResourcePool<CodeCompareBlockPart>;
 
-	private readonly _pool: ResourcePool<CodeCompareBlockPart>;
+  public inUse(): Iterable<CodeCompareBlockPart> {
+    return this._pool.inUse;
+  }
 
-	public inUse(): Iterable<CodeCompareBlockPart> {
-		return this._pool.inUse;
-	}
-
-	constructor(
-		options: ChatEditorOptions,
-		delegate: IChatRendererDelegate,
-		overflowWidgetsDomNode: HTMLElement | undefined,
-		private readonly isSimpleWidget: boolean = false,
-		@IInstantiationService instantiationService: IInstantiationService,
-	) {
-		super();
-		this._pool = this._register(
+  constructor(
+    options: ChatEditorOptions,
+    delegate: IChatRendererDelegate,
+    overflowWidgetsDomNode: HTMLElement | undefined,
+    private readonly isSimpleWidget: boolean = false,
+    @IInstantiationService instantiationService: IInstantiationService,
+  ) {
+    super();
+    this._pool = this._register(
       new ResourcePool(() => {
         return instantiationService.createInstance(
           CodeCompareBlockPart,
@@ -91,23 +94,23 @@ export class DiffEditorPool extends Disposable {
         );
       }),
     );
-	}
+  }
 
-	get(): IDisposableReference<CodeCompareBlockPart> {
-		const codeBlock = this._pool.get();
-		let stale = false;
-		return {
-			object: codeBlock,
-			isStale: () => stale,
-			dispose: createSingleCallFunction(() => {
-				codeBlock.reset();
-				stale = true;
-				this._pool.release(codeBlock);
-			}),
-		};
-	}
+  get(): IDisposableReference<CodeCompareBlockPart> {
+    const codeBlock = this._pool.get();
+    let stale = false;
+    return {
+      object: codeBlock,
+      isStale: () => stale,
+      dispose: createSingleCallFunction(() => {
+        codeBlock.reset();
+        stale = true;
+        this._pool.release(codeBlock);
+      }),
+    };
+  }
 
-	clear(): void {
-		this._pool.clear();
-	}
+  clear(): void {
+    this._pool.clear();
+  }
 }

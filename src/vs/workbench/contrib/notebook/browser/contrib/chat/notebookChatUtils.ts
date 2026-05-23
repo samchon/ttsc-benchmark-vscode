@@ -9,7 +9,10 @@ import { ThemeIcon } from "../../../../../../base/common/themables.js";
 import { localize } from "../../../../../../nls.js";
 import { INotebookOutputVariableEntry } from "../../../../chat/common/attachments/chatVariableEntries.js";
 import { CellUri } from "../../../common/notebookCommon.js";
-import { ICellOutputViewModel, INotebookEditor } from "../../notebookBrowser.js";
+import {
+  ICellOutputViewModel,
+  INotebookEditor,
+} from "../../notebookBrowser.js";
 
 export const NOTEBOOK_CELL_OUTPUT_MIME_TYPE_LIST_FOR_CHAT_CONST = [
   "text/plain",
@@ -25,47 +28,59 @@ export const NOTEBOOK_CELL_OUTPUT_MIME_TYPE_LIST_FOR_CHAT_CONST = [
   "image/svg",
 ];
 
-export function createNotebookOutputVariableEntry(outputViewModel: ICellOutputViewModel, mimeType: string, notebookEditor: INotebookEditor): INotebookOutputVariableEntry | undefined {
+export function createNotebookOutputVariableEntry(
+  outputViewModel: ICellOutputViewModel,
+  mimeType: string,
+  notebookEditor: INotebookEditor,
+): INotebookOutputVariableEntry | undefined {
+  // get the cell index
+  const cellFromViewModelHandle = outputViewModel.cellViewModel.handle;
+  const notebookModel = notebookEditor.textModel;
+  const cell = notebookEditor.getCellByHandle(cellFromViewModelHandle);
+  if (!cell || cell.outputsViewModels.length === 0 || !notebookModel) {
+    return;
+  }
+  // uri of the cell
+  const notebookUri = notebookModel.uri;
+  const cellUri = cell.uri;
+  const cellIndex = notebookModel.cells.indexOf(cell.model);
 
-	// get the cell index
-	const cellFromViewModelHandle = outputViewModel.cellViewModel.handle;
-	const notebookModel = notebookEditor.textModel;
-	const cell = notebookEditor.getCellByHandle(cellFromViewModelHandle);
-	if (!cell || cell.outputsViewModels.length === 0 || !notebookModel) {
-		return;
-	}
-	// uri of the cell
-	const notebookUri = notebookModel.uri;
-	const cellUri = cell.uri;
-	const cellIndex = notebookModel.cells.indexOf(cell.model);
-
-	// get the output index
-	const outputId = outputViewModel?.model.outputId;
-	let outputIndex: number = 0;
-	if (outputId !== undefined) {
-		// find the output index
-		outputIndex = cell.outputsViewModels.findIndex(output => {
+  // get the output index
+  const outputId = outputViewModel?.model.outputId;
+  let outputIndex: number = 0;
+  if (outputId !== undefined) {
+    // find the output index
+    outputIndex = cell.outputsViewModels.findIndex((output) => {
       return output.model.outputId === outputId;
     });
-	}
+  }
 
-	// construct the URI using the cell uri and output index
-	const outputCellUri = CellUri.generateCellOutputUriWithIndex(
+  // construct the URI using the cell uri and output index
+  const outputCellUri = CellUri.generateCellOutputUriWithIndex(
     notebookUri,
     cellUri,
     outputIndex,
   );
-	const fileName = normalizeDriveLetter(basenameOrAuthority(notebookUri));
+  const fileName = normalizeDriveLetter(basenameOrAuthority(notebookUri));
 
-	const l: INotebookOutputVariableEntry = {
+  const l: INotebookOutputVariableEntry = {
     value: outputCellUri,
     id: outputCellUri.toString(),
-    name: localize("notebookOutputCellLabel", "{0} • Cell {1} • Output {2}", fileName, `${cellIndex + 1}`, `${outputIndex + 1}`),
-    icon: mimeType === "application/vnd.code.notebook.error" ? ThemeIcon.fromId("error") : undefined,
+    name: localize(
+      "notebookOutputCellLabel",
+      "{0} • Cell {1} • Output {2}",
+      fileName,
+      `${cellIndex + 1}`,
+      `${outputIndex + 1}`,
+    ),
+    icon:
+      mimeType === "application/vnd.code.notebook.error"
+        ? ThemeIcon.fromId("error")
+        : undefined,
     kind: "notebookOutput",
     outputIndex,
     mimeType,
   };
 
-	return l;
+  return l;
 }

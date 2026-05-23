@@ -24,6 +24,8 @@ const webviewMimeTypes = new Map([
 ]);
 
 export function getWebviewContentMimeType(resource: URI): string {
-	const ext = extname(resource.fsPath).toLowerCase();
-	return webviewMimeTypes.get(ext) || getMediaMime(resource.fsPath) || Mimes.unknown;
+  const ext = extname(resource.fsPath).toLowerCase();
+  return (
+    webviewMimeTypes.get(ext) || getMediaMime(resource.fsPath) || Mimes.unknown
+  );
 }

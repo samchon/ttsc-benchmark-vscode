@@ -30,63 +30,61 @@ import { resolveEventsUri } from "../copilotCliEventsUri.js";
  * this helper after resolving the active Copilot CLI session resource.
  */
 export async function openCopilotCliStateFile(
-	accessor: ServicesAccessor,
-	sessionResource: URI | undefined,
+  accessor: ServicesAccessor,
+  sessionResource: URI | undefined,
 ): Promise<void> {
-	const pathService = accessor.get(IPathService);
-	const remoteAgentHostService = accessor.get(IRemoteAgentHostService);
-	const editorService = accessor.get(IEditorService);
-	const notificationService = accessor.get(INotificationService);
+  const pathService = accessor.get(IPathService);
+  const remoteAgentHostService = accessor.get(IRemoteAgentHostService);
+  const editorService = accessor.get(IEditorService);
+  const notificationService = accessor.get(INotificationService);
 
-	const userHome = pathService.userHome({ preferLocal: true });
+  const userHome = pathService.userHome({ preferLocal: true });
 
-	const result = resolveEventsUri(
-    sessionResource,
-    userHome,
-    authority => remoteAgentHostService.connections.find(
-      c => agentHostAuthority(c.address) === authority,
+  const result = resolveEventsUri(sessionResource, userHome, (authority) =>
+    remoteAgentHostService.connections.find(
+      (c) => agentHostAuthority(c.address) === authority,
     ),
   );
 
-	switch (result.kind) {
-		case "ok":
-			await editorService.openEditor({ resource: result.resource });
-			return;
-		case "no-session":
-			notificationService.info(
+  switch (result.kind) {
+    case "ok":
+      await editorService.openEditor({ resource: result.resource });
+      return;
+    case "no-session":
+      notificationService.info(
         localize(
           "openSessionEventsFile.noSession",
           "No Copilot CLI session is active.",
         ),
       );
-			return;
-		case "unsupported-scheme":
-			notificationService.info(
+      return;
+    case "unsupported-scheme":
+      notificationService.info(
         localize(
           "openSessionEventsFile.unsupported",
           "The active chat session is not a Copilot CLI session.",
         ),
       );
-			return;
-		case "remote-not-connected":
-			notificationService.warn(
+      return;
+    case "remote-not-connected":
+      notificationService.warn(
         localize(
           "openSessionEventsFile.notConnected",
           "No active connection found for remote agent host '{0}'.",
           result.authority,
         ),
       );
-			return;
-		case "remote-no-home":
-			notificationService.warn(
+      return;
+    case "remote-no-home":
+      notificationService.warn(
         localize(
           "openSessionEventsFile.noHome",
           "Remote agent host '{0}' did not report a home directory.",
           result.authority,
         ),
       );
-			return;
-	}
+      return;
+  }
 }
 
 /**
@@ -95,25 +93,25 @@ export async function openCopilotCliStateFile(
  * agents-window-specific `ISessionsManagementService` is not present.
  */
 export class OpenCopilotCliStateFileAction extends Action2 {
+  static readonly ID = "workbench.action.chat.openCopilotCliStateFile";
 
-	static readonly ID = "workbench.action.chat.openCopilotCliStateFile";
+  constructor() {
+    super({
+      id: OpenCopilotCliStateFileAction.ID,
+      title: localize2("openSessionEventsFile", "Open Copilot CLI State File"),
+      f1: true,
+      category: Categories.Developer,
+      precondition: ContextKeyExpr.and(
+        ChatContextKeys.enabled,
+        IsSessionsWindowContext.negate(),
+      ),
+    });
+  }
 
-	constructor() {
-		super({
-			id: OpenCopilotCliStateFileAction.ID,
-			title: localize2("openSessionEventsFile", "Open Copilot CLI State File"),
-			f1: true,
-			category: Categories.Developer,
-			precondition: ContextKeyExpr.and(
-				ChatContextKeys.enabled,
-				IsSessionsWindowContext.negate(),
-			),
-		});
-	}
-
-	override async run(accessor: ServicesAccessor): Promise<void> {
-		const chatWidgetService = accessor.get(IChatWidgetService);
-		const sessionResource = chatWidgetService.lastFocusedWidget?.viewModel?.sessionResource;
-		await openCopilotCliStateFile(accessor, sessionResource);
-	}
+  override async run(accessor: ServicesAccessor): Promise<void> {
+    const chatWidgetService = accessor.get(IChatWidgetService);
+    const sessionResource =
+      chatWidgetService.lastFocusedWidget?.viewModel?.sessionResource;
+    await openCopilotCliStateFile(accessor, sessionResource);
+  }
 }

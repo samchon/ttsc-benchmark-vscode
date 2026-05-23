@@ -6,7 +6,11 @@
 import assert from "assert";
 import { URI } from "../../../../base/common/uri.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
-import { AGENT_CLIENT_SCHEME, fromAgentClientUri, toAgentClientUri } from "../../common/agentClientUri.js";
+import {
+  AGENT_CLIENT_SCHEME,
+  fromAgentClientUri,
+  toAgentClientUri,
+} from "../../common/agentClientUri.js";
 
 suite("Agent Client URI transform", () => {
   ensureNoDisposablesAreLeakedInTestSuite();
@@ -25,7 +29,11 @@ suite("Agent Client URI transform", () => {
   });
 
   test("round-trips a URI with authority", () => {
-    const original = URI.from({ scheme: "https", authority: "example.com", path: "/plugins/foo" });
+    const original = URI.from({
+      scheme: "https",
+      authority: "example.com",
+      path: "/plugins/foo",
+    });
     const wrapped = toAgentClientUri(original, "c2");
 
     const decoded = fromAgentClientUri(wrapped);

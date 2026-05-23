@@ -11,27 +11,28 @@ import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js"
 import { safeIntl } from "../../../../base/common/date.js";
 
 interface ILocalHistoryDateFormatter {
-	format: (timestamp: number) => string;
+  format: (timestamp: number) => string;
 }
 
-let localHistoryDateFormatter: ILocalHistoryDateFormatter | undefined = undefined;
+let localHistoryDateFormatter: ILocalHistoryDateFormatter | undefined =
+  undefined;
 
 export function getLocalHistoryDateFormatter(): ILocalHistoryDateFormatter {
-	if (!localHistoryDateFormatter) {
-		const options: Intl.DateTimeFormatOptions = {
+  if (!localHistoryDateFormatter) {
+    const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
       month: "long",
       day: "numeric",
       hour: "numeric",
       minute: "numeric",
     };
-		const formatter = safeIntl.DateTimeFormat(language, options).value;
-		localHistoryDateFormatter = {
-      format: date => formatter.format(date),
+    const formatter = safeIntl.DateTimeFormat(language, options).value;
+    localHistoryDateFormatter = {
+      format: (date) => formatter.format(date),
     };
-	}
+  }
 
-	return localHistoryDateFormatter;
+  return localHistoryDateFormatter;
 }
 
 export const LOCAL_HISTORY_MENU_CONTEXT_VALUE = "localHistory:item";

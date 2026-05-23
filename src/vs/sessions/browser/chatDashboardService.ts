@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { DisposableStore } from "../../base/common/lifecycle.js";
-import { InstantiationType, registerSingleton } from "../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../platform/instantiation/common/extensions.js";
 import { createDecorator } from "../../platform/instantiation/common/instantiation.js";
 
 export const IChatDashboardService = createDecorator<IChatDashboardService>(
@@ -12,18 +15,20 @@ export const IChatDashboardService = createDecorator<IChatDashboardService>(
 );
 
 export interface IChatDashboardService {
-	readonly _serviceBrand: undefined;
+  readonly _serviceBrand: undefined;
 
-	/**
-	 * Creates a chat status dashboard element embedded in a container div.
-	 * Returns `undefined` if the dashboard is not available.
-	 */
-	createDashboardElement(store: DisposableStore): HTMLElement | undefined;
+  /**
+   * Creates a chat status dashboard element embedded in a container div.
+   * Returns `undefined` if the dashboard is not available.
+   */
+  createDashboardElement(store: DisposableStore): HTMLElement | undefined;
 }
 
 class NullChatDashboardService implements IChatDashboardService {
-	readonly _serviceBrand: undefined;
-	createDashboardElement(): HTMLElement | undefined { return undefined; }
+  readonly _serviceBrand: undefined;
+  createDashboardElement(): HTMLElement | undefined {
+    return undefined;
+  }
 }
 
 registerSingleton(

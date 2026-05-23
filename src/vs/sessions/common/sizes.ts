@@ -11,7 +11,10 @@
 // the main workbench and the sessions workbench.
 
 import { localize } from "../../nls.js";
-import { registerSize, sizeForAllThemes } from "../../platform/theme/common/sizeUtils.js";
+import {
+  registerSize,
+  sizeForAllThemes,
+} from "../../platform/theme/common/sizeUtils.js";
 
 // ============================================================================
 // Agents window — font ramp

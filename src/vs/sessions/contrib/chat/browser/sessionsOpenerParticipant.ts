@@ -7,7 +7,11 @@ import { Disposable } from "../../../../base/common/lifecycle.js";
 import { ServicesAccessor } from "../../../../editor/browser/editorExtensions.js";
 import { IWorkbenchContribution } from "../../../../workbench/common/contributions.js";
 import { IAgentSession } from "../../../../workbench/contrib/chat/browser/agentSessions/agentSessionsModel.js";
-import { ISessionOpenerParticipant, ISessionOpenOptions, sessionOpenerRegistry } from "../../../../workbench/contrib/chat/browser/agentSessions/agentSessionsOpener.js";
+import {
+  ISessionOpenerParticipant,
+  ISessionOpenOptions,
+  sessionOpenerRegistry,
+} from "../../../../workbench/contrib/chat/browser/agentSessions/agentSessionsOpener.js";
 import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
 
 /**
@@ -18,29 +22,36 @@ import { ISessionsManagementService } from "../../../services/sessions/common/se
  * tied to the new-chat context keys and may simply do nothing.
  */
 class SessionsOpenerParticipant implements ISessionOpenerParticipant {
+  async handleOpenSession(
+    accessor: ServicesAccessor,
+    session: IAgentSession,
+    openOptions?: ISessionOpenOptions,
+  ): Promise<boolean> {
+    const sessionsManagementService = accessor.get(ISessionsManagementService);
+    const target = sessionsManagementService.getSession(session.resource);
+    if (!target) {
+      return false;
+    }
 
-	async handleOpenSession(accessor: ServicesAccessor, session: IAgentSession, openOptions?: ISessionOpenOptions): Promise<boolean> {
-		const sessionsManagementService = accessor.get(ISessionsManagementService);
-		const target = sessionsManagementService.getSession(session.resource);
-		if (!target) {
-			return false;
-		}
-
-		await sessionsManagementService.openSession(session.resource, {
+    await sessionsManagementService.openSession(session.resource, {
       preserveFocus: openOptions?.editorOptions?.preserveFocus,
     });
-		return true;
-	}
+    return true;
+  }
 }
 
-export class SessionsOpenerParticipantContribution extends Disposable implements IWorkbenchContribution {
+export class SessionsOpenerParticipantContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "sessions.sessionOpenerParticipant";
 
-	static readonly ID = "sessions.sessionOpenerParticipant";
-
-	constructor() {
-		super();
-		this._register(
-      sessionOpenerRegistry.registerParticipant(new SessionsOpenerParticipant()),
+  constructor() {
+    super();
+    this._register(
+      sessionOpenerRegistry.registerParticipant(
+        new SessionsOpenerParticipant(),
+      ),
     );
-	}
+  }
 }

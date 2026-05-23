@@ -13,7 +13,10 @@ import { ThemeIcon } from "../../../../../base/common/themables.js";
 import { isEqual, relativePath } from "../../../../../base/common/resources.js";
 import { Position } from "../../../../../editor/common/core/position.js";
 import { Range } from "../../../../../editor/common/core/range.js";
-import { Location, LocationLink } from "../../../../../editor/common/languages.js";
+import {
+  Location,
+  LocationLink,
+} from "../../../../../editor/common/languages.js";
 import { IModelService } from "../../../../../editor/common/services/model.js";
 import { ILanguageFeaturesService } from "../../../../../editor/common/services/languageFeatures.js";
 import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
@@ -26,7 +29,11 @@ import { localize } from "../../../../../nls.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
 import { IWorkbenchContribution } from "../../../../common/contributions.js";
-import { ISearchService, QueryType, resultIsMatch } from "../../../../services/search/common/search.js";
+import {
+  ISearchService,
+  QueryType,
+  resultIsMatch,
+} from "../../../../services/search/common/search.js";
 import {
   CountTokensCallback,
   ILanguageModelToolsService,
@@ -67,121 +74,143 @@ If the tool returns an error, retry with corrected input - ensure the file path 
  * providers, so it stays byte-stable across requests as language extensions
  * activate during a turn.
  */
-const StaticModelDescription = BaseModelDescription + `
+const StaticModelDescription =
+  BaseModelDescription +
+  `
 
 If the file's language has no reference provider registered, the tool returns an error.`;
 
 export class UsagesTool extends Disposable implements IToolImpl {
+  constructor(
+    @ILanguageFeaturesService
+    private readonly _languageFeaturesService: ILanguageFeaturesService,
+    @IModelService private readonly _modelService: IModelService,
+    @ISearchService private readonly _searchService: ISearchService,
+    @ITextModelService private readonly _textModelService: ITextModelService,
+    @IWorkspaceContextService
+    private readonly _workspaceContextService: IWorkspaceContextService,
+  ) {
+    super();
+  }
 
-	constructor(
-		@ILanguageFeaturesService private readonly _languageFeaturesService: ILanguageFeaturesService,
-		@IModelService private readonly _modelService: IModelService,
-		@ISearchService private readonly _searchService: ISearchService,
-		@ITextModelService private readonly _textModelService: ITextModelService,
-		@IWorkspaceContextService private readonly _workspaceContextService: IWorkspaceContextService,
-	) {
-		super();
-	}
-
-	getToolData(): IToolData {
-		return this._buildToolData(
+  getToolData(): IToolData {
+    return this._buildToolData(
       StaticModelDescription,
       localize(
         "tool.usages.userDescription",
         "Find references, definitions, and implementations of a symbol",
       ),
     );
-	}
+  }
 
-	private _buildToolData(modelDescription: string, userDescription: string): IToolData {
-		return {
-			id: UsagesToolId,
-			toolReferenceName: "usages",
-			canBeReferencedInPrompt: false,
-			icon: ThemeIcon.fromId(Codicon.references.id),
-			displayName: localize("tool.usages.displayName", "List Code Usages"),
-			userDescription,
-			modelDescription,
-			source: ToolDataSource.Internal,
-			inputSchema: {
-				type: "object",
-				properties: {
-					symbol: {
-						type: "string",
-						description: "The exact name of the symbol (function, class, method, variable, type, etc.) to find usages of.",
-					},
-					uri: {
-						type: "string",
-						description: 'A full URI of a file where the symbol appears (e.g. "file:///path/to/file.ts"). Provide either "uri" or "filePath".',
-					},
-					filePath: {
-						type: "string",
-						description: 'A workspace-relative file path where the symbol appears (e.g. "src/utils/helpers.ts"). Provide either "uri" or "filePath".',
-					},
-					lineContent: {
-						type: "string",
-						description: "A substring of the line of code where the symbol appears. Used to locate the exact position. Must be actual text from the file.",
-					},
-				},
-				required: ["symbol", "lineContent"],
-			},
-		};
-	}
-
-	async prepareToolInvocation(context: IToolInvocationPreparationContext, _token: CancellationToken): Promise<IPreparedToolInvocation | undefined> {
-		const input = context.parameters as ISymbolToolInput;
-		return {
-      invocationMessage: localize("tool.usages.invocationMessage", "Analyzing usages of `{0}`", input.symbol),
+  private _buildToolData(
+    modelDescription: string,
+    userDescription: string,
+  ): IToolData {
+    return {
+      id: UsagesToolId,
+      toolReferenceName: "usages",
+      canBeReferencedInPrompt: false,
+      icon: ThemeIcon.fromId(Codicon.references.id),
+      displayName: localize("tool.usages.displayName", "List Code Usages"),
+      userDescription,
+      modelDescription,
+      source: ToolDataSource.Internal,
+      inputSchema: {
+        type: "object",
+        properties: {
+          symbol: {
+            type: "string",
+            description:
+              "The exact name of the symbol (function, class, method, variable, type, etc.) to find usages of.",
+          },
+          uri: {
+            type: "string",
+            description:
+              'A full URI of a file where the symbol appears (e.g. "file:///path/to/file.ts"). Provide either "uri" or "filePath".',
+          },
+          filePath: {
+            type: "string",
+            description:
+              'A workspace-relative file path where the symbol appears (e.g. "src/utils/helpers.ts"). Provide either "uri" or "filePath".',
+          },
+          lineContent: {
+            type: "string",
+            description:
+              "A substring of the line of code where the symbol appears. Used to locate the exact position. Must be actual text from the file.",
+          },
+        },
+        required: ["symbol", "lineContent"],
+      },
     };
-	}
+  }
 
-	async invoke(invocation: IToolInvocation, _countTokens: CountTokensCallback, _progress: ToolProgress, token: CancellationToken): Promise<IToolResult> {
-		const input = invocation.parameters as ISymbolToolInput;
+  async prepareToolInvocation(
+    context: IToolInvocationPreparationContext,
+    _token: CancellationToken,
+  ): Promise<IPreparedToolInvocation | undefined> {
+    const input = context.parameters as ISymbolToolInput;
+    return {
+      invocationMessage: localize(
+        "tool.usages.invocationMessage",
+        "Analyzing usages of `{0}`",
+        input.symbol,
+      ),
+    };
+  }
 
-		// --- resolve URI ---
-		const uri = resolveToolUri(
+  async invoke(
+    invocation: IToolInvocation,
+    _countTokens: CountTokensCallback,
+    _progress: ToolProgress,
+    token: CancellationToken,
+  ): Promise<IToolResult> {
+    const input = invocation.parameters as ISymbolToolInput;
+
+    // --- resolve URI ---
+    const uri = resolveToolUri(
       input,
       this._workspaceContextService,
       invocation.context?.workingDirectory,
     );
-		if (!uri) {
-			return errorResult(
+    if (!uri) {
+      return errorResult(
         'Provide either "uri" (a full URI) or "filePath" (a workspace-relative path) to identify the file.',
       );
-		}
+    }
 
-		// --- open text model ---
-		const ref = await this._textModelService.createModelReference(uri);
-		try {
-			const model = ref.object.textEditorModel;
+    // --- open text model ---
+    const ref = await this._textModelService.createModelReference(uri);
+    try {
+      const model = ref.object.textEditorModel;
 
-			if (!this._languageFeaturesService.referenceProvider.has(model)) {
-				return errorResult(
+      if (!this._languageFeaturesService.referenceProvider.has(model)) {
+        return errorResult(
           `No reference provider available for this file's language. The usages tool may not support this language.`,
         );
-			}
+      }
 
-			// --- find line containing lineContent ---
-			const lineNumber = findLineNumber(model, input.lineContent);
-			if (lineNumber === undefined) {
-				return errorResult(
+      // --- find line containing lineContent ---
+      const lineNumber = findLineNumber(model, input.lineContent);
+      if (lineNumber === undefined) {
+        return errorResult(
           `Could not find line content "${input.lineContent}" in ${uri.toString()}. Provide the exact text from the line where the symbol appears.`,
         );
-			}
+      }
 
-			// --- find symbol in that line ---
-			const lineText = model.getLineContent(lineNumber);
-			const column = findSymbolColumn(lineText, input.symbol);
-			if (column === undefined) {
-				return errorResult(
+      // --- find symbol in that line ---
+      const lineText = model.getLineContent(lineNumber);
+      const column = findSymbolColumn(lineText, input.symbol);
+      if (column === undefined) {
+        return errorResult(
           `Could not find symbol "${input.symbol}" in the matched line. Ensure the symbol name is correct and appears in the provided line content.`,
         );
-			}
+      }
 
-			const position = new Position(lineNumber, column);
+      const position = new Position(lineNumber, column);
 
-			// --- query references, definitions, implementations in parallel ---
-			const [definitions, references, implementations] = await Promise.all([
+      // --- query references, definitions, implementations in parallel ---
+      const [definitions, references, implementations] = await Promise.all([
         getDefinitionsAtPosition(
           this._languageFeaturesService.definitionProvider,
           model,
@@ -206,199 +235,212 @@ export class UsagesTool extends Disposable implements IToolImpl {
         ),
       ]);
 
-			if (references.length === 0) {
-				const result = createToolSimpleTextResult(
+      if (references.length === 0) {
+        const result = createToolSimpleTextResult(
           `No usages found for \`${input.symbol}\`.`,
         );
-				result.toolResultMessage = new MarkdownString(
+        result.toolResultMessage = new MarkdownString(
           localize(
             "tool.usages.noResults",
             "Analyzed usages of `{0}`, no results",
             input.symbol,
           ),
         );
-				return result;
-			}
+        return result;
+      }
 
-			// --- classify and format results with previews ---
-			const previews = await this._getLinePreviews(
+      // --- classify and format results with previews ---
+      const previews = await this._getLinePreviews(
         input.symbol,
         references,
         token,
       );
 
-			const lines: string[] = [];
-			lines.push(`${references.length} usages of \`${input.symbol}\`:\n`);
+      const lines: string[] = [];
+      lines.push(`${references.length} usages of \`${input.symbol}\`:\n`);
 
-			for (let i = 0; i < references.length; i++) {
-				const ref = references[i];
-				const kind = this._classifyReference(ref, definitions, implementations);
-				const startLine = Range.lift(ref.range).startLineNumber;
-				const preview = previews[i];
-				if (preview) {
-					lines.push(
+      for (let i = 0; i < references.length; i++) {
+        const ref = references[i];
+        const kind = this._classifyReference(ref, definitions, implementations);
+        const startLine = Range.lift(ref.range).startLineNumber;
+        const preview = previews[i];
+        if (preview) {
+          lines.push(
             `<usage type="${kind}" uri="${ref.uri.toString()}" line="${startLine}">`,
           );
-					lines.push(`\t${preview}`);
-					lines.push(`</usage>`);
-				} else {
-					lines.push(
+          lines.push(`\t${preview}`);
+          lines.push(`</usage>`);
+        } else {
+          lines.push(
             `<usage type="${kind}" uri="${ref.uri.toString()}" line="${startLine}" />`,
           );
-				}
-			}
+        }
+      }
 
-			const text = lines.join("\n");
-			const result = createToolSimpleTextResult(text);
+      const text = lines.join("\n");
+      const result = createToolSimpleTextResult(text);
 
-			result.toolResultMessage = references.length === 1
-				? new MarkdownString(
-            localize(
-              "tool.usages.oneResult",
-              "Analyzed usages of `{0}`, 1 result",
-              input.symbol,
-            ),
-          )
-				: new MarkdownString(
-            localize(
-              "tool.usages.results",
-              "Analyzed usages of `{0}`, {1} results",
-              input.symbol,
-              references.length,
-            ),
-          );
+      result.toolResultMessage =
+        references.length === 1
+          ? new MarkdownString(
+              localize(
+                "tool.usages.oneResult",
+                "Analyzed usages of `{0}`, 1 result",
+                input.symbol,
+              ),
+            )
+          : new MarkdownString(
+              localize(
+                "tool.usages.results",
+                "Analyzed usages of `{0}`, {1} results",
+                input.symbol,
+                references.length,
+              ),
+            );
 
-			result.toolResultDetails = references.map((r): Location => ({
-        uri: r.uri,
-        range: r.range,
-      }));
+      result.toolResultDetails = references.map(
+        (r): Location => ({ uri: r.uri, range: r.range }),
+      );
 
-			return result;
-		} finally {
-			ref.dispose();
-		}
-	}
+      return result;
+    } finally {
+      ref.dispose();
+    }
+  }
 
-	private async _getLinePreviews(symbol: string, references: LocationLink[], token: CancellationToken): Promise<(string | undefined)[]> {
-		const previews: (string | undefined)[] = new Array(references.length);
+  private async _getLinePreviews(
+    symbol: string,
+    references: LocationLink[],
+    token: CancellationToken,
+  ): Promise<(string | undefined)[]> {
+    const previews: (string | undefined)[] = new Array(references.length);
 
-		// Build a lookup: (uriString, lineNumber) → index in references array
-		const lookup = new Map<string, number>();
-		const needSearch = new ResourceSet();
+    // Build a lookup: (uriString, lineNumber) → index in references array
+    const lookup = new Map<string, number>();
+    const needSearch = new ResourceSet();
 
-		for (let i = 0; i < references.length; i++) {
-			const ref = references[i];
-			const lineNumber = Range.lift(ref.range).startLineNumber;
+    for (let i = 0; i < references.length; i++) {
+      const ref = references[i];
+      const lineNumber = Range.lift(ref.range).startLineNumber;
 
-			// Try already-open models first
-			const existingModel = this._modelService.getModel(ref.uri);
-			if (existingModel) {
-				previews[i] = existingModel.getLineContent(lineNumber).trim();
-			} else {
-				lookup.set(`${ref.uri.toString()}:${lineNumber}`, i);
-				needSearch.add(ref.uri);
-			}
-		}
+      // Try already-open models first
+      const existingModel = this._modelService.getModel(ref.uri);
+      if (existingModel) {
+        previews[i] = existingModel.getLineContent(lineNumber).trim();
+      } else {
+        lookup.set(`${ref.uri.toString()}:${lineNumber}`, i);
+        needSearch.add(ref.uri);
+      }
+    }
 
-		if (needSearch.size === 0 || token.isCancellationRequested) {
-			return previews;
-		}
+    if (needSearch.size === 0 || token.isCancellationRequested) {
+      return previews;
+    }
 
-		// Use ISearchService to search for the symbol name, restricted to the
-		// referenced files. This is backed by ripgrep for file:// URIs.
-		try {
-			// Build includePattern from workspace-relative paths
-			const folders = this._workspaceContextService.getWorkspace().folders;
-			const relativePaths: string[] = [];
-			for (const uri of needSearch) {
-				const folder = this._workspaceContextService.getWorkspaceFolder(uri);
-				if (folder) {
-					const rel = relativePath(folder.uri, uri);
-					if (rel) {
-						relativePaths.push(rel);
-					}
-				}
-			}
+    // Use ISearchService to search for the symbol name, restricted to the
+    // referenced files. This is backed by ripgrep for file:// URIs.
+    try {
+      // Build includePattern from workspace-relative paths
+      const folders = this._workspaceContextService.getWorkspace().folders;
+      const relativePaths: string[] = [];
+      for (const uri of needSearch) {
+        const folder = this._workspaceContextService.getWorkspaceFolder(uri);
+        if (folder) {
+          const rel = relativePath(folder.uri, uri);
+          if (rel) {
+            relativePaths.push(rel);
+          }
+        }
+      }
 
-			if (relativePaths.length > 0) {
-				const includePattern: Record<string, true> = {};
-				if (relativePaths.length === 1) {
-					includePattern[relativePaths[0]] = true;
-				} else {
-					includePattern[`{${relativePaths.join(",")}}`] = true;
-				}
+      if (relativePaths.length > 0) {
+        const includePattern: Record<string, true> = {};
+        if (relativePaths.length === 1) {
+          includePattern[relativePaths[0]] = true;
+        } else {
+          includePattern[`{${relativePaths.join(",")}}`] = true;
+        }
 
-				const searchResult = await this._searchService.textSearch(
+        const searchResult = await this._searchService.textSearch(
           {
             type: QueryType.Text,
-            contentPattern: { pattern: escapeRegExpCharacters(symbol), isRegExp: true, isWordMatch: true },
-            folderQueries: folders.map(f => ({ folder: f.uri })),
+            contentPattern: {
+              pattern: escapeRegExpCharacters(symbol),
+              isRegExp: true,
+              isWordMatch: true,
+            },
+            folderQueries: folders.map((f) => ({ folder: f.uri })),
             includePattern,
           },
           token,
         );
 
-				for (const fileMatch of searchResult.results) {
-					if (!fileMatch.results) {
-						continue;
-					}
-					for (const textMatch of fileMatch.results) {
-						if (!resultIsMatch(textMatch)) {
-							continue;
-						}
-						for (const range of textMatch.rangeLocations) {
-							const lineNumber = range.source.startLineNumber + 1; // 0-based → 1-based
-							const key = `${fileMatch.resource.toString()}:${lineNumber}`;
-							const idx = lookup.get(key);
-							if (idx !== undefined) {
-								previews[idx] = textMatch.previewText.trim();
-								lookup.delete(key);
-							}
-						}
-					}
-				}
-			}
-		} catch {
-			// search might fail, leave remaining previews as undefined
-		}
+        for (const fileMatch of searchResult.results) {
+          if (!fileMatch.results) {
+            continue;
+          }
+          for (const textMatch of fileMatch.results) {
+            if (!resultIsMatch(textMatch)) {
+              continue;
+            }
+            for (const range of textMatch.rangeLocations) {
+              const lineNumber = range.source.startLineNumber + 1; // 0-based → 1-based
+              const key = `${fileMatch.resource.toString()}:${lineNumber}`;
+              const idx = lookup.get(key);
+              if (idx !== undefined) {
+                previews[idx] = textMatch.previewText.trim();
+                lookup.delete(key);
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // search might fail, leave remaining previews as undefined
+    }
 
-		return previews;
-	}
+    return previews;
+  }
 
-	private _classifyReference(ref: LocationLink, definitions: LocationLink[], implementations: LocationLink[]): string {
-		if (definitions.some(d => this._overlaps(ref, d))) {
-			return "definition";
-		}
-		if (implementations.some(d => this._overlaps(ref, d))) {
-			return "implementation";
-		}
-		return "reference";
-	}
+  private _classifyReference(
+    ref: LocationLink,
+    definitions: LocationLink[],
+    implementations: LocationLink[],
+  ): string {
+    if (definitions.some((d) => this._overlaps(ref, d))) {
+      return "definition";
+    }
+    if (implementations.some((d) => this._overlaps(ref, d))) {
+      return "implementation";
+    }
+    return "reference";
+  }
 
-	private _overlaps(a: LocationLink, b: LocationLink): boolean {
-		if (!isEqual(a.uri, b.uri)) {
-			return false;
-		}
-		return Range.areIntersectingOrTouching(a.range, b.range);
-	}
-
+  private _overlaps(a: LocationLink, b: LocationLink): boolean {
+    if (!isEqual(a.uri, b.uri)) {
+      return false;
+    }
+    return Range.areIntersectingOrTouching(a.range, b.range);
+  }
 }
 
-export class UsagesToolContribution extends Disposable implements IWorkbenchContribution {
+export class UsagesToolContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "chat.usagesTool";
 
-	static readonly ID = "chat.usagesTool";
+  constructor(
+    @ILanguageModelToolsService toolsService: ILanguageModelToolsService,
+    @IInstantiationService instantiationService: IInstantiationService,
+  ) {
+    super();
 
-	constructor(
-		@ILanguageModelToolsService toolsService: ILanguageModelToolsService,
-		@IInstantiationService instantiationService: IInstantiationService,
-	) {
-		super();
-
-		const usagesTool = this._store.add(
+    const usagesTool = this._store.add(
       instantiationService.createInstance(UsagesTool),
     );
-		this._store.add(
+    this._store.add(
       toolsService.registerTool(usagesTool.getToolData(), usagesTool),
     );
-	}
+  }
 }

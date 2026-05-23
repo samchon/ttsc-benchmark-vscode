@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
-import { AccessibleDiffViewerNext, AccessibleDiffViewerPrev } from "../../../../editor/browser/widget/diffEditor/commands.js";
+import {
+  AccessibleDiffViewerNext,
+  AccessibleDiffViewerPrev,
+} from "../../../../editor/browser/widget/diffEditor/commands.js";
 import { DiffEditorWidget } from "../../../../editor/browser/widget/diffEditor/diffEditorWidget.js";
 import { localize } from "../../../../nls.js";
 import {
@@ -13,7 +16,10 @@ import {
   AccessibleContentProvider,
 } from "../../../../platform/accessibility/browser/accessibleView.js";
 import { IAccessibleViewImplementation } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
-import { ContextKeyEqualsExpr, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import {
+  ContextKeyEqualsExpr,
+  IContextKeyService,
+} from "../../../../platform/contextkey/common/contextkey.js";
 import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
 import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
 import { AccessibilityVerbositySettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
@@ -21,41 +27,43 @@ import { getCommentCommandInfo } from "../../accessibility/browser/editorAccessi
 import { IEditorService } from "../../../services/editor/common/editorService.js";
 
 export class DiffEditorAccessibilityHelp implements IAccessibleViewImplementation {
-	readonly priority = 105;
-	readonly name = "diff-editor";
-	readonly when = ContextKeyEqualsExpr.create("isInDiffEditor", true);
-	readonly type = AccessibleViewType.Help;
-	getProvider(accessor: ServicesAccessor) {
-		const editorService = accessor.get(IEditorService);
-		const codeEditorService = accessor.get(ICodeEditorService);
-		const keybindingService = accessor.get(IKeybindingService);
-		const contextKeyService = accessor.get(IContextKeyService);
+  readonly priority = 105;
+  readonly name = "diff-editor";
+  readonly when = ContextKeyEqualsExpr.create("isInDiffEditor", true);
+  readonly type = AccessibleViewType.Help;
+  getProvider(accessor: ServicesAccessor) {
+    const editorService = accessor.get(IEditorService);
+    const codeEditorService = accessor.get(ICodeEditorService);
+    const keybindingService = accessor.get(IKeybindingService);
+    const contextKeyService = accessor.get(IContextKeyService);
 
-		if (!(editorService.activeTextEditorControl instanceof DiffEditorWidget)) {
-			return;
-		}
+    if (!(editorService.activeTextEditorControl instanceof DiffEditorWidget)) {
+      return;
+    }
 
-		const codeEditor = codeEditorService.getActiveCodeEditor() || codeEditorService.getFocusedCodeEditor();
-		if (!codeEditor) {
-			return;
-		}
+    const codeEditor =
+      codeEditorService.getActiveCodeEditor() ||
+      codeEditorService.getFocusedCodeEditor();
+    if (!codeEditor) {
+      return;
+    }
 
-		const switchSides = localize(
+    const switchSides = localize(
       "msg3",
       "Run the command Diff Editor: Switch Side{0} to toggle between the original and modified editors.",
       "<keybinding:diffEditor.switchSide>",
     );
-		const diffEditorActiveAnnouncement = localize(
+    const diffEditorActiveAnnouncement = localize(
       "msg5",
       "The setting, accessibility.verbosity.diffEditorActive, controls if a diff editor announcement is made when it becomes the active editor.",
     );
 
-		const keys = [
+    const keys = [
       "accessibility.signals.diffLineDeleted",
       "accessibility.signals.diffLineInserted",
       "accessibility.signals.diffLineModified",
     ];
-		const content = [
+    const content = [
       localize("msg1", "You are in a diff editor."),
       localize(
         "msg2",
@@ -71,20 +79,20 @@ export class DiffEditorAccessibilityHelp implements IAccessibleViewImplementatio
         keys.join(", "),
       ),
     ];
-		const commentCommandInfo = getCommentCommandInfo(
+    const commentCommandInfo = getCommentCommandInfo(
       keybindingService,
       contextKeyService,
       codeEditor,
     );
-		if (commentCommandInfo) {
-			content.push(commentCommandInfo);
-		}
-		return new AccessibleContentProvider(
+    if (commentCommandInfo) {
+      content.push(commentCommandInfo);
+    }
+    return new AccessibleContentProvider(
       AccessibleViewProviderId.DiffEditor,
       { type: AccessibleViewType.Help },
       () => content.join("\n"),
       () => codeEditor.focus(),
       AccessibilityVerbositySettingId.DiffEditor,
     );
-	}
+  }
 }

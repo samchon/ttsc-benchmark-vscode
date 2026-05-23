@@ -10,15 +10,19 @@ import { TextSearchProvider2 } from "../common/searchExtTypes.js";
 import { TextSearchManager } from "../common/textSearchManager.js";
 
 export class NativeTextSearchManager extends TextSearchManager {
-
-	constructor(query: ITextQuery, provider: TextSearchProvider2, _pfs: typeof pfs = pfs, processType: ITextSearchStats["type"] = "searchProcess") {
-		super(
+  constructor(
+    query: ITextQuery,
+    provider: TextSearchProvider2,
+    _pfs: typeof pfs = pfs,
+    processType: ITextSearchStats["type"] = "searchProcess",
+  ) {
+    super(
       { query, provider },
       {
-        readdir: resource => _pfs.Promises.readdir(resource.fsPath),
-        toCanonicalName: name => toCanonicalName(name),
+        readdir: (resource) => _pfs.Promises.readdir(resource.fsPath),
+        toCanonicalName: (name) => toCanonicalName(name),
       },
       processType,
     );
-	}
+  }
 }

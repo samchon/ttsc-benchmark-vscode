@@ -16,7 +16,10 @@ import { INativeHostService } from "../../../../platform/native/common/native.js
 import { INotificationService } from "../../../../platform/notification/common/notification.js";
 import { IRemoteAuthorityResolverService } from "../../../../platform/remote/common/remoteAuthorityResolver.js";
 import { ITunnelService } from "../../../../platform/tunnel/common/tunnel.js";
-import { FindInFrameOptions, IWebviewManagerService } from "../../../../platform/webview/common/webviewManagerService.js";
+import {
+  FindInFrameOptions,
+  IWebviewManagerService,
+} from "../../../../platform/webview/common/webviewManagerService.js";
 import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
 import { WebviewThemeDataProvider } from "../browser/themeing.js";
 import { WebviewInitInfo } from "../browser/webview.js";
@@ -27,33 +30,36 @@ import { WindowIgnoreMenuShortcutsManager } from "./windowIgnoreMenuShortcutsMan
  * Webview backed by an iframe but that uses Electron APIs to power the webview.
  */
 export class ElectronWebviewElement extends WebviewElement {
+  private readonly _webviewKeyboardHandler: WindowIgnoreMenuShortcutsManager;
 
-	private readonly _webviewKeyboardHandler: WindowIgnoreMenuShortcutsManager;
+  private _findStarted: boolean = false;
+  private _cachedHtmlContent: string | undefined;
 
-	private _findStarted: boolean = false;
-	private _cachedHtmlContent: string | undefined;
+  private readonly _webviewMainService: IWebviewManagerService;
+  private readonly _iframeDelayer = this._register(new Delayer<void>(200));
 
-	private readonly _webviewMainService: IWebviewManagerService;
-	private readonly _iframeDelayer = this._register(new Delayer<void>(200));
+  protected override get platform() {
+    return "electron";
+  }
 
-	protected override get platform() { return "electron"; }
-
-	constructor(
-		initInfo: WebviewInitInfo,
-		webviewThemeDataProvider: WebviewThemeDataProvider,
-		@IContextMenuService contextMenuService: IContextMenuService,
-		@ITunnelService tunnelService: ITunnelService,
-		@IWorkbenchEnvironmentService environmentService: IWorkbenchEnvironmentService,
-		@IRemoteAuthorityResolverService remoteAuthorityResolverService: IRemoteAuthorityResolverService,
-		@ILogService logService: ILogService,
-		@IConfigurationService configurationService: IConfigurationService,
-		@IMainProcessService mainProcessService: IMainProcessService,
-		@INotificationService notificationService: INotificationService,
-		@INativeHostService private readonly _nativeHostService: INativeHostService,
-		@IInstantiationService instantiationService: IInstantiationService,
-		@IAccessibilityService accessibilityService: IAccessibilityService,
-	) {
-		super(
+  constructor(
+    initInfo: WebviewInitInfo,
+    webviewThemeDataProvider: WebviewThemeDataProvider,
+    @IContextMenuService contextMenuService: IContextMenuService,
+    @ITunnelService tunnelService: ITunnelService,
+    @IWorkbenchEnvironmentService
+    environmentService: IWorkbenchEnvironmentService,
+    @IRemoteAuthorityResolverService
+    remoteAuthorityResolverService: IRemoteAuthorityResolverService,
+    @ILogService logService: ILogService,
+    @IConfigurationService configurationService: IConfigurationService,
+    @IMainProcessService mainProcessService: IMainProcessService,
+    @INotificationService notificationService: INotificationService,
+    @INativeHostService private readonly _nativeHostService: INativeHostService,
+    @IInstantiationService instantiationService: IInstantiationService,
+    @IAccessibilityService accessibilityService: IAccessibilityService,
+  ) {
+    super(
       initInfo,
       webviewThemeDataProvider,
       configurationService,
@@ -67,86 +73,88 @@ export class ElectronWebviewElement extends WebviewElement {
       instantiationService,
     );
 
-		this._webviewKeyboardHandler = new WindowIgnoreMenuShortcutsManager(
+    this._webviewKeyboardHandler = new WindowIgnoreMenuShortcutsManager(
       configurationService,
       mainProcessService,
       _nativeHostService,
     );
 
-		this._webviewMainService = ProxyChannel.toService<IWebviewManagerService>(
+    this._webviewMainService = ProxyChannel.toService<IWebviewManagerService>(
       mainProcessService.getChannel("webview"),
     );
 
-		if (initInfo.options.enableFindWidget) {
-			this._register(this.onDidHtmlChange((newContent) => {
-				if (this._findStarted && this._cachedHtmlContent !== newContent) {
-					this.stopFind(false);
-					this._cachedHtmlContent = newContent;
-				}
-			}));
+    if (initInfo.options.enableFindWidget) {
+      this._register(
+        this.onDidHtmlChange((newContent) => {
+          if (this._findStarted && this._cachedHtmlContent !== newContent) {
+            this.stopFind(false);
+            this._cachedHtmlContent = newContent;
+          }
+        }),
+      );
 
-			this._register(
+      this._register(
         this._webviewMainService.onFoundInFrame((result) => {
           this._hasFindResult.fire(result.matches > 0);
         }),
       );
-		}
-	}
+    }
+  }
 
-	override dispose(): void {
-		// Make sure keyboard handler knows it closed (#71800)
-		this._webviewKeyboardHandler.didBlur();
+  override dispose(): void {
+    // Make sure keyboard handler knows it closed (#71800)
+    this._webviewKeyboardHandler.didBlur();
 
-		super.dispose();
-	}
+    super.dispose();
+  }
 
-	protected override webviewContentEndpoint(iframeId: string): string {
-		return `${Schemas.vscodeWebview}://${iframeId}`;
-	}
+  protected override webviewContentEndpoint(iframeId: string): string {
+    return `${Schemas.vscodeWebview}://${iframeId}`;
+  }
 
-	/**
-	 * Webviews expose a stateful find API.
-	 * Successive calls to find will move forward or backward through onFindResults
-	 * depending on the supplied options.
-	 *
-	 * @param value The string to search for. Empty strings are ignored.
-	 */
-	public override find(value: string, previous: boolean): void {
-		if (!this.element) {
-			return;
-		}
+  /**
+   * Webviews expose a stateful find API.
+   * Successive calls to find will move forward or backward through onFindResults
+   * depending on the supplied options.
+   *
+   * @param value The string to search for. Empty strings are ignored.
+   */
+  public override find(value: string, previous: boolean): void {
+    if (!this.element) {
+      return;
+    }
 
-		if (!this._findStarted) {
-			this.updateFind(value);
-		} else {
-			// continuing the find, so set findNext to false
-			const options: FindInFrameOptions = {
+    if (!this._findStarted) {
+      this.updateFind(value);
+    } else {
+      // continuing the find, so set findNext to false
+      const options: FindInFrameOptions = {
         forward: !previous,
         findNext: false,
         matchCase: false,
       };
-			this._webviewMainService.findInFrame(
+      this._webviewMainService.findInFrame(
         { windowId: this._nativeHostService.windowId },
         this.id,
         value,
         options,
       );
-		}
-	}
+    }
+  }
 
-	public override updateFind(value: string) {
-		if (!value || !this.element) {
-			return;
-		}
+  public override updateFind(value: string) {
+    if (!value || !this.element) {
+      return;
+    }
 
-		// FindNext must be true for a first request
-		const options: FindInFrameOptions = {
+    // FindNext must be true for a first request
+    const options: FindInFrameOptions = {
       forward: true,
       findNext: true,
       matchCase: false,
     };
 
-		this._iframeDelayer.trigger(() => {
+    this._iframeDelayer.trigger(() => {
       this._findStarted = true;
       this._webviewMainService.findInFrame(
         { windowId: this._nativeHostService.windowId },
@@ -155,30 +163,30 @@ export class ElectronWebviewElement extends WebviewElement {
         options,
       );
     });
-	}
+  }
 
-	public override stopFind(keepSelection?: boolean): void {
-		if (!this.element) {
-			return;
-		}
-		this._iframeDelayer.cancel();
-		this._findStarted = false;
-		this._webviewMainService.stopFindInFrame(
+  public override stopFind(keepSelection?: boolean): void {
+    if (!this.element) {
+      return;
+    }
+    this._iframeDelayer.cancel();
+    this._findStarted = false;
+    this._webviewMainService.stopFindInFrame(
       { windowId: this._nativeHostService.windowId },
       this.id,
       {
         keepSelection,
       },
     );
-		this._onDidStopFind.fire();
-	}
+    this._onDidStopFind.fire();
+  }
 
-	protected override handleFocusChange(isFocused: boolean): void {
-		super.handleFocusChange(isFocused);
-		if (isFocused) {
-			this._webviewKeyboardHandler.didFocus();
-		} else {
-			this._webviewKeyboardHandler.didBlur();
-		}
-	}
+  protected override handleFocusChange(isFocused: boolean): void {
+    super.handleFocusChange(isFocused);
+    if (isFocused) {
+      this._webviewKeyboardHandler.didFocus();
+    } else {
+      this._webviewKeyboardHandler.didBlur();
+    }
+  }
 }

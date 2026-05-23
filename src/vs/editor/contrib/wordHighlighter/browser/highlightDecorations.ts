@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./highlightDecorations.css";
-import { MinimapPosition, OverviewRulerLane, TrackedRangeStickiness } from "../../../common/model.js";
+import {
+  MinimapPosition,
+  OverviewRulerLane,
+  TrackedRangeStickiness,
+} from "../../../common/model.js";
 import { ModelDecorationOptions } from "../../../common/model/textModel.js";
 import { DocumentHighlightKind } from "../../../common/languages.js";
 import * as nls from "../../../../nls.js";
@@ -15,7 +19,10 @@ import {
   overviewRulerSelectionHighlightForeground,
   registerColor,
 } from "../../../../platform/theme/common/colorRegistry.js";
-import { registerThemingParticipant, themeColorFromId } from "../../../../platform/theme/common/themeService.js";
+import {
+  registerThemingParticipant,
+  themeColorFromId,
+} from "../../../../platform/theme/common/themeService.js";
 
 const wordHighlightBackground = registerColor(
   "editor.wordHighlightBackground",
@@ -107,87 +114,94 @@ const overviewRulerWordHighlightTextForeground = registerColor(
 );
 
 const _WRITE_OPTIONS = ModelDecorationOptions.register({
-	description: "word-highlight-strong",
-	stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-	className: "wordHighlightStrong",
-	overviewRuler: {
-		color: themeColorFromId(overviewRulerWordHighlightStrongForeground),
-		position: OverviewRulerLane.Center,
-	},
-	minimap: {
-		color: themeColorFromId(minimapSelectionOccurrenceHighlight),
-		position: MinimapPosition.Inline,
-	},
+  description: "word-highlight-strong",
+  stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+  className: "wordHighlightStrong",
+  overviewRuler: {
+    color: themeColorFromId(overviewRulerWordHighlightStrongForeground),
+    position: OverviewRulerLane.Center,
+  },
+  minimap: {
+    color: themeColorFromId(minimapSelectionOccurrenceHighlight),
+    position: MinimapPosition.Inline,
+  },
 });
 
 const _TEXT_OPTIONS = ModelDecorationOptions.register({
-	description: "word-highlight-text",
-	stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-	className: "wordHighlightText",
-	overviewRuler: {
-		color: themeColorFromId(overviewRulerWordHighlightTextForeground),
-		position: OverviewRulerLane.Center,
-	},
-	minimap: {
-		color: themeColorFromId(minimapSelectionOccurrenceHighlight),
-		position: MinimapPosition.Inline,
-	},
+  description: "word-highlight-text",
+  stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+  className: "wordHighlightText",
+  overviewRuler: {
+    color: themeColorFromId(overviewRulerWordHighlightTextForeground),
+    position: OverviewRulerLane.Center,
+  },
+  minimap: {
+    color: themeColorFromId(minimapSelectionOccurrenceHighlight),
+    position: MinimapPosition.Inline,
+  },
 });
 
 const _SELECTION_HIGHLIGHT_OPTIONS = ModelDecorationOptions.register({
-	description: "selection-highlight-overview",
-	stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-	className: "selectionHighlight",
-	overviewRuler: {
-		color: themeColorFromId(overviewRulerSelectionHighlightForeground),
-		position: OverviewRulerLane.Center,
-	},
-	minimap: {
-		color: themeColorFromId(minimapSelectionOccurrenceHighlight),
-		position: MinimapPosition.Inline,
-	},
+  description: "selection-highlight-overview",
+  stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+  className: "selectionHighlight",
+  overviewRuler: {
+    color: themeColorFromId(overviewRulerSelectionHighlightForeground),
+    position: OverviewRulerLane.Center,
+  },
+  minimap: {
+    color: themeColorFromId(minimapSelectionOccurrenceHighlight),
+    position: MinimapPosition.Inline,
+  },
 });
 
-const _SELECTION_HIGHLIGHT_OPTIONS_NO_OVERVIEW = ModelDecorationOptions.register(
-  {
+const _SELECTION_HIGHLIGHT_OPTIONS_NO_OVERVIEW =
+  ModelDecorationOptions.register({
     description: "selection-highlight",
     stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
     className: "selectionHighlight",
-  },
-);
+  });
 
 const _REGULAR_OPTIONS = ModelDecorationOptions.register({
-	description: "word-highlight",
-	stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-	className: "wordHighlight",
-	overviewRuler: {
-		color: themeColorFromId(overviewRulerWordHighlightForeground),
-		position: OverviewRulerLane.Center,
-	},
-	minimap: {
-		color: themeColorFromId(minimapSelectionOccurrenceHighlight),
-		position: MinimapPosition.Inline,
-	},
+  description: "word-highlight",
+  stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+  className: "wordHighlight",
+  overviewRuler: {
+    color: themeColorFromId(overviewRulerWordHighlightForeground),
+    position: OverviewRulerLane.Center,
+  },
+  minimap: {
+    color: themeColorFromId(minimapSelectionOccurrenceHighlight),
+    position: MinimapPosition.Inline,
+  },
 });
 
-export function getHighlightDecorationOptions(kind: DocumentHighlightKind | undefined): ModelDecorationOptions {
-	if (kind === DocumentHighlightKind.Write) {
-		return _WRITE_OPTIONS;
-	} else if (kind === DocumentHighlightKind.Text) {
-		return _TEXT_OPTIONS;
-	} else {
-		return _REGULAR_OPTIONS;
-	}
+export function getHighlightDecorationOptions(
+  kind: DocumentHighlightKind | undefined,
+): ModelDecorationOptions {
+  if (kind === DocumentHighlightKind.Write) {
+    return _WRITE_OPTIONS;
+  } else if (kind === DocumentHighlightKind.Text) {
+    return _TEXT_OPTIONS;
+  } else {
+    return _REGULAR_OPTIONS;
+  }
 }
 
-export function getSelectionHighlightDecorationOptions(hasSemanticHighlights: boolean): ModelDecorationOptions {
-	// Show in overviewRuler only if model has no semantic highlighting
-	return (hasSemanticHighlights ? _SELECTION_HIGHLIGHT_OPTIONS_NO_OVERVIEW : _SELECTION_HIGHLIGHT_OPTIONS);
+export function getSelectionHighlightDecorationOptions(
+  hasSemanticHighlights: boolean,
+): ModelDecorationOptions {
+  // Show in overviewRuler only if model has no semantic highlighting
+  return hasSemanticHighlights
+    ? _SELECTION_HIGHLIGHT_OPTIONS_NO_OVERVIEW
+    : _SELECTION_HIGHLIGHT_OPTIONS;
 }
 
 registerThemingParticipant((theme, collector) => {
-	const selectionHighlight = theme.getColor(editorSelectionHighlight);
-	if (selectionHighlight) {
-		collector.addRule(`.monaco-editor .selectionHighlight { background-color: ${selectionHighlight.transparent(0.5)}; }`);
-	}
+  const selectionHighlight = theme.getColor(editorSelectionHighlight);
+  if (selectionHighlight) {
+    collector.addRule(
+      `.monaco-editor .selectionHighlight { background-color: ${selectionHighlight.transparent(0.5)}; }`,
+    );
+  }
 });

@@ -5,11 +5,18 @@
 
 import { coalesce } from "../../../../../../../base/common/arrays.js";
 import { decodeBase64 } from "../../../../../../../base/common/buffer.js";
-import { CancellationToken, CancellationTokenSource } from "../../../../../../../base/common/cancellation.js";
+import {
+  CancellationToken,
+  CancellationTokenSource,
+} from "../../../../../../../base/common/cancellation.js";
 import { Codicon } from "../../../../../../../base/common/codicons.js";
 import { StopWatch } from "../../../../../../../base/common/stopwatch.js";
 import { isPatternInWord } from "../../../../../../../base/common/filters.js";
-import { Disposable, DisposableStore, toDisposable } from "../../../../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  DisposableStore,
+  toDisposable,
+} from "../../../../../../../base/common/lifecycle.js";
 import { ResourceSet } from "../../../../../../../base/common/map.js";
 import { Schemas } from "../../../../../../../base/common/network.js";
 import { basename } from "../../../../../../../base/common/resources.js";
@@ -17,7 +24,11 @@ import { ThemeIcon } from "../../../../../../../base/common/themables.js";
 import { assertType } from "../../../../../../../base/common/types.js";
 import { URI } from "../../../../../../../base/common/uri.js";
 import { generateUuid } from "../../../../../../../base/common/uuid.js";
-import { ICodeEditor, getCodeEditor, isCodeEditor } from "../../../../../../../editor/browser/editorBrowser.js";
+import {
+  ICodeEditor,
+  getCodeEditor,
+  isCodeEditor,
+} from "../../../../../../../editor/browser/editorBrowser.js";
 import { ICodeEditorService } from "../../../../../../../editor/browser/services/codeEditorService.js";
 import { Position } from "../../../../../../../editor/common/core/position.js";
 import { Range } from "../../../../../../../editor/common/core/range.js";
@@ -38,17 +49,32 @@ import { ITextModel } from "../../../../../../../editor/common/model.js";
 import { ILanguageFeaturesService } from "../../../../../../../editor/common/services/languageFeatures.js";
 import { IOutlineModelService } from "../../../../../../../editor/contrib/documentSymbols/browser/outlineModel.js";
 import { localize } from "../../../../../../../nls.js";
-import { Action2, registerAction2 } from "../../../../../../../platform/actions/common/actions.js";
+import {
+  Action2,
+  registerAction2,
+} from "../../../../../../../platform/actions/common/actions.js";
 import { CommandsRegistry } from "../../../../../../../platform/commands/common/commands.js";
 import { IConfigurationService } from "../../../../../../../platform/configuration/common/configuration.js";
-import { FileKind, IFileService } from "../../../../../../../platform/files/common/files.js";
-import { IInstantiationService, ServicesAccessor } from "../../../../../../../platform/instantiation/common/instantiation.js";
+import {
+  FileKind,
+  IFileService,
+} from "../../../../../../../platform/files/common/files.js";
+import {
+  IInstantiationService,
+  ServicesAccessor,
+} from "../../../../../../../platform/instantiation/common/instantiation.js";
 import { ILabelService } from "../../../../../../../platform/label/common/label.js";
 import { INotificationService } from "../../../../../../../platform/notification/common/notification.js";
 import { Registry } from "../../../../../../../platform/registry/common/platform.js";
 import { IWorkspaceContextService } from "../../../../../../../platform/workspace/common/workspace.js";
-import { IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions } from "../../../../../../common/contributions.js";
-import { EditorsOrder, isDiffEditorInput } from "../../../../../../common/editor.js";
+import {
+  IWorkbenchContributionsRegistry,
+  Extensions as WorkbenchExtensions,
+} from "../../../../../../common/contributions.js";
+import {
+  EditorsOrder,
+  isDiffEditorInput,
+} from "../../../../../../common/editor.js";
 import { IEditorService } from "../../../../../../services/editor/common/editorService.js";
 import { IHistoryService } from "../../../../../../services/history/common/history.js";
 import { LifecyclePhase } from "../../../../../../services/lifecycle/common/lifecycle.js";
@@ -83,12 +109,22 @@ import {
 import { IChatSlashCommandService } from "../../../../common/participants/chatSlashCommands.js";
 import { IChatRequestVariableEntry } from "../../../../common/attachments/chatVariableEntries.js";
 import { IDynamicVariable } from "../../../../common/attachments/chatVariables.js";
-import { ChatAgentLocation, ChatModeKind, isSupportedChatFileScheme } from "../../../../common/constants.js";
+import {
+  ChatAgentLocation,
+  ChatModeKind,
+  isSupportedChatFileScheme,
+} from "../../../../common/constants.js";
 import { isToolSet } from "../../../../common/tools/languageModelToolsService.js";
-import { IChatSessionsService, isAgentHostTarget } from "../../../../common/chatSessionsService.js";
+import {
+  IChatSessionsService,
+  isAgentHostTarget,
+} from "../../../../common/chatSessionsService.js";
 import { ICustomizationHarnessService } from "../../../../common/customizationHarnessService.js";
 import { matchesSessionType } from "../../../../common/promptSyntax/service/promptsService.js";
-import { ChatSubmitAction, IChatExecuteActionContext } from "../../../actions/chatExecuteActions.js";
+import {
+  ChatSubmitAction,
+  IChatExecuteActionContext,
+} from "../../../actions/chatExecuteActions.js";
 import { IChatWidget, IChatWidgetService } from "../../../chat.js";
 import { resizeImage } from "../../../chatImageUtils.js";
 import { ChatDynamicVariableModel } from "../../../attachments/chatDynamicVariables.js";
@@ -100,7 +136,10 @@ import {
   IChatCompletionRangeResult,
   isEmptyUpToCompletionWord,
 } from "./chatInputCompletionUtils.js";
-import { getAgentSessionProviderIcon, AgentSessionProviders } from "../../../agentSessions/agentSessions.js";
+import {
+  getAgentSessionProviderIcon,
+  AgentSessionProviders,
+} from "../../../agentSessions/agentSessions.js";
 
 /**
  * Regex matching a slash command word (e.g. `/foo`). Uses `\p{L}` for Unicode
@@ -120,1024 +159,1416 @@ const AgentOrSlashCommandWord = /(@|\/)[\p{L}0-9_.:-]*/gu;
  * default in-process providers (file/symbol/tool/agent) short-circuit.
  */
 function isAgentHostBackedWidget(widget: IChatWidget): boolean {
-	const sessionResource = widget.viewModel?.model.sessionResource;
-	return !!sessionResource && isAgentHostTarget(
-    getChatSessionType(sessionResource),
+  const sessionResource = widget.viewModel?.model.sessionResource;
+  return (
+    !!sessionResource && isAgentHostTarget(getChatSessionType(sessionResource))
   );
 }
 
 class SlashCommandCompletions extends Disposable {
-	constructor(
-		@ILanguageFeaturesService private readonly languageFeaturesService: ILanguageFeaturesService,
-		@IChatWidgetService private readonly chatWidgetService: IChatWidgetService,
-		@IChatSlashCommandService private readonly chatSlashCommandService: IChatSlashCommandService,
-		@ICustomizationHarnessService private readonly harnessService: ICustomizationHarnessService,
-		@IChatService chatService: IChatService,
-		@IChatSessionsService chatSessionsService: IChatSessionsService,
-		@IMcpService mcpService: IMcpService,
-	) {
-		super();
+  constructor(
+    @ILanguageFeaturesService
+    private readonly languageFeaturesService: ILanguageFeaturesService,
+    @IChatWidgetService private readonly chatWidgetService: IChatWidgetService,
+    @IChatSlashCommandService
+    private readonly chatSlashCommandService: IChatSlashCommandService,
+    @ICustomizationHarnessService
+    private readonly harnessService: ICustomizationHarnessService,
+    @IChatService chatService: IChatService,
+    @IChatSessionsService chatSessionsService: IChatSessionsService,
+    @IMcpService mcpService: IMcpService,
+  ) {
+    super();
 
-		this._register(this.languageFeaturesService.completionProvider.register({ scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true }, {
-			_debugDisplayName: "globalSlashCommands",
-			triggerCharacters: [chatSubcommandLeader],
-			provideCompletionItems: async (model: ITextModel, position: Position, _context: CompletionContext, _token: CancellationToken) => {
-				const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
-				if (!widget || !widget.viewModel) {
-					return null;
-				}
+    this._register(
+      this.languageFeaturesService.completionProvider.register(
+        { scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true },
+        {
+          _debugDisplayName: "globalSlashCommands",
+          triggerCharacters: [chatSubcommandLeader],
+          provideCompletionItems: async (
+            model: ITextModel,
+            position: Position,
+            _context: CompletionContext,
+            _token: CancellationToken,
+          ) => {
+            const widget = this.chatWidgetService.getWidgetByInputUri(
+              model.uri,
+            );
+            if (!widget || !widget.viewModel) {
+              return null;
+            }
 
-				const range = computeCompletionRanges(model, position, SlashCommandWord);
-				if (!range) {
-					return null;
-				}
+            const range = computeCompletionRanges(
+              model,
+              position,
+              SlashCommandWord,
+            );
+            if (!range) {
+              return null;
+            }
 
-				if (!isEmptyUpToCompletionWord(model, range)) {
-					// No text allowed before the completion
-					return;
-				}
+            if (!isEmptyUpToCompletionWord(model, range)) {
+              // No text allowed before the completion
+              return;
+            }
 
-				const parsedRequest = widget.parsedInput.parts;
-				const usedAgent = parsedRequest.find(p => p instanceof ChatRequestAgentPart);
-				if (usedAgent) {
-					// No (classic) global slash commands when an agent is used
-					return;
-				}
+            const parsedRequest = widget.parsedInput.parts;
+            const usedAgent = parsedRequest.find(
+              (p) => p instanceof ChatRequestAgentPart,
+            );
+            if (usedAgent) {
+              // No (classic) global slash commands when an agent is used
+              return;
+            }
 
-				const slashCommands = this.chatSlashCommandService.getCommands(widget.location, widget.input.currentModeKind);
-				if (!slashCommands) {
-					return null;
-				}
+            const slashCommands = this.chatSlashCommandService.getCommands(
+              widget.location,
+              widget.input.currentModeKind,
+            );
+            if (!slashCommands) {
+              return null;
+            }
 
-				const sessionType = getChatSessionType(widget.viewModel.model.sessionResource);
+            const sessionType = getChatSessionType(
+              widget.viewModel.model.sessionResource,
+            );
 
-				return {
-					suggestions: slashCommands
-						.filter(c => {
-							// silent commands are client-side only... so they're not "attaching anything"
-							// so this check can be scoped to when the command _does_ attach something before
-							// checking if the widget supports attachments at all
-							if (!c.silent && !widget.attachmentCapabilities.supportsPromptAttachments) {
-								return false;
-							}
-							if (c.when && !widget.scopedContextKeyService.contextMatchesRules(c.when)) {
-								return false;
-							}
-							if (!matchesSessionType(c.sessionTypes, sessionType)) {
-								return false;
-							}
-							if (!widget.lockedAgentId) {
-								return true;
-							}
-							if (c.modes && c.modes.length && !c.modes.includes(ChatModeKind.Agent)) {
-								return false;
-							}
-							return true;
-						})
-						.map((c, i): CompletionItem => {
-							const withSlash = `/${c.command}`;
-							return {
-								label: { label: withSlash, description: c.detail },
-								insertText: c.executeImmediately ? "" : `${withSlash} `,
-								documentation: c.detail,
-								range,
-								sortText: c.sortText ?? "a".repeat(i + 1),
-								kind: CompletionItemKind.Text, // The icons are disabled here anyway,
-								command: c.executeImmediately ? { id: ChatSubmitAction.ID, title: withSlash, arguments: [{ widget, inputValue: `${withSlash} ` } satisfies IChatExecuteActionContext] } : undefined,
-							};
-						}),
-				};
-			},
-		}));
-		this._register(this.languageFeaturesService.completionProvider.register({ scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true }, {
-			_debugDisplayName: "globalSlashCommandsAt",
-			triggerCharacters: [chatAgentLeader],
-			provideCompletionItems: async (model: ITextModel, position: Position, _context: CompletionContext, _token: CancellationToken) => {
-				const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
-				if (!widget || !widget.viewModel) {
-					return null;
-				}
+            return {
+              suggestions: slashCommands
+                .filter((c) => {
+                  // silent commands are client-side only... so they're not "attaching anything"
+                  // so this check can be scoped to when the command _does_ attach something before
+                  // checking if the widget supports attachments at all
+                  if (
+                    !c.silent &&
+                    !widget.attachmentCapabilities.supportsPromptAttachments
+                  ) {
+                    return false;
+                  }
+                  if (
+                    c.when &&
+                    !widget.scopedContextKeyService.contextMatchesRules(c.when)
+                  ) {
+                    return false;
+                  }
+                  if (!matchesSessionType(c.sessionTypes, sessionType)) {
+                    return false;
+                  }
+                  if (!widget.lockedAgentId) {
+                    return true;
+                  }
+                  if (
+                    c.modes &&
+                    c.modes.length &&
+                    !c.modes.includes(ChatModeKind.Agent)
+                  ) {
+                    return false;
+                  }
+                  return true;
+                })
+                .map((c, i): CompletionItem => {
+                  const withSlash = `/${c.command}`;
+                  return {
+                    label: { label: withSlash, description: c.detail },
+                    insertText: c.executeImmediately ? "" : `${withSlash} `,
+                    documentation: c.detail,
+                    range,
+                    sortText: c.sortText ?? "a".repeat(i + 1),
+                    kind: CompletionItemKind.Text, // The icons are disabled here anyway,
+                    command: c.executeImmediately
+                      ? {
+                          id: ChatSubmitAction.ID,
+                          title: withSlash,
+                          arguments: [
+                            {
+                              widget,
+                              inputValue: `${withSlash} `,
+                            } satisfies IChatExecuteActionContext,
+                          ],
+                        }
+                      : undefined,
+                  };
+                }),
+            };
+          },
+        },
+      ),
+    );
+    this._register(
+      this.languageFeaturesService.completionProvider.register(
+        { scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true },
+        {
+          _debugDisplayName: "globalSlashCommandsAt",
+          triggerCharacters: [chatAgentLeader],
+          provideCompletionItems: async (
+            model: ITextModel,
+            position: Position,
+            _context: CompletionContext,
+            _token: CancellationToken,
+          ) => {
+            const widget = this.chatWidgetService.getWidgetByInputUri(
+              model.uri,
+            );
+            if (!widget || !widget.viewModel) {
+              return null;
+            }
 
-				const range = computeCompletionRanges(model, position, /@\w*/g);
-				if (!range) {
-					return null;
-				}
+            const range = computeCompletionRanges(model, position, /@\w*/g);
+            if (!range) {
+              return null;
+            }
 
-				if (!isEmptyUpToCompletionWord(model, range)) {
-					// No text allowed before the completion
-					return;
-				}
+            if (!isEmptyUpToCompletionWord(model, range)) {
+              // No text allowed before the completion
+              return;
+            }
 
-				const slashCommands = this.chatSlashCommandService.getCommands(widget.location, widget.input.currentModeKind);
-				if (!slashCommands) {
-					return null;
-				}
+            const slashCommands = this.chatSlashCommandService.getCommands(
+              widget.location,
+              widget.input.currentModeKind,
+            );
+            if (!slashCommands) {
+              return null;
+            }
 
-				if (widget.lockedAgentId) {
-					return null;
-				}
+            if (widget.lockedAgentId) {
+              return null;
+            }
 
-				const currentSessionType = getChatSessionType(widget.viewModel.model.sessionResource);
+            const currentSessionType = getChatSessionType(
+              widget.viewModel.model.sessionResource,
+            );
 
-				return {
-					suggestions: slashCommands
-						.filter(c => !c.when || widget.scopedContextKeyService.contextMatchesRules(c.when))
-						.filter(c => matchesSessionType(c.sessionTypes, currentSessionType))
-						.map((c, i): CompletionItem => {
-							const withSlash = `${chatSubcommandLeader}${c.command}`;
-							return {
-								label: { label: withSlash, description: c.detail },
-								insertText: c.executeImmediately ? "" : `${withSlash} `,
-								documentation: c.detail,
-								range,
-								filterText: `${chatAgentLeader}${c.command}`,
-								sortText: c.sortText ?? "z".repeat(i + 1),
-								kind: CompletionItemKind.Text, // The icons are disabled here anyway,
-								command: c.executeImmediately ? { id: ChatSubmitAction.ID, title: withSlash, arguments: [{ widget, inputValue: `${withSlash} ` } satisfies IChatExecuteActionContext] } : undefined,
-							};
-						}),
-				};
-			},
-		}));
-		this._register(this.languageFeaturesService.completionProvider.register({ scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true }, {
-			_debugDisplayName: "promptSlashCommands",
-			triggerCharacters: [chatSubcommandLeader],
-			provideCompletionItems: async (model: ITextModel, position: Position, _context: CompletionContext, token: CancellationToken) => {
-				const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
-				if (!widget || !widget.viewModel) {
-					return null;
-				}
+            return {
+              suggestions: slashCommands
+                .filter(
+                  (c) =>
+                    !c.when ||
+                    widget.scopedContextKeyService.contextMatchesRules(c.when),
+                )
+                .filter((c) =>
+                  matchesSessionType(c.sessionTypes, currentSessionType),
+                )
+                .map((c, i): CompletionItem => {
+                  const withSlash = `${chatSubcommandLeader}${c.command}`;
+                  return {
+                    label: { label: withSlash, description: c.detail },
+                    insertText: c.executeImmediately ? "" : `${withSlash} `,
+                    documentation: c.detail,
+                    range,
+                    filterText: `${chatAgentLeader}${c.command}`,
+                    sortText: c.sortText ?? "z".repeat(i + 1),
+                    kind: CompletionItemKind.Text, // The icons are disabled here anyway,
+                    command: c.executeImmediately
+                      ? {
+                          id: ChatSubmitAction.ID,
+                          title: withSlash,
+                          arguments: [
+                            {
+                              widget,
+                              inputValue: `${withSlash} `,
+                            } satisfies IChatExecuteActionContext,
+                          ],
+                        }
+                      : undefined,
+                  };
+                }),
+            };
+          },
+        },
+      ),
+    );
+    this._register(
+      this.languageFeaturesService.completionProvider.register(
+        { scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true },
+        {
+          _debugDisplayName: "promptSlashCommands",
+          triggerCharacters: [chatSubcommandLeader],
+          provideCompletionItems: async (
+            model: ITextModel,
+            position: Position,
+            _context: CompletionContext,
+            token: CancellationToken,
+          ) => {
+            const widget = this.chatWidgetService.getWidgetByInputUri(
+              model.uri,
+            );
+            if (!widget || !widget.viewModel) {
+              return null;
+            }
 
-				if (isAgentHostBackedWidget(widget)) {
-					return;
-				}
+            if (isAgentHostBackedWidget(widget)) {
+              return;
+            }
 
-				const range = computeCompletionRanges(model, position, SlashCommandWord);
-				if (!range) {
-					return null;
-				}
+            const range = computeCompletionRanges(
+              model,
+              position,
+              SlashCommandWord,
+            );
+            if (!range) {
+              return null;
+            }
 
-				if (!isEmptyUpToCompletionWord(model, range)) {
-					// No text allowed before the completion
-					return;
-				}
+            if (!isEmptyUpToCompletionWord(model, range)) {
+              // No text allowed before the completion
+              return;
+            }
 
-				const parsedRequest = widget.parsedInput.parts;
-				const usedAgent = parsedRequest.find(p => p instanceof ChatRequestAgentPart);
-				if (usedAgent) {
-					// No (classic) global slash commands when an agent is used
-					return;
-				}
+            const parsedRequest = widget.parsedInput.parts;
+            const usedAgent = parsedRequest.find(
+              (p) => p instanceof ChatRequestAgentPart,
+            );
+            if (usedAgent) {
+              // No (classic) global slash commands when an agent is used
+              return;
+            }
 
-				const currentSessionType = getChatSessionType(widget.viewModel.model.sessionResource);
-				const promptCommands = await this.harnessService.getSlashCommands(widget.viewModel.model.sessionResource, token);
-				if (promptCommands.length === 0) {
-					return null;
-				}
+            const currentSessionType = getChatSessionType(
+              widget.viewModel.model.sessionResource,
+            );
+            const promptCommands = await this.harnessService.getSlashCommands(
+              widget.viewModel.model.sessionResource,
+              token,
+            );
+            if (promptCommands.length === 0) {
+              return null;
+            }
 
-				if (widget.lockedAgentId && !widget.attachmentCapabilities.supportsPromptAttachments) {
-					return null;
-				}
+            if (
+              widget.lockedAgentId &&
+              !widget.attachmentCapabilities.supportsPromptAttachments
+            ) {
+              return null;
+            }
 
-				const userInvocableCommands = promptCommands
-					.filter(c => c.userInvocable)
-					.filter(c => matchesSessionType(c.sessionTypes, currentSessionType));
-				if (userInvocableCommands.length === 0) {
-					return null;
-				}
+            const userInvocableCommands = promptCommands
+              .filter((c) => c.userInvocable)
+              .filter((c) =>
+                matchesSessionType(c.sessionTypes, currentSessionType),
+              );
+            if (userInvocableCommands.length === 0) {
+              return null;
+            }
 
-				return {
-					suggestions: userInvocableCommands.map((c, i): CompletionItem => {
-						const label = `/${c.name}`;
-						const description = c.description;
-						return {
-							label: { label, description },
-							insertText: `${label} `,
-							documentation: c.description,
-							range,
-							sortText: "a".repeat(i + 1),
-							kind: CompletionItemKind.Text, // The icons are disabled here anyway,
-						};
-					}),
-				};
-			},
-		}));
+            return {
+              suggestions: userInvocableCommands.map((c, i): CompletionItem => {
+                const label = `/${c.name}`;
+                const description = c.description;
+                return {
+                  label: { label, description },
+                  insertText: `${label} `,
+                  documentation: c.description,
+                  range,
+                  sortText: "a".repeat(i + 1),
+                  kind: CompletionItemKind.Text, // The icons are disabled here anyway,
+                };
+              }),
+            };
+          },
+        },
+      ),
+    );
 
-		this._register(this.languageFeaturesService.completionProvider.register({ scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true }, {
-			_debugDisplayName: "mcpPromptSlashCommands",
-			triggerCharacters: [chatSubcommandLeader],
-			provideCompletionItems: async (model: ITextModel, position: Position, _context: CompletionContext, _token: CancellationToken) => {
-				const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
-				if (!widget || !widget.viewModel) {
-					return null;
-				}
+    this._register(
+      this.languageFeaturesService.completionProvider.register(
+        { scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true },
+        {
+          _debugDisplayName: "mcpPromptSlashCommands",
+          triggerCharacters: [chatSubcommandLeader],
+          provideCompletionItems: async (
+            model: ITextModel,
+            position: Position,
+            _context: CompletionContext,
+            _token: CancellationToken,
+          ) => {
+            const widget = this.chatWidgetService.getWidgetByInputUri(
+              model.uri,
+            );
+            if (!widget || !widget.viewModel) {
+              return null;
+            }
 
-				if (isAgentHostBackedWidget(widget)) {
-					return;
-				}
+            if (isAgentHostBackedWidget(widget)) {
+              return;
+            }
 
-				// regex is the opposite of `mcpPromptReplaceSpecialChars` found in `mcpTypes.ts`
-				const range = computeCompletionRanges(model, position, /\/[\p{L}0-9_.-]*/gu);
-				if (!range) {
-					return null;
-				}
+            // regex is the opposite of `mcpPromptReplaceSpecialChars` found in `mcpTypes.ts`
+            const range = computeCompletionRanges(
+              model,
+              position,
+              /\/[\p{L}0-9_.-]*/gu,
+            );
+            if (!range) {
+              return null;
+            }
 
-				if (!isEmptyUpToCompletionWord(model, range)) {
-					// No text allowed before the completion
-					return;
-				}
+            if (!isEmptyUpToCompletionWord(model, range)) {
+              // No text allowed before the completion
+              return;
+            }
 
-				if (widget.lockedAgentId) {
-					return null;
-				}
+            if (widget.lockedAgentId) {
+              return null;
+            }
 
-				return {
-					suggestions: mcpService.servers.get().flatMap(server => server.prompts.get().map((prompt): CompletionItem => {
-						const label = `/mcp.${prompt.id}`;
-						return {
-							label: { label, description: prompt.description },
-							command: {
-								id: StartParameterizedPromptAction.ID,
-								title: prompt.name,
-								arguments: [model, server, prompt, `${label} `],
-							},
-							insertText: `${label} `,
-							range,
-							kind: CompletionItemKind.Text,
-						};
-					})),
-				};
-			},
-		}));
-	}
+            return {
+              suggestions: mcpService.servers.get().flatMap((server) =>
+                server.prompts.get().map((prompt): CompletionItem => {
+                  const label = `/mcp.${prompt.id}`;
+                  return {
+                    label: { label, description: prompt.description },
+                    command: {
+                      id: StartParameterizedPromptAction.ID,
+                      title: prompt.name,
+                      arguments: [model, server, prompt, `${label} `],
+                    },
+                    insertText: `${label} `,
+                    range,
+                    kind: CompletionItemKind.Text,
+                  };
+                }),
+              ),
+            };
+          },
+        },
+      ),
+    );
+  }
 }
 
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(
   SlashCommandCompletions,
   LifecyclePhase.Eventually,
 );
 
 class AgentCompletions extends Disposable {
-	constructor(
-		@ILanguageFeaturesService private readonly languageFeaturesService: ILanguageFeaturesService,
-		@IChatWidgetService private readonly chatWidgetService: IChatWidgetService,
-		@IChatAgentService private readonly chatAgentService: IChatAgentService,
-		@IChatAgentNameService private readonly chatAgentNameService: IChatAgentNameService,
-		@IChatSessionsService private readonly chatSessionsService: IChatSessionsService,
-	) {
-		super();
+  constructor(
+    @ILanguageFeaturesService
+    private readonly languageFeaturesService: ILanguageFeaturesService,
+    @IChatWidgetService private readonly chatWidgetService: IChatWidgetService,
+    @IChatAgentService private readonly chatAgentService: IChatAgentService,
+    @IChatAgentNameService
+    private readonly chatAgentNameService: IChatAgentNameService,
+    @IChatSessionsService
+    private readonly chatSessionsService: IChatSessionsService,
+  ) {
+    super();
 
+    const subCommandProvider: CompletionItemProvider = {
+      _debugDisplayName: "chatAgentSubcommand",
+      triggerCharacters: [chatSubcommandLeader],
+      provideCompletionItems: async (
+        model: ITextModel,
+        position: Position,
+        _context: CompletionContext,
+        token: CancellationToken,
+      ) => {
+        const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
+        if (!widget || !widget.viewModel) {
+          return;
+        }
 
-		const subCommandProvider: CompletionItemProvider = {
-			_debugDisplayName: "chatAgentSubcommand",
-			triggerCharacters: [chatSubcommandLeader],
-			provideCompletionItems: async (model: ITextModel, position: Position, _context: CompletionContext, token: CancellationToken) => {
-				const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
-				if (!widget || !widget.viewModel) {
-					return;
-				}
+        if (isAgentHostBackedWidget(widget)) {
+          return;
+        }
 
-				if (isAgentHostBackedWidget(widget)) {
-					return;
-				}
+        const range = computeCompletionRanges(
+          model,
+          position,
+          SlashCommandWord,
+        );
+        if (!range) {
+          return;
+        }
 
-				const range = computeCompletionRanges(model, position, SlashCommandWord);
-				if (!range) {
-					return;
-				}
+        const usedAgent = this.getCurrentAgentForWidget(widget);
+        if (!usedAgent || usedAgent.command) {
+          // Only one allowed
+          return;
+        }
 
-				const usedAgent = this.getCurrentAgentForWidget(widget);
-				if (!usedAgent || usedAgent.command) {
-					// Only one allowed
-					return;
-				}
-
-				return {
-					suggestions: usedAgent.agent.slashCommands.map((c, i): CompletionItem => {
-						const withSlash = `/${c.name}`;
-						return {
-							label: withSlash,
-							insertText: `${withSlash} `,
-							documentation: c.description,
-							range,
-							kind: CompletionItemKind.Text, // The icons are disabled here anyway
-						};
-					}),
-				};
-			},
-		};
-		this._register(
+        return {
+          suggestions: usedAgent.agent.slashCommands.map(
+            (c, i): CompletionItem => {
+              const withSlash = `/${c.name}`;
+              return {
+                label: withSlash,
+                insertText: `${withSlash} `,
+                documentation: c.description,
+                range,
+                kind: CompletionItemKind.Text, // The icons are disabled here anyway
+              };
+            },
+          ),
+        };
+      },
+    };
+    this._register(
       this.languageFeaturesService.completionProvider.register(
         { scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true },
         subCommandProvider,
       ),
     );
 
-		this._register(this.languageFeaturesService.completionProvider.register({ scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true }, {
-			_debugDisplayName: "chatAgentAndSubcommand",
-			triggerCharacters: [chatAgentLeader],
-			provideCompletionItems: async (model: ITextModel, position: Position, _context: CompletionContext, token: CancellationToken) => {
-				const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
-				const viewModel = widget?.viewModel;
-				if (!widget || !viewModel) {
-					return;
-				}
+    this._register(
+      this.languageFeaturesService.completionProvider.register(
+        { scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true },
+        {
+          _debugDisplayName: "chatAgentAndSubcommand",
+          triggerCharacters: [chatAgentLeader],
+          provideCompletionItems: async (
+            model: ITextModel,
+            position: Position,
+            _context: CompletionContext,
+            token: CancellationToken,
+          ) => {
+            const widget = this.chatWidgetService.getWidgetByInputUri(
+              model.uri,
+            );
+            const viewModel = widget?.viewModel;
+            if (!widget || !viewModel) {
+              return;
+            }
 
-				if (isAgentHostBackedWidget(widget)) {
-					return;
-				}
+            if (isAgentHostBackedWidget(widget)) {
+              return;
+            }
 
-				if (widget.lockedAgentId) {
-					return null;
-				}
+            if (widget.lockedAgentId) {
+              return null;
+            }
 
-				const range = computeCompletionRanges(model, position, AgentOrSlashCommandWord);
-				if (!range) {
-					return null;
-				}
+            const range = computeCompletionRanges(
+              model,
+              position,
+              AgentOrSlashCommandWord,
+            );
+            if (!range) {
+              return null;
+            }
 
-				if (!isEmptyUpToCompletionWord(model, range)) {
-					// No text allowed before the completion
-					return;
-				}
+            if (!isEmptyUpToCompletionWord(model, range)) {
+              // No text allowed before the completion
+              return;
+            }
 
-				const agents = this.chatAgentService.getAgents()
-					.filter(a => a.locations.includes(widget.location));
+            const agents = this.chatAgentService
+              .getAgents()
+              .filter((a) => a.locations.includes(widget.location));
 
-				// Filter out chatSessions contributions for slash command completions
-				const chatSessionContributions = this.chatSessionsService.getAllChatSessionContributions();
-				const chatSessionAgentIds = new Set(chatSessionContributions.map(contribution => contribution.type));
-				const agentsForSlashCommands = agents.filter(a => !chatSessionAgentIds.has(a.id));
+            // Filter out chatSessions contributions for slash command completions
+            const chatSessionContributions =
+              this.chatSessionsService.getAllChatSessionContributions();
+            const chatSessionAgentIds = new Set(
+              chatSessionContributions.map((contribution) => contribution.type),
+            );
+            const agentsForSlashCommands = agents.filter(
+              (a) => !chatSessionAgentIds.has(a.id),
+            );
 
-				// When the input is only `/`, items are sorted by sortText.
-				// When typing, filterText is used to score and sort.
-				// The same list is refiltered/ranked while typing.
-				const getFilterText = (agent: IChatAgentData, command: string) => {
-					// This is hacking the filter algorithm to make @terminal /explain match worse than @workspace /explain by making its match index later in the string.
-					// When I type `/exp`, the workspace one should be sorted over the terminal one.
-					const dummyPrefix = agent.id === "github.copilot.terminalPanel" ? `0000` : ``;
-					return `${chatAgentLeader}${dummyPrefix}${agent.name}.${command}`;
-				};
+            // When the input is only `/`, items are sorted by sortText.
+            // When typing, filterText is used to score and sort.
+            // The same list is refiltered/ranked while typing.
+            const getFilterText = (agent: IChatAgentData, command: string) => {
+              // This is hacking the filter algorithm to make @terminal /explain match worse than @workspace /explain by making its match index later in the string.
+              // When I type `/exp`, the workspace one should be sorted over the terminal one.
+              const dummyPrefix =
+                agent.id === "github.copilot.terminalPanel" ? `0000` : ``;
+              return `${chatAgentLeader}${dummyPrefix}${agent.name}.${command}`;
+            };
 
-				const justAgents: CompletionItem[] = agents
-					.filter(a => !a.isDefault)
-					.filter(a => !chatSessionAgentIds.has(a.id))
-					.map(agent => {
-						const { label: agentLabel, isDupe } = this.getAgentCompletionDetails(agent);
-						const detail = agent.description;
+            const justAgents: CompletionItem[] = agents
+              .filter((a) => !a.isDefault)
+              .filter((a) => !chatSessionAgentIds.has(a.id))
+              .map((agent) => {
+                const { label: agentLabel, isDupe } =
+                  this.getAgentCompletionDetails(agent);
+                const detail = agent.description;
 
-						return {
-							label: isDupe ?
-								{ label: agentLabel, description: agent.description, detail: ` (${agent.publisherDisplayName})` } :
-								agentLabel,
-							documentation: detail,
-							filterText: `${chatAgentLeader}${agent.name}`,
-							insertText: `${agentLabel} `,
-							range,
-							kind: CompletionItemKind.Text,
-							sortText: `${chatAgentLeader}${agent.name}`,
-							command: { id: AssignSelectedAgentAction.ID, title: AssignSelectedAgentAction.ID, arguments: [{ agent, widget } satisfies AssignSelectedAgentActionArgs] },
-						};
-					});
+                return {
+                  label: isDupe
+                    ? {
+                        label: agentLabel,
+                        description: agent.description,
+                        detail: ` (${agent.publisherDisplayName})`,
+                      }
+                    : agentLabel,
+                  documentation: detail,
+                  filterText: `${chatAgentLeader}${agent.name}`,
+                  insertText: `${agentLabel} `,
+                  range,
+                  kind: CompletionItemKind.Text,
+                  sortText: `${chatAgentLeader}${agent.name}`,
+                  command: {
+                    id: AssignSelectedAgentAction.ID,
+                    title: AssignSelectedAgentAction.ID,
+                    arguments: [
+                      { agent, widget } satisfies AssignSelectedAgentActionArgs,
+                    ],
+                  },
+                };
+              });
 
-				return {
-					suggestions: justAgents.concat(
-						coalesce(agentsForSlashCommands.flatMap(agent => agent.slashCommands.map((c, i) => {
-							if (agent.isDefault && this.chatAgentService.getDefaultAgent(widget.location, widget.input.currentModeKind)?.id !== agent.id) {
-								return;
-							}
+            return {
+              suggestions: justAgents.concat(
+                coalesce(
+                  agentsForSlashCommands.flatMap((agent) =>
+                    agent.slashCommands.map((c, i) => {
+                      if (
+                        agent.isDefault &&
+                        this.chatAgentService.getDefaultAgent(
+                          widget.location,
+                          widget.input.currentModeKind,
+                        )?.id !== agent.id
+                      ) {
+                        return;
+                      }
 
-							const { label: agentLabel, isDupe } = this.getAgentCompletionDetails(agent);
-							const label = `${agentLabel} ${chatSubcommandLeader}${c.name}`;
-							const item: CompletionItem = {
-								label: isDupe ?
-									{ label, description: c.description, detail: isDupe ? ` (${agent.publisherDisplayName})` : undefined } :
-									label,
-								documentation: c.description,
-								filterText: getFilterText(agent, c.name),
-								commitCharacters: [" "],
-								insertText: label + " ",
-								range,
-								kind: CompletionItemKind.Text, // The icons are disabled here anyway
-								sortText: `x${chatAgentLeader}${agent.name}${c.name}`,
-								command: { id: AssignSelectedAgentAction.ID, title: AssignSelectedAgentAction.ID, arguments: [{ agent, widget } satisfies AssignSelectedAgentActionArgs] },
-							};
+                      const { label: agentLabel, isDupe } =
+                        this.getAgentCompletionDetails(agent);
+                      const label = `${agentLabel} ${chatSubcommandLeader}${c.name}`;
+                      const item: CompletionItem = {
+                        label: isDupe
+                          ? {
+                              label,
+                              description: c.description,
+                              detail: isDupe
+                                ? ` (${agent.publisherDisplayName})`
+                                : undefined,
+                            }
+                          : label,
+                        documentation: c.description,
+                        filterText: getFilterText(agent, c.name),
+                        commitCharacters: [" "],
+                        insertText: label + " ",
+                        range,
+                        kind: CompletionItemKind.Text, // The icons are disabled here anyway
+                        sortText: `x${chatAgentLeader}${agent.name}${c.name}`,
+                        command: {
+                          id: AssignSelectedAgentAction.ID,
+                          title: AssignSelectedAgentAction.ID,
+                          arguments: [
+                            {
+                              agent,
+                              widget,
+                            } satisfies AssignSelectedAgentActionArgs,
+                          ],
+                        },
+                      };
 
-							if (agent.isDefault) {
-								// default agent isn't mentioned nor inserted
-								const label = `${chatSubcommandLeader}${c.name}`;
-								item.label = label;
-								item.insertText = `${label} `;
-								item.documentation = c.description;
-							}
+                      if (agent.isDefault) {
+                        // default agent isn't mentioned nor inserted
+                        const label = `${chatSubcommandLeader}${c.name}`;
+                        item.label = label;
+                        item.insertText = `${label} `;
+                        item.documentation = c.description;
+                      }
 
-							return item;
-						})))),
-				};
-			},
-		}));
+                      return item;
+                    }),
+                  ),
+                ),
+              ),
+            };
+          },
+        },
+      ),
+    );
 
-		this._register(this.languageFeaturesService.completionProvider.register({ scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true }, {
-			_debugDisplayName: "chatAgentAndSubcommand",
-			triggerCharacters: [chatSubcommandLeader],
-			provideCompletionItems: async (model: ITextModel, position: Position, _context: CompletionContext, token: CancellationToken) => {
-				const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
-				const viewModel = widget?.viewModel;
-				if (!widget || !viewModel) {
-					return;
-				}
+    this._register(
+      this.languageFeaturesService.completionProvider.register(
+        { scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true },
+        {
+          _debugDisplayName: "chatAgentAndSubcommand",
+          triggerCharacters: [chatSubcommandLeader],
+          provideCompletionItems: async (
+            model: ITextModel,
+            position: Position,
+            _context: CompletionContext,
+            token: CancellationToken,
+          ) => {
+            const widget = this.chatWidgetService.getWidgetByInputUri(
+              model.uri,
+            );
+            const viewModel = widget?.viewModel;
+            if (!widget || !viewModel) {
+              return;
+            }
 
-				if (isAgentHostBackedWidget(widget)) {
-					return;
-				}
+            if (isAgentHostBackedWidget(widget)) {
+              return;
+            }
 
-				if (widget.lockedAgentId) {
-					return null;
-				}
+            if (widget.lockedAgentId) {
+              return null;
+            }
 
-				const range = computeCompletionRanges(model, position, AgentOrSlashCommandWord);
-				if (!range) {
-					return null;
-				}
+            const range = computeCompletionRanges(
+              model,
+              position,
+              AgentOrSlashCommandWord,
+            );
+            if (!range) {
+              return null;
+            }
 
-				if (!isEmptyUpToCompletionWord(model, range)) {
-					// No text allowed before the completion
-					return;
-				}
+            if (!isEmptyUpToCompletionWord(model, range)) {
+              // No text allowed before the completion
+              return;
+            }
 
-				const agents = this.chatAgentService.getAgents()
-					.filter(a => a.locations.includes(widget.location) && a.modes.includes(widget.input.currentModeKind))
-					// Filter out chatSessions contributions for slash command completions
-					.filter(a => !this.chatSessionsService.getChatSessionContribution(a.id));
+            const agents = this.chatAgentService
+              .getAgents()
+              .filter(
+                (a) =>
+                  a.locations.includes(widget.location) &&
+                  a.modes.includes(widget.input.currentModeKind),
+              )
+              // Filter out chatSessions contributions for slash command completions
+              .filter(
+                (a) =>
+                  !this.chatSessionsService.getChatSessionContribution(a.id),
+              );
 
-				return {
-					suggestions: coalesce(agents.flatMap(agent => agent.slashCommands.map((c, i) => {
-						if (agent.isDefault && this.chatAgentService.getDefaultAgent(widget.location, widget.input.currentModeKind)?.id !== agent.id) {
-							return;
-						}
+            return {
+              suggestions: coalesce(
+                agents.flatMap((agent) =>
+                  agent.slashCommands.map((c, i) => {
+                    if (
+                      agent.isDefault &&
+                      this.chatAgentService.getDefaultAgent(
+                        widget.location,
+                        widget.input.currentModeKind,
+                      )?.id !== agent.id
+                    ) {
+                      return;
+                    }
 
-						const { label: agentLabel, isDupe } = this.getAgentCompletionDetails(agent);
-						const withSlash = `${chatSubcommandLeader}${c.name}`;
-						const extraSortText = agent.id === "github.copilot.terminalPanel" ? `z` : ``;
-						const sortText = `${chatSubcommandLeader}${extraSortText}${agent.name}${c.name}`;
-						const item: CompletionItem = {
-							label: { label: withSlash, description: agentLabel, detail: isDupe ? ` (${agent.publisherDisplayName})` : undefined },
-							commitCharacters: [" "],
-							insertText: `${agentLabel} ${withSlash} `,
-							documentation: `(${agentLabel}) ${c.description ?? ""}`,
-							range,
-							kind: CompletionItemKind.Text, // The icons are disabled here anyway
-							sortText,
-							command: { id: AssignSelectedAgentAction.ID, title: AssignSelectedAgentAction.ID, arguments: [{ agent, widget } satisfies AssignSelectedAgentActionArgs] },
-						};
+                    const { label: agentLabel, isDupe } =
+                      this.getAgentCompletionDetails(agent);
+                    const withSlash = `${chatSubcommandLeader}${c.name}`;
+                    const extraSortText =
+                      agent.id === "github.copilot.terminalPanel" ? `z` : ``;
+                    const sortText = `${chatSubcommandLeader}${extraSortText}${agent.name}${c.name}`;
+                    const item: CompletionItem = {
+                      label: {
+                        label: withSlash,
+                        description: agentLabel,
+                        detail: isDupe
+                          ? ` (${agent.publisherDisplayName})`
+                          : undefined,
+                      },
+                      commitCharacters: [" "],
+                      insertText: `${agentLabel} ${withSlash} `,
+                      documentation: `(${agentLabel}) ${c.description ?? ""}`,
+                      range,
+                      kind: CompletionItemKind.Text, // The icons are disabled here anyway
+                      sortText,
+                      command: {
+                        id: AssignSelectedAgentAction.ID,
+                        title: AssignSelectedAgentAction.ID,
+                        arguments: [
+                          {
+                            agent,
+                            widget,
+                          } satisfies AssignSelectedAgentActionArgs,
+                        ],
+                      },
+                    };
 
-						if (agent.isDefault) {
-							// default agent isn't mentioned nor inserted
-							const label = `${chatSubcommandLeader}${c.name}`;
-							item.label = label;
-							item.insertText = `${label} `;
-							item.documentation = c.description;
-						}
+                    if (agent.isDefault) {
+                      // default agent isn't mentioned nor inserted
+                      const label = `${chatSubcommandLeader}${c.name}`;
+                      item.label = label;
+                      item.insertText = `${label} `;
+                      item.documentation = c.description;
+                    }
 
-						return item;
-					}))),
-				};
-			},
-		}));
+                    return item;
+                  }),
+                ),
+              ),
+            };
+          },
+        },
+      ),
+    );
 
-		this._register(this.languageFeaturesService.completionProvider.register({ scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true }, {
-			_debugDisplayName: "installChatExtensions",
-			triggerCharacters: [chatAgentLeader],
-			provideCompletionItems: async (model: ITextModel, position: Position, _context: CompletionContext, token: CancellationToken) => {
-				if (!model.getLineContent(1).startsWith(chatAgentLeader)) {
-					return;
-				}
+    this._register(
+      this.languageFeaturesService.completionProvider.register(
+        { scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true },
+        {
+          _debugDisplayName: "installChatExtensions",
+          triggerCharacters: [chatAgentLeader],
+          provideCompletionItems: async (
+            model: ITextModel,
+            position: Position,
+            _context: CompletionContext,
+            token: CancellationToken,
+          ) => {
+            if (!model.getLineContent(1).startsWith(chatAgentLeader)) {
+              return;
+            }
 
-				const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
-				if (widget?.location !== ChatAgentLocation.Chat || widget.input.currentModeKind !== ChatModeKind.Ask) {
-					return;
-				}
+            const widget = this.chatWidgetService.getWidgetByInputUri(
+              model.uri,
+            );
+            if (
+              widget?.location !== ChatAgentLocation.Chat ||
+              widget.input.currentModeKind !== ChatModeKind.Ask
+            ) {
+              return;
+            }
 
-				if (isAgentHostBackedWidget(widget)) {
-					return;
-				}
+            if (isAgentHostBackedWidget(widget)) {
+              return;
+            }
 
-				if (widget.lockedAgentId) {
-					return null;
-				}
+            if (widget.lockedAgentId) {
+              return null;
+            }
 
-				const range = computeCompletionRanges(model, position, AgentOrSlashCommandWord);
-				if (!range) {
-					return;
-				}
+            const range = computeCompletionRanges(
+              model,
+              position,
+              AgentOrSlashCommandWord,
+            );
+            if (!range) {
+              return;
+            }
 
-				if (!isEmptyUpToCompletionWord(model, range)) {
-					// No text allowed before the completion
-					return;
-				}
+            if (!isEmptyUpToCompletionWord(model, range)) {
+              // No text allowed before the completion
+              return;
+            }
 
-				const label = localize("installLabel", "Install Chat Extensions...");
-				const item: CompletionItem = {
-					label,
-					insertText: "",
-					range,
-					kind: CompletionItemKind.Text, // The icons are disabled here anyway
-					command: { id: "workbench.extensions.search", title: "", arguments: ["@tag:chat-participant"] },
-					filterText: chatAgentLeader + label,
-					sortText: "zzz",
-				};
+            const label = localize(
+              "installLabel",
+              "Install Chat Extensions...",
+            );
+            const item: CompletionItem = {
+              label,
+              insertText: "",
+              range,
+              kind: CompletionItemKind.Text, // The icons are disabled here anyway
+              command: {
+                id: "workbench.extensions.search",
+                title: "",
+                arguments: ["@tag:chat-participant"],
+              },
+              filterText: chatAgentLeader + label,
+              sortText: "zzz",
+            };
 
-				return {
-					suggestions: [item],
-				};
-			},
-		}));
-	}
+            return {
+              suggestions: [item],
+            };
+          },
+        },
+      ),
+    );
+  }
 
-	private getCurrentAgentForWidget(widget: IChatWidget): { agent: IChatAgentData; command?: string } | undefined {
-		if (widget.lockedAgentId) {
-			const usedAgent = this.chatAgentService.getAgent(widget.lockedAgentId);
-			return usedAgent && { agent: usedAgent };
-		}
+  private getCurrentAgentForWidget(
+    widget: IChatWidget,
+  ): { agent: IChatAgentData; command?: string } | undefined {
+    if (widget.lockedAgentId) {
+      const usedAgent = this.chatAgentService.getAgent(widget.lockedAgentId);
+      return usedAgent && { agent: usedAgent };
+    }
 
-		const parsedRequest = widget.parsedInput.parts;
-		const usedAgentIdx = parsedRequest.findIndex(
+    const parsedRequest = widget.parsedInput.parts;
+    const usedAgentIdx = parsedRequest.findIndex(
       (p): p is ChatRequestAgentPart => p instanceof ChatRequestAgentPart,
     );
-		if (usedAgentIdx < 0) {
-			return;
-		}
+    if (usedAgentIdx < 0) {
+      return;
+    }
 
-		const usedAgent = parsedRequest[usedAgentIdx] as ChatRequestAgentPart;
+    const usedAgent = parsedRequest[usedAgentIdx] as ChatRequestAgentPart;
 
-		const usedOtherCommand = parsedRequest.find(
-      p => p instanceof ChatRequestAgentSubcommandPart || p instanceof ChatRequestSlashPromptPart,
+    const usedOtherCommand = parsedRequest.find(
+      (p) =>
+        p instanceof ChatRequestAgentSubcommandPart ||
+        p instanceof ChatRequestSlashPromptPart,
     );
-		if (usedOtherCommand) {
-			// Only one allowed
-			return {
+    if (usedOtherCommand) {
+      // Only one allowed
+      return {
         agent: usedAgent.agent,
-        command: usedOtherCommand instanceof ChatRequestAgentSubcommandPart ? usedOtherCommand.command.name : undefined,
+        command:
+          usedOtherCommand instanceof ChatRequestAgentSubcommandPart
+            ? usedOtherCommand.command.name
+            : undefined,
       };
-		}
+    }
 
-		for (const partAfterAgent of parsedRequest.slice(usedAgentIdx + 1)) {
-			// Could allow text after 'position'
-			if (!(partAfterAgent instanceof ChatRequestTextPart) || !partAfterAgent.text.trim().match(
-        /^(\/[\p{L}0-9_.:-]*)?$/u,
-      )) {
-				// No text allowed between agent and subcommand
-				return;
-			}
-		}
+    for (const partAfterAgent of parsedRequest.slice(usedAgentIdx + 1)) {
+      // Could allow text after 'position'
+      if (
+        !(partAfterAgent instanceof ChatRequestTextPart) ||
+        !partAfterAgent.text.trim().match(/^(\/[\p{L}0-9_.:-]*)?$/u)
+      ) {
+        // No text allowed between agent and subcommand
+        return;
+      }
+    }
 
-		return { agent: usedAgent.agent };
-	}
+    return { agent: usedAgent.agent };
+  }
 
-	private getAgentCompletionDetails(agent: IChatAgentData): { label: string; isDupe: boolean } {
-		const isAllowed = this.chatAgentNameService.getAgentNameRestriction(agent);
-		const agentLabel = `${chatAgentLeader}${isAllowed ? agent.name : getFullyQualifiedId(agent)}`;
-		const isDupe = isAllowed && this.chatAgentService.agentHasDupeName(
-      agent.id,
-    );
-		return { label: agentLabel, isDupe };
-	}
+  private getAgentCompletionDetails(agent: IChatAgentData): {
+    label: string;
+    isDupe: boolean;
+  } {
+    const isAllowed = this.chatAgentNameService.getAgentNameRestriction(agent);
+    const agentLabel = `${chatAgentLeader}${isAllowed ? agent.name : getFullyQualifiedId(agent)}`;
+    const isDupe =
+      isAllowed && this.chatAgentService.agentHasDupeName(agent.id);
+    return { label: agentLabel, isDupe };
+  }
 }
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
-  AgentCompletions,
-  LifecyclePhase.Eventually,
-);
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(AgentCompletions, LifecyclePhase.Eventually);
 
 interface AssignSelectedAgentActionArgs {
-	agent: IChatAgentData;
-	widget: IChatWidget;
+  agent: IChatAgentData;
+  widget: IChatWidget;
 }
 
 class AssignSelectedAgentAction extends Action2 {
-	static readonly ID = "workbench.action.chat.assignSelectedAgent";
+  static readonly ID = "workbench.action.chat.assignSelectedAgent";
 
-	constructor() {
-		super({
+  constructor() {
+    super({
       id: AssignSelectedAgentAction.ID,
-      title: "",
+      title: "", // not displayed
     });
-	}
+  }
 
-	async run(accessor: ServicesAccessor, ...args: unknown[]) {
-		const arg = args[0] as AssignSelectedAgentActionArgs | undefined;
-		if (!arg || !arg.widget || !arg.agent) {
-			return;
-		}
+  async run(accessor: ServicesAccessor, ...args: unknown[]) {
+    const arg = args[0] as AssignSelectedAgentActionArgs | undefined;
+    if (!arg || !arg.widget || !arg.agent) {
+      return;
+    }
 
-		if (!arg.agent.modes.includes(arg.widget.input.currentModeKind)) {
-			arg.widget.input.setChatMode(arg.agent.modes[0]);
-		}
+    if (!arg.agent.modes.includes(arg.widget.input.currentModeKind)) {
+      arg.widget.input.setChatMode(arg.agent.modes[0]);
+    }
 
-		arg.widget.lastSelectedAgent = arg.agent;
-	}
+    arg.widget.lastSelectedAgent = arg.agent;
+  }
 }
 registerAction2(AssignSelectedAgentAction);
 
 class StartParameterizedPromptAction extends Action2 {
-	static readonly ID = "workbench.action.chat.startParameterizedPrompt";
+  static readonly ID = "workbench.action.chat.startParameterizedPrompt";
 
-	constructor() {
-		super({
+  constructor() {
+    super({
       id: StartParameterizedPromptAction.ID,
-      title: "",
+      title: "", // not displayed
     });
-	}
+  }
 
-	async run(accessor: ServicesAccessor, model: ITextModel, server: IMcpServer, prompt: IMcpPrompt, textToReplace: string) {
-		if (!model || !prompt) {
-			return;
-		}
+  async run(
+    accessor: ServicesAccessor,
+    model: ITextModel,
+    server: IMcpServer,
+    prompt: IMcpPrompt,
+    textToReplace: string,
+  ) {
+    if (!model || !prompt) {
+      return;
+    }
 
-		const instantiationService = accessor.get(IInstantiationService);
-		const notificationService = accessor.get(INotificationService);
-		const widgetService = accessor.get(IChatWidgetService);
-		const fileService = accessor.get(IFileService);
+    const instantiationService = accessor.get(IInstantiationService);
+    const notificationService = accessor.get(INotificationService);
+    const widgetService = accessor.get(IChatWidgetService);
+    const fileService = accessor.get(IFileService);
 
-		const chatWidget = await widgetService.revealWidget(true);
-		if (!chatWidget) {
-			return;
-		}
+    const chatWidget = await widgetService.revealWidget(true);
+    if (!chatWidget) {
+      return;
+    }
 
-		const lastPosition = model.getFullModelRange().collapseToEnd();
-		const getPromptIndex = () => model.findMatches(
-      textToReplace,
-      true,
-      false,
-      true,
-      null,
-      false,
-    )[0];
-		const replaceTextWith = (value: string) => model.applyEdits([
-      {
-        range: getPromptIndex()?.range || lastPosition,
-        text: value,
-      },
-    ]);
+    const lastPosition = model.getFullModelRange().collapseToEnd();
+    const getPromptIndex = () =>
+      model.findMatches(textToReplace, true, false, true, null, false)[0];
+    const replaceTextWith = (value: string) =>
+      model.applyEdits([
+        {
+          range: getPromptIndex()?.range || lastPosition,
+          text: value,
+        },
+      ]);
 
-		const store = new DisposableStore();
-		const cts = store.add(new CancellationTokenSource());
-		store.add(chatWidget.input.startGenerating());
+    const store = new DisposableStore();
+    const cts = store.add(new CancellationTokenSource());
+    store.add(chatWidget.input.startGenerating());
 
-		store.add(model.onDidChangeContent(() => {
-			if (getPromptIndex()) {
-				cts.cancel(); // cancel if the user deletes their prompt
-			}
-		}));
+    store.add(
+      model.onDidChangeContent(() => {
+        if (getPromptIndex()) {
+          cts.cancel(); // cancel if the user deletes their prompt
+        }
+      }),
+    );
 
-		model.changeDecorations(accessor => {
-			const id = accessor.addDecoration(lastPosition, {
-				description: "mcp-prompt-spinner",
-				showIfCollapsed: true,
-				after: {
-					content: " ",
-					inlineClassNameAffectsLetterSpacing: true,
-					inlineClassName: ThemeIcon.asClassName(ThemeIcon.modify(Codicon.loading, "spin")) + " chat-prompt-spinner",
-				},
-			});
-			store.add(toDisposable(() => {
-				model.changeDecorations(a => a.removeDecoration(id));
-			}));
-		});
+    model.changeDecorations((accessor) => {
+      const id = accessor.addDecoration(lastPosition, {
+        description: "mcp-prompt-spinner",
+        showIfCollapsed: true,
+        after: {
+          content: " ",
+          inlineClassNameAffectsLetterSpacing: true,
+          inlineClassName:
+            ThemeIcon.asClassName(ThemeIcon.modify(Codicon.loading, "spin")) +
+            " chat-prompt-spinner",
+        },
+      });
+      store.add(
+        toDisposable(() => {
+          model.changeDecorations((a) => a.removeDecoration(id));
+        }),
+      );
+    });
 
-		const pick = store.add(
+    const pick = store.add(
       instantiationService.createInstance(McpPromptArgumentPick, prompt),
     );
 
-		try {
-			// start the server if not already running so that it's ready to resolve
-			// the prompt instantly when the user finishes picking arguments.
-			await server.start();
+    try {
+      // start the server if not already running so that it's ready to resolve
+      // the prompt instantly when the user finishes picking arguments.
+      await server.start();
 
-			const args = await pick.createArgs();
-			if (!args) {
-				replaceTextWith("");
-				return;
-			}
+      const args = await pick.createArgs();
+      if (!args) {
+        replaceTextWith("");
+        return;
+      }
 
-			let messages: IMcpPromptMessage[];
-			try {
-				messages = await prompt.resolve(args, cts.token);
-			} catch (e) {
-				if (!cts.token.isCancellationRequested) {
-					notificationService.error(
+      let messages: IMcpPromptMessage[];
+      try {
+        messages = await prompt.resolve(args, cts.token);
+      } catch (e) {
+        if (!cts.token.isCancellationRequested) {
+          notificationService.error(
             localize(
               "mcp.prompt.error",
               "Error resolving prompt: {0}",
               String(e),
             ),
           );
-				}
-				replaceTextWith("");
-				return;
-			}
+        }
+        replaceTextWith("");
+        return;
+      }
 
-			const toAttach: IChatRequestVariableEntry[] = [];
-			const attachBlob = async (mimeType: string | undefined, contents: string, uriStr?: string, isText = false) => {
-				let validURI: URI | undefined;
-				if (uriStr) {
-					for (const uri of [
+      const toAttach: IChatRequestVariableEntry[] = [];
+      const attachBlob = async (
+        mimeType: string | undefined,
+        contents: string,
+        uriStr?: string,
+        isText = false,
+      ) => {
+        let validURI: URI | undefined;
+        if (uriStr) {
+          for (const uri of [
             URI.parse(uriStr),
             McpResourceURI.fromServer(server.definition, uriStr),
           ]) {
-						try {
-							validURI ||= await fileService.exists(uri) ? uri : undefined;
-						} catch {
-							// ignored
-						}
-					}
-				}
+            try {
+              validURI ||= (await fileService.exists(uri)) ? uri : undefined;
+            } catch {
+              // ignored
+            }
+          }
+        }
 
-				if (isText) {
-					if (validURI) {
-						toAttach.push({
+        if (isText) {
+          if (validURI) {
+            toAttach.push({
               id: generateUuid(),
               kind: "file",
               value: validURI,
               name: basename(validURI),
             });
-					} else {
-						toAttach.push({
+          } else {
+            toAttach.push({
               id: generateUuid(),
               kind: "generic",
               value: contents,
               name: localize("mcp.prompt.resource", "Prompt Resource"),
             });
-					}
-				} else if (mimeType && getAttachableImageExtension(mimeType)) {
-					const resized = await resizeImage(contents)
-						.catch(() => decodeBase64(contents).buffer);
-					chatWidget.attachmentModel.addContext({
+          }
+        } else if (mimeType && getAttachableImageExtension(mimeType)) {
+          const resized = await resizeImage(contents).catch(
+            () => decodeBase64(contents).buffer,
+          );
+          chatWidget.attachmentModel.addContext({
             id: generateUuid(),
             name: localize("mcp.prompt.image", "Prompt Image"),
             fullName: localize("mcp.prompt.image", "Prompt Image"),
             value: resized,
             kind: "image",
-            references: validURI && [{ reference: validURI, kind: "reference" }],
+            references: validURI && [
+              { reference: validURI, kind: "reference" },
+            ],
           });
-				} else if (validURI) {
-					toAttach.push({
+        } else if (validURI) {
+          toAttach.push({
             id: generateUuid(),
             kind: "file",
             value: validURI,
             name: basename(validURI),
           });
-				} else {
-					// not a valid resource/resource URI
-				}
-			};
+        } else {
+          // not a valid resource/resource URI
+        }
+      };
 
-			const hasMultipleRoles = messages.some(m => m.role !== messages[0].role);
-			let input = "";
-			for (const message of messages) {
-				switch (message.content.type) {
-					case "text":
-						if (input) {
-							input += "\n\n";
-						}
-						if (hasMultipleRoles) {
-							input += `--${message.role.toUpperCase()}\n`;
-						}
+      const hasMultipleRoles = messages.some(
+        (m) => m.role !== messages[0].role,
+      );
+      let input = "";
+      for (const message of messages) {
+        switch (message.content.type) {
+          case "text":
+            if (input) {
+              input += "\n\n";
+            }
+            if (hasMultipleRoles) {
+              input += `--${message.role.toUpperCase()}\n`;
+            }
 
-						input += message.content.text;
-						break;
-					case "resource":
-						if ("text" in message.content.resource) {
-							await attachBlob(
+            input += message.content.text;
+            break;
+          case "resource":
+            if ("text" in message.content.resource) {
+              await attachBlob(
                 message.content.resource.mimeType,
                 message.content.resource.text,
                 message.content.resource.uri,
                 true,
               );
-						} else {
-							await attachBlob(
+            } else {
+              await attachBlob(
                 message.content.resource.mimeType,
                 message.content.resource.blob,
                 message.content.resource.uri,
               );
-						}
-						break;
-					case "image":
-					case "audio":
-						await attachBlob(message.content.mimeType, message.content.data);
-						break;
-				}
-			}
+            }
+            break;
+          case "image":
+          case "audio":
+            await attachBlob(message.content.mimeType, message.content.data);
+            break;
+        }
+      }
 
-			if (toAttach.length) {
-				chatWidget.attachmentModel.addContext(...toAttach);
-			}
-			replaceTextWith(input);
-		} finally {
-			store.dispose();
-		}
-	}
+      if (toAttach.length) {
+        chatWidget.attachmentModel.addContext(...toAttach);
+      }
+      replaceTextWith(input);
+    } finally {
+      store.dispose();
+    }
+  }
 }
 registerAction2(StartParameterizedPromptAction);
 
-
 class ReferenceArgument {
-	constructor(
-		readonly widget: IChatWidget,
-		readonly variable: IDynamicVariable,
-	) { }
+  constructor(
+    readonly widget: IChatWidget,
+    readonly variable: IDynamicVariable,
+  ) {}
 }
 
 interface IVariableCompletionsDetails {
-	model: ITextModel;
-	position: Position;
-	context: CompletionContext;
-	widget: IChatWidget;
-	range: IChatCompletionRangeResult;
+  model: ITextModel;
+  position: Position;
+  context: CompletionContext;
+  widget: IChatWidget;
+  range: IChatCompletionRangeResult;
 }
 
 class BuiltinDynamicCompletions extends Disposable {
-	private static readonly addReferenceCommand = "_addReferenceCmd";
-	private static readonly VariableNameDef = new RegExp(
+  private static readonly addReferenceCommand = "_addReferenceCmd";
+  private static readonly VariableNameDef = new RegExp(
     `[${escapeForCharClass(chatVariableLeader)}${escapeForCharClass(chatAgentLeader)}][\\w:-]*`,
     "g",
   ); // MUST be using `g`-flag
 
+  constructor(
+    @IHistoryService private readonly historyService: IHistoryService,
+    @IWorkspaceContextService
+    private readonly workspaceContextService: IWorkspaceContextService,
+    @ISearchService private readonly searchService: ISearchService,
+    @ILabelService private readonly labelService: ILabelService,
+    @ILanguageFeaturesService
+    private readonly languageFeaturesService: ILanguageFeaturesService,
+    @IChatWidgetService private readonly chatWidgetService: IChatWidgetService,
+    @IOutlineModelService private readonly outlineService: IOutlineModelService,
+    @IEditorService private readonly editorService: IEditorService,
+    @IConfigurationService
+    private readonly configurationService: IConfigurationService,
+    @ICodeEditorService private readonly codeEditorService: ICodeEditorService,
+    @IChatAgentService private readonly chatAgentService: IChatAgentService,
+    @IInstantiationService
+    private readonly instantiationService: IInstantiationService,
+    @IChatSessionsService
+    private readonly chatSessionsService: IChatSessionsService,
+  ) {
+    super();
 
-	constructor(
-		@IHistoryService private readonly historyService: IHistoryService,
-		@IWorkspaceContextService private readonly workspaceContextService: IWorkspaceContextService,
-		@ISearchService private readonly searchService: ISearchService,
-		@ILabelService private readonly labelService: ILabelService,
-		@ILanguageFeaturesService private readonly languageFeaturesService: ILanguageFeaturesService,
-		@IChatWidgetService private readonly chatWidgetService: IChatWidgetService,
-		@IOutlineModelService private readonly outlineService: IOutlineModelService,
-		@IEditorService private readonly editorService: IEditorService,
-		@IConfigurationService private readonly configurationService: IConfigurationService,
-		@ICodeEditorService private readonly codeEditorService: ICodeEditorService,
-		@IChatAgentService private readonly chatAgentService: IChatAgentService,
-		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@IChatSessionsService private readonly chatSessionsService: IChatSessionsService,
-	) {
-		super();
-
-		// File/Folder completions in one go and m
-		const fileWordPattern = new RegExp(
+    // File/Folder completions in one go and m
+    const fileWordPattern = new RegExp(
       `[${escapeForCharClass(chatVariableLeader)}${escapeForCharClass(chatAgentLeader)}][^\\s]*`,
       "g",
     );
-		this.registerVariableCompletions("fileAndFolder", async ({ widget, range }, token) => {
-			if (!widget.supportsFileReferences) {
-				return;
-			}
+    this.registerVariableCompletions(
+      "fileAndFolder",
+      async ({ widget, range }, token) => {
+        if (!widget.supportsFileReferences) {
+          return;
+        }
 
-			const result: CompletionList = { suggestions: [] };
+        const result: CompletionList = { suggestions: [] };
 
-			// If locked to an agent that doesn't support file attachments, skip
-			if (widget.lockedAgentId) {
-				const agent = this.chatAgentService.getAgent(widget.lockedAgentId);
-				if (agent && !agent.capabilities?.supportsFileAttachments) {
-					return result;
-				}
-			}
-			await this.addFileAndFolderEntries(widget, result, range, token);
-			return result;
+        // If locked to an agent that doesn't support file attachments, skip
+        if (widget.lockedAgentId) {
+          const agent = this.chatAgentService.getAgent(widget.lockedAgentId);
+          if (agent && !agent.capabilities?.supportsFileAttachments) {
+            return result;
+          }
+        }
+        await this.addFileAndFolderEntries(widget, result, range, token);
+        return result;
+      },
+      fileWordPattern,
+    );
 
-		}, fileWordPattern);
+    // Selection completion
+    this.registerVariableCompletions(
+      "selection",
+      ({ widget, range }, token) => {
+        if (!widget.supportsFileReferences) {
+          return;
+        }
 
-		// Selection completion
-		this.registerVariableCompletions("selection", ({ widget, range }, token) => {
-			if (!widget.supportsFileReferences) {
-				return;
-			}
+        if (widget.location === ChatAgentLocation.EditorInline) {
+          return;
+        }
 
-			if (widget.location === ChatAgentLocation.EditorInline) {
-				return;
-			}
+        const active = this.findActiveCodeEditor();
+        if (!isCodeEditor(active)) {
+          return;
+        }
 
-			const active = this.findActiveCodeEditor();
-			if (!isCodeEditor(active)) {
-				return;
-			}
+        const currentResource = active.getModel()?.uri;
+        const currentSelection = active.getSelection();
+        if (
+          !currentSelection ||
+          !currentResource ||
+          currentSelection.isEmpty()
+        ) {
+          return;
+        }
 
-			const currentResource = active.getModel()?.uri;
-			const currentSelection = active.getSelection();
-			if (!currentSelection || !currentResource || currentSelection.isEmpty()) {
-				return;
-			}
+        const typedLeader =
+          range.varWord?.word?.charAt(0) === chatAgentLeader
+            ? chatAgentLeader
+            : chatVariableLeader;
+        const basename = this.labelService.getUriBasenameLabel(currentResource);
+        const text = `${typedLeader}file:${basename}:${currentSelection.startLineNumber}-${currentSelection.endLineNumber}`;
+        const fullRangeText = `:${currentSelection.startLineNumber}:${currentSelection.startColumn}-${currentSelection.endLineNumber}:${currentSelection.endColumn}`;
+        const description =
+          this.labelService.getUriLabel(currentResource, { relative: true }) +
+          fullRangeText;
 
-			const typedLeader = range.varWord?.word?.charAt(0) === chatAgentLeader ? chatAgentLeader : chatVariableLeader;
-			const basename = this.labelService.getUriBasenameLabel(currentResource);
-			const text = `${typedLeader}file:${basename}:${currentSelection.startLineNumber}-${currentSelection.endLineNumber}`;
-			const fullRangeText = `:${currentSelection.startLineNumber}:${currentSelection.startColumn}-${currentSelection.endLineNumber}:${currentSelection.endColumn}`;
-			const description = this.labelService.getUriLabel(currentResource, { relative: true }) + fullRangeText;
+        const result: CompletionList = { suggestions: [] };
+        result.suggestions.push({
+          label: { label: `${typedLeader}selection`, description },
+          filterText: `${typedLeader}selection`,
+          insertText:
+            range.varWord?.endColumn === range.replace.endColumn
+              ? `${text} `
+              : text,
+          range,
+          kind: CompletionItemKind.Text,
+          sortText: "z",
+          command: {
+            id: BuiltinDynamicCompletions.addReferenceCommand,
+            title: "",
+            arguments: [
+              new ReferenceArgument(widget, {
+                id: "vscode.selection",
+                isFile: true,
+                range: {
+                  startLineNumber: range.replace.startLineNumber,
+                  startColumn: range.replace.startColumn,
+                  endLineNumber: range.replace.endLineNumber,
+                  endColumn: range.replace.startColumn + text.length,
+                },
+                data: {
+                  range: currentSelection,
+                  uri: currentResource,
+                } satisfies Location,
+              }),
+            ],
+          },
+        });
+        return result;
+      },
+    );
 
-			const result: CompletionList = { suggestions: [] };
-			result.suggestions.push({
-				label: { label: `${typedLeader}selection`, description },
-				filterText: `${typedLeader}selection`,
-				insertText: range.varWord?.endColumn === range.replace.endColumn ? `${text} ` : text,
-				range,
-				kind: CompletionItemKind.Text,
-				sortText: "z",
-				command: {
-					id: BuiltinDynamicCompletions.addReferenceCommand, title: "", arguments: [new ReferenceArgument(widget, {
-						id: "vscode.selection",
-						isFile: true,
-						range: { startLineNumber: range.replace.startLineNumber, startColumn: range.replace.startColumn, endLineNumber: range.replace.endLineNumber, endColumn: range.replace.startColumn + text.length },
-						data: { range: currentSelection, uri: currentResource } satisfies Location,
-					})],
-				},
-			});
-			return result;
-		});
+    // Symbol completions
+    this.registerVariableCompletions(
+      "symbol",
+      ({ widget, range, position, model }, token) => {
+        if (!widget.supportsFileReferences) {
+          return null;
+        }
 
-		// Symbol completions
-		this.registerVariableCompletions("symbol", ({ widget, range, position, model }, token) => {
-			if (!widget.supportsFileReferences) {
-				return null;
-			}
+        const result: CompletionList = { suggestions: [] };
+        const range2 = computeCompletionRanges(
+          model,
+          position,
+          new RegExp(
+            `[${escapeForCharClass(chatVariableLeader)}${escapeForCharClass(chatAgentLeader)}][^\\s]*`,
+            "g",
+          ),
+          true,
+        );
+        if (range2) {
+          this.addSymbolEntries(widget, result, range2, token);
+        }
 
-			const result: CompletionList = { suggestions: [] };
-			const range2 = computeCompletionRanges(model, position, new RegExp(`[${escapeForCharClass(chatVariableLeader)}${escapeForCharClass(chatAgentLeader)}][^\\s]*`, "g"), true);
-			if (range2) {
-				this.addSymbolEntries(widget, result, range2, token);
-			}
+        return result;
+      },
+    );
 
-			return result;
-		});
+    // Session Reference completion
+    const sessionWordPattern = new RegExp(`${chatVariableLeader}[^\\s]*`, "g");
+    this.registerVariableCompletions(
+      "sessionReference",
+      async ({ widget, range }, token) => {
+        if (widget.location !== ChatAgentLocation.Chat) {
+          return;
+        }
 
-		// Session Reference completion
-		const sessionWordPattern = new RegExp(`${chatVariableLeader}[^\\s]*`, "g");
-		this.registerVariableCompletions("sessionReference", async ({ widget, range }, token) => {
-			if (widget.location !== ChatAgentLocation.Chat) {
-				return;
-			}
+        const typedWord = range.varWord?.word ?? "";
+        const sessionPrefix = `${chatVariableLeader}session`;
+        const result: CompletionList = { suggestions: [] };
 
-			const typedWord = range.varWord?.word ?? "";
-			const sessionPrefix = `${chatVariableLeader}session`;
-			const result: CompletionList = { suggestions: [] };
+        if (typedWord.toLowerCase().startsWith(`${sessionPrefix}:`)) {
+          // User has typed #session: — fetch all sessions and show them inline
+          const allSessions: {
+            title: string;
+            sessionResource: URI;
+            lastMessageDate: number;
+            icon: ThemeIcon;
+          }[] = [];
 
-			if (typedWord.toLowerCase().startsWith(`${sessionPrefix}:`)) {
-				// User has typed #session: — fetch all sessions and show them inline
-				const allSessions: { title: string; sessionResource: URI; lastMessageDate: number; icon: ThemeIcon }[] = [];
+          const sessionProviderFilter = [
+            AgentSessionProviders.Local,
+            AgentSessionProviders.Background,
+            AgentSessionProviders.Claude,
+          ];
+          for await (const group of this.chatSessionsService.getChatSessionItems(
+            sessionProviderFilter,
+            token,
+          )) {
+            if (token.isCancellationRequested) {
+              return;
+            }
+            const providerIcon = getAgentSessionProviderIcon(
+              group.chatSessionType,
+            );
+            for (const item of group.items) {
+              allSessions.push({
+                title: item.label,
+                sessionResource: item.resource,
+                lastMessageDate:
+                  item.timing.lastRequestEnded ?? item.timing.created,
+                icon: item.iconPath ?? providerIcon,
+              });
+            }
+          }
 
-				const sessionProviderFilter = [AgentSessionProviders.Local, AgentSessionProviders.Background, AgentSessionProviders.Claude];
-				for await (const group of this.chatSessionsService.getChatSessionItems(sessionProviderFilter, token)) {
-					if (token.isCancellationRequested) {
-						return;
-					}
-					const providerIcon = getAgentSessionProviderIcon(group.chatSessionType);
-					for (const item of group.items) {
-						allSessions.push({
-							title: item.label,
-							sessionResource: item.resource,
-							lastMessageDate: item.timing.lastRequestEnded ?? item.timing.created,
-							icon: item.iconPath ?? providerIcon,
-						});
-					}
-				}
+          const currentSessionResource = widget.viewModel?.sessionResource;
+          const filteredSessions = allSessions
+            .filter(
+              (s) =>
+                !currentSessionResource ||
+                s.sessionResource.toString() !==
+                  currentSessionResource.toString(),
+            )
+            .sort((a, b) => b.lastMessageDate - a.lastMessageDate);
 
-				const currentSessionResource = widget.viewModel?.sessionResource;
-				const filteredSessions = allSessions
-					.filter(s => !currentSessionResource || s.sessionResource.toString() !== currentSessionResource.toString())
-					.sort((a, b) => b.lastMessageDate - a.lastMessageDate);
+          for (const session of filteredSessions) {
+            const text = `${sessionPrefix}:${session.title}`;
+            const dateStr = new Date(session.lastMessageDate).toLocaleString();
+            result.suggestions.push({
+              label: { label: session.title, description: dateStr },
+              filterText: `${sessionPrefix}:${session.title}`,
+              insertText:
+                range.varWord?.endColumn === range.replace.endColumn
+                  ? `${text} `
+                  : text,
+              range,
+              kind: CompletionItemKind.Text,
+              sortText: `z${String(Number.MAX_SAFE_INTEGER - session.lastMessageDate).padStart(20, "0")}`,
+              command: {
+                id: BuiltinDynamicCompletions.addReferenceCommand,
+                title: "",
+                arguments: [
+                  new ReferenceArgument(widget, {
+                    id: session.sessionResource.toString(),
+                    icon: session.icon,
+                    range: {
+                      startLineNumber: range.replace.startLineNumber,
+                      startColumn: range.replace.startColumn,
+                      endLineNumber: range.replace.endLineNumber,
+                      endColumn: range.replace.startColumn + text.length,
+                    },
+                    data: session.sessionResource,
+                  }),
+                ],
+              },
+            });
+          }
+        } else {
+          // User typed # or #s etc — show single #session entry that inserts #session: and re-triggers suggest
+          result.suggestions.push({
+            label: {
+              label: sessionPrefix,
+              description: localize(
+                "session.description",
+                "Attach a chat session",
+              ),
+            },
+            filterText: sessionPrefix,
+            insertText: `${sessionPrefix}:`,
+            range,
+            kind: CompletionItemKind.Text,
+            sortText: "z",
+            command: { id: "editor.action.triggerSuggest", title: "" },
+          });
+        }
+        return result;
+      },
+      sessionWordPattern,
+    );
 
-				for (const session of filteredSessions) {
-					const text = `${sessionPrefix}:${session.title}`;
-					const dateStr = new Date(session.lastMessageDate).toLocaleString();
-					result.suggestions.push({
-						label: { label: session.title, description: dateStr },
-						filterText: `${sessionPrefix}:${session.title}`,
-						insertText: range.varWord?.endColumn === range.replace.endColumn ? `${text} ` : text,
-						range,
-						kind: CompletionItemKind.Text,
-						sortText: `z${String(Number.MAX_SAFE_INTEGER - session.lastMessageDate).padStart(20, "0")}`,
-						command: {
-							id: BuiltinDynamicCompletions.addReferenceCommand, title: "", arguments: [new ReferenceArgument(widget, {
-								id: session.sessionResource.toString(),
-								icon: session.icon,
-								range: { startLineNumber: range.replace.startLineNumber, startColumn: range.replace.startColumn, endLineNumber: range.replace.endLineNumber, endColumn: range.replace.startColumn + text.length },
-								data: session.sessionResource,
-							})],
-						},
-					});
-				}
-			} else {
-				// User typed # or #s etc — show single #session entry that inserts #session: and re-triggers suggest
-				result.suggestions.push({
-					label: { label: sessionPrefix, description: localize("session.description", "Attach a chat session") },
-					filterText: sessionPrefix,
-					insertText: `${sessionPrefix}:`,
-					range,
-					kind: CompletionItemKind.Text,
-					sortText: "z",
-					command: { id: "editor.action.triggerSuggest", title: "" },
-				});
-			}
-			return result;
-		}, sessionWordPattern);
-
-		this._register(
+    this._register(
       CommandsRegistry.registerCommand(
         BuiltinDynamicCompletions.addReferenceCommand,
         (_services, arg) => {
@@ -1146,147 +1577,207 @@ class BuiltinDynamicCompletions extends Disposable {
         },
       ),
     );
-	}
+  }
 
-	private findActiveCodeEditor(): ICodeEditor | undefined {
-		const codeEditor = this.codeEditorService.getActiveCodeEditor();
-		if (codeEditor) {
-			const model = codeEditor.getModel();
-			if (model?.uri.scheme === Schemas.vscodeNotebookCell) {
-				return undefined;
-			}
+  private findActiveCodeEditor(): ICodeEditor | undefined {
+    const codeEditor = this.codeEditorService.getActiveCodeEditor();
+    if (codeEditor) {
+      const model = codeEditor.getModel();
+      if (model?.uri.scheme === Schemas.vscodeNotebookCell) {
+        return undefined;
+      }
 
-			if (model) {
-				return codeEditor;
-			}
-		}
-		for (const codeOrDiffEditor of this.editorService.getVisibleTextEditorControls(
+      if (model) {
+        return codeEditor;
+      }
+    }
+    for (const codeOrDiffEditor of this.editorService.getVisibleTextEditorControls(
       EditorsOrder.MOST_RECENTLY_ACTIVE,
     )) {
-			const codeEditor = getCodeEditor(codeOrDiffEditor);
-			if (!codeEditor) {
-				continue;
-			}
+      const codeEditor = getCodeEditor(codeOrDiffEditor);
+      if (!codeEditor) {
+        continue;
+      }
 
-			const model = codeEditor.getModel();
-			if (model) {
-				return codeEditor;
-			}
-		}
-		return undefined;
-	}
+      const model = codeEditor.getModel();
+      if (model) {
+        return codeEditor;
+      }
+    }
+    return undefined;
+  }
 
-	private registerVariableCompletions(debugName: string, provider: (details: IVariableCompletionsDetails, token: CancellationToken) => ProviderResult<CompletionList>, wordPattern: RegExp = BuiltinDynamicCompletions.VariableNameDef) {
-		this._register(this.languageFeaturesService.completionProvider.register({ scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true }, {
-			_debugDisplayName: `chatVarCompletions-${debugName}`,
-			triggerCharacters: [chatVariableLeader, chatAgentLeader],
-			provideCompletionItems: async (model: ITextModel, position: Position, context: CompletionContext, token: CancellationToken) => {
-				const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
-				if (!widget) {
-					return;
-				}
+  private registerVariableCompletions(
+    debugName: string,
+    provider: (
+      details: IVariableCompletionsDetails,
+      token: CancellationToken,
+    ) => ProviderResult<CompletionList>,
+    wordPattern: RegExp = BuiltinDynamicCompletions.VariableNameDef,
+  ) {
+    this._register(
+      this.languageFeaturesService.completionProvider.register(
+        { scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true },
+        {
+          _debugDisplayName: `chatVarCompletions-${debugName}`,
+          triggerCharacters: [chatVariableLeader, chatAgentLeader],
+          provideCompletionItems: async (
+            model: ITextModel,
+            position: Position,
+            context: CompletionContext,
+            token: CancellationToken,
+          ) => {
+            const widget = this.chatWidgetService.getWidgetByInputUri(
+              model.uri,
+            );
+            if (!widget) {
+              return;
+            }
 
-				if (isAgentHostBackedWidget(widget)) {
-					// Agent-host sessions delegate completions to the host
-					// process via `AgentHostInputCompletions`.
-					return;
-				}
+            if (isAgentHostBackedWidget(widget)) {
+              // Agent-host sessions delegate completions to the host
+              // process via `AgentHostInputCompletions`.
+              return;
+            }
 
-				const range = computeCompletionRanges(model, position, wordPattern, true);
-				if (range) {
-					return provider({ model, position, widget, range, context }, token);
-				}
+            const range = computeCompletionRanges(
+              model,
+              position,
+              wordPattern,
+              true,
+            );
+            if (range) {
+              return provider(
+                { model, position, widget, range, context },
+                token,
+              );
+            }
 
-				return;
-			},
-		}));
-	}
+            return;
+          },
+        },
+      ),
+    );
+  }
 
-	private cacheKey?: { key: string; time: number };
+  private cacheKey?: { key: string; time: number };
 
-	private async addFileAndFolderEntries(widget: IChatWidget, result: CompletionList, info: { insert: Range; replace: Range; varWord: IWordAtPosition | null }, token: CancellationToken) {
+  private async addFileAndFolderEntries(
+    widget: IChatWidget,
+    result: CompletionList,
+    info: { insert: Range; replace: Range; varWord: IWordAtPosition | null },
+    token: CancellationToken,
+  ) {
+    const typedLeader =
+      info.varWord?.word?.charAt(0) === chatAgentLeader
+        ? chatAgentLeader
+        : chatVariableLeader;
 
-		const typedLeader = info.varWord?.word?.charAt(
-      0,
-    ) === chatAgentLeader ? chatAgentLeader : chatVariableLeader;
-
-		const makeCompletionItem = (resource: URI, kind: FileKind, description?: string, boostPriority?: boolean): CompletionItem => {
-			const basename = this.labelService.getUriBasenameLabel(resource);
-			const text = `${typedLeader}file:${basename}`;
-			const uriLabel = this.labelService.getUriLabel(resource, {
+    const makeCompletionItem = (
+      resource: URI,
+      kind: FileKind,
+      description?: string,
+      boostPriority?: boolean,
+    ): CompletionItem => {
+      const basename = this.labelService.getUriBasenameLabel(resource);
+      const text = `${typedLeader}file:${basename}`;
+      const uriLabel = this.labelService.getUriLabel(resource, {
         relative: true,
       });
-			const labelDescription = description
-				? localize("fileEntryDescription", "{0} ({1})", uriLabel, description)
-				: uriLabel;
-			// keep files above other completions
-			const sortText = boostPriority ? " " : "!";
+      const labelDescription = description
+        ? localize("fileEntryDescription", "{0} ({1})", uriLabel, description)
+        : uriLabel;
+      // keep files above other completions
+      const sortText = boostPriority ? " " : "!";
 
-			return {
-				label: { label: basename, description: labelDescription },
-				filterText: `${basename} ${typedLeader}${basename} ${uriLabel}`,
-				insertText: info.varWord?.endColumn === info.replace.endColumn ? `${text} ` : text,
-				range: info,
-				kind: kind === FileKind.FILE ? CompletionItemKind.File : CompletionItemKind.Folder,
-				sortText,
-				command: {
-					id: BuiltinDynamicCompletions.addReferenceCommand, title: "", arguments: [new ReferenceArgument(widget, {
-						id: resource.toString(),
-						isFile: kind === FileKind.FILE,
-						isDirectory: kind === FileKind.FOLDER,
-						range: { startLineNumber: info.replace.startLineNumber, startColumn: info.replace.startColumn, endLineNumber: info.replace.endLineNumber, endColumn: info.replace.startColumn + text.length },
-						data: resource,
-					})],
-				},
-			};
-		};
+      return {
+        label: { label: basename, description: labelDescription },
+        filterText: `${basename} ${typedLeader}${basename} ${uriLabel}`,
+        insertText:
+          info.varWord?.endColumn === info.replace.endColumn
+            ? `${text} `
+            : text,
+        range: info,
+        kind:
+          kind === FileKind.FILE
+            ? CompletionItemKind.File
+            : CompletionItemKind.Folder,
+        sortText,
+        command: {
+          id: BuiltinDynamicCompletions.addReferenceCommand,
+          title: "",
+          arguments: [
+            new ReferenceArgument(widget, {
+              id: resource.toString(),
+              isFile: kind === FileKind.FILE,
+              isDirectory: kind === FileKind.FOLDER,
+              range: {
+                startLineNumber: info.replace.startLineNumber,
+                startColumn: info.replace.startColumn,
+                endLineNumber: info.replace.endLineNumber,
+                endColumn: info.replace.startColumn + text.length,
+              },
+              data: resource,
+            }),
+          ],
+        },
+      };
+    };
 
-		let pattern: string | undefined;
-		if (info.varWord?.word && (info.varWord.word.startsWith(
-      chatVariableLeader,
-    ) || info.varWord.word.startsWith(chatAgentLeader))) {
-			pattern = info.varWord.word.toLowerCase().slice(
-        1,
-      ); // remove leading # or @
-		}
+    let pattern: string | undefined;
+    if (
+      info.varWord?.word &&
+      (info.varWord.word.startsWith(chatVariableLeader) ||
+        info.varWord.word.startsWith(chatAgentLeader))
+    ) {
+      pattern = info.varWord.word.toLowerCase().slice(1); // remove leading # or @
+    }
 
-		const seen = new ResourceSet();
-		const len = result.suggestions.length;
+    const seen = new ResourceSet();
+    const len = result.suggestions.length;
 
-		// HISTORY
-		// always take the last N items
-		for (const [i, item] of this.historyService.getHistory().entries()) {
-			const resource = isDiffEditorInput(
-        item,
-      ) ? item.modified.resource : item.resource;
-			if (!resource || seen.has(
-        resource,
-      ) || !this.instantiationService.invokeFunction(
-        accessor => isSupportedChatFileScheme(accessor, resource.scheme),
-      )) {
-				// ignore editors without a resource
-				continue;
-			}
+    // HISTORY
+    // always take the last N items
+    for (const [i, item] of this.historyService.getHistory().entries()) {
+      const resource = isDiffEditorInput(item)
+        ? item.modified.resource
+        : item.resource;
+      if (
+        !resource ||
+        seen.has(resource) ||
+        !this.instantiationService.invokeFunction((accessor) =>
+          isSupportedChatFileScheme(accessor, resource.scheme),
+        )
+      ) {
+        // ignore editors without a resource
+        continue;
+      }
 
-			if (pattern) {
-				// use pattern if available
-				const uriLabel = this.labelService.getUriLabel(resource, { relative: true }).toLowerCase();
-				const basename = this.labelService.getUriBasenameLabel(resource).toLowerCase();
-				const combined = `${basename} ${uriLabel}`;
-				if (!isPatternInWord(
-          pattern,
-          0,
-          pattern.length,
-          combined,
-          0,
-          combined.length,
-        )) {
-					continue;
-				}
-			}
+      if (pattern) {
+        // use pattern if available
+        const uriLabel = this.labelService
+          .getUriLabel(resource, { relative: true })
+          .toLowerCase();
+        const basename = this.labelService
+          .getUriBasenameLabel(resource)
+          .toLowerCase();
+        const combined = `${basename} ${uriLabel}`;
+        if (
+          !isPatternInWord(
+            pattern,
+            0,
+            pattern.length,
+            combined,
+            0,
+            combined.length,
+          )
+        ) {
+          continue;
+        }
+      }
 
-			seen.add(resource);
-			const newLen = result.suggestions.push(
+      seen.add(resource);
+      const newLen = result.suggestions.push(
         makeCompletionItem(
           resource,
           FileKind.FILE,
@@ -1294,22 +1785,21 @@ class BuiltinDynamicCompletions extends Disposable {
           i === 0,
         ),
       );
-			if (newLen - len >= 5) {
-				break;
-			}
-		}
+      if (newLen - len >= 5) {
+        break;
+      }
+    }
 
-		// SEARCH
-		// use file search when having a pattern
-		if (pattern) {
+    // SEARCH
+    // use file search when having a pattern
+    if (pattern) {
+      const cacheKey = this.updateCacheKey();
+      const workspaces = this.workspaceContextService
+        .getWorkspace()
+        .folders.map((folder) => folder.uri);
 
-			const cacheKey = this.updateCacheKey();
-			const workspaces = this.workspaceContextService.getWorkspace().folders.map(
-        folder => folder.uri,
-      );
-
-			for (const workspace of workspaces) {
-				const { folders, files } = await searchFilesAndFolders(
+      for (const workspace of workspaces) {
+        const { folders, files } = await searchFilesAndFolders(
           workspace,
           pattern,
           true,
@@ -1318,88 +1808,109 @@ class BuiltinDynamicCompletions extends Disposable {
           this.configurationService,
           this.searchService,
         );
-				for (const file of files) {
-					if (!seen.has(file)) {
-						result.suggestions.push(makeCompletionItem(file, FileKind.FILE));
-						seen.add(file);
-					}
-				}
-				for (const folder of folders) {
-					if (!seen.has(folder)) {
-						result.suggestions.push(
+        for (const file of files) {
+          if (!seen.has(file)) {
+            result.suggestions.push(makeCompletionItem(file, FileKind.FILE));
+            seen.add(file);
+          }
+        }
+        for (const folder of folders) {
+          if (!seen.has(folder)) {
+            result.suggestions.push(
               makeCompletionItem(folder, FileKind.FOLDER),
             );
-						seen.add(folder);
-					}
-				}
-			}
-		}
+            seen.add(folder);
+          }
+        }
+      }
+    }
 
-		// mark results as incomplete because further typing might yield
-		// in more search results
-		result.incomplete = true;
-	}
+    // mark results as incomplete because further typing might yield
+    // in more search results
+    result.incomplete = true;
+  }
 
-	private addSymbolEntries(widget: IChatWidget, result: CompletionList, info: { insert: Range; replace: Range; varWord: IWordAtPosition | null }, token: CancellationToken) {
-		const timeoutMs = 100;
-		const stopwatch = new StopWatch();
+  private addSymbolEntries(
+    widget: IChatWidget,
+    result: CompletionList,
+    info: { insert: Range; replace: Range; varWord: IWordAtPosition | null },
+    token: CancellationToken,
+  ) {
+    const timeoutMs = 100;
+    const stopwatch = new StopWatch();
 
-		const typedLeader = info.varWord?.word?.charAt(
-      0,
-    ) === chatAgentLeader ? chatAgentLeader : chatVariableLeader;
+    const typedLeader =
+      info.varWord?.word?.charAt(0) === chatAgentLeader
+        ? chatAgentLeader
+        : chatVariableLeader;
 
-		const makeSymbolCompletionItem = (symbolItem: { name: string; location: Location; kind: SymbolKind }, pattern: string): CompletionItem => {
-			const text = `${typedLeader}sym:${symbolItem.name}`;
-			const resource = symbolItem.location.uri;
-			const uriLabel = this.labelService.getUriLabel(resource, {
+    const makeSymbolCompletionItem = (
+      symbolItem: { name: string; location: Location; kind: SymbolKind },
+      pattern: string,
+    ): CompletionItem => {
+      const text = `${typedLeader}sym:${symbolItem.name}`;
+      const resource = symbolItem.location.uri;
+      const uriLabel = this.labelService.getUriLabel(resource, {
         relative: true,
       });
-			const sortText = pattern ? "{" /* after z */ : "|" /* after { */;
+      const sortText = pattern ? "{" /* after z */ : "|"; /* after { */
 
-			return {
-				label: { label: symbolItem.name, description: uriLabel },
-				filterText: `${typedLeader}${symbolItem.name}`,
-				insertText: info.varWord?.endColumn === info.replace.endColumn ? `${text} ` : text,
-				range: info,
-				kind: SymbolKinds.toCompletionKind(symbolItem.kind),
-				sortText,
-				command: {
-					id: BuiltinDynamicCompletions.addReferenceCommand, title: "", arguments: [new ReferenceArgument(widget, {
-						id: `vscode.symbol/${JSON.stringify(symbolItem.location)}`,
-						fullName: symbolItem.name,
-						range: { startLineNumber: info.replace.startLineNumber, startColumn: info.replace.startColumn, endLineNumber: info.replace.endLineNumber, endColumn: info.replace.startColumn + text.length },
-						data: symbolItem.location,
-						icon: SymbolKinds.toIcon(symbolItem.kind),
-					})],
-				},
-			};
-		};
+      return {
+        label: { label: symbolItem.name, description: uriLabel },
+        filterText: `${typedLeader}${symbolItem.name}`,
+        insertText:
+          info.varWord?.endColumn === info.replace.endColumn
+            ? `${text} `
+            : text,
+        range: info,
+        kind: SymbolKinds.toCompletionKind(symbolItem.kind),
+        sortText,
+        command: {
+          id: BuiltinDynamicCompletions.addReferenceCommand,
+          title: "",
+          arguments: [
+            new ReferenceArgument(widget, {
+              id: `vscode.symbol/${JSON.stringify(symbolItem.location)}`,
+              fullName: symbolItem.name,
+              range: {
+                startLineNumber: info.replace.startLineNumber,
+                startColumn: info.replace.startColumn,
+                endLineNumber: info.replace.endLineNumber,
+                endColumn: info.replace.startColumn + text.length,
+              },
+              data: symbolItem.location,
+              icon: SymbolKinds.toIcon(symbolItem.kind),
+            }),
+          ],
+        },
+      };
+    };
 
-		let pattern: string | undefined;
-		if (info.varWord?.word && (info.varWord.word.startsWith(
-      chatVariableLeader,
-    ) || info.varWord.word.startsWith(chatAgentLeader))) {
-			pattern = info.varWord.word.toLowerCase().slice(
-        1,
-      ); // remove leading # or @
-		}
+    let pattern: string | undefined;
+    if (
+      info.varWord?.word &&
+      (info.varWord.word.startsWith(chatVariableLeader) ||
+        info.varWord.word.startsWith(chatAgentLeader))
+    ) {
+      pattern = info.varWord.word.toLowerCase().slice(1); // remove leading # or @
+    }
 
-		const symbolsToAdd: { symbol: DocumentSymbol; uri: URI }[] = [];
-		for (const outlineModel of this.outlineService.getCachedModels()) {
-			const symbols = outlineModel.asListOfDocumentSymbols();
-			for (const symbol of symbols) {
-				symbolsToAdd.push({ symbol, uri: outlineModel.uri });
-			}
-		}
+    const symbolsToAdd: { symbol: DocumentSymbol; uri: URI }[] = [];
+    for (const outlineModel of this.outlineService.getCachedModels()) {
+      const symbols = outlineModel.asListOfDocumentSymbols();
+      for (const symbol of symbols) {
+        symbolsToAdd.push({ symbol, uri: outlineModel.uri });
+      }
+    }
 
-		let timedOut = false;
+    let timedOut = false;
 
-		for (const symbol of symbolsToAdd) {
-			if (stopwatch.elapsed() > timeoutMs || token.isCancellationRequested) {
-				timedOut = true;
-				break;
-			}
-			result.suggestions.push(
+    for (const symbol of symbolsToAdd) {
+      if (stopwatch.elapsed() > timeoutMs || token.isCancellationRequested) {
+        timedOut = true;
+        break;
+      }
+      result.suggestions.push(
         makeSymbolCompletionItem(
           {
             ...symbol.symbol,
@@ -1408,152 +1919,187 @@ class BuiltinDynamicCompletions extends Disposable {
           pattern ?? "",
         ),
       );
-		}
+    }
 
-		result.incomplete = !!pattern || timedOut;
-	}
+    result.incomplete = !!pattern || timedOut;
+  }
 
-	private updateCacheKey() {
-		if (this.cacheKey && Date.now() - this.cacheKey.time > 60000) {
-			this.searchService.clearCache(this.cacheKey.key);
-			this.cacheKey = undefined;
-		}
+  private updateCacheKey() {
+    if (this.cacheKey && Date.now() - this.cacheKey.time > 60000) {
+      this.searchService.clearCache(this.cacheKey.key);
+      this.cacheKey = undefined;
+    }
 
-		if (!this.cacheKey) {
-			this.cacheKey = {
+    if (!this.cacheKey) {
+      this.cacheKey = {
         key: generateUuid(),
         time: Date.now(),
       };
-		}
+    }
 
-		this.cacheKey.time = Date.now();
+    this.cacheKey.time = Date.now();
 
-		return this.cacheKey;
-	}
+    return this.cacheKey;
+  }
 
-	private cmdAddReference(arg: ReferenceArgument) {
-		// invoked via the completion command
-		arg.widget.getContrib<ChatDynamicVariableModel>(ChatDynamicVariableModel.ID)?.addReference(
-      arg.variable,
-    );
-	}
+  private cmdAddReference(arg: ReferenceArgument) {
+    // invoked via the completion command
+    arg.widget
+      .getContrib<ChatDynamicVariableModel>(ChatDynamicVariableModel.ID)
+      ?.addReference(arg.variable);
+  }
 }
 
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(
   BuiltinDynamicCompletions,
   LifecyclePhase.Eventually,
 );
 
 class ToolCompletions extends Disposable {
-
-	private static readonly VariableNameDef = new RegExp(
+  private static readonly VariableNameDef = new RegExp(
     `(?<=^|\\s)[${escapeForCharClass(chatVariableLeader)}${escapeForCharClass(chatAgentLeader)}]\\w*`,
     "g",
   ); // MUST be using `g`-flag
 
-	constructor(
-		@ILanguageFeaturesService private readonly languageFeaturesService: ILanguageFeaturesService,
-		@IChatWidgetService private readonly chatWidgetService: IChatWidgetService,
-		@IChatAgentService private readonly chatAgentService: IChatAgentService,
-	) {
-		super();
+  constructor(
+    @ILanguageFeaturesService
+    private readonly languageFeaturesService: ILanguageFeaturesService,
+    @IChatWidgetService private readonly chatWidgetService: IChatWidgetService,
+    @IChatAgentService private readonly chatAgentService: IChatAgentService,
+  ) {
+    super();
 
-		this._register(this.languageFeaturesService.completionProvider.register({ scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true }, {
-			_debugDisplayName: "chatVariables",
-			triggerCharacters: [chatVariableLeader, chatAgentLeader],
-			provideCompletionItems: async (model: ITextModel, position: Position, _context: CompletionContext, _token: CancellationToken) => {
-				const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
-				if (!widget) {
-					return null;
-				}
+    this._register(
+      this.languageFeaturesService.completionProvider.register(
+        { scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true },
+        {
+          _debugDisplayName: "chatVariables",
+          triggerCharacters: [chatVariableLeader, chatAgentLeader],
+          provideCompletionItems: async (
+            model: ITextModel,
+            position: Position,
+            _context: CompletionContext,
+            _token: CancellationToken,
+          ) => {
+            const widget = this.chatWidgetService.getWidgetByInputUri(
+              model.uri,
+            );
+            if (!widget) {
+              return null;
+            }
 
-				if (isAgentHostBackedWidget(widget)) {
-					// Agent-host sessions delegate completions to the host
-					// process via `AgentHostInputCompletions`.
-					return null;
-				}
+            if (isAgentHostBackedWidget(widget)) {
+              // Agent-host sessions delegate completions to the host
+              // process via `AgentHostInputCompletions`.
+              return null;
+            }
 
-				// If locked to an agent that doesn't support tool attachments, skip
-				if (widget.lockedAgentId) {
-					const agent = this.chatAgentService.getAgent(widget.lockedAgentId);
-					if (agent && !agent.capabilities?.supportsToolAttachments) {
-						return null;
-					}
-				}
+            // If locked to an agent that doesn't support tool attachments, skip
+            if (widget.lockedAgentId) {
+              const agent = this.chatAgentService.getAgent(
+                widget.lockedAgentId,
+              );
+              if (agent && !agent.capabilities?.supportsToolAttachments) {
+                return null;
+              }
+            }
 
-				const range = computeCompletionRanges(model, position, ToolCompletions.VariableNameDef, true);
-				if (!range) {
-					return null;
-				}
+            const range = computeCompletionRanges(
+              model,
+              position,
+              ToolCompletions.VariableNameDef,
+              true,
+            );
+            if (!range) {
+              return null;
+            }
 
+            const usedNames = new Set<string>();
+            for (const part of widget.parsedInput.parts) {
+              if (part instanceof ChatRequestToolPart) {
+                usedNames.add(part.toolName);
+              } else if (part instanceof ChatRequestToolSetPart) {
+                usedNames.add(part.name);
+              }
+            }
 
-				const usedNames = new Set<string>();
-				for (const part of widget.parsedInput.parts) {
-					if (part instanceof ChatRequestToolPart) {
-						usedNames.add(part.toolName);
-					} else if (part instanceof ChatRequestToolSetPart) {
-						usedNames.add(part.name);
-					}
-				}
+            const typedLeader =
+              range.varWord?.word?.charAt(0) === chatAgentLeader
+                ? chatAgentLeader
+                : chatVariableLeader;
+            const pattern = range.varWord?.word
+              ? range.varWord.word.toLowerCase().slice(1)
+              : "";
+            const suggestions: CompletionItem[] = [];
 
-				const typedLeader = range.varWord?.word?.charAt(0) === chatAgentLeader ? chatAgentLeader : chatVariableLeader;
-				const pattern = range.varWord?.word ? range.varWord.word.toLowerCase().slice(1) : "";
-				const suggestions: CompletionItem[] = [];
+            const iter = widget.input.selectedToolsModel.entriesMap.get();
 
+            for (const [item, enabled] of iter) {
+              if (!enabled) {
+                continue;
+              }
 
-				const iter = widget.input.selectedToolsModel.entriesMap.get();
+              let detail: string | undefined;
+              let documentation: string | undefined;
 
-				for (const [item, enabled] of iter) {
-					if (!enabled) {
-						continue;
-					}
+              let name: string;
+              if (isToolSet(item)) {
+                detail = item.description;
+                name = item.referenceName;
+              } else {
+                const source = item.source;
+                detail = localize(
+                  "tool_source_completion",
+                  "{0}: {1}",
+                  source.label,
+                  item.displayName,
+                );
+                name = item.toolReferenceName ?? item.displayName;
+                documentation = item.userDescription ?? item.modelDescription;
+              }
 
-					let detail: string | undefined;
-					let documentation: string | undefined;
+              if (usedNames.has(name)) {
+                continue;
+              }
 
-					let name: string;
-					if (isToolSet(item)) {
-						detail = item.description;
-						name = item.referenceName;
+              if (pattern) {
+                const lowerName = name.toLowerCase();
+                if (
+                  !isPatternInWord(
+                    pattern,
+                    0,
+                    pattern.length,
+                    lowerName,
+                    0,
+                    lowerName.length,
+                  )
+                ) {
+                  continue;
+                }
+              }
 
-					} else {
-						const source = item.source;
-						detail = localize("tool_source_completion", "{0}: {1}", source.label, item.displayName);
-						name = item.toolReferenceName ?? item.displayName;
-						documentation = item.userDescription ?? item.modelDescription;
-					}
+              const withLeader = `${typedLeader}${name}`;
+              suggestions.push({
+                label: withLeader,
+                range,
+                detail,
+                documentation,
+                filterText: `${typedLeader}${name}`,
+                insertText: withLeader + " ",
+                kind: CompletionItemKind.Tool,
+              });
+            }
 
-					if (usedNames.has(name)) {
-						continue;
-					}
-
-					if (pattern) {
-						const lowerName = name.toLowerCase();
-						if (!isPatternInWord(pattern, 0, pattern.length, lowerName, 0, lowerName.length)) {
-							continue;
-						}
-					}
-
-					const withLeader = `${typedLeader}${name}`;
-					suggestions.push({
-						label: withLeader,
-						range,
-						detail,
-						documentation,
-						filterText: `${typedLeader}${name}`,
-						insertText: withLeader + " ",
-						kind: CompletionItemKind.Tool,
-					});
-
-				}
-
-				return { suggestions };
-			},
-		}));
-	}
+            return { suggestions };
+          },
+        },
+      ),
+    );
+  }
 }
 
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
-  ToolCompletions,
-  LifecyclePhase.Eventually,
-);
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(ToolCompletions, LifecyclePhase.Eventually);

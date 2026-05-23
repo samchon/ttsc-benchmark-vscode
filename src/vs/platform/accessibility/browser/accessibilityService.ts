@@ -14,234 +14,262 @@ import {
   IAccessibilityService,
 } from "../common/accessibility.js";
 import { IConfigurationService } from "../../configuration/common/configuration.js";
-import { IContextKey, IContextKeyService } from "../../contextkey/common/contextkey.js";
+import {
+  IContextKey,
+  IContextKeyService,
+} from "../../contextkey/common/contextkey.js";
 import { ILayoutService } from "../../layout/browser/layoutService.js";
 
-export class AccessibilityService extends Disposable implements IAccessibilityService {
-	declare readonly _serviceBrand: undefined;
+export class AccessibilityService
+  extends Disposable
+  implements IAccessibilityService
+{
+  declare readonly _serviceBrand: undefined;
 
-	private _accessibilityModeEnabledContext: IContextKey<boolean>;
-	protected _accessibilitySupport = AccessibilitySupport.Unknown;
-	protected readonly _onDidChangeScreenReaderOptimized = this._register(
+  private _accessibilityModeEnabledContext: IContextKey<boolean>;
+  protected _accessibilitySupport = AccessibilitySupport.Unknown;
+  protected readonly _onDidChangeScreenReaderOptimized = this._register(
     new Emitter<void>(),
   );
 
-	protected _configMotionReduced: "auto" | "on" | "off";
-	protected _systemMotionReduced: boolean;
-	protected readonly _onDidChangeReducedMotion = this._register(
+  protected _configMotionReduced: "auto" | "on" | "off";
+  protected _systemMotionReduced: boolean;
+  protected readonly _onDidChangeReducedMotion = this._register(
     new Emitter<void>(),
   );
 
-	protected _configTransparencyReduced: "auto" | "on" | "off";
-	protected _systemTransparencyReduced: boolean;
-	protected readonly _onDidChangeReducedTransparency = this._register(
+  protected _configTransparencyReduced: "auto" | "on" | "off";
+  protected _systemTransparencyReduced: boolean;
+  protected readonly _onDidChangeReducedTransparency = this._register(
     new Emitter<void>(),
   );
 
-	private _linkUnderlinesEnabled: boolean;
-	protected readonly _onDidChangeLinkUnderline = this._register(
+  private _linkUnderlinesEnabled: boolean;
+  protected readonly _onDidChangeLinkUnderline = this._register(
     new Emitter<void>(),
   );
 
-	constructor(
-		@IContextKeyService private readonly _contextKeyService: IContextKeyService,
-		@ILayoutService private readonly _layoutService: ILayoutService,
-		@IConfigurationService protected readonly _configurationService: IConfigurationService,
-	) {
-		super();
-		this._accessibilityModeEnabledContext = CONTEXT_ACCESSIBILITY_MODE_ENABLED.bindTo(
-      this._contextKeyService,
+  constructor(
+    @IContextKeyService private readonly _contextKeyService: IContextKeyService,
+    @ILayoutService private readonly _layoutService: ILayoutService,
+    @IConfigurationService
+    protected readonly _configurationService: IConfigurationService,
+  ) {
+    super();
+    this._accessibilityModeEnabledContext =
+      CONTEXT_ACCESSIBILITY_MODE_ENABLED.bindTo(this._contextKeyService);
+
+    const updateContextKey = () =>
+      this._accessibilityModeEnabledContext.set(this.isScreenReaderOptimized());
+    this._register(
+      this._configurationService.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration("editor.accessibilitySupport")) {
+          updateContextKey();
+          this._onDidChangeScreenReaderOptimized.fire();
+        }
+        if (e.affectsConfiguration("workbench.reduceMotion")) {
+          this._configMotionReduced = this._configurationService.getValue(
+            "workbench.reduceMotion",
+          );
+          this._onDidChangeReducedMotion.fire();
+        }
+        if (e.affectsConfiguration("workbench.reduceTransparency")) {
+          this._configTransparencyReduced = this._configurationService.getValue(
+            "workbench.reduceTransparency",
+          );
+          this._onDidChangeReducedTransparency.fire();
+        }
+      }),
     );
-
-		const updateContextKey = () => this._accessibilityModeEnabledContext.set(
-      this.isScreenReaderOptimized(),
-    );
-		this._register(this._configurationService.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration("editor.accessibilitySupport")) {
-				updateContextKey();
-				this._onDidChangeScreenReaderOptimized.fire();
-			}
-			if (e.affectsConfiguration("workbench.reduceMotion")) {
-				this._configMotionReduced = this._configurationService.getValue("workbench.reduceMotion");
-				this._onDidChangeReducedMotion.fire();
-			}
-			if (e.affectsConfiguration("workbench.reduceTransparency")) {
-				this._configTransparencyReduced = this._configurationService.getValue("workbench.reduceTransparency");
-				this._onDidChangeReducedTransparency.fire();
-			}
-		}));
-		updateContextKey();
-		this._register(
+    updateContextKey();
+    this._register(
       this.onDidChangeScreenReaderOptimized(() => updateContextKey()),
     );
 
-		const reduceMotionMatcher = mainWindow.matchMedia(
+    const reduceMotionMatcher = mainWindow.matchMedia(
       `(prefers-reduced-motion: reduce)`,
     );
-		this._systemMotionReduced = reduceMotionMatcher.matches;
-		this._configMotionReduced = this._configurationService.getValue<"auto" | "on" | "off">(
-      "workbench.reduceMotion",
-    );
+    this._systemMotionReduced = reduceMotionMatcher.matches;
+    this._configMotionReduced = this._configurationService.getValue<
+      "auto" | "on" | "off"
+    >("workbench.reduceMotion");
 
-		const reduceTransparencyMatcher = mainWindow.matchMedia(
+    const reduceTransparencyMatcher = mainWindow.matchMedia(
       `(prefers-reduced-transparency: reduce)`,
     );
-		this._systemTransparencyReduced = reduceTransparencyMatcher.matches;
-		this._configTransparencyReduced = this._configurationService.getValue<"auto" | "on" | "off">(
-      "workbench.reduceTransparency",
-    );
+    this._systemTransparencyReduced = reduceTransparencyMatcher.matches;
+    this._configTransparencyReduced = this._configurationService.getValue<
+      "auto" | "on" | "off"
+    >("workbench.reduceTransparency");
 
-		this._linkUnderlinesEnabled = this._configurationService.getValue(
+    this._linkUnderlinesEnabled = this._configurationService.getValue(
       "accessibility.underlineLinks",
     );
 
-		this.initReducedMotionListeners(reduceMotionMatcher);
-		this.initReducedTransparencyListeners(reduceTransparencyMatcher);
-		this.initLinkUnderlineListeners();
-	}
+    this.initReducedMotionListeners(reduceMotionMatcher);
+    this.initReducedTransparencyListeners(reduceTransparencyMatcher);
+    this.initLinkUnderlineListeners();
+  }
 
-	private initReducedMotionListeners(reduceMotionMatcher: MediaQueryList) {
+  private initReducedMotionListeners(reduceMotionMatcher: MediaQueryList) {
+    this._register(
+      addDisposableListener(reduceMotionMatcher, "change", () => {
+        this._systemMotionReduced = reduceMotionMatcher.matches;
+        if (this._configMotionReduced === "auto") {
+          this._onDidChangeReducedMotion.fire();
+        }
+      }),
+    );
 
-		this._register(addDisposableListener(reduceMotionMatcher, "change", () => {
-			this._systemMotionReduced = reduceMotionMatcher.matches;
-			if (this._configMotionReduced === "auto") {
-				this._onDidChangeReducedMotion.fire();
-			}
-		}));
-
-		const updateRootClasses = () => {
-			const reduce = this.isMotionReduced();
-			this._layoutService.mainContainer.classList.toggle(
+    const updateRootClasses = () => {
+      const reduce = this.isMotionReduced();
+      this._layoutService.mainContainer.classList.toggle(
         "monaco-reduce-motion",
         reduce,
       );
-			this._layoutService.mainContainer.classList.toggle(
+      this._layoutService.mainContainer.classList.toggle(
         "monaco-enable-motion",
         !reduce,
       );
-		};
+    };
 
-		updateRootClasses();
-		this._register(this.onDidChangeReducedMotion(() => updateRootClasses()));
-	}
+    updateRootClasses();
+    this._register(this.onDidChangeReducedMotion(() => updateRootClasses()));
+  }
 
-	private initReducedTransparencyListeners(reduceTransparencyMatcher: MediaQueryList) {
+  private initReducedTransparencyListeners(
+    reduceTransparencyMatcher: MediaQueryList,
+  ) {
+    this._register(
+      addDisposableListener(reduceTransparencyMatcher, "change", () => {
+        this._systemTransparencyReduced = reduceTransparencyMatcher.matches;
+        if (this._configTransparencyReduced === "auto") {
+          this._onDidChangeReducedTransparency.fire();
+        }
+      }),
+    );
 
-		this._register(addDisposableListener(reduceTransparencyMatcher, "change", () => {
-			this._systemTransparencyReduced = reduceTransparencyMatcher.matches;
-			if (this._configTransparencyReduced === "auto") {
-				this._onDidChangeReducedTransparency.fire();
-			}
-		}));
-
-		const updateRootClasses = () => {
-			const reduce = this.isTransparencyReduced();
-			this._layoutService.mainContainer.classList.toggle(
+    const updateRootClasses = () => {
+      const reduce = this.isTransparencyReduced();
+      this._layoutService.mainContainer.classList.toggle(
         "monaco-reduce-transparency",
         reduce,
       );
-		};
+    };
 
-		updateRootClasses();
-		this._register(
+    updateRootClasses();
+    this._register(
       this.onDidChangeReducedTransparency(() => updateRootClasses()),
     );
-	}
+  }
 
-	private initLinkUnderlineListeners() {
-		this._register(this._configurationService.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration("accessibility.underlineLinks")) {
-				const linkUnderlinesEnabled = this._configurationService.getValue<boolean>("accessibility.underlineLinks");
-				this._linkUnderlinesEnabled = linkUnderlinesEnabled;
-				this._onDidChangeLinkUnderline.fire();
-			}
-		}));
+  private initLinkUnderlineListeners() {
+    this._register(
+      this._configurationService.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration("accessibility.underlineLinks")) {
+          const linkUnderlinesEnabled =
+            this._configurationService.getValue<boolean>(
+              "accessibility.underlineLinks",
+            );
+          this._linkUnderlinesEnabled = linkUnderlinesEnabled;
+          this._onDidChangeLinkUnderline.fire();
+        }
+      }),
+    );
 
-		const updateLinkUnderlineClasses = () => {
-			const underlineLinks = this._linkUnderlinesEnabled;
-			this._layoutService.mainContainer.classList.toggle(
+    const updateLinkUnderlineClasses = () => {
+      const underlineLinks = this._linkUnderlinesEnabled;
+      this._layoutService.mainContainer.classList.toggle(
         "underline-links",
         underlineLinks,
       );
-		};
+    };
 
-		updateLinkUnderlineClasses();
+    updateLinkUnderlineClasses();
 
-		this._register(
+    this._register(
       this.onDidChangeLinkUnderlines(() => updateLinkUnderlineClasses()),
     );
-	}
+  }
 
-	public onDidChangeLinkUnderlines(listener: () => void) {
-		return this._onDidChangeLinkUnderline.event(listener);
-	}
+  public onDidChangeLinkUnderlines(listener: () => void) {
+    return this._onDidChangeLinkUnderline.event(listener);
+  }
 
-	get onDidChangeScreenReaderOptimized(): Event<void> {
-		return this._onDidChangeScreenReaderOptimized.event;
-	}
+  get onDidChangeScreenReaderOptimized(): Event<void> {
+    return this._onDidChangeScreenReaderOptimized.event;
+  }
 
-	isScreenReaderOptimized(): boolean {
-		const config = this.getAccessibilitySupportConfigurationValue();
-		return config === "on" || (config === "auto" && this._accessibilitySupport === AccessibilitySupport.Enabled);
-	}
-
-	private getAccessibilitySupportConfigurationValue(): "auto" | "off" | "on" {
-		const inspectedValue = this._configurationService.inspect<"auto" | "off" | "on">(
-      "editor.accessibilitySupport",
+  isScreenReaderOptimized(): boolean {
+    const config = this.getAccessibilitySupportConfigurationValue();
+    return (
+      config === "on" ||
+      (config === "auto" &&
+        this._accessibilitySupport === AccessibilitySupport.Enabled)
     );
+  }
 
-		// Resolve the setting explicitly in scope precedence order to avoid relying on
-		// resource-dependent resolution in this global service.
-		return inspectedValue.policyValue
-			?? inspectedValue.memoryValue
-			?? inspectedValue.workspaceFolderValue
-			?? inspectedValue.workspaceValue
-			?? inspectedValue.userValue
-			?? inspectedValue.applicationValue
-			?? inspectedValue.defaultValue
-			?? "auto";
-	}
+  private getAccessibilitySupportConfigurationValue(): "auto" | "off" | "on" {
+    const inspectedValue = this._configurationService.inspect<
+      "auto" | "off" | "on"
+    >("editor.accessibilitySupport");
 
-	get onDidChangeReducedMotion(): Event<void> {
-		return this._onDidChangeReducedMotion.event;
-	}
+    // Resolve the setting explicitly in scope precedence order to avoid relying on
+    // resource-dependent resolution in this global service.
+    return (
+      inspectedValue.policyValue ??
+      inspectedValue.memoryValue ??
+      inspectedValue.workspaceFolderValue ??
+      inspectedValue.workspaceValue ??
+      inspectedValue.userValue ??
+      inspectedValue.applicationValue ??
+      inspectedValue.defaultValue ??
+      "auto"
+    );
+  }
 
-	isMotionReduced(): boolean {
-		const config = this._configMotionReduced;
-		return config === "on" || (config === "auto" && this._systemMotionReduced);
-	}
+  get onDidChangeReducedMotion(): Event<void> {
+    return this._onDidChangeReducedMotion.event;
+  }
 
-	get onDidChangeReducedTransparency(): Event<void> {
-		return this._onDidChangeReducedTransparency.event;
-	}
+  isMotionReduced(): boolean {
+    const config = this._configMotionReduced;
+    return config === "on" || (config === "auto" && this._systemMotionReduced);
+  }
 
-	isTransparencyReduced(): boolean {
-		const config = this._configTransparencyReduced;
-		return config === "on" || (config === "auto" && this._systemTransparencyReduced);
-	}
+  get onDidChangeReducedTransparency(): Event<void> {
+    return this._onDidChangeReducedTransparency.event;
+  }
 
-	alwaysUnderlineAccessKeys(): Promise<boolean> {
-		return Promise.resolve(false);
-	}
+  isTransparencyReduced(): boolean {
+    const config = this._configTransparencyReduced;
+    return (
+      config === "on" || (config === "auto" && this._systemTransparencyReduced)
+    );
+  }
 
-	getAccessibilitySupport(): AccessibilitySupport {
-		return this._accessibilitySupport;
-	}
+  alwaysUnderlineAccessKeys(): Promise<boolean> {
+    return Promise.resolve(false);
+  }
 
-	setAccessibilitySupport(accessibilitySupport: AccessibilitySupport): void {
-		if (this._accessibilitySupport === accessibilitySupport) {
-			return;
-		}
+  getAccessibilitySupport(): AccessibilitySupport {
+    return this._accessibilitySupport;
+  }
 
-		this._accessibilitySupport = accessibilitySupport;
-		this._onDidChangeScreenReaderOptimized.fire();
-	}
+  setAccessibilitySupport(accessibilitySupport: AccessibilitySupport): void {
+    if (this._accessibilitySupport === accessibilitySupport) {
+      return;
+    }
 
-	alert(message: string): void {
-		alert(message);
-	}
+    this._accessibilitySupport = accessibilitySupport;
+    this._onDidChangeScreenReaderOptimized.fire();
+  }
 
-	status(message: string): void {
-		status(message);
-	}
+  alert(message: string): void {
+    alert(message);
+  }
+
+  status(message: string): void {
+    status(message);
+  }
 }

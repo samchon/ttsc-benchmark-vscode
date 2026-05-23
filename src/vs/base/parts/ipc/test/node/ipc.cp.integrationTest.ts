@@ -11,9 +11,12 @@ import { ITestService, TestServiceClient } from "./testService.js";
 import { FileAccess } from "../../../../common/network.js";
 
 function createClient(): Client {
-	return new Client(FileAccess.asFileUri("bootstrap-fork").fsPath, {
+  return new Client(FileAccess.asFileUri("bootstrap-fork").fsPath, {
     serverName: "TestServer",
-    env: { VSCODE_ESM_ENTRYPOINT: "vs/base/parts/ipc/test/node/testApp", verbose: true },
+    env: {
+      VSCODE_ESM_ENTRYPOINT: "vs/base/parts/ipc/test/node/testApp",
+      verbose: true,
+    },
   });
 }
 

@@ -9,25 +9,27 @@ import type { OperatingSystem } from "../../../../../../../base/common/platform.
 import type { URI } from "../../../../../../../base/common/uri.js";
 
 export interface ICommandLineRewriter extends IDisposable {
-	rewrite(options: ICommandLineRewriterOptions): MaybePromise<ICommandLineRewriterResult | undefined>;
+  rewrite(
+    options: ICommandLineRewriterOptions,
+  ): MaybePromise<ICommandLineRewriterResult | undefined>;
 }
 
 export interface ICommandLineRewriterOptions {
-	commandLine: string;
-	cwd: URI | undefined;
-	shell: string;
-	os: OperatingSystem;
-	isBackground?: boolean;
-	requestUnsandboxedExecution?: boolean;
+  commandLine: string;
+  cwd: URI | undefined;
+  shell: string;
+  os: OperatingSystem;
+  isBackground?: boolean;
+  requestUnsandboxedExecution?: boolean;
 }
 
 export interface ICommandLineRewriterResult {
-	rewritten: string;
-	reasoning: string;
-	//for scenarios where we want to show a different command in the chat UI than what is actually run in the terminal
-	forDisplay?: string;
-	isSandboxWrapped?: boolean;
-	requiresUnsandboxConfirmation?: boolean;
-	blockedDomains?: string[];
-	deniedDomains?: string[];
+  rewritten: string;
+  reasoning: string;
+  //for scenarios where we want to show a different command in the chat UI than what is actually run in the terminal
+  forDisplay?: string;
+  isSandboxWrapped?: boolean;
+  requiresUnsandboxConfirmation?: boolean;
+  blockedDomains?: string[];
+  deniedDomains?: string[];
 }

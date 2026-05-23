@@ -5,7 +5,10 @@
 
 import assert from "assert";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
-import { GheParseResultKind, parseGheInstanceInput } from "../../common/onboardingTypes.js";
+import {
+  GheParseResultKind,
+  parseGheInstanceInput,
+} from "../../common/onboardingTypes.js";
 
 suite("parseGheInstanceInput", () => {
   ensureNoDisposablesAreLeakedInTestSuite();

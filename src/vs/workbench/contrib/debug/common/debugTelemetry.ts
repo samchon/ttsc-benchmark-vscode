@@ -8,15 +8,14 @@ import { ITelemetryService } from "../../../../platform/telemetry/common/telemet
 import { Debugger } from "./debugger.js";
 
 export class DebugTelemetry {
+  constructor(
+    private readonly model: IDebugModel,
+    @ITelemetryService private readonly telemetryService: ITelemetryService,
+  ) {}
 
-	constructor(
-		private readonly model: IDebugModel,
-		@ITelemetryService private readonly telemetryService: ITelemetryService,
-	) { }
-
-	logDebugSessionStart(dbgr: Debugger, launchJsonExists: boolean) {
-		const extension = dbgr.getMainExtensionDescriptor();
-		/* __GDPR__
+  logDebugSessionStart(dbgr: Debugger, launchJsonExists: boolean) {
+    const extension = dbgr.getMainExtensionDescriptor();
+    /* __GDPR__
 			"debugSessionStart" : {
 				"owner": "connor4312",
 				"type": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -28,7 +27,7 @@ export class DebugTelemetry {
 				"launchJsonExists": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
 			}
 		*/
-		this.telemetryService.publicLog("debugSessionStart", {
+    this.telemetryService.publicLog("debugSessionStart", {
       type: dbgr.type,
       breakpointCount: this.model.getBreakpoints().length,
       exceptionBreakpoints: this.model.getExceptionBreakpoints(),
@@ -37,13 +36,15 @@ export class DebugTelemetry {
       isBuiltin: extension.isBuiltin,
       launchJsonExists,
     });
-	}
+  }
 
-	logDebugSessionStop(session: IDebugSession, adapterExitEvent: AdapterEndEvent) {
+  logDebugSessionStop(
+    session: IDebugSession,
+    adapterExitEvent: AdapterEndEvent,
+  ) {
+    const breakpoints = this.model.getBreakpoints();
 
-		const breakpoints = this.model.getBreakpoints();
-
-		/* __GDPR__
+    /* __GDPR__
 			"debugSessionStop" : {
 				"owner": "connor4312",
 				"type" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -53,12 +54,12 @@ export class DebugTelemetry {
 				"watchExpressionsCount": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
 			}
 		*/
-		this.telemetryService.publicLog("debugSessionStop", {
+    this.telemetryService.publicLog("debugSessionStop", {
       type: session && session.configuration.type,
       success: adapterExitEvent.emittedStopped || breakpoints.length === 0,
       sessionLengthInSeconds: adapterExitEvent.sessionLengthInSeconds,
       breakpointCount: breakpoints.length,
       watchExpressionsCount: this.model.getWatchExpressions().length,
     });
-	}
+  }
 }

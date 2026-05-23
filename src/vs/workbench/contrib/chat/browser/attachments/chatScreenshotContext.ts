@@ -9,8 +9,10 @@ import { IChatRequestVariableEntry } from "../../common/attachments/chatVariable
 
 export const ScreenshotVariableId = "screenshot-focused-window";
 
-export function convertBufferToScreenshotVariable(buffer: VSBuffer): IChatRequestVariableEntry {
-	return {
+export function convertBufferToScreenshotVariable(
+  buffer: VSBuffer,
+): IChatRequestVariableEntry {
+  return {
     id: ScreenshotVariableId,
     name: localize("screenshot", "Screenshot"),
     value: buffer.buffer,

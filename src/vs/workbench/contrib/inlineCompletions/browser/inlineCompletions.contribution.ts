@@ -5,10 +5,19 @@
 
 import { withoutDuplicates } from "../../../../base/common/arrays.js";
 import { Disposable } from "../../../../base/common/lifecycle.js";
-import { autorun, observableFromEvent } from "../../../../base/common/observable.js";
+import {
+  autorun,
+  observableFromEvent,
+} from "../../../../base/common/observable.js";
 import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
-import { inlineCompletionProviderGetMatcher, providerIdSchemaUri } from "../../../../editor/contrib/inlineCompletions/browser/controller/commands.js";
-import { Extensions, IJSONContributionRegistry } from "../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
+import {
+  inlineCompletionProviderGetMatcher,
+  providerIdSchemaUri,
+} from "../../../../editor/contrib/inlineCompletions/browser/controller/commands.js";
+import {
+  Extensions,
+  IJSONContributionRegistry,
+} from "../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
 import { wrapInHotClass1 } from "../../../../platform/observable/common/wrapInHotClass.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
 import {
@@ -24,30 +33,43 @@ registerWorkbenchContribution2(
   WorkbenchPhase.Eventually,
 );
 
-export class InlineCompletionSchemaContribution extends Disposable implements IWorkbenchContribution {
-	public static Id = "vs.contrib.InlineCompletionSchemaContribution";
+export class InlineCompletionSchemaContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  public static Id = "vs.contrib.InlineCompletionSchemaContribution";
 
-	constructor(
-		@ILanguageFeaturesService private readonly _languageFeaturesService: ILanguageFeaturesService,
-	) {
-		super();
+  constructor(
+    @ILanguageFeaturesService
+    private readonly _languageFeaturesService: ILanguageFeaturesService,
+  ) {
+    super();
 
-		const registry = Registry.as<IJSONContributionRegistry>(
+    const registry = Registry.as<IJSONContributionRegistry>(
       Extensions.JSONContribution,
     );
-		const inlineCompletionsProvider = observableFromEvent(
+    const inlineCompletionsProvider = observableFromEvent(
       this,
       this._languageFeaturesService.inlineCompletionsProvider.onDidChange,
-      () => this._languageFeaturesService.inlineCompletionsProvider.allNoModel(),
+      () =>
+        this._languageFeaturesService.inlineCompletionsProvider.allNoModel(),
     );
 
-		this._register(autorun(reader => {
-			const provider = inlineCompletionsProvider.read(reader);
-			registry.registerSchema(providerIdSchemaUri, {
-				enum: withoutDuplicates(provider.flatMap(p => inlineCompletionProviderGetMatcher(p))),
-			}, reader.store);
-		}));
-	}
+    this._register(
+      autorun((reader) => {
+        const provider = inlineCompletionsProvider.read(reader);
+        registry.registerSchema(
+          providerIdSchemaUri,
+          {
+            enum: withoutDuplicates(
+              provider.flatMap((p) => inlineCompletionProviderGetMatcher(p)),
+            ),
+          },
+          reader.store,
+        );
+      }),
+    );
+  }
 }
 
 registerWorkbenchContribution2(

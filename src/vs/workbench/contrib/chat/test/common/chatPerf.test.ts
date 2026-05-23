@@ -6,7 +6,11 @@ import assert from "assert";
 import { getMarks } from "../../../../../base/common/performance.js";
 import { URI } from "../../../../../base/common/uri.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
-import { ChatPerfMark, clearChatMarks, markChat } from "../../common/chatPerf.js";
+import {
+  ChatPerfMark,
+  clearChatMarks,
+  markChat,
+} from "../../common/chatPerf.js";
 
 suite("chatPerf", () => {
   ensureNoDisposablesAreLeakedInTestSuite();
@@ -24,7 +28,9 @@ suite("chatPerf", () => {
   test("markChat emits a mark with the expected prefix", () => {
     markChat(sessionResource, ChatPerfMark.RequestStart);
 
-    const marks = getMarks().filter(m => m.name.includes(sessionResource.toString()));
+    const marks = getMarks().filter((m) =>
+      m.name.includes(sessionResource.toString()),
+    );
     assert.strictEqual(marks.length, 1);
     assert.ok(marks[0].name.startsWith("code/chat/"));
     assert.ok(marks[0].name.endsWith("/request/start"));
@@ -36,7 +42,9 @@ suite("chatPerf", () => {
 
     clearChatMarks(sessionResource);
 
-    const marks = getMarks().filter(m => m.name.includes(sessionResource.toString()));
+    const marks = getMarks().filter((m) =>
+      m.name.includes(sessionResource.toString()),
+    );
     assert.strictEqual(marks.length, 0);
   });
 
@@ -47,7 +55,9 @@ suite("chatPerf", () => {
 
     clearChatMarks(sessionResource);
 
-    const remaining = getMarks().filter(m => m.name.includes(otherSession.toString()));
+    const remaining = getMarks().filter((m) =>
+      m.name.includes(otherSession.toString()),
+    );
     assert.strictEqual(remaining.length, 1);
 
     clearChatMarks(otherSession);

@@ -19,7 +19,10 @@ import {
 } from "../../../../common/languages.js";
 import { ILanguageService } from "../../../../common/languages/language.js";
 import { ITextModel } from "../../../../common/model.js";
-import { ILanguageFeatureDebounceService, LanguageFeatureDebounceService } from "../../../../common/services/languageFeatureDebounce.js";
+import {
+  ILanguageFeatureDebounceService,
+  LanguageFeatureDebounceService,
+} from "../../../../common/services/languageFeatureDebounce.js";
 import { ILanguageFeaturesService } from "../../../../common/services/languageFeatures.js";
 import { LanguageFeaturesService } from "../../../../common/services/languageFeaturesService.js";
 import { LanguageService } from "../../../../common/services/languageService.js";
@@ -32,98 +35,140 @@ import { IEnvironmentService } from "../../../../../platform/environment/common/
 import { NullLogService } from "../../../../../platform/log/common/log.js";
 import { ColorScheme } from "../../../../../platform/theme/common/theme.js";
 import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
-import { TestColorTheme, TestThemeService } from "../../../../../platform/theme/test/common/testThemeService.js";
+import {
+  TestColorTheme,
+  TestThemeService,
+} from "../../../../../platform/theme/test/common/testThemeService.js";
 import { createTextModel } from "../../../../test/common/testTextModel.js";
 import { createTestCodeEditor } from "../../../../test/browser/testCodeEditor.js";
 import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
 import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
 
 suite("ViewportSemanticTokens", () => {
+  const disposables = new DisposableStore();
+  let languageService: ILanguageService;
+  let languageFeaturesService: ILanguageFeaturesService;
+  let serviceCollection: ServiceCollection;
 
-	const disposables = new DisposableStore();
-	let languageService: ILanguageService;
-	let languageFeaturesService: ILanguageFeaturesService;
-	let serviceCollection: ServiceCollection;
+  setup(() => {
+    const configService = new TestConfigurationService({
+      editor: { semanticHighlighting: true },
+    });
+    const themeService = new TestThemeService();
+    themeService.setTheme(new TestColorTheme({}, ColorScheme.DARK, true));
+    languageFeaturesService = new LanguageFeaturesService();
+    languageService = disposables.add(new LanguageService(false));
 
-	setup(() => {
-		const configService = new TestConfigurationService({ editor: { semanticHighlighting: true } });
-		const themeService = new TestThemeService();
-		themeService.setTheme(new TestColorTheme({}, ColorScheme.DARK, true));
-		languageFeaturesService = new LanguageFeaturesService();
-		languageService = disposables.add(new LanguageService(false));
+    const logService = new NullLogService();
+    const semanticTokensStylingService = new SemanticTokensStylingService(
+      themeService,
+      logService,
+      languageService,
+    );
+    const envService = new (class extends mock<IEnvironmentService>() {
+      override isBuilt: boolean = true;
+      override isExtensionDevelopment: boolean = false;
+    })();
+    const languageFeatureDebounceService = new LanguageFeatureDebounceService(
+      logService,
+      envService,
+    );
 
-		const logService = new NullLogService();
-		const semanticTokensStylingService = new SemanticTokensStylingService(themeService, logService, languageService);
-		const envService = new class extends mock<IEnvironmentService>() {
-			override isBuilt: boolean = true;
-			override isExtensionDevelopment: boolean = false;
-		};
-		const languageFeatureDebounceService = new LanguageFeatureDebounceService(logService, envService);
+    serviceCollection = new ServiceCollection(
+      [ILanguageFeaturesService, languageFeaturesService],
+      [ILanguageFeatureDebounceService, languageFeatureDebounceService],
+      [ISemanticTokensStylingService, semanticTokensStylingService],
+      [IThemeService, themeService],
+      [IConfigurationService, configService],
+    );
+  });
 
-		serviceCollection = new ServiceCollection(
-			[ILanguageFeaturesService, languageFeaturesService],
-			[ILanguageFeatureDebounceService, languageFeatureDebounceService],
-			[ISemanticTokensStylingService, semanticTokensStylingService],
-			[IThemeService, themeService],
-			[IConfigurationService, configService],
-		);
-	});
+  teardown(() => {
+    disposables.clear();
+  });
 
-	teardown(() => {
-		disposables.clear();
-	});
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-	ensureNoDisposablesAreLeakedInTestSuite();
+  test("DocumentRangeSemanticTokens provider onDidChange event should trigger refresh", async () => {
+    await runWithFakedTimers({}, async () => {
+      disposables.add(languageService.registerLanguage({ id: "testMode" }));
 
-	test("DocumentRangeSemanticTokens provider onDidChange event should trigger refresh", async () => {
-		await runWithFakedTimers({}, async () => {
+      const inFirstCall = new Barrier();
+      const inRefreshCall = new Barrier();
 
-			disposables.add(languageService.registerLanguage({ id: "testMode" }));
+      const emitter = new Emitter<void>();
+      let requestCount = 0;
+      disposables.add(
+        languageFeaturesService.documentRangeSemanticTokensProvider.register(
+          "testMode",
+          new (class implements DocumentRangeSemanticTokensProvider {
+            onDidChange = emitter.event;
+            getLegend(): SemanticTokensLegend {
+              return { tokenTypes: ["class"], tokenModifiers: [] };
+            }
+            async provideDocumentRangeSemanticTokens(
+              model: ITextModel,
+              range: Range,
+              token: CancellationToken,
+            ): Promise<SemanticTokens | null> {
+              requestCount++;
+              if (requestCount === 1) {
+                inFirstCall.open();
+              } else if (requestCount === 2) {
+                inRefreshCall.open();
+              }
+              return {
+                data: new Uint32Array([0, 1, 1, 1, 1]),
+              };
+            }
+          })(),
+        ),
+      );
 
-			const inFirstCall = new Barrier();
-			const inRefreshCall = new Barrier();
+      const textModel = disposables.add(
+        createTextModel("Hello world", "testMode"),
+      );
+      const editor = disposables.add(
+        createTestCodeEditor(textModel, { serviceCollection }),
+      );
+      const instantiationService = new TestInstantiationService(
+        serviceCollection,
+      );
+      disposables.add(
+        instantiationService.createInstance(
+          ViewportSemanticTokensContribution,
+          editor,
+        ),
+      );
 
-			const emitter = new Emitter<void>();
-			let requestCount = 0;
-			disposables.add(languageFeaturesService.documentRangeSemanticTokensProvider.register("testMode", new class implements DocumentRangeSemanticTokensProvider {
-				onDidChange = emitter.event;
-				getLegend(): SemanticTokensLegend {
-					return { tokenTypes: ["class"], tokenModifiers: [] };
-				}
-				async provideDocumentRangeSemanticTokens(model: ITextModel, range: Range, token: CancellationToken): Promise<SemanticTokens | null> {
-					requestCount++;
-					if (requestCount === 1) {
-						inFirstCall.open();
-					} else if (requestCount === 2) {
-						inRefreshCall.open();
-					}
-					return {
-						data: new Uint32Array([0, 1, 1, 1, 1]),
-					};
-				}
-			}));
+      textModel.onBeforeAttached();
 
-			const textModel = disposables.add(createTextModel("Hello world", "testMode"));
-			const editor = disposables.add(createTestCodeEditor(textModel, { serviceCollection }));
-			const instantiationService = new TestInstantiationService(serviceCollection);
-			disposables.add(instantiationService.createInstance(ViewportSemanticTokensContribution, editor));
+      await inFirstCall.wait();
 
-			textModel.onBeforeAttached();
+      assert.strictEqual(
+        requestCount,
+        1,
+        "Initial request should have been made",
+      );
 
-			await inFirstCall.wait();
+      // Make sure no other requests are made for a little while
+      await timeout(1000);
+      assert.strictEqual(
+        requestCount,
+        1,
+        "No additional requests should have been made",
+      );
 
-			assert.strictEqual(requestCount, 1, "Initial request should have been made");
+      // Fire the provider's onDidChange event
+      emitter.fire();
 
-			// Make sure no other requests are made for a little while
-			await timeout(1000);
-			assert.strictEqual(requestCount, 1, "No additional requests should have been made");
+      await inRefreshCall.wait();
 
-			// Fire the provider's onDidChange event
-			emitter.fire();
-
-			await inRefreshCall.wait();
-
-			assert.strictEqual(requestCount, 2, "Provider onDidChange should trigger a refresh of viewport semantic tokens");
-		});
-	});
+      assert.strictEqual(
+        requestCount,
+        2,
+        "Provider onDidChange should trigger a refresh of viewport semantic tokens",
+      );
+    });
+  });
 });

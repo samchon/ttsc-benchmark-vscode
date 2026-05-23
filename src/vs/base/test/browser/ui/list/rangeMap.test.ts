@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from "assert";
-import { consolidate, groupIntersect, RangeMap } from "../../../../browser/ui/list/rangeMap.js";
+import {
+  consolidate,
+  groupIntersect,
+  RangeMap,
+} from "../../../../browser/ui/list/rangeMap.js";
 import { Range } from "../../../../common/range.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../common/utils.js";
 
@@ -412,7 +416,18 @@ suite("RangeMap", () => {
       assert.strictEqual(rangeMap.indexAt(10), 10);
       assert.strictEqual(rangeMap.indexAt(11), 10);
 
-      rangeMap.splice(10, 0, [one, one, one, one, one, one, one, one, one, one]);
+      rangeMap.splice(10, 0, [
+        one,
+        one,
+        one,
+        one,
+        one,
+        one,
+        one,
+        one,
+        one,
+        one,
+      ]);
       assert.strictEqual(rangeMap.indexAt(10), 10);
       assert.strictEqual(rangeMap.indexAt(19), 19);
       assert.strictEqual(rangeMap.indexAt(20), 20);

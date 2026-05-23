@@ -5,9 +5,15 @@
 
 import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
 import Severity from "../../../../base/common/severity.js";
-import { ICodeEditor, getCodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import {
+  ICodeEditor,
+  getCodeEditor,
+} from "../../../../editor/browser/editorBrowser.js";
 import { IEditorService } from "../../../services/editor/common/editorService.js";
-import { ILanguageStatus, ILanguageStatusService } from "../../../services/languageStatus/common/languageStatusService.js";
+import {
+  ILanguageStatus,
+  ILanguageStatusService,
+} from "../../../services/languageStatus/common/languageStatusService.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
 import {
   Extensions as WorkbenchExtensions,
@@ -31,162 +37,172 @@ const configureSettingsLabel = nls.localize(
  * Uses that language status indicator to show information which language features have been limited for performance reasons.
  * Currently this is used for folding ranges and for color decorators.
  */
-export class LimitIndicatorContribution extends Disposable implements IWorkbenchContribution {
+export class LimitIndicatorContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  constructor(
+    @IEditorService editorService: IEditorService,
+    @ILanguageStatusService languageStatusService: ILanguageStatusService,
+  ) {
+    super();
 
-	constructor(
-		@IEditorService editorService: IEditorService,
-		@ILanguageStatusService languageStatusService: ILanguageStatusService,
-	) {
-		super();
-
-		const accessors = [
+    const accessors = [
       new ColorDecorationAccessor(),
       new FoldingRangeAccessor(),
     ];
-		const statusEntries = accessors.map(
-      indicator => new LanguageStatusEntry(languageStatusService, indicator),
+    const statusEntries = accessors.map(
+      (indicator) => new LanguageStatusEntry(languageStatusService, indicator),
     );
-		statusEntries.forEach(entry => this._register(entry));
+    statusEntries.forEach((entry) => this._register(entry));
 
-		let control: unknown;
+    let control: unknown;
 
-		const onActiveEditorChanged = () => {
-			const activeControl = editorService.activeTextEditorControl;
-			if (activeControl === control) {
-				return;
-			}
-			control = activeControl;
-			const editor = getCodeEditor(activeControl);
+    const onActiveEditorChanged = () => {
+      const activeControl = editorService.activeTextEditorControl;
+      if (activeControl === control) {
+        return;
+      }
+      control = activeControl;
+      const editor = getCodeEditor(activeControl);
 
-			statusEntries.forEach(
-        statusEntry => statusEntry.onActiveEditorChanged(editor),
+      statusEntries.forEach((statusEntry) =>
+        statusEntry.onActiveEditorChanged(editor),
       );
-		};
-		this._register(
+    };
+    this._register(
       editorService.onDidActiveEditorChange(onActiveEditorChanged),
     );
 
-		onActiveEditorChanged();
-	}
-
+    onActiveEditorChanged();
+  }
 }
 
-
 export interface LimitInfo {
-	readonly onDidChange: Event<void>;
+  readonly onDidChange: Event<void>;
 
-	readonly computed: number;
-	readonly limited: number | false;
+  readonly computed: number;
+  readonly limited: number | false;
 }
 
 interface LanguageFeatureAccessor {
-	readonly id: string;
-	readonly name: string;
-	readonly label: string;
-	readonly source: string;
-	readonly settingsId: string;
-	getLimitReporter(editor: ICodeEditor): LimitInfo | undefined;
+  readonly id: string;
+  readonly name: string;
+  readonly label: string;
+  readonly source: string;
+  readonly settingsId: string;
+  getLimitReporter(editor: ICodeEditor): LimitInfo | undefined;
 }
 
 class ColorDecorationAccessor implements LanguageFeatureAccessor {
-	readonly id = "decoratorsLimitInfo";
-	readonly name = nls.localize(
+  readonly id = "decoratorsLimitInfo";
+  readonly name = nls.localize(
     "colorDecoratorsStatusItem.name",
     "Color Decorator Status",
   );
-	readonly label = nls.localize(
+  readonly label = nls.localize(
     "status.limitedColorDecorators.short",
     "Color decorators",
   );
-	readonly source = nls.localize(
+  readonly source = nls.localize(
     "colorDecoratorsStatusItem.source",
     "Color Decorators",
   );
-	readonly settingsId = "editor.colorDecoratorsLimit";
+  readonly settingsId = "editor.colorDecoratorsLimit";
 
-	getLimitReporter(editor: ICodeEditor): LimitInfo | undefined {
-		return ColorDetector.get(editor)?.limitReporter;
-	}
+  getLimitReporter(editor: ICodeEditor): LimitInfo | undefined {
+    return ColorDetector.get(editor)?.limitReporter;
+  }
 }
 
 class FoldingRangeAccessor implements LanguageFeatureAccessor {
-	readonly id = "foldingLimitInfo";
-	readonly name = nls.localize(
+  readonly id = "foldingLimitInfo";
+  readonly name = nls.localize(
     "foldingRangesStatusItem.name",
     "Folding Status",
   );
-	readonly label = nls.localize(
+  readonly label = nls.localize(
     "status.limitedFoldingRanges.short",
     "Folding ranges",
   );
-	readonly source = nls.localize("foldingRangesStatusItem.source", "Folding");
-	readonly settingsId = "editor.foldingMaximumRegions";
+  readonly source = nls.localize("foldingRangesStatusItem.source", "Folding");
+  readonly settingsId = "editor.foldingMaximumRegions";
 
-	getLimitReporter(editor: ICodeEditor): LimitInfo | undefined {
-		return FoldingController.get(editor)?.limitReporter;
-	}
+  getLimitReporter(editor: ICodeEditor): LimitInfo | undefined {
+    return FoldingController.get(editor)?.limitReporter;
+  }
 }
 
 class LanguageStatusEntry implements IDisposable {
+  private _limitStatusItem: IDisposable | undefined;
+  private _indicatorChangeListener: IDisposable | undefined;
 
-	private _limitStatusItem: IDisposable | undefined;
-	private _indicatorChangeListener: IDisposable | undefined;
+  constructor(
+    private languageStatusService: ILanguageStatusService,
+    private accessor: LanguageFeatureAccessor,
+  ) {}
 
-	constructor(private languageStatusService: ILanguageStatusService, private accessor: LanguageFeatureAccessor) {
-	}
+  onActiveEditorChanged(editor: ICodeEditor | null): boolean {
+    if (this._indicatorChangeListener) {
+      this._indicatorChangeListener.dispose();
+      this._indicatorChangeListener = undefined;
+    }
 
-	onActiveEditorChanged(editor: ICodeEditor | null): boolean {
-		if (this._indicatorChangeListener) {
-			this._indicatorChangeListener.dispose();
-			this._indicatorChangeListener = undefined;
-		}
-
-		let info: LimitInfo | undefined;
-		if (editor) {
-			info = this.accessor.getLimitReporter(editor);
-		}
-		this.updateStatusItem(info);
-		if (info) {
-			this._indicatorChangeListener = info.onDidChange(_ => {
+    let info: LimitInfo | undefined;
+    if (editor) {
+      info = this.accessor.getLimitReporter(editor);
+    }
+    this.updateStatusItem(info);
+    if (info) {
+      this._indicatorChangeListener = info.onDidChange((_) => {
         this.updateStatusItem(info);
       });
-			return true;
-		}
-		return false;
-	}
+      return true;
+    }
+    return false;
+  }
 
-
-	private updateStatusItem(info: LimitInfo | undefined) {
-		if (this._limitStatusItem) {
-			this._limitStatusItem.dispose();
-			this._limitStatusItem = undefined;
-		}
-		if (info && info.limited !== false) {
-			const status: ILanguageStatus = {
+  private updateStatusItem(info: LimitInfo | undefined) {
+    if (this._limitStatusItem) {
+      this._limitStatusItem.dispose();
+      this._limitStatusItem = undefined;
+    }
+    if (info && info.limited !== false) {
+      const status: ILanguageStatus = {
         id: this.accessor.id,
         selector: "*",
         name: this.accessor.name,
         severity: Severity.Warning,
         label: this.accessor.label,
-        detail: nls.localize("status.limited.details", "only {0} shown for performance reasons", info.limited),
-        command: { id: openSettingsCommand, arguments: [this.accessor.settingsId], title: configureSettingsLabel },
+        detail: nls.localize(
+          "status.limited.details",
+          "only {0} shown for performance reasons",
+          info.limited,
+        ),
+        command: {
+          id: openSettingsCommand,
+          arguments: [this.accessor.settingsId],
+          title: configureSettingsLabel,
+        },
         accessibilityInfo: undefined,
         source: this.accessor.source,
         busy: false,
       };
-			this._limitStatusItem = this.languageStatusService.addStatus(status);
-		}
-	}
+      this._limitStatusItem = this.languageStatusService.addStatus(status);
+    }
+  }
 
-	public dispose() {
-		this._limitStatusItem?.dispose();
-		this._limitStatusItem = undefined;
-		this._indicatorChangeListener?.dispose();
-		this._indicatorChangeListener = undefined;
-	}
+  public dispose() {
+    this._limitStatusItem?.dispose();
+    this._limitStatusItem = undefined;
+    this._indicatorChangeListener?.dispose();
+    this._indicatorChangeListener = undefined;
+  }
 }
 
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(
   LimitIndicatorContribution,
   LifecyclePhase.Restored,
 );

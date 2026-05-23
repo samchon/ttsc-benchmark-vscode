@@ -30,26 +30,35 @@ import { CopilotPermissionPickerDelegate } from "./permissionPicker.js";
  * on tablet/desktop web viewports it falls through to the inherited
  * desktop action-widget popup.
  */
-class CopilotPermissionPickerWebContribution extends Disposable implements IWorkbenchContribution {
+class CopilotPermissionPickerWebContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "workbench.contrib.copilotPermissionPickerWeb";
 
-	static readonly ID = "workbench.contrib.copilotPermissionPickerWeb";
+  constructor(
+    @IActionViewItemService actionViewItemService: IActionViewItemService,
+    @IInstantiationService instantiationService: IInstantiationService,
+  ) {
+    super();
 
-	constructor(
-		@IActionViewItemService actionViewItemService: IActionViewItemService,
-		@IInstantiationService instantiationService: IInstantiationService,
-	) {
-		super();
-
-		this._register(actionViewItemService.register(
-			Menus.NewSessionControl,
-			"sessions.defaultCopilot.permissionPicker",
-			() => {
-				const delegate = instantiationService.createInstance(CopilotPermissionPickerDelegate);
-				const picker = instantiationService.createInstance(MobilePermissionPicker, delegate);
-				return new PickerActionViewItem(picker, delegate);
-			},
-		));
-	}
+    this._register(
+      actionViewItemService.register(
+        Menus.NewSessionControl,
+        "sessions.defaultCopilot.permissionPicker",
+        () => {
+          const delegate = instantiationService.createInstance(
+            CopilotPermissionPickerDelegate,
+          );
+          const picker = instantiationService.createInstance(
+            MobilePermissionPicker,
+            delegate,
+          );
+          return new PickerActionViewItem(picker, delegate);
+        },
+      ),
+    );
+  }
 }
 
 registerWorkbenchContribution2(

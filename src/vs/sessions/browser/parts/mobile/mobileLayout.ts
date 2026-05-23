@@ -29,5 +29,5 @@ const PHONE_LAYOUT_CLASS = "phone-layout";
  * notification (`onDidChangeContext` / `when:` clauses).
  */
 export function isPhoneLayout(layoutService: IWorkbenchLayoutService): boolean {
-	return layoutService.mainContainer.classList.contains(PHONE_LAYOUT_CLASS);
+  return layoutService.mainContainer.classList.contains(PHONE_LAYOUT_CLASS);
 }

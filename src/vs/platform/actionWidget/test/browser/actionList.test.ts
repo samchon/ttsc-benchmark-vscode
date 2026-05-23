@@ -19,40 +19,51 @@ import { IKeybindingService } from "../../../keybinding/common/keybinding.js";
 import { ILayoutService } from "../../../layout/browser/layoutService.js";
 import { IOpenerService } from "../../../opener/common/opener.js";
 import { NullOpenerService } from "../../../opener/test/common/nullOpenerService.js";
-import { ActionList, ActionListItemKind, ActionListWidget, IActionListItem } from "../../browser/actionList.js";
+import {
+  ActionList,
+  ActionListItemKind,
+  ActionListWidget,
+  IActionListItem,
+} from "../../browser/actionList.js";
 
 interface ITestActionItem {
-	readonly id: string;
+  readonly id: string;
 }
 
 function action(id: string): IActionListItem<ITestActionItem> {
-	return { kind: ActionListItemKind.Action, label: id, item: { id } };
+  return { kind: ActionListItemKind.Action, label: id, item: { id } };
 }
 
 function separator(label?: string): IActionListItem<ITestActionItem> {
-	return { kind: ActionListItemKind.Separator, label };
+  return { kind: ActionListItemKind.Separator, label };
 }
 
-function createActionListWidget(disposables: ReturnType<typeof ensureNoDisposablesAreLeakedInTestSuite>, options: {
-	readonly items?: readonly IActionListItem<ITestActionItem>[];
-	readonly onFilter?: (filter: string, cancellationToken: CancellationToken) => Promise<readonly IActionListItem<ITestActionItem>[]>;
-}): ActionListWidget<ITestActionItem> {
-	const instantiationService = disposables.add(new TestInstantiationService());
-	instantiationService.set(IKeybindingService, new MockKeybindingService());
-	instantiationService.set(IHoverService, NullHoverService);
-	instantiationService.set(IOpenerService, NullOpenerService);
-	const delegate = options.onFilter
-		? {
-        onHide: () => { },
-        onSelect: () => { },
+function createActionListWidget(
+  disposables: ReturnType<typeof ensureNoDisposablesAreLeakedInTestSuite>,
+  options: {
+    readonly items?: readonly IActionListItem<ITestActionItem>[];
+    readonly onFilter?: (
+      filter: string,
+      cancellationToken: CancellationToken,
+    ) => Promise<readonly IActionListItem<ITestActionItem>[]>;
+  },
+): ActionListWidget<ITestActionItem> {
+  const instantiationService = disposables.add(new TestInstantiationService());
+  instantiationService.set(IKeybindingService, new MockKeybindingService());
+  instantiationService.set(IHoverService, NullHoverService);
+  instantiationService.set(IOpenerService, NullOpenerService);
+  const delegate = options.onFilter
+    ? {
+        onHide: () => {},
+        onSelect: () => {},
         onFilter: options.onFilter,
       }
-		: {
-        onHide: () => { },
-        onSelect: () => { },
+    : {
+        onHide: () => {},
+        onSelect: () => {},
       };
 
-	const widget = disposables.add(
+  const widget = disposables.add(
     instantiationService.createInstance(
       ActionListWidget<ITestActionItem>,
       "testActionList",
@@ -64,79 +75,89 @@ function createActionListWidget(disposables: ReturnType<typeof ensureNoDisposabl
     ),
   );
 
-	if (widget.filterContainer) {
-		document.body.appendChild(widget.filterContainer);
-		disposables.add({ dispose: () => widget.filterContainer?.remove() });
-	}
-	document.body.appendChild(widget.domNode);
-	disposables.add({ dispose: () => widget.domNode.remove() });
-	widget.layout(200, 200);
+  if (widget.filterContainer) {
+    document.body.appendChild(widget.filterContainer);
+    disposables.add({ dispose: () => widget.filterContainer?.remove() });
+  }
+  document.body.appendChild(widget.domNode);
+  disposables.add({ dispose: () => widget.domNode.remove() });
+  widget.layout(200, 200);
 
-	return widget;
+  return widget;
 }
 
-function typeFilter(widget: ActionListWidget<ITestActionItem>, value: string): void {
-	assert.ok(widget.filterInput);
-	widget.filterInput.value = value;
-	widget.filterInput.dispatchEvent(new Event("input"));
+function typeFilter(
+  widget: ActionListWidget<ITestActionItem>,
+  value: string,
+): void {
+  assert.ok(widget.filterInput);
+  widget.filterInput.value = value;
+  widget.filterInput.dispatchEvent(new Event("input"));
 }
 
-function getVisibleRowText(widget: ActionListWidget<ITestActionItem>): string[] {
-	return Array.from(widget.domNode.querySelectorAll<HTMLElement>(".monaco-list-row"))
-		.map(row => row.textContent ?? "")
-		.filter(text => text.length > 0);
+function getVisibleRowText(
+  widget: ActionListWidget<ITestActionItem>,
+): string[] {
+  return Array.from(
+    widget.domNode.querySelectorAll<HTMLElement>(".monaco-list-row"),
+  )
+    .map((row) => row.textContent ?? "")
+    .filter((text) => text.length > 0);
 }
 
 function withWindowInnerHeight<T>(height: number, callback: () => T): T {
-	const originalDescriptor = Object.getOwnPropertyDescriptor(
+  const originalDescriptor = Object.getOwnPropertyDescriptor(
     mainWindow,
     "innerHeight",
   );
-	Object.defineProperty(mainWindow, "innerHeight", {
+  Object.defineProperty(mainWindow, "innerHeight", {
     configurable: true,
     value: height,
   });
-	try {
-		return callback();
-	} finally {
-		if (originalDescriptor) {
-			Object.defineProperty(mainWindow, "innerHeight", originalDescriptor);
-		} else {
-			Reflect.deleteProperty(mainWindow, "innerHeight");
-		}
-	}
+  try {
+    return callback();
+  } finally {
+    if (originalDescriptor) {
+      Object.defineProperty(mainWindow, "innerHeight", originalDescriptor);
+    } else {
+      Reflect.deleteProperty(mainWindow, "innerHeight");
+    }
+  }
 }
 
-function createActionList(disposables: ReturnType<typeof ensureNoDisposablesAreLeakedInTestSuite>, items: readonly IActionListItem<ITestActionItem>[]): ActionList<ITestActionItem> {
-	const instantiationService = disposables.add(new TestInstantiationService());
-	instantiationService.set(IKeybindingService, new MockKeybindingService());
-	instantiationService.set(IHoverService, NullHoverService);
-	instantiationService.set(IOpenerService, NullOpenerService);
-	instantiationService.stub(IContextViewService, {
-		layout: () => { },
-		hideContextView: () => { },
-		getContextViewElement: () => document.body,
-	} as Partial<IContextViewService> as IContextViewService);
-	instantiationService.stub(ILayoutService, {
-		getContainer: () => document.body,
-		mainContainer: document.body,
-		activeContainer: document.body,
-		onDidLayoutMainContainer: CommonEvent.None,
-		onDidLayoutContainer: CommonEvent.None,
-		onDidLayoutActiveContainer: CommonEvent.None,
-		onDidAddContainer: CommonEvent.None,
-		onDidChangeActiveContainer: CommonEvent.None,
-	} as Partial<ILayoutService> as ILayoutService);
+function createActionList(
+  disposables: ReturnType<typeof ensureNoDisposablesAreLeakedInTestSuite>,
+  items: readonly IActionListItem<ITestActionItem>[],
+): ActionList<ITestActionItem> {
+  const instantiationService = disposables.add(new TestInstantiationService());
+  instantiationService.set(IKeybindingService, new MockKeybindingService());
+  instantiationService.set(IHoverService, NullHoverService);
+  instantiationService.set(IOpenerService, NullOpenerService);
+  instantiationService.stub(IContextViewService, {
+    layout: () => {},
+    hideContextView: () => {},
+    getContextViewElement: () => document.body,
+  } as Partial<IContextViewService> as IContextViewService);
+  instantiationService.stub(ILayoutService, {
+    getContainer: () => document.body,
+    mainContainer: document.body,
+    activeContainer: document.body,
+    onDidLayoutMainContainer: CommonEvent.None,
+    onDidLayoutContainer: CommonEvent.None,
+    onDidLayoutActiveContainer: CommonEvent.None,
+    onDidAddContainer: CommonEvent.None,
+    onDidChangeActiveContainer: CommonEvent.None,
+  } as Partial<ILayoutService> as ILayoutService);
 
-	const list = disposables.add(
+  const list = disposables.add(
     instantiationService.createInstance(
       ActionList<ITestActionItem>,
       "testActionList",
       false,
       items,
       {
-        onHide: () => { },
-        onSelect: () => { },
+        onHide: () => {},
+        onSelect: () => {},
       },
       undefined,
       { showFilter: true },
@@ -144,105 +165,123 @@ function createActionList(disposables: ReturnType<typeof ensureNoDisposablesAreL
     ),
   );
 
-	const widget = document.createElement("div");
-	widget.classList.add("action-widget");
-	document.body.appendChild(widget);
-	disposables.add({ dispose: () => widget.remove() });
-	if (list.filterContainer) {
-		widget.appendChild(list.filterContainer);
-	}
-	widget.appendChild(list.domNode);
+  const widget = document.createElement("div");
+  widget.classList.add("action-widget");
+  document.body.appendChild(widget);
+  disposables.add({ dispose: () => widget.remove() });
+  if (list.filterContainer) {
+    widget.appendChild(list.filterContainer);
+  }
+  widget.appendChild(list.domNode);
 
-	return list;
+  return list;
 }
 
 suite("ActionListWidget", () => {
-	const disposables = ensureNoDisposablesAreLeakedInTestSuite();
+  const disposables = ensureNoDisposablesAreLeakedInTestSuite();
 
-	test("runs dynamic filter updates immediately", () => runWithFakedTimers({ useFakeTimers: true }, async () => {
-		const filters: string[] = [];
-		const widget = createActionListWidget(disposables, {
-			onFilter: async filter => {
-				filters.push(filter);
-				return [action(`server-${filter === "ma" ? "ranked" : filter}-result`)];
-			},
-		});
+  test("runs dynamic filter updates immediately", () =>
+    runWithFakedTimers({ useFakeTimers: true }, async () => {
+      const filters: string[] = [];
+      const widget = createActionListWidget(disposables, {
+        onFilter: async (filter) => {
+          filters.push(filter);
+          return [
+            action(`server-${filter === "ma" ? "ranked" : filter}-result`),
+          ];
+        },
+      });
 
-		typeFilter(widget, "m");
-		typeFilter(widget, "ma");
-		assert.deepStrictEqual(filters, ["m", "ma"]);
-		await timeout(0);
-		assert.ok(widget.domNode.textContent?.includes("server-ranked-result"));
-	}));
+      typeFilter(widget, "m");
+      typeFilter(widget, "ma");
+      assert.deepStrictEqual(filters, ["m", "ma"]);
+      await timeout(0);
+      assert.ok(widget.domNode.textContent?.includes("server-ranked-result"));
+    }));
 
-	test("ignores stale dynamic filter results", async () => {
-		const firstResult = new DeferredPromise<readonly IActionListItem<ITestActionItem>[]>();
-		const secondResult = new DeferredPromise<readonly IActionListItem<ITestActionItem>[]>();
-		const filters: string[] = [];
-		const widget = createActionListWidget(disposables, {
-			onFilter: filter => {
-				filters.push(filter);
-				return filter === "m" ? firstResult.p : secondResult.p;
-			},
-		});
+  test("ignores stale dynamic filter results", async () => {
+    const firstResult = new DeferredPromise<
+      readonly IActionListItem<ITestActionItem>[]
+    >();
+    const secondResult = new DeferredPromise<
+      readonly IActionListItem<ITestActionItem>[]
+    >();
+    const filters: string[] = [];
+    const widget = createActionListWidget(disposables, {
+      onFilter: (filter) => {
+        filters.push(filter);
+        return filter === "m" ? firstResult.p : secondResult.p;
+      },
+    });
 
-		typeFilter(widget, "m");
-		typeFilter(widget, "ma");
-		assert.deepStrictEqual(filters, ["m", "ma"]);
+    typeFilter(widget, "m");
+    typeFilter(widget, "ma");
+    assert.deepStrictEqual(filters, ["m", "ma"]);
 
-		firstResult.complete([action("ma-stale-result")]);
-		await timeout(0);
-		assert.ok(!widget.domNode.textContent?.includes("ma-stale-result"));
+    firstResult.complete([action("ma-stale-result")]);
+    await timeout(0);
+    assert.ok(!widget.domNode.textContent?.includes("ma-stale-result"));
 
-		secondResult.complete([action("ma-fresh-result")]);
-		await timeout(0);
-		assert.ok(widget.domNode.textContent?.includes("ma-fresh-result"));
-	});
+    secondResult.complete([action("ma-fresh-result")]);
+    await timeout(0);
+    assert.ok(widget.domNode.textContent?.includes("ma-fresh-result"));
+  });
 
-	test("keeps titled separator above first filtered match", () => {
-		const widget = createActionListWidget(disposables, {
-			items: [
-				separator("Provider A"),
-				action("alpha"),
-				separator("Provider B"),
-				action("beta"),
-			],
-		});
+  test("keeps titled separator above first filtered match", () => {
+    const widget = createActionListWidget(disposables, {
+      items: [
+        separator("Provider A"),
+        action("alpha"),
+        separator("Provider B"),
+        action("beta"),
+      ],
+    });
 
-		typeFilter(widget, "alpha");
+    typeFilter(widget, "alpha");
 
-		assert.deepStrictEqual(getVisibleRowText(widget), ["Provider A", "alpha"]);
-	});
+    assert.deepStrictEqual(getVisibleRowText(widget), ["Provider A", "alpha"]);
+  });
 
-	test("keeps only titled separators for sections with filtered matches", () => {
-		const widget = createActionListWidget(disposables, {
-			items: [
-				separator("Provider A"),
-				action("alpha"),
-				separator("Provider B"),
-				action("beta"),
-				separator("Provider C"),
-				action("gamma"),
-			],
-		});
+  test("keeps only titled separators for sections with filtered matches", () => {
+    const widget = createActionListWidget(disposables, {
+      items: [
+        separator("Provider A"),
+        action("alpha"),
+        separator("Provider B"),
+        action("beta"),
+        separator("Provider C"),
+        action("gamma"),
+      ],
+    });
 
-		typeFilter(widget, "beta");
+    typeFilter(widget, "beta");
 
-		assert.deepStrictEqual(getVisibleRowText(widget), ["Provider B", "beta"]);
-	});
+    assert.deepStrictEqual(getVisibleRowText(widget), ["Provider B", "beta"]);
+  });
 
-	test("leaves room for action widget chrome when clamping dynamic height", () => withWindowInnerHeight(300, () => {
-		const list = createActionList(disposables, Array.from({ length: 50 }, (_, i) => action(`item-${i}`)));
+  test("leaves room for action widget chrome when clamping dynamic height", () =>
+    withWindowInnerHeight(300, () => {
+      const list = createActionList(
+        disposables,
+        Array.from({ length: 50 }, (_, i) => action(`item-${i}`)),
+      );
 
-		list.layout(200);
+      list.layout(200);
 
-		const filterHeight = 36;
-		const widget = list.domNode.parentElement!;
-		const style = mainWindow.getComputedStyle(widget);
-		const toPixels = (value: string): number => Number.parseFloat(value) || 0;
-		const actionWidgetVerticalChromeHeight = toPixels(style.paddingTop) + toPixels(style.paddingBottom) + toPixels(style.borderTopWidth) + toPixels(style.borderBottomWidth);
-		const availableSpaceAboveAnchor = 150;
-		const listHeight = parseFloat(list.domNode.style.height);
-		assert.ok(listHeight + filterHeight + actionWidgetVerticalChromeHeight <= availableSpaceAboveAnchor);
-	}));
+      const filterHeight = 36;
+      const widget = list.domNode.parentElement!;
+      const style = mainWindow.getComputedStyle(widget);
+      const toPixels = (value: string): number => Number.parseFloat(value) || 0;
+      const actionWidgetVerticalChromeHeight =
+        toPixels(style.paddingTop) +
+        toPixels(style.paddingBottom) +
+        toPixels(style.borderTopWidth) +
+        toPixels(style.borderBottomWidth);
+      const availableSpaceAboveAnchor = 150;
+      const listHeight = parseFloat(list.domNode.style.height);
+      assert.ok(
+        listHeight + filterHeight + actionWidgetVerticalChromeHeight <=
+          availableSpaceAboveAnchor,
+      );
+    }));
 });

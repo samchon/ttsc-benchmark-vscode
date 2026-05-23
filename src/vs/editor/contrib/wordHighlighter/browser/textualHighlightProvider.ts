@@ -19,28 +19,32 @@ import { Disposable } from "../../../../base/common/lifecycle.js";
 import { ResourceMap } from "../../../../base/common/map.js";
 import { LanguageFilter } from "../../../common/languageSelector.js";
 
+class TextualDocumentHighlightProvider
+  implements DocumentHighlightProvider, MultiDocumentHighlightProvider
+{
+  selector: LanguageFilter = { language: "*" };
 
-class TextualDocumentHighlightProvider implements DocumentHighlightProvider, MultiDocumentHighlightProvider {
+  provideDocumentHighlights(
+    model: ITextModel,
+    position: Position,
+    token: CancellationToken,
+  ): ProviderResult<DocumentHighlight[]> {
+    if (model.isDisposed()) {
+      return;
+    }
 
-	selector: LanguageFilter = { language: "*" };
+    const result: DocumentHighlight[] = [];
 
-	provideDocumentHighlights(model: ITextModel, position: Position, token: CancellationToken): ProviderResult<DocumentHighlight[]> {
-		if (model.isDisposed()) {
-			return;
-		}
-
-		const result: DocumentHighlight[] = [];
-
-		const word = model.getWordAtPosition({
+    const word = model.getWordAtPosition({
       lineNumber: position.lineNumber,
       column: position.column,
     });
 
-		if (!word) {
-			return Promise.resolve(result);
-		}
+    if (!word) {
+      return Promise.resolve(result);
+    }
 
-		const matches = model.findMatches(
+    const matches = model.findMatches(
       word.word,
       true,
       false,
@@ -48,34 +52,38 @@ class TextualDocumentHighlightProvider implements DocumentHighlightProvider, Mul
       USUAL_WORD_SEPARATORS,
       false,
     );
-		return matches.map(m => ({
+    return matches.map((m) => ({
       range: m.range,
       kind: DocumentHighlightKind.Text,
     }));
-	}
+  }
 
-	provideMultiDocumentHighlights(primaryModel: ITextModel, position: Position, otherModels: ITextModel[], token: CancellationToken): ProviderResult<ResourceMap<DocumentHighlight[]>> {
-		if (primaryModel.isDisposed()) {
-			return;
-		}
+  provideMultiDocumentHighlights(
+    primaryModel: ITextModel,
+    position: Position,
+    otherModels: ITextModel[],
+    token: CancellationToken,
+  ): ProviderResult<ResourceMap<DocumentHighlight[]>> {
+    if (primaryModel.isDisposed()) {
+      return;
+    }
 
-		const result = new ResourceMap<DocumentHighlight[]>();
+    const result = new ResourceMap<DocumentHighlight[]>();
 
-		const word = primaryModel.getWordAtPosition({
+    const word = primaryModel.getWordAtPosition({
       lineNumber: position.lineNumber,
       column: position.column,
     });
-		if (!word) {
-			return Promise.resolve(result);
-		}
+    if (!word) {
+      return Promise.resolve(result);
+    }
 
+    for (const model of [primaryModel, ...otherModels]) {
+      if (model.isDisposed()) {
+        continue;
+      }
 
-		for (const model of [primaryModel, ...otherModels]) {
-			if (model.isDisposed()) {
-				continue;
-			}
-
-			const matches = model.findMatches(
+      const matches = model.findMatches(
         word.word,
         true,
         false,
@@ -83,37 +91,36 @@ class TextualDocumentHighlightProvider implements DocumentHighlightProvider, Mul
         USUAL_WORD_SEPARATORS,
         false,
       );
-			const highlights = matches.map(m => ({
+      const highlights = matches.map((m) => ({
         range: m.range,
         kind: DocumentHighlightKind.Text,
       }));
 
-			if (highlights) {
-				result.set(model.uri, highlights);
-			}
-		}
+      if (highlights) {
+        result.set(model.uri, highlights);
+      }
+    }
 
-		return result;
-	}
-
+    return result;
+  }
 }
 
 export class TextualMultiDocumentHighlightFeature extends Disposable {
-	constructor(
-		@ILanguageFeaturesService languageFeaturesService: ILanguageFeaturesService,
-	) {
-		super();
-		this._register(
+  constructor(
+    @ILanguageFeaturesService languageFeaturesService: ILanguageFeaturesService,
+  ) {
+    super();
+    this._register(
       languageFeaturesService.documentHighlightProvider.register(
         "*",
         new TextualDocumentHighlightProvider(),
       ),
     );
-		this._register(
+    this._register(
       languageFeaturesService.multiDocumentHighlightProvider.register(
         "*",
         new TextualDocumentHighlightProvider(),
       ),
     );
-	}
+  }
 }

@@ -14,71 +14,83 @@ import {
 import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
 import { ISessionsProvidersService } from "../../../services/sessions/browser/sessionsProvidersService.js";
 import { IViewsService } from "../../../../workbench/services/views/common/viewsService.js";
-import { ILifecycleService, LifecyclePhase } from "../../../../workbench/services/lifecycle/common/lifecycle.js";
+import {
+  ILifecycleService,
+  LifecyclePhase,
+} from "../../../../workbench/services/lifecycle/common/lifecycle.js";
 import { NewChatViewPane, SessionsViewId } from "../browser/newChatViewPane.js";
-import { SessionsView, SessionsViewId as SessionsListViewId } from "../../sessions/browser/views/sessionsView.js";
+import {
+  SessionsView,
+  SessionsViewId as SessionsListViewId,
+} from "../../sessions/browser/views/sessionsView.js";
 import { ISessionsSetUpService } from "../../../browser/sessionsSetUpService.js";
 
-class SelectAgentsFolderContribution extends Disposable implements IWorkbenchContribution {
+class SelectAgentsFolderContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "sessions.selectAgentsFolder";
 
-	static readonly ID = "sessions.selectAgentsFolder";
-
-	constructor(
-		@ISessionsManagementService private readonly sessionsManagementService: ISessionsManagementService,
-		@ISessionsProvidersService private readonly sessionsProvidersService: ISessionsProvidersService,
-		@IViewsService private readonly viewsService: IViewsService,
-		@ILifecycleService private readonly lifecycleService: ILifecycleService,
-		@ISessionsSetUpService private readonly sessionsSetUpService: ISessionsSetUpService,
-	) {
-		super();
-		ipcRenderer.on(
+  constructor(
+    @ISessionsManagementService
+    private readonly sessionsManagementService: ISessionsManagementService,
+    @ISessionsProvidersService
+    private readonly sessionsProvidersService: ISessionsProvidersService,
+    @IViewsService private readonly viewsService: IViewsService,
+    @ILifecycleService private readonly lifecycleService: ILifecycleService,
+    @ISessionsSetUpService
+    private readonly sessionsSetUpService: ISessionsSetUpService,
+  ) {
+    super();
+    ipcRenderer.on(
       "vscode:selectAgentsFolder",
       (_: unknown, ...args: unknown[]) => {
         const folderUri = URI.revive(args[0] as UriComponents);
         this.selectFolder(folderUri);
       },
     );
-	}
+  }
 
-	private async selectFolder(folderUri: URI): Promise<void> {
-		// Wait for the welcome/setup flow to complete before selecting the folder
-		await this.sessionsSetUpService.whenWelcomeDone();
+  private async selectFolder(folderUri: URI): Promise<void> {
+    // Wait for the welcome/setup flow to complete before selecting the folder
+    await this.sessionsSetUpService.whenWelcomeDone();
 
-		this.sessionsManagementService.openNewSessionView();
+    this.sessionsManagementService.openNewSessionView();
 
-		// Tell the sessions list this folder is the open-window source folder
-		// so it ranks the matching folder section first. Get the view if it
-		// already exists — do not open it just for this side-effect.
-		const sessionsView = this.viewsService.getViewWithId<SessionsView>(
-      SessionsListViewId,
+    // Tell the sessions list this folder is the open-window source folder
+    // so it ranks the matching folder section first. Get the view if it
+    // already exists — do not open it just for this side-effect.
+    const sessionsView =
+      this.viewsService.getViewWithId<SessionsView>(SessionsListViewId);
+    sessionsView?.sessionsControl?.setOpenWindowSourceFolder(folderUri);
+
+    if (this.tryResolveAndSelect(folderUri)) {
+      return;
+    }
+
+    // Provider not registered yet — wait for it, but give up at Eventually phase
+    const disposable = this.sessionsProvidersService.onDidChangeProviders(
+      () => {
+        if (this.tryResolveAndSelect(folderUri)) {
+          disposable.dispose();
+        }
+      },
     );
-		sessionsView?.sessionsControl?.setOpenWindowSourceFolder(folderUri);
+    this.lifecycleService
+      .when(LifecyclePhase.Eventually)
+      .then(() => disposable.dispose());
+  }
 
-		if (this.tryResolveAndSelect(folderUri)) {
-			return;
-		}
-
-		// Provider not registered yet — wait for it, but give up at Eventually phase
-		const disposable = this.sessionsProvidersService.onDidChangeProviders(() => {
-			if (this.tryResolveAndSelect(folderUri)) {
-				disposable.dispose();
-			}
-		});
-		this.lifecycleService.when(LifecyclePhase.Eventually).then(
-      () => disposable.dispose(),
-    );
-	}
-
-	private tryResolveAndSelect(folderUri: URI): boolean {
-		const resolved = this.sessionsManagementService.resolveWorkspace(folderUri);
-		if (!resolved) {
-			return false;
-		}
-		this.viewsService.openView<NewChatViewPane>(SessionsViewId).then(view => {
+  private tryResolveAndSelect(folderUri: URI): boolean {
+    const resolved = this.sessionsManagementService.resolveWorkspace(folderUri);
+    if (!resolved) {
+      return false;
+    }
+    this.viewsService.openView<NewChatViewPane>(SessionsViewId).then((view) => {
       view?.selectWorkspace(folderUri);
     });
-		return true;
-	}
+    return true;
+  }
 }
 
 registerWorkbenchContribution2(

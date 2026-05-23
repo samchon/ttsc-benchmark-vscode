@@ -8,9 +8,18 @@ import { isEqualOrParent } from "../../../../../../base/common/resources.js";
 import { URI } from "../../../../../../base/common/uri.js";
 import { type URI as ProtocolURI } from "../../../../../../platform/agentHost/common/state/protocol/state.js";
 import { type CustomizationRef } from "../../../../../../platform/agentHost/common/state/sessionState.js";
-import { AICustomizationSource, AICustomizationSources, BUILTIN_STORAGE } from "../../../common/aiCustomizationWorkspaceService.js";
+import {
+  AICustomizationSource,
+  AICustomizationSources,
+  BUILTIN_STORAGE,
+} from "../../../common/aiCustomizationWorkspaceService.js";
 import { PromptsType } from "../../../common/promptSyntax/promptTypes.js";
-import { IPromptPath, IPromptsService, matchesSessionType, PromptsStorage } from "../../../common/promptSyntax/service/promptsService.js";
+import {
+  IPromptPath,
+  IPromptsService,
+  matchesSessionType,
+  PromptsStorage,
+} from "../../../common/promptSyntax/service/promptsService.js";
 import { type ICustomizationSyncProvider } from "../../../common/customizationHarnessService.js";
 import { IAgentPluginService } from "../../../common/plugins/agentPluginService.js";
 import type { SyncedCustomizationBundler } from "./syncedCustomizationBundler.js";
@@ -39,12 +48,12 @@ export const SYNCABLE_STORAGE_SOURCES: readonly PromptsStorage[] = [
 ];
 
 export interface ILocalCustomizationFile {
-	readonly uri: URI;
-	readonly type: PromptsType;
-	readonly source: AICustomizationSource;
-	readonly disabled: boolean;
-	readonly pluginUri?: URI;
-	readonly extensionId?: string;
+  readonly uri: URI;
+  readonly type: PromptsType;
+  readonly source: AICustomizationSource;
+  readonly disabled: boolean;
+  readonly pluginUri?: URI;
+  readonly extensionId?: string;
 }
 
 /**
@@ -62,27 +71,23 @@ export interface ILocalCustomizationFile {
  * built-in lookup returns nothing and this is a no-op.
  */
 export async function enumerateLocalCustomizationsForHarness(
-	promptsService: IPromptsService,
-	syncProvider: ICustomizationSyncProvider,
-	sessionType: string,
-	token: CancellationToken,
+  promptsService: IPromptsService,
+  syncProvider: ICustomizationSyncProvider,
+  sessionType: string,
+  token: CancellationToken,
 ): Promise<readonly ILocalCustomizationFile[]> {
-	const result: ILocalCustomizationFile[] = [];
-	for (const type of SYNCABLE_PROMPT_TYPES) {
-		const lists = await Promise.all(
-      SYNCABLE_STORAGE_SOURCES.map(
-        storage => promptsService.listPromptFilesForStorage(
-          type,
-          storage,
-          token,
-        ),
+  const result: ILocalCustomizationFile[] = [];
+  for (const type of SYNCABLE_PROMPT_TYPES) {
+    const lists = await Promise.all(
+      SYNCABLE_STORAGE_SOURCES.map((storage) =>
+        promptsService.listPromptFilesForStorage(type, storage, token),
       ),
     );
-		for (let i = 0; i < lists.length; i++) {
-			const source = SYNCABLE_STORAGE_SOURCES[i];
-			for (const file of lists[i]) {
-				if (matchesSessionType(file.sessionTypes, sessionType)) {
-					result.push({
+    for (let i = 0; i < lists.length; i++) {
+      const source = SYNCABLE_STORAGE_SOURCES[i];
+      for (const file of lists[i]) {
+        if (matchesSessionType(file.sessionTypes, sessionType)) {
+          result.push({
             uri: file.uri,
             type,
             source,
@@ -90,39 +95,39 @@ export async function enumerateLocalCustomizationsForHarness(
             extensionId: file.extension?.identifier.value,
             disabled: syncProvider.isDisabled(file.uri),
           });
-				}
-			}
-		}
-	}
+        }
+      }
+    }
+  }
 
-	// Built-in skills (e.g. `/create-pr`, `/merge`) are exposed via
-	// `BUILTIN_STORAGE`, which is not a member of the core `PromptsStorage`
-	// enum. The sessions-aware prompts service supports this extra storage,
-	// but the regular workbench prompts service throws on unknown storage
-	// values; treat that case as "no built-in skills available" so
-	// enumeration remains a no-op outside Sessions.
-	let builtinSkills: readonly IPromptPath[] = [];
-	try {
-		builtinSkills = await promptsService.listPromptFilesForStorage(
+  // Built-in skills (e.g. `/create-pr`, `/merge`) are exposed via
+  // `BUILTIN_STORAGE`, which is not a member of the core `PromptsStorage`
+  // enum. The sessions-aware prompts service supports this extra storage,
+  // but the regular workbench prompts service throws on unknown storage
+  // values; treat that case as "no built-in skills available" so
+  // enumeration remains a no-op outside Sessions.
+  let builtinSkills: readonly IPromptPath[] = [];
+  try {
+    builtinSkills = await promptsService.listPromptFilesForStorage(
       PromptsType.skill,
       BUILTIN_STORAGE as unknown as PromptsStorage,
       token,
     );
-	} catch {
-		builtinSkills = [];
-	}
-	for (const file of builtinSkills) {
-		if (matchesSessionType(file.sessionTypes, sessionType)) {
-			result.push({
+  } catch {
+    builtinSkills = [];
+  }
+  for (const file of builtinSkills) {
+    if (matchesSessionType(file.sessionTypes, sessionType)) {
+      result.push({
         uri: file.uri,
         type: PromptsType.skill,
         source: BUILTIN_STORAGE,
         disabled: syncProvider.isDisabled(file.uri),
       });
-		}
-	}
+    }
+  }
 
-	return result;
+  return result;
 }
 
 /**
@@ -134,54 +139,54 @@ export async function enumerateLocalCustomizationsForHarness(
  * remaining loose files are bundled into a synthetic Open Plugin.
  */
 export async function resolveCustomizationRefs(
-	promptsService: IPromptsService,
-	syncProvider: ICustomizationSyncProvider,
-	agentPluginService: IAgentPluginService,
-	bundler: SyncedCustomizationBundler,
-	sessionType: string,
+  promptsService: IPromptsService,
+  syncProvider: ICustomizationSyncProvider,
+  agentPluginService: IAgentPluginService,
+  bundler: SyncedCustomizationBundler,
+  sessionType: string,
 ): Promise<CustomizationRef[]> {
-	const enumerated = await enumerateLocalCustomizationsForHarness(
+  const enumerated = await enumerateLocalCustomizationsForHarness(
     promptsService,
     syncProvider,
     sessionType,
     CancellationToken.None,
   );
-	const enabled = enumerated.filter(e => !e.disabled);
-	if (enabled.length === 0) {
-		return [];
-	}
+  const enabled = enumerated.filter((e) => !e.disabled);
+  if (enabled.length === 0) {
+    return [];
+  }
 
-	const plugins = agentPluginService.plugins.get();
-	const pluginRefs = new Map<string, CustomizationRef>();
-	const looseFiles: { uri: URI; type: PromptsType }[] = [];
+  const plugins = agentPluginService.plugins.get();
+  const pluginRefs = new Map<string, CustomizationRef>();
+  const looseFiles: { uri: URI; type: PromptsType }[] = [];
 
-	for (const entry of enabled) {
-		if (entry.source === AICustomizationSources.plugin) {
-			const plugin = plugins.find(p => isEqualOrParent(entry.uri, p.uri));
-			if (!plugin) {
-				continue;
-			}
-			if (syncProvider.isDisabled(plugin.uri)) {
-				continue;
-			}
-			const key = plugin.uri.toString();
-			if (!pluginRefs.has(key)) {
-				pluginRefs.set(key, {
+  for (const entry of enabled) {
+    if (entry.source === AICustomizationSources.plugin) {
+      const plugin = plugins.find((p) => isEqualOrParent(entry.uri, p.uri));
+      if (!plugin) {
+        continue;
+      }
+      if (syncProvider.isDisabled(plugin.uri)) {
+        continue;
+      }
+      const key = plugin.uri.toString();
+      if (!pluginRefs.has(key)) {
+        pluginRefs.set(key, {
           uri: key as ProtocolURI,
           displayName: plugin.label,
         });
-			}
-		} else {
-			looseFiles.push({ uri: entry.uri, type: entry.type });
-		}
-	}
+      }
+    } else {
+      looseFiles.push({ uri: entry.uri, type: entry.type });
+    }
+  }
 
-	const refs: CustomizationRef[] = [...pluginRefs.values()];
-	if (looseFiles.length > 0) {
-		const result = await bundler.bundle(looseFiles);
-		if (result) {
-			refs.push(result.ref);
-		}
-	}
-	return refs;
+  const refs: CustomizationRef[] = [...pluginRefs.values()];
+  if (looseFiles.length > 0) {
+    const result = await bundler.bundle(looseFiles);
+    if (result) {
+      refs.push(result.ref);
+    }
+  }
+  return refs;
 }

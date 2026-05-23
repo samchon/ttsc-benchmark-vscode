@@ -13,24 +13,30 @@ import { Command } from "../../../../editor/common/languages.js";
 import { LanguageFeatureRegistry } from "../../../../editor/common/languageFeatureRegistry.js";
 import { LanguageSelector } from "../../../../editor/common/languageSelector.js";
 import { IAccessibilityInformation } from "../../../../platform/accessibility/common/accessibility.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
 
 export interface ILanguageStatus {
-	readonly id: string;
-	readonly name: string;
-	readonly selector: LanguageSelector;
-	readonly severity: Severity;
-	readonly label: string | { value: string; shortValue: string };
-	readonly detail: string;
-	readonly busy: boolean;
-	readonly source: string;
-	readonly command: Command | undefined;
-	readonly accessibilityInfo: IAccessibilityInformation | undefined;
+  readonly id: string;
+  readonly name: string;
+  readonly selector: LanguageSelector;
+  readonly severity: Severity;
+  readonly label: string | { value: string; shortValue: string };
+  readonly detail: string;
+  readonly busy: boolean;
+  readonly source: string;
+  readonly command: Command | undefined;
+  readonly accessibilityInfo: IAccessibilityInformation | undefined;
 }
 
 export interface ILanguageStatusProvider {
-	provideLanguageStatus(langId: string, token: CancellationToken): Promise<ILanguageStatus | undefined>;
+  provideLanguageStatus(
+    langId: string,
+    token: CancellationToken,
+  ): Promise<ILanguageStatus | undefined>;
 }
 
 export const ILanguageStatusService = createDecorator<ILanguageStatusService>(
@@ -38,41 +44,38 @@ export const ILanguageStatusService = createDecorator<ILanguageStatusService>(
 );
 
 export interface ILanguageStatusService {
+  _serviceBrand: undefined;
 
-	_serviceBrand: undefined;
+  readonly onDidChange: Event<void>;
 
-	readonly onDidChange: Event<void>;
+  addStatus(status: ILanguageStatus): IDisposable;
 
-	addStatus(status: ILanguageStatus): IDisposable;
-
-	getLanguageStatus(model: ITextModel): ILanguageStatus[];
+  getLanguageStatus(model: ITextModel): ILanguageStatus[];
 }
 
-
 class LanguageStatusServiceImpl implements ILanguageStatusService {
+  declare _serviceBrand: undefined;
 
-	declare _serviceBrand: undefined;
+  private readonly _provider = new LanguageFeatureRegistry<ILanguageStatus>();
 
-	private readonly _provider = new LanguageFeatureRegistry<ILanguageStatus>();
+  readonly onDidChange = Event.map(this._provider.onDidChange, () => undefined);
 
-	readonly onDidChange = Event.map(this._provider.onDidChange, () => undefined);
+  addStatus(status: ILanguageStatus): IDisposable {
+    return this._provider.register(status.selector, status);
+  }
 
-	addStatus(status: ILanguageStatus): IDisposable {
-		return this._provider.register(status.selector, status);
-	}
-
-	getLanguageStatus(model: ITextModel): ILanguageStatus[] {
-		return this._provider.ordered(model).sort((a, b) => {
-			let res = b.severity - a.severity;
-			if (res === 0) {
-				res = compare(a.source, b.source);
-			}
-			if (res === 0) {
-				res = compare(a.id, b.id);
-			}
-			return res;
-		});
-	}
+  getLanguageStatus(model: ITextModel): ILanguageStatus[] {
+    return this._provider.ordered(model).sort((a, b) => {
+      let res = b.severity - a.severity;
+      if (res === 0) {
+        res = compare(a.source, b.source);
+      }
+      if (res === 0) {
+        res = compare(a.id, b.id);
+      }
+      return res;
+    });
+  }
 }
 
 registerSingleton(

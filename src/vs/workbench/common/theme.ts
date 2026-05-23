@@ -36,16 +36,16 @@ import { ColorScheme } from "../../platform/theme/common/theme.js";
 // < --- Workbench (not customizable) --- >
 
 export function WORKBENCH_BACKGROUND(theme: IColorTheme): Color {
-	switch (theme.type) {
-		case ColorScheme.LIGHT:
-			return Color.fromHex("#F3F3F3");
-		case ColorScheme.HIGH_CONTRAST_LIGHT:
-			return Color.fromHex("#FFFFFF");
-		case ColorScheme.HIGH_CONTRAST_DARK:
-			return Color.fromHex("#000000");
-		default:
-			return Color.fromHex("#252526");
-	}
+  switch (theme.type) {
+    case ColorScheme.LIGHT:
+      return Color.fromHex("#F3F3F3");
+    case ColorScheme.HIGH_CONTRAST_LIGHT:
+      return Color.fromHex("#FFFFFF");
+    case ColorScheme.HIGH_CONTRAST_DARK:
+      return Color.fromHex("#000000");
+    default:
+      return Color.fromHex("#252526");
+  }
 }
 
 // < --- Tabs --- >
@@ -313,7 +313,6 @@ export const TAB_SELECTED_FOREGROUND = registerColor(
   ),
 );
 
-
 export const TAB_HOVER_BORDER = registerColor(
   "tab.hoverBorder",
   null,
@@ -479,7 +478,7 @@ export const EDITOR_GROUP_HEADER_NO_TABS_BACKGROUND = registerColor(
   editorBackground,
   localize(
     "editorGroupHeaderBackground",
-    "Background color of the editor group title header when (`\"workbench.editor.showTabs\": \"single\"`). Editor groups are the containers of editors.",
+    'Background color of the editor group title header when (`"workbench.editor.showTabs": "single"`). Editor groups are the containers of editors.',
   ),
 );
 
@@ -517,7 +516,7 @@ export const EDITOR_DRAG_AND_DROP_BACKGROUND = registerColor(
     dark: Color.fromHex("#53595D").transparent(0.5),
     light: Color.fromHex("#2677CB").transparent(0.18),
     hcDark: null,
-    hcLight: Color.fromHex("#0F4A85").transparent(0.50),
+    hcLight: Color.fromHex("#0F4A85").transparent(0.5),
   },
   localize(
     "editorDragAndDropBackground",
@@ -575,7 +574,6 @@ export const SIDE_BY_SIDE_EDITOR_VERTICAL_BORDER = registerColor(
   ),
 );
 
-
 // < --- Output Editor -->
 
 const OUTPUT_VIEW_BACKGROUND = registerColor(
@@ -583,7 +581,6 @@ const OUTPUT_VIEW_BACKGROUND = registerColor(
   null,
   localize("outputViewBackground", "Output view background color."),
 );
-
 
 registerColor(
   "outputViewStickyScroll.background",
@@ -593,7 +590,6 @@ registerColor(
     "Output view sticky scroll background color.",
   ),
 );
-
 
 // < --- Banner --- >
 
@@ -823,8 +819,8 @@ export const STATUS_BAR_PROMINENT_ITEM_HOVER_BACKGROUND = registerColor(
 export const STATUS_BAR_ERROR_ITEM_BACKGROUND = registerColor(
   "statusBarItem.errorBackground",
   {
-    dark: darken(errorForeground, .4),
-    light: darken(errorForeground, .4),
+    dark: darken(errorForeground, 0.4),
+    light: darken(errorForeground, 0.4),
     hcDark: null,
     hcLight: "#B5200D",
   },
@@ -864,8 +860,8 @@ export const STATUS_BAR_ERROR_ITEM_HOVER_BACKGROUND = registerColor(
 export const STATUS_BAR_WARNING_ITEM_BACKGROUND = registerColor(
   "statusBarItem.warningBackground",
   {
-    dark: darken(editorWarningForeground, .4),
-    light: darken(editorWarningForeground, .4),
+    dark: darken(editorWarningForeground, 0.4),
+    light: darken(editorWarningForeground, 0.4),
     hcDark: null,
     hcLight: "#895503",
   },
@@ -901,7 +897,6 @@ export const STATUS_BAR_WARNING_ITEM_HOVER_BACKGROUND = registerColor(
     "Status bar warning items background color when hovering. Warning items stand out from other status bar entries to indicate warning conditions. The status bar is shown in the bottom of the window.",
   ),
 );
-
 
 // < --- Activity Bar --- >
 
@@ -1104,7 +1099,6 @@ export const ACTIVITY_BAR_TOP_BACKGROUND = registerColor(
   ),
 );
 
-
 // < --- Panels --- >
 
 export const PANEL_BACKGROUND = registerColor(
@@ -1301,7 +1295,6 @@ export const PANEL_STICKY_SCROLL_SHADOW = registerColor(
   ),
 );
 
-
 // < --- Browser --- >
 
 export const BROWSER_BORDER = registerColor(
@@ -1309,7 +1302,6 @@ export const BROWSER_BORDER = registerColor(
   TAB_BORDER,
   localize("browserBorder", "Border color for integrated browser pages."),
 );
-
 
 // < --- Profiles --- >
 
@@ -1340,7 +1332,6 @@ export const PROFILE_BADGE_FOREGROUND = registerColor(
     "Profile badge foreground color. The profile badge shows on top of the settings gear icon in the activity bar.",
   ),
 );
-
 
 // < --- Remote --- >
 
@@ -1442,7 +1433,6 @@ export const EXTENSION_BADGE_FOREGROUND = registerColor(
     "Foreground color for the remote badge in the extensions view.",
   ),
 );
-
 
 // < --- Side Bar --- >
 
@@ -1706,7 +1696,10 @@ export const MENUBAR_SELECTION_BORDER = registerColor(
 export const COMMAND_CENTER_FOREGROUND = registerColor(
   "commandCenter.foreground",
   TITLE_BAR_ACTIVE_FOREGROUND,
-  localize("commandCenter-foreground", "Foreground color of the command center"),
+  localize(
+    "commandCenter-foreground",
+    "Foreground color of the command center",
+  ),
   false,
 );
 export const COMMAND_CENTER_ACTIVEFOREGROUND = registerColor(
@@ -1736,7 +1729,10 @@ export const COMMAND_CENTER_BACKGROUND = registerColor(
     light: Color.black.transparent(0.05),
     hcLight: null,
   },
-  localize("commandCenter-background", "Background color of the command center"),
+  localize(
+    "commandCenter-background",
+    "Background color of the command center",
+  ),
   false,
 );
 export const COMMAND_CENTER_ACTIVEBACKGROUND = registerColor(
@@ -1757,9 +1753,9 @@ export const COMMAND_CENTER_ACTIVEBACKGROUND = registerColor(
 export const COMMAND_CENTER_BORDER = registerColor(
   "commandCenter.border",
   {
-    dark: transparent(TITLE_BAR_ACTIVE_FOREGROUND, .20),
+    dark: transparent(TITLE_BAR_ACTIVE_FOREGROUND, 0.2),
     hcDark: contrastBorder,
-    light: transparent(TITLE_BAR_ACTIVE_FOREGROUND, .20),
+    light: transparent(TITLE_BAR_ACTIVE_FOREGROUND, 0.2),
     hcLight: contrastBorder,
   },
   localize("commandCenter-border", "Border color of the command center"),
@@ -1768,9 +1764,9 @@ export const COMMAND_CENTER_BORDER = registerColor(
 export const COMMAND_CENTER_ACTIVEBORDER = registerColor(
   "commandCenter.activeBorder",
   {
-    dark: transparent(TITLE_BAR_ACTIVE_FOREGROUND, .30),
+    dark: transparent(TITLE_BAR_ACTIVE_FOREGROUND, 0.3),
     hcDark: TITLE_BAR_ACTIVE_FOREGROUND,
-    light: transparent(TITLE_BAR_ACTIVE_FOREGROUND, .30),
+    light: transparent(TITLE_BAR_ACTIVE_FOREGROUND, 0.3),
     hcLight: TITLE_BAR_ACTIVE_FOREGROUND,
   },
   localize(
@@ -1782,14 +1778,13 @@ export const COMMAND_CENTER_ACTIVEBORDER = registerColor(
 // border: defaults to active background
 export const COMMAND_CENTER_INACTIVEBORDER = registerColor(
   "commandCenter.inactiveBorder",
-  transparent(TITLE_BAR_INACTIVE_FOREGROUND, .25),
+  transparent(TITLE_BAR_INACTIVE_FOREGROUND, 0.25),
   localize(
     "commandCenter-inactiveBorder",
     "Border color of the command center when the window is inactive",
   ),
   false,
 );
-
 
 // < --- Notifications --- >
 

@@ -61,13 +61,7 @@ suite("filterSupportedBetas", () => {
     assert.strictEqual(filterSupportedBetas(""), undefined);
   });
 
-  test(
-    "rejects supported family without date suffix (date-suffix discipline)",
-    () => {
-      assert.strictEqual(
-        filterSupportedBetas("interleaved-thinking"),
-        undefined,
-      );
-    },
-  );
+  test("rejects supported family without date suffix (date-suffix discipline)", () => {
+    assert.strictEqual(filterSupportedBetas("interleaved-thinking"), undefined);
+  });
 });

@@ -81,7 +81,8 @@ export const NotificationType = {
   SessionSummaryChanged: "root/sessionSummaryChanged",
   AuthRequired: "auth/required",
 } as const;
-export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+export type NotificationType =
+  (typeof NotificationType)[keyof typeof NotificationType];
 
 // ---- Local aliases for short names ------------------------------------------
 // Consumers use these shorter names; they're type-only aliases.
@@ -139,10 +140,10 @@ import type {
  * enum.
  */
 export type ProtocolNotification =
-	| ({ type: "root/sessionAdded" } & SessionAddedParams)
-	| ({ type: "root/sessionRemoved" } & SessionRemovedParams)
-	| ({ type: "root/sessionSummaryChanged" } & SessionSummaryChangedParams)
-	| ({ type: "auth/required" } & AuthRequiredParams);
+  | ({ type: "root/sessionAdded" } & SessionAddedParams)
+  | ({ type: "root/sessionRemoved" } & SessionRemovedParams)
+  | ({ type: "root/sessionSummaryChanged" } & SessionSummaryChangedParams)
+  | ({ type: "auth/required" } & AuthRequiredParams);
 
 export type RootAction = IRootAction_;
 export type SessionAction = ISessionAction_;
@@ -168,7 +169,8 @@ export type IToolCallApprovedAction = SessionToolCallApprovedAction;
 export type IToolCallDeniedAction = SessionToolCallDeniedAction;
 export type IToolCallConfirmedAction = SessionToolCallConfirmedAction;
 export type IToolCallCompleteAction = SessionToolCallCompleteAction;
-export type IToolCallResultConfirmedAction = SessionToolCallResultConfirmedAction;
+export type IToolCallResultConfirmedAction =
+  SessionToolCallResultConfirmedAction;
 export type ITurnCompleteAction = SessionTurnCompleteAction;
 export type ITurnCancelledAction = SessionTurnCancelledAction;
 export type ITitleChangedAction = SessionTitleChangedAction;
@@ -176,12 +178,15 @@ export type IUsageAction = SessionUsageAction;
 export type IReasoningAction = SessionReasoningAction;
 export type IModelChangedAction = SessionModelChangedAction;
 export type IAgentChangedAction = SessionAgentChangedAction;
-export type ICustomizationsChangedAction = import("./protocol/actions.js").SessionCustomizationsChangedAction;
-export type ICustomizationToggledAction = import("./protocol/actions.js").SessionCustomizationToggledAction;
+export type ICustomizationsChangedAction =
+  import("./protocol/actions.js").SessionCustomizationsChangedAction;
+export type ICustomizationToggledAction =
+  import("./protocol/actions.js").SessionCustomizationToggledAction;
 
 export type IPendingMessageSetAction = SessionPendingMessageSetAction;
 export type IPendingMessageRemovedAction = SessionPendingMessageRemovedAction;
-export type IQueuedMessagesReorderedAction = SessionQueuedMessagesReorderedAction;
+export type IQueuedMessagesReorderedAction =
+  SessionQueuedMessagesReorderedAction;
 export type IIsReadChangedAction = SessionIsReadChangedAction;
 export type IIsArchivedChangedAction = SessionIsArchivedChangedAction;
 
@@ -191,17 +196,21 @@ export type INotification = ProtocolNotification;
 // ---- Type guards ------------------------------------------------------------
 
 export function isRootAction(action: StateAction): action is RootAction {
-	return action.type.startsWith("root/");
+  return action.type.startsWith("root/");
 }
 
 export function isSessionAction(action: StateAction): action is SessionAction {
-	return action.type.startsWith("session/");
+  return action.type.startsWith("session/");
 }
 
-export function isTerminalAction(action: StateAction): action is TerminalAction {
-	return action.type.startsWith("terminal/");
+export function isTerminalAction(
+  action: StateAction,
+): action is TerminalAction {
+  return action.type.startsWith("terminal/");
 }
 
-export function isChangesetAction(action: StateAction): action is ChangesetAction {
-	return action.type.startsWith("changeset/");
+export function isChangesetAction(
+  action: StateAction,
+): action is ChangesetAction {
+  return action.type.startsWith("changeset/");
 }

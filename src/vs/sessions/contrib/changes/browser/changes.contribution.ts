@@ -8,7 +8,10 @@ import { localize, localize2 } from "../../../../nls.js";
 import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
 import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
-import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../../workbench/common/contributions.js";
+import {
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../workbench/common/contributions.js";
 import {
   IViewContainersRegistry,
   ViewContainerLocation,
@@ -16,7 +19,10 @@ import {
   Extensions as ViewContainerExtensions,
   WindowEnablement,
 } from "../../../../workbench/common/views.js";
-import { CHANGES_VIEW_CONTAINER_ID, CHANGES_VIEW_ID } from "../common/changes.js";
+import {
+  CHANGES_VIEW_CONTAINER_ID,
+  CHANGES_VIEW_ID,
+} from "../common/changes.js";
 import { ChangesViewPane, ChangesViewPaneContainer } from "./changesView.js";
 import { ChangesTitleBarContribution } from "./changesTitleBarWidget.js";
 import { IsPhoneLayoutContext } from "../../../common/contextkeys.js";
@@ -34,27 +40,33 @@ const viewContainersRegistry = Registry.as<IViewContainersRegistry>(
   ViewContainerExtensions.ViewContainersRegistry,
 );
 
-const changesViewContainer = viewContainersRegistry.registerViewContainer({
-	id: CHANGES_VIEW_CONTAINER_ID,
-	title: localize2("changes", "Changes"),
-	icon: changesViewIcon,
-	order: 10,
-	ctorDescriptor: new SyncDescriptor(ChangesViewPaneContainer),
-	storageId: CHANGES_VIEW_CONTAINER_ID,
-	hideIfEmpty: false,
-	openCommandActionDescriptor: {
-		id: CHANGES_VIEW_CONTAINER_ID,
-		mnemonicTitle: localize({ key: "miChanges", comment: ["&& denotes a mnemonic"] }, "Chan&&ges"),
-		keybindings: {
-			primary: 0,
-			win: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyG },
-			linux: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyG },
-			mac: { primary: KeyMod.WinCtrl | KeyMod.Shift | KeyCode.KeyG },
-		},
-		order: 1,
-	},
-	windowEnablement: WindowEnablement.Sessions,
-}, ViewContainerLocation.AuxiliaryBar);
+const changesViewContainer = viewContainersRegistry.registerViewContainer(
+  {
+    id: CHANGES_VIEW_CONTAINER_ID,
+    title: localize2("changes", "Changes"),
+    icon: changesViewIcon,
+    order: 10,
+    ctorDescriptor: new SyncDescriptor(ChangesViewPaneContainer),
+    storageId: CHANGES_VIEW_CONTAINER_ID,
+    hideIfEmpty: false,
+    openCommandActionDescriptor: {
+      id: CHANGES_VIEW_CONTAINER_ID,
+      mnemonicTitle: localize(
+        { key: "miChanges", comment: ["&& denotes a mnemonic"] },
+        "Chan&&ges",
+      ),
+      keybindings: {
+        primary: 0,
+        win: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyG },
+        linux: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyG },
+        mac: { primary: KeyMod.WinCtrl | KeyMod.Shift | KeyCode.KeyG },
+      },
+      order: 1,
+    },
+    windowEnablement: WindowEnablement.Sessions,
+  },
+  ViewContainerLocation.AuxiliaryBar,
+);
 
 const viewsRegistry = Registry.as<IViewsRegistry>(
   ViewContainerExtensions.ViewsRegistry,

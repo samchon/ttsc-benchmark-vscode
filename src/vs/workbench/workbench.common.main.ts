@@ -21,7 +21,6 @@ import "../sessions/common/sizes.js";
 
 //#endregion
 
-
 //#region --- workbench actions
 
 import "./browser/actions/textInputActions.js";
@@ -38,7 +37,6 @@ import "./browser/actions/widgetNavigationCommands.js";
 
 //#endregion
 
-
 //#region --- API Extension Points
 
 import "./services/actions/common/menusExtensionPoint.js";
@@ -46,7 +44,6 @@ import "./api/common/configurationExtensionPoint.js";
 import "./api/browser/viewsExtensionPoint.js";
 
 //#endregion
-
 
 //#region --- workbench parts
 
@@ -58,7 +55,6 @@ import "./browser/parts/statusbar/statusbarPart.js";
 import "./browser/parts/titlebar/menubar.contribution.js";
 
 //#endregion
-
 
 //#region --- workbench services
 
@@ -146,12 +142,21 @@ import "./services/chat/common/chatEntitlementService.js";
 import "./services/agentHost/common/agentHostPermissionService.js";
 import "./services/log/common/defaultLogLevels.js";
 
-import { InstantiationType, registerSingleton } from "../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../platform/instantiation/common/extensions.js";
 import { GlobalExtensionEnablementService } from "../platform/extensionManagement/common/extensionEnablementService.js";
-import { IAllowedExtensionsService, IGlobalExtensionEnablementService } from "../platform/extensionManagement/common/extensionManagement.js";
+import {
+  IAllowedExtensionsService,
+  IGlobalExtensionEnablementService,
+} from "../platform/extensionManagement/common/extensionManagement.js";
 import { ContextViewService } from "../platform/contextview/browser/contextViewService.js";
 import { IContextViewService } from "../platform/contextview/browser/contextView.js";
-import { IListService, ListService } from "../platform/list/browser/listService.js";
+import {
+  IListService,
+  ListService,
+} from "../platform/list/browser/listService.js";
 import { MarkerDecorationsService } from "../editor/common/services/markerDecorationsService.js";
 import { IMarkerDecorationsService } from "../editor/common/services/markerDecorations.js";
 import { IMarkerService } from "../platform/markers/common/markers.js";
@@ -168,11 +173,17 @@ import {
   IgnoredExtensionsManagementService,
   IIgnoredExtensionsManagementService,
 } from "../platform/userDataSync/common/ignoredExtensions.js";
-import { ExtensionStorageService, IExtensionStorageService } from "../platform/extensionManagement/common/extensionStorage.js";
+import {
+  ExtensionStorageService,
+  IExtensionStorageService,
+} from "../platform/extensionManagement/common/extensionStorage.js";
 import { IUserDataSyncLogService } from "../platform/userDataSync/common/userDataSync.js";
 import { UserDataSyncLogService } from "../platform/userDataSync/common/userDataSyncLog.js";
 import { AllowedExtensionsService } from "../platform/extensionManagement/common/allowedExtensionsService.js";
-import { IAllowedMcpServersService, IMcpGalleryService } from "../platform/mcp/common/mcpManagement.js";
+import {
+  IAllowedMcpServersService,
+  IMcpGalleryService,
+} from "../platform/mcp/common/mcpManagement.js";
 import { McpGalleryService } from "../platform/mcp/common/mcpGalleryService.js";
 import { AllowedMcpServersService } from "../platform/mcp/common/allowedMcpServersService.js";
 import { IWebWorkerService } from "../platform/webWorker/browser/webWorkerService.js";
@@ -244,7 +255,6 @@ registerSingleton(
 );
 
 //#endregion
-
 
 //#region --- workbench contributions
 

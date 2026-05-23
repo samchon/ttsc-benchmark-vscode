@@ -11,22 +11,22 @@ import { LazyObservableValue } from "./lazyObservableValue.js";
 import { DebugLocation } from "../debugLocation.js";
 
 export function observableValueOpts<T, TChange = void>(
-	options: IDebugNameData & {
-		equalsFn?: EqualityComparer<T>;
-		lazy?: boolean;
-	},
-	initialValue: T,
-	debugLocation = DebugLocation.ofCaller(),
+  options: IDebugNameData & {
+    equalsFn?: EqualityComparer<T>;
+    lazy?: boolean;
+  },
+  initialValue: T,
+  debugLocation = DebugLocation.ofCaller(),
 ): ISettableObservable<T, TChange> {
-	if (options.lazy) {
-		return new LazyObservableValue(
+  if (options.lazy) {
+    return new LazyObservableValue(
       new DebugNameData(options.owner, options.debugName, undefined),
       initialValue,
       options.equalsFn ?? strictEquals,
       debugLocation,
     );
-	}
-	return new ObservableValue(
+  }
+  return new ObservableValue(
     new DebugNameData(options.owner, options.debugName, undefined),
     initialValue,
     options.equalsFn ?? strictEquals,

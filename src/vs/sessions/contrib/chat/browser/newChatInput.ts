@@ -9,10 +9,17 @@ import * as dom from "../../../../base/browser/dom.js";
 import { Codicon } from "../../../../base/common/codicons.js";
 import { Emitter } from "../../../../base/common/event.js";
 import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
-import { Disposable, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  MutableDisposable,
+  toDisposable,
+} from "../../../../base/common/lifecycle.js";
 import { URI } from "../../../../base/common/uri.js";
 import { Button } from "../../../../base/browser/ui/button/button.js";
-import { CodeEditorWidget, ICodeEditorWidgetOptions } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import {
+  CodeEditorWidget,
+  ICodeEditorWidgetOptions,
+} from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
 import { EditorExtensionsRegistry } from "../../../../editor/browser/editorExtensions.js";
 import { IEditorConstructionOptions } from "../../../../editor/browser/config/editorConfiguration.js";
 import { IModelService } from "../../../../editor/common/services/model.js";
@@ -27,7 +34,11 @@ import { IKeybindingService } from "../../../../platform/keybinding/common/keybi
 import { AccessibilityVerbositySettingId } from "../../../../workbench/contrib/accessibility/browser/accessibilityConfiguration.js";
 import { AccessibilityCommandId } from "../../../../workbench/contrib/accessibility/common/accessibilityCommands.js";
 import { ILogService } from "../../../../platform/log/common/log.js";
-import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import {
+  IStorageService,
+  StorageScope,
+  StorageTarget,
+} from "../../../../platform/storage/common/storage.js";
 import { IHoverService } from "../../../../platform/hover/browser/hover.js";
 import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
 import { HoverPosition } from "../../../../base/browser/ui/hover/hoverWidget.js";
@@ -43,28 +54,39 @@ import { MobileSessionTypePicker } from "./mobile/mobileSessionTypePicker.js";
 import { installMobileChipLaneScroll } from "../../../browser/parts/mobile/mobileChipLaneScroll.js";
 import { IWorkbenchLayoutService } from "../../../../workbench/services/layout/browser/layoutService.js";
 import { Menus } from "../../../browser/menus.js";
-import { HiddenItemStrategy, MenuWorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
+import {
+  HiddenItemStrategy,
+  MenuWorkbenchToolBar,
+} from "../../../../platform/actions/browser/toolbar.js";
 import { SlashCommandHandler } from "./slashCommands.js";
 import { VariableCompletionHandler } from "./variableCompletions.js";
 import { AgentHostInputCompletionHandler } from "./agentHostInputCompletions.js";
 import { IChatModelInputState } from "../../../../workbench/contrib/chat/common/model/chatModel.js";
 import { IChatRequestVariableEntry } from "../../../../workbench/contrib/chat/common/attachments/chatVariableEntries.js";
-import { ChatAgentLocation, ChatModeKind } from "../../../../workbench/contrib/chat/common/constants.js";
+import {
+  ChatAgentLocation,
+  ChatModeKind,
+} from "../../../../workbench/contrib/chat/common/constants.js";
 import { ChatHistoryNavigator } from "../../../../workbench/contrib/chat/common/widget/chatWidgetHistoryService.js";
 import { IHistoryNavigationWidget } from "../../../../base/browser/history.js";
-import { registerAndCreateHistoryNavigationContext, IHistoryNavigationContext } from "../../../../platform/history/browser/contextScopedHistoryWidget.js";
+import {
+  registerAndCreateHistoryNavigationContext,
+  IHistoryNavigationContext,
+} from "../../../../platform/history/browser/contextScopedHistoryWidget.js";
 import { autorun, IObservable } from "../../../../base/common/observable.js";
 import { ChatInputNotificationWidget } from "../../../../workbench/contrib/chat/browser/widget/input/chatInputNotificationWidget.js";
-import { INewChatModelPickerService, NewChatModelPickerService } from "./newChatModelPicker.js";
-
+import {
+  INewChatModelPickerService,
+  NewChatModelPickerService,
+} from "./newChatModelPicker.js";
 
 const STORAGE_KEY_DRAFT_STATE = "sessions.draftState";
 const MIN_EDITOR_HEIGHT = 50;
 const MAX_EDITOR_HEIGHT = 200;
 
 interface IDraftState {
-	inputText: string;
-	attachments: readonly IChatRequestVariableEntry[];
+  inputText: string;
+  attachments: readonly IChatRequestVariableEntry[];
 }
 
 /**
@@ -131,81 +153,91 @@ const RANDOM_PLACEHOLDERS = [
 
 let lastPlaceholderIndex = -1;
 function getRandomChatInputPlaceholder(): string {
-	let index = Math.floor(Math.random() * RANDOM_PLACEHOLDERS.length);
-	if (index === lastPlaceholderIndex) {
-		index = (index + 1) % RANDOM_PLACEHOLDERS.length;
-	}
-	lastPlaceholderIndex = index;
-	return RANDOM_PLACEHOLDERS[index];
+  let index = Math.floor(Math.random() * RANDOM_PLACEHOLDERS.length);
+  if (index === lastPlaceholderIndex) {
+    index = (index + 1) % RANDOM_PLACEHOLDERS.length;
+  }
+  lastPlaceholderIndex = index;
+  return RANDOM_PLACEHOLDERS[index];
 }
 
 // #region --- New Chat Widget ---
 
-export class NewChatInputWidget extends Disposable implements IHistoryNavigationWidget {
+export class NewChatInputWidget
+  extends Disposable
+  implements IHistoryNavigationWidget
+{
+  readonly sessionTypePicker: SessionTypePicker;
 
-	readonly sessionTypePicker: SessionTypePicker;
+  // IHistoryNavigationWidget
+  private readonly _onDidFocus = this._register(new Emitter<void>());
+  readonly onDidFocus = this._onDidFocus.event;
+  private readonly _onDidBlur = this._register(new Emitter<void>());
+  readonly onDidBlur = this._onDidBlur.event;
+  get element(): HTMLElement {
+    return this._editorContainer;
+  }
 
-	// IHistoryNavigationWidget
-	private readonly _onDidFocus = this._register(new Emitter<void>());
-	readonly onDidFocus = this._onDidFocus.event;
-	private readonly _onDidBlur = this._register(new Emitter<void>());
-	readonly onDidBlur = this._onDidBlur.event;
-	get element(): HTMLElement { return this._editorContainer; }
+  // Input
+  private _editor!: CodeEditorWidget;
+  private _editorContainer!: HTMLElement;
 
-	// Input
-	private _editor!: CodeEditorWidget;
-	private _editorContainer!: HTMLElement;
+  // Send button
+  private _sendButton: Button | undefined;
+  private _sending = false;
 
-	// Send button
-	private _sendButton: Button | undefined;
-	private _sending = false;
-
-	// Loading state
-	private _loadingSpinner: HTMLElement | undefined;
-	private readonly _loadingDelayDisposable = this._register(
+  // Loading state
+  private _loadingSpinner: HTMLElement | undefined;
+  private readonly _loadingDelayDisposable = this._register(
     new MutableDisposable(),
   );
 
-	// Attached context
-	private readonly _contextAttachments: NewChatContextAttachments;
+  // Attached context
+  private readonly _contextAttachments: NewChatContextAttachments;
 
-	// Slash commands
-	private _slashCommandHandler: SlashCommandHandler | undefined;
-	private readonly _modelPickerInstantiationService: IInstantiationService;
+  // Slash commands
+  private _slashCommandHandler: SlashCommandHandler | undefined;
+  private readonly _modelPickerInstantiationService: IInstantiationService;
 
-	// Input state
-	private _draftState: IDraftState | undefined = {
+  // Input state
+  private _draftState: IDraftState | undefined = {
     inputText: "",
     attachments: [],
   };
 
-	// Input history
-	private readonly _history: ChatHistoryNavigator;
-	private _historyNavigationBackwardsEnablement!: IHistoryNavigationContext["historyNavigationBackwardsEnablement"];
-	private _historyNavigationForwardsEnablement!: IHistoryNavigationContext["historyNavigationForwardsEnablement"];
+  // Input history
+  private readonly _history: ChatHistoryNavigator;
+  private _historyNavigationBackwardsEnablement!: IHistoryNavigationContext["historyNavigationBackwardsEnablement"];
+  private _historyNavigationForwardsEnablement!: IHistoryNavigationContext["historyNavigationForwardsEnablement"];
 
-	constructor(
-		private readonly options: {
-			getContextFolderUri: () => URI | undefined;
-			sendRequest: (query: string, attachments?: IChatRequestVariableEntry[]) => Promise<void>;
-			canSendRequest: IObservable<boolean>;
-			loading: IObservable<boolean>;
-			minEditorHeight?: number;
-			placeholder?: string;
-			renderSessionTypePickerInControls?: boolean;
-		},
-		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@IModelService private readonly modelService: IModelService,
-		@IConfigurationService private readonly configurationService: IConfigurationService,
-		@IContextKeyService private readonly contextKeyService: IContextKeyService,
-		@ILogService private readonly logService: ILogService,
-		@IHoverService private readonly hoverService: IHoverService,
-		@IStorageService private readonly storageService: IStorageService,
-		@IKeybindingService private readonly keybindingService: IKeybindingService,
-		@IWorkbenchLayoutService private readonly layoutService: IWorkbenchLayoutService,
-	) {
-		super();
-		this._modelPickerInstantiationService = this._register(
+  constructor(
+    private readonly options: {
+      getContextFolderUri: () => URI | undefined;
+      sendRequest: (
+        query: string,
+        attachments?: IChatRequestVariableEntry[],
+      ) => Promise<void>;
+      canSendRequest: IObservable<boolean>;
+      loading: IObservable<boolean>;
+      minEditorHeight?: number;
+      placeholder?: string;
+      renderSessionTypePickerInControls?: boolean;
+    },
+    @IInstantiationService
+    private readonly instantiationService: IInstantiationService,
+    @IModelService private readonly modelService: IModelService,
+    @IConfigurationService
+    private readonly configurationService: IConfigurationService,
+    @IContextKeyService private readonly contextKeyService: IContextKeyService,
+    @ILogService private readonly logService: ILogService,
+    @IHoverService private readonly hoverService: IHoverService,
+    @IStorageService private readonly storageService: IStorageService,
+    @IKeybindingService private readonly keybindingService: IKeybindingService,
+    @IWorkbenchLayoutService
+    private readonly layoutService: IWorkbenchLayoutService,
+  ) {
+    super();
+    this._modelPickerInstantiationService = this._register(
       this.instantiationService.createChild(
         new ServiceCollection([
           INewChatModelPickerService,
@@ -213,100 +245,100 @@ export class NewChatInputWidget extends Disposable implements IHistoryNavigation
         ]),
       ),
     );
-		this._history = this._register(
+    this._history = this._register(
       this.instantiationService.createInstance(
         ChatHistoryNavigator,
         ChatAgentLocation.Chat,
       ),
     );
-		this._contextAttachments = this._register(
+    this._contextAttachments = this._register(
       this.instantiationService.createInstance(NewChatContextAttachments),
     );
-		// Always use the mobile-aware picker. Its overrides bail to the
-		// desktop behavior when `isPhoneLayout()` is false, so picking
-		// the same class regardless of construction-time viewport
-		// avoids a class-mismatch when the user resizes across the
-		// phone breakpoint after the chat input mounted.
-		this.sessionTypePicker = this._register(
+    // Always use the mobile-aware picker. Its overrides bail to the
+    // desktop behavior when `isPhoneLayout()` is false, so picking
+    // the same class regardless of construction-time viewport
+    // avoids a class-mismatch when the user resizes across the
+    // phone breakpoint after the chat input mounted.
+    this.sessionTypePicker = this._register(
       this.instantiationService.createInstance(MobileSessionTypePicker),
     );
-		this._register(
+    this._register(
       this._contextAttachments.onDidChangeContext(() => {
         this._updateDraftState();
         this.focus();
       }),
     );
-		this._register(
-      autorun(reader => {
+    this._register(
+      autorun((reader) => {
         this.options.canSendRequest.read(reader);
         const isLoading = this.options.loading.read(reader);
         this._loadingSpinner?.classList.toggle("visible", isLoading);
         this._updateSendButtonState();
       }),
     );
-	}
+  }
 
-	// --- Rendering ---
+  // --- Rendering ---
 
-	render(parent: HTMLElement, root: HTMLElement): void {
-		// Input slot
-		const chatInputContainer = dom.append(
+  render(parent: HTMLElement, root: HTMLElement): void {
+    // Input slot
+    const chatInputContainer = dom.append(
       parent,
       dom.$(".new-chat-input-container"),
     );
 
-		// Overflow widget DOM node at the top level so the suggest widget
-		// is not clipped by any overflow:hidden ancestor.
-		const editorOverflowWidgetsDomNode = dom.append(
+    // Overflow widget DOM node at the top level so the suggest widget
+    // is not clipped by any overflow:hidden ancestor.
+    const editorOverflowWidgetsDomNode = dom.append(
       root,
       dom.$(".sessions-chat-editor-overflow.monaco-editor"),
     );
-		// Suppress the default `Text` kind icon in the suggest widget; chat slash/skill
-		// completions use that kind and rely on the chat module's CSS rule scoped to this class.
-		editorOverflowWidgetsDomNode.classList.add("hideSuggestTextIcons");
-		this._register({ dispose: () => editorOverflowWidgetsDomNode.remove() });
+    // Suppress the default `Text` kind icon in the suggest widget; chat slash/skill
+    // completions use that kind and rely on the chat module's CSS rule scoped to this class.
+    editorOverflowWidgetsDomNode.classList.add("hideSuggestTextIcons");
+    this._register({ dispose: () => editorOverflowWidgetsDomNode.remove() });
 
-		// Notification widget above the input area
-		const notificationContainer = dom.append(
+    // Notification widget above the input area
+    const notificationContainer = dom.append(
       chatInputContainer,
       dom.$(".chat-input-notification-container"),
     );
-		const notificationWidget = this._register(
+    const notificationWidget = this._register(
       this.instantiationService.createInstance(ChatInputNotificationWidget),
     );
-		notificationContainer.appendChild(notificationWidget.domNode);
+    notificationContainer.appendChild(notificationWidget.domNode);
 
-		// Input area inside the input slot
-		const inputArea = dom.append(
+    // Input area inside the input slot
+    const inputArea = dom.append(
       chatInputContainer,
       dom.$(".new-chat-input-area"),
     );
 
-		// Attachments row (pills only) inside input area, above editor
-		const attachRow = dom.append(inputArea, dom.$(".sessions-chat-attach-row"));
-		const attachedContextContainer = dom.append(
+    // Attachments row (pills only) inside input area, above editor
+    const attachRow = dom.append(inputArea, dom.$(".sessions-chat-attach-row"));
+    const attachedContextContainer = dom.append(
       attachRow,
       dom.$(".sessions-chat-attached-context"),
     );
-		this._contextAttachments.renderAttachedContext(attachedContextContainer);
-		this._contextAttachments.registerDropTarget(root);
-		this._contextAttachments.registerPasteHandler(inputArea);
+    this._contextAttachments.renderAttachedContext(attachedContextContainer);
+    this._contextAttachments.registerDropTarget(root);
+    this._contextAttachments.registerPasteHandler(inputArea);
 
-		this._createEditor(inputArea, editorOverflowWidgetsDomNode);
-		this._createInputToolbar(inputArea);
+    this._createEditor(inputArea, editorOverflowWidgetsDomNode);
+    this._createInputToolbar(inputArea);
 
-		const newChatBottomContainer = dom.append(
+    const newChatBottomContainer = dom.append(
       parent,
       dom.$(".new-chat-bottom-container"),
     );
-		const newChatControlsContainer = dom.append(
+    const newChatControlsContainer = dom.append(
       newChatBottomContainer,
       dom.$(".new-chat-controls-container"),
     );
-		if (this.options.renderSessionTypePickerInControls !== false) {
-			this.sessionTypePicker.render(newChatControlsContainer);
-		}
-		this._register(
+    if (this.options.renderSessionTypePickerInControls !== false) {
+      this.sessionTypePicker.render(newChatControlsContainer);
+    }
+    this._register(
       this.instantiationService.createInstance(
         MenuWorkbenchToolBar,
         dom.append(newChatControlsContainer, dom.$("")),
@@ -317,11 +349,11 @@ export class NewChatInputWidget extends Disposable implements IHistoryNavigation
       ),
     );
 
-		const repoConfigContainer = dom.append(
+    const repoConfigContainer = dom.append(
       newChatBottomContainer,
       dom.$(".new-chat-repo-config-container"),
     );
-		this._register(
+    this._register(
       this.instantiationService.createInstance(
         MenuWorkbenchToolBar,
         repoConfigContainer,
@@ -332,95 +364,108 @@ export class NewChatInputWidget extends Disposable implements IHistoryNavigation
       ),
     );
 
-		// On phone, the chip lane is horizontally scrollable when its
-		// content overflows the viewport. Native touch scroll is blocked
-		// because each chip registers a `Gesture.addTarget` handler in
-		// `renderPickerTrigger` that calls `preventDefault` on
-		// `touchmove`, swallowing the pan. The helper below installs a
-		// pointer-event-based scroll handler that no-ops on desktop and
-		// kicks in once a drag crosses a small threshold on phone.
-		this._register(
+    // On phone, the chip lane is horizontally scrollable when its
+    // content overflows the viewport. Native touch scroll is blocked
+    // because each chip registers a `Gesture.addTarget` handler in
+    // `renderPickerTrigger` that calls `preventDefault` on
+    // `touchmove`, swallowing the pan. The helper below installs a
+    // pointer-event-based scroll handler that no-ops on desktop and
+    // kicks in once a drag crosses a small threshold on phone.
+    this._register(
       installMobileChipLaneScroll(newChatBottomContainer, this.layoutService),
     );
 
-		// Restore draft input state from storage
-		this._restoreState();
+    // Restore draft input state from storage
+    this._restoreState();
 
-		// Layout editor after the input slot fade-in animation completes
-		this._register(
-      dom.addDisposableListener(chatInputContainer, "animationend", () => {
-        this._editor?.layout();
-      }, {
-        once: true,
-      }),
+    // Layout editor after the input slot fade-in animation completes
+    this._register(
+      dom.addDisposableListener(
+        chatInputContainer,
+        "animationend",
+        () => {
+          this._editor?.layout();
+        },
+        { once: true },
+      ),
     );
-	}
+  }
 
-	private _updateInputLoadingState(): void {
-		const loading = this._sending;
-		if (loading) {
-			if (!this._loadingDelayDisposable.value) {
-				const timer = setTimeout(() => {
-					this._loadingDelayDisposable.clear();
-					if (this._sending) {
-						this._loadingSpinner?.classList.add("visible");
-					}
-				}, 500);
-				this._loadingDelayDisposable.value = toDisposable(
-          () => clearTimeout(timer),
+  private _updateInputLoadingState(): void {
+    const loading = this._sending;
+    if (loading) {
+      if (!this._loadingDelayDisposable.value) {
+        const timer = setTimeout(() => {
+          this._loadingDelayDisposable.clear();
+          if (this._sending) {
+            this._loadingSpinner?.classList.add("visible");
+          }
+        }, 500);
+        this._loadingDelayDisposable.value = toDisposable(() =>
+          clearTimeout(timer),
         );
-			}
-		} else {
-			this._loadingDelayDisposable.clear();
-			this._loadingSpinner?.classList.remove("visible");
-		}
-	}
+      }
+    } else {
+      this._loadingDelayDisposable.clear();
+      this._loadingSpinner?.classList.remove("visible");
+    }
+  }
 
-	// --- Editor ---
+  // --- Editor ---
 
-	private _getAriaLabel(): string {
-		const verbose = this.configurationService.getValue<boolean>(
+  private _getAriaLabel(): string {
+    const verbose = this.configurationService.getValue<boolean>(
       AccessibilityVerbositySettingId.SessionsChat,
     );
-		if (verbose) {
-			const kbLabel = this.keybindingService.lookupKeybinding(AccessibilityCommandId.OpenAccessibilityHelp)?.getLabel();
-			return kbLabel
-				? localize(
+    if (verbose) {
+      const kbLabel = this.keybindingService
+        .lookupKeybinding(AccessibilityCommandId.OpenAccessibilityHelp)
+        ?.getLabel();
+      return kbLabel
+        ? localize(
             "chatInput.accessibilityHelp",
             "Chat input. Press Enter to send out the request. Use {0} for Chat Accessibility Help.",
             kbLabel,
           )
-				: localize(
+        : localize(
             "chatInput.accessibilityHelpNoKb",
             "Chat input. Press Enter to send out the request. Use the Chat Accessibility Help command for more information.",
           );
-		}
-		return localize("chatInput", "Chat input");
-	}
+    }
+    return localize("chatInput", "Chat input");
+  }
 
-	private _createEditor(container: HTMLElement, overflowWidgetsDomNode: HTMLElement): void {
-		const editorContainer = this._editorContainer = dom.append(
+  private _createEditor(
+    container: HTMLElement,
+    overflowWidgetsDomNode: HTMLElement,
+  ): void {
+    const editorContainer = (this._editorContainer = dom.append(
       container,
       dom.$(".sessions-chat-editor"),
-    );
-		const minHeight = this.options.minEditorHeight ?? MIN_EDITOR_HEIGHT;
-		editorContainer.style.height = `${minHeight}px`;
+    ));
+    const minHeight = this.options.minEditorHeight ?? MIN_EDITOR_HEIGHT;
+    editorContainer.style.height = `${minHeight}px`;
 
-		// Create scoped context key service and register history navigation
-		// BEFORE creating the editor, so the editor's context key scope is a child
-		const inputScopedContextKeyService = this._register(
+    // Create scoped context key service and register history navigation
+    // BEFORE creating the editor, so the editor's context key scope is a child
+    const inputScopedContextKeyService = this._register(
       this.contextKeyService.createScoped(container),
     );
-		const { historyNavigationBackwardsEnablement, historyNavigationForwardsEnablement } = this._register(
+    const {
+      historyNavigationBackwardsEnablement,
+      historyNavigationForwardsEnablement,
+    } = this._register(
       registerAndCreateHistoryNavigationContext(
         inputScopedContextKeyService,
         this,
       ),
     );
-		this._historyNavigationBackwardsEnablement = historyNavigationBackwardsEnablement;
-		this._historyNavigationForwardsEnablement = historyNavigationForwardsEnablement;
+    this._historyNavigationBackwardsEnablement =
+      historyNavigationBackwardsEnablement;
+    this._historyNavigationForwardsEnablement =
+      historyNavigationForwardsEnablement;
 
-		const scopedInstantiationService = this._register(
+    const scopedInstantiationService = this._register(
       this.instantiationService.createChild(
         new ServiceCollection([
           IContextKeyService,
@@ -429,48 +474,48 @@ export class NewChatInputWidget extends Disposable implements IHistoryNavigation
       ),
     );
 
-		const uri = URI.from({
+    const uri = URI.from({
       scheme: "sessions-chat",
       path: `input-${Date.now()}`,
     });
-		const textModel = this._register(
+    const textModel = this._register(
       this.modelService.createModel("", null, uri, true),
     );
 
-		const editorOptions: IEditorConstructionOptions = {
-			...getSimpleEditorOptions(this.configurationService),
-			readOnly: false,
-			ariaLabel: this._getAriaLabel(),
-			placeholder: this.options.placeholder ?? getRandomChatInputPlaceholder(),
-			fontFamily: "system-ui, -apple-system, sans-serif",
-			fontSize: 13,
-			lineHeight: 20,
-			cursorWidth: 1,
-			padding: { top: 8, bottom: 2 },
-			wrappingStrategy: "advanced",
-			stickyScroll: { enabled: false },
-			renderWhitespace: "none",
-			overflowWidgetsDomNode,
-			suggest: {
-				showIcons: true,
-				showSnippets: false,
-				showWords: true,
-				showStatusBar: false,
-				insertMode: "insert",
-			},
-		};
+    const editorOptions: IEditorConstructionOptions = {
+      ...getSimpleEditorOptions(this.configurationService),
+      readOnly: false,
+      ariaLabel: this._getAriaLabel(),
+      placeholder: this.options.placeholder ?? getRandomChatInputPlaceholder(),
+      fontFamily: "system-ui, -apple-system, sans-serif",
+      fontSize: 13,
+      lineHeight: 20,
+      cursorWidth: 1,
+      padding: { top: 8, bottom: 2 },
+      wrappingStrategy: "advanced",
+      stickyScroll: { enabled: false },
+      renderWhitespace: "none",
+      overflowWidgetsDomNode,
+      suggest: {
+        showIcons: true,
+        showSnippets: false,
+        showWords: true,
+        showStatusBar: false,
+        insertMode: "insert",
+      },
+    };
 
-		const widgetOptions: ICodeEditorWidgetOptions = {
-			isSimpleWidget: true,
-			contributions: EditorExtensionsRegistry.getSomeEditorContributions([
-				ContextMenuController.ID,
-				SuggestController.ID,
-				SnippetController2.ID,
-				PlaceholderTextContribution.ID,
-			]),
-		};
+    const widgetOptions: ICodeEditorWidgetOptions = {
+      isSimpleWidget: true,
+      contributions: EditorExtensionsRegistry.getSomeEditorContributions([
+        ContextMenuController.ID,
+        SuggestController.ID,
+        SnippetController2.ID,
+        PlaceholderTextContribution.ID,
+      ]),
+    };
 
-		this._editor = this._register(
+    this._editor = this._register(
       scopedInstantiationService.createInstance(
         CodeEditorWidget,
         editorContainer,
@@ -478,94 +523,125 @@ export class NewChatInputWidget extends Disposable implements IHistoryNavigation
         widgetOptions,
       ),
     );
-		this._editor.setModel(textModel);
+    this._editor.setModel(textModel);
 
-		// Ensure suggest widget renders above the input (not clipped by container)
-		SuggestController.get(this._editor)?.forceRenderingAbove();
+    // Ensure suggest widget renders above the input (not clipped by container)
+    SuggestController.get(this._editor)?.forceRenderingAbove();
 
-		// Update aria label when accessibility verbosity setting changes
-		this._register(this.configurationService.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration(AccessibilityVerbositySettingId.SessionsChat)) {
-				this._editor.updateOptions({ ariaLabel: this._getAriaLabel() });
-			}
-		}));
+    // Update aria label when accessibility verbosity setting changes
+    this._register(
+      this.configurationService.onDidChangeConfiguration((e) => {
+        if (
+          e.affectsConfiguration(AccessibilityVerbositySettingId.SessionsChat)
+        ) {
+          this._editor.updateOptions({ ariaLabel: this._getAriaLabel() });
+        }
+      }),
+    );
 
-		this._register(
+    this._register(
       this._editor.onDidFocusEditorWidget(() => this._onDidFocus.fire()),
     );
-		this._register(
+    this._register(
       this._editor.onDidBlurEditorWidget(() => this._onDidBlur.fire()),
     );
 
-		this._register(this._editor.onKeyDown(e => {
-			if (e.keyCode === KeyCode.Enter && !e.shiftKey && !e.ctrlKey && !e.altKey) {
-				// Don't send if the suggest widget is visible (let it accept the completion)
-				if (this._editor.contextKeyService.getContextKeyValue<boolean>("suggestWidgetVisible")) {
-					return;
-				}
-				e.preventDefault();
-				e.stopPropagation();
-				this._send();
-			}
-			if (e.keyCode === KeyCode.Enter && !e.shiftKey && !e.ctrlKey && e.altKey) {
-				e.preventDefault();
-				e.stopPropagation();
-				this._send();
-			}
-			// Cmd+/ / Ctrl+/ — open the context picker (same as the attach button)
-			if (e.equals(KeyMod.CtrlCmd | KeyCode.Slash)) {
-				e.preventDefault();
-				e.stopPropagation();
-				this._contextAttachments.showPicker(this.options.getContextFolderUri());
-			}
-		}));
+    this._register(
+      this._editor.onKeyDown((e) => {
+        if (
+          e.keyCode === KeyCode.Enter &&
+          !e.shiftKey &&
+          !e.ctrlKey &&
+          !e.altKey
+        ) {
+          // Don't send if the suggest widget is visible (let it accept the completion)
+          if (
+            this._editor.contextKeyService.getContextKeyValue<boolean>(
+              "suggestWidgetVisible",
+            )
+          ) {
+            return;
+          }
+          e.preventDefault();
+          e.stopPropagation();
+          this._send();
+        }
+        if (
+          e.keyCode === KeyCode.Enter &&
+          !e.shiftKey &&
+          !e.ctrlKey &&
+          e.altKey
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          this._send();
+        }
+        // Cmd+/ / Ctrl+/ — open the context picker (same as the attach button)
+        if (e.equals(KeyMod.CtrlCmd | KeyCode.Slash)) {
+          e.preventDefault();
+          e.stopPropagation();
+          this._contextAttachments.showPicker(
+            this.options.getContextFolderUri(),
+          );
+        }
+      }),
+    );
 
-		// Update history navigation enablement based on cursor position
-		const updateHistoryNavigationEnablement = () => {
-			const model = this._editor.getModel();
-			const position = this._editor.getPosition();
-			if (!model || !position) {
-				return;
-			}
-			this._historyNavigationBackwardsEnablement.set(
+    // Update history navigation enablement based on cursor position
+    const updateHistoryNavigationEnablement = () => {
+      const model = this._editor.getModel();
+      const position = this._editor.getPosition();
+      if (!model || !position) {
+        return;
+      }
+      this._historyNavigationBackwardsEnablement.set(
         position.lineNumber === 1 && position.column === 1,
       );
-			this._historyNavigationForwardsEnablement.set(
-        position.lineNumber === model.getLineCount() && position.column === model.getLineMaxColumn(position.lineNumber),
+      this._historyNavigationForwardsEnablement.set(
+        position.lineNumber === model.getLineCount() &&
+          position.column === model.getLineMaxColumn(position.lineNumber),
       );
-		};
-		this._register(
-      this._editor.onDidChangeCursorPosition(
-        () => updateHistoryNavigationEnablement(),
+    };
+    this._register(
+      this._editor.onDidChangeCursorPosition(() =>
+        updateHistoryNavigationEnablement(),
       ),
     );
-		updateHistoryNavigationEnablement();
+    updateHistoryNavigationEnablement();
 
-		let previousHeight = -1;
-		this._register(this._editor.onDidContentSizeChange(e => {
-			if (!e.contentHeightChanged) {
-				return;
-			}
-			const contentHeight = this._editor.getContentHeight();
-			const clampedHeight = Math.min(MAX_EDITOR_HEIGHT, Math.max(this.options.minEditorHeight ?? MIN_EDITOR_HEIGHT, contentHeight));
-			if (clampedHeight === previousHeight) {
-				return;
-			}
-			previousHeight = clampedHeight;
-			this._editorContainer.style.height = `${clampedHeight}px`;
-			this._editor.layout();
-		}));
+    let previousHeight = -1;
+    this._register(
+      this._editor.onDidContentSizeChange((e) => {
+        if (!e.contentHeightChanged) {
+          return;
+        }
+        const contentHeight = this._editor.getContentHeight();
+        const clampedHeight = Math.min(
+          MAX_EDITOR_HEIGHT,
+          Math.max(
+            this.options.minEditorHeight ?? MIN_EDITOR_HEIGHT,
+            contentHeight,
+          ),
+        );
+        if (clampedHeight === previousHeight) {
+          return;
+        }
+        previousHeight = clampedHeight;
+        this._editorContainer.style.height = `${clampedHeight}px`;
+        this._editor.layout();
+      }),
+    );
 
-		// Slash commands
-		this._slashCommandHandler = this._register(
+    // Slash commands
+    this._slashCommandHandler = this._register(
       this._modelPickerInstantiationService.createInstance(
         SlashCommandHandler,
         this._editor,
       ),
     );
 
-		// Variable completions (#file, #folder)
-		this._register(
+    // Variable completions (#file, #folder)
+    this._register(
       this.instantiationService.createInstance(
         VariableCompletionHandler,
         this._editor,
@@ -574,7 +650,7 @@ export class NewChatInputWidget extends Disposable implements IHistoryNavigation
       ),
     );
 
-		this._register(
+    this._register(
       this.instantiationService.createInstance(
         AgentHostInputCompletionHandler,
         this._editor,
@@ -582,50 +658,50 @@ export class NewChatInputWidget extends Disposable implements IHistoryNavigation
       ),
     );
 
-		this._register(
+    this._register(
       this._editor.onDidChangeModelContent(() => {
         this._updateDraftState();
         this._updateSendButtonState();
       }),
     );
-	}
+  }
 
-	private _createAttachButton(container: HTMLElement): void {
-		const attachButton = dom.append(
+  private _createAttachButton(container: HTMLElement): void {
+    const attachButton = dom.append(
       container,
       dom.$(".sessions-chat-attach-button"),
     );
-		const attachButtonLabel = localize("addContext", "Add Context...");
-		attachButton.tabIndex = 0;
-		attachButton.role = "button";
-		attachButton.ariaLabel = attachButtonLabel;
-		this._register(
+    const attachButtonLabel = localize("addContext", "Add Context...");
+    attachButton.tabIndex = 0;
+    attachButton.role = "button";
+    attachButton.ariaLabel = attachButtonLabel;
+    this._register(
       this.hoverService.setupDelayedHover(attachButton, {
         content: attachButtonLabel,
         position: { hoverPosition: HoverPosition.BELOW },
         appearance: { showPointer: true },
       }),
     );
-		dom.append(attachButton, renderIcon(Codicon.add));
-		this._register(
+    dom.append(attachButton, renderIcon(Codicon.add));
+    this._register(
       dom.addDisposableListener(attachButton, dom.EventType.CLICK, () => {
         this._contextAttachments.showPicker(this.options.getContextFolderUri());
       }),
     );
-	}
+  }
 
-	private _createInputToolbar(container: HTMLElement): void {
-		const toolbar = dom.append(container, dom.$(".sessions-chat-toolbar"));
+  private _createInputToolbar(container: HTMLElement): void {
+    const toolbar = dom.append(container, dom.$(".sessions-chat-toolbar"));
 
-		this._createAttachButton(toolbar);
+    this._createAttachButton(toolbar);
 
-		// Session config pickers (mode, model) — rendered via MenuWorkbenchToolBar
-		// Visibility controlled by context keys (isActiveSessionBackgroundProvider, isNewChatSession)
-		const configContainer = dom.append(
+    // Session config pickers (mode, model) — rendered via MenuWorkbenchToolBar
+    // Visibility controlled by context keys (isActiveSessionBackgroundProvider, isNewChatSession)
+    const configContainer = dom.append(
       toolbar,
       dom.$(".sessions-chat-config-toolbar"),
     );
-		this._register(
+    this._register(
       this._modelPickerInstantiationService.createInstance(
         MenuWorkbenchToolBar,
         configContainer,
@@ -636,18 +712,18 @@ export class NewChatInputWidget extends Disposable implements IHistoryNavigation
       ),
     );
 
-		dom.append(toolbar, dom.$(".sessions-chat-toolbar-spacer"));
+    dom.append(toolbar, dom.$(".sessions-chat-toolbar-spacer"));
 
-		this._loadingSpinner = dom.append(
+    this._loadingSpinner = dom.append(
       toolbar,
       dom.$(".sessions-chat-loading-spinner"),
     );
-		const loadingIcon = dom.append(
+    const loadingIcon = dom.append(
       this._loadingSpinner,
       renderIcon(ThemeIcon.modify(Codicon.loading, "spin")),
     );
-		loadingIcon.setAttribute("aria-hidden", "true");
-		this._register(
+    loadingIcon.setAttribute("aria-hidden", "true");
+    this._register(
       this.hoverService.setupManagedHover(
         getDefaultHoverDelegate("mouse"),
         this._loadingSpinner,
@@ -655,212 +731,215 @@ export class NewChatInputWidget extends Disposable implements IHistoryNavigation
       ),
     );
 
-		const sendButtonContainer = dom.append(
+    const sendButtonContainer = dom.append(
       toolbar,
       dom.$(".sessions-chat-send-button"),
     );
-		const sendButton = this._sendButton = this._register(
+    const sendButton = (this._sendButton = this._register(
       new Button(sendButtonContainer, {
         secondary: true,
         title: localize("send", "Send"),
         ariaLabel: localize("send", "Send"),
       }),
-    );
-		sendButton.icon = Codicon.arrowUp;
-		this._register(sendButton.onDidClick(() => this._send()));
-	}
+    ));
+    sendButton.icon = Codicon.arrowUp;
+    this._register(sendButton.onDidClick(() => this._send()));
+  }
 
-	// --- Input History (IHistoryNavigationWidget) ---
+  // --- Input History (IHistoryNavigationWidget) ---
 
-	showPreviousValue(): void {
-		if (this._history.isAtStart()) {
-			return;
-		}
-		if (this._draftState?.inputText || this._draftState?.attachments.length) {
-			this._history.overlay(this._toHistoryEntry(this._draftState));
-		}
-		this._navigateHistory(true);
-	}
+  showPreviousValue(): void {
+    if (this._history.isAtStart()) {
+      return;
+    }
+    if (this._draftState?.inputText || this._draftState?.attachments.length) {
+      this._history.overlay(this._toHistoryEntry(this._draftState));
+    }
+    this._navigateHistory(true);
+  }
 
-	showNextValue(): void {
-		if (this._history.isAtEnd()) {
-			return;
-		}
-		if (this._draftState?.inputText || this._draftState?.attachments.length) {
-			this._history.overlay(this._toHistoryEntry(this._draftState));
-		}
-		this._navigateHistory(false);
-	}
+  showNextValue(): void {
+    if (this._history.isAtEnd()) {
+      return;
+    }
+    if (this._draftState?.inputText || this._draftState?.attachments.length) {
+      this._history.overlay(this._toHistoryEntry(this._draftState));
+    }
+    this._navigateHistory(false);
+  }
 
-	private _updateDraftState(): void {
-		this._draftState = {
+  private _updateDraftState(): void {
+    this._draftState = {
       inputText: this._editor?.getModel()?.getValue() ?? "",
       attachments: [...this._contextAttachments.attachments],
     };
-	}
+  }
 
-	private _toHistoryEntry(draft: IDraftState): IChatModelInputState {
-		return {
+  private _toHistoryEntry(draft: IDraftState): IChatModelInputState {
+    return {
       ...draft,
       mode: { id: ChatModeKind.Agent, kind: ChatModeKind.Agent },
       selectedModel: undefined,
       selections: [],
       contrib: {},
     };
-	}
+  }
 
-	private _navigateHistory(previous: boolean): void {
-		const entry = previous ? this._history.previous() : this._history.next();
-		const inputText = entry?.inputText ?? "";
-		if (entry) {
-			this._editor?.getModel()?.setValue(inputText);
-			this._contextAttachments.setAttachments(entry.attachments);
-		}
-		aria.status(inputText);
-		if (previous) {
-			this._editor.setPosition({ lineNumber: 1, column: 1 });
-		} else {
-			const model = this._editor.getModel();
-			if (model) {
-				const lastLine = model.getLineCount();
-				this._editor.setPosition({
+  private _navigateHistory(previous: boolean): void {
+    const entry = previous ? this._history.previous() : this._history.next();
+    const inputText = entry?.inputText ?? "";
+    if (entry) {
+      this._editor?.getModel()?.setValue(inputText);
+      this._contextAttachments.setAttachments(entry.attachments);
+    }
+    aria.status(inputText);
+    if (previous) {
+      this._editor.setPosition({ lineNumber: 1, column: 1 });
+    } else {
+      const model = this._editor.getModel();
+      if (model) {
+        const lastLine = model.getLineCount();
+        this._editor.setPosition({
           lineNumber: lastLine,
           column: model.getLineMaxColumn(lastLine),
         });
-			}
-		}
-	}
+      }
+    }
+  }
 
-	// --- Send ---
+  // --- Send ---
 
+  private async _send(): Promise<void> {
+    const query = this._editor.getModel()?.getValue().trim();
+    if (!query || this._sending) {
+      return;
+    }
 
-	private async _send(): Promise<void> {
-		const query = this._editor.getModel()?.getValue().trim();
-		if (!query || this._sending) {
-			return;
-		}
+    // Check for slash commands first
+    if (this._slashCommandHandler?.tryExecuteSlashCommand(query)) {
+      this._editor.getModel()?.setValue("");
+      return;
+    }
 
-		// Check for slash commands first
-		if (this._slashCommandHandler?.tryExecuteSlashCommand(query)) {
-			this._editor.getModel()?.setValue("");
-			return;
-		}
+    const attachedContext =
+      this._contextAttachments.attachments.length > 0
+        ? [...this._contextAttachments.attachments]
+        : undefined;
 
-		const attachedContext = this._contextAttachments.attachments.length > 0
-			? [...this._contextAttachments.attachments]
-			: undefined;
+    if (this._draftState) {
+      this._history.append(this._toHistoryEntry(this._draftState));
+    }
+    this._clearDraftState();
 
-		if (this._draftState) {
-			this._history.append(this._toHistoryEntry(this._draftState));
-		}
-		this._clearDraftState();
+    this._sending = true;
+    this._editor.updateOptions({ readOnly: true });
+    this._updateSendButtonState();
+    this._updateInputLoadingState();
 
-		this._sending = true;
-		this._editor.updateOptions({ readOnly: true });
-		this._updateSendButtonState();
-		this._updateInputLoadingState();
+    try {
+      await this.options.sendRequest(query, attachedContext);
+      this._contextAttachments.clear();
+      this._editor.getModel()?.setValue("");
+    } catch (e) {
+      this.logService.error("Failed to send request:", e);
+    }
 
-		try {
-			await this.options.sendRequest(query, attachedContext);
-			this._contextAttachments.clear();
-			this._editor.getModel()?.setValue("");
-		} catch (e) {
-			this.logService.error("Failed to send request:", e);
-		}
+    this._sending = false;
+    this._editor.updateOptions({ readOnly: false });
+    this._updateSendButtonState();
+    this._updateInputLoadingState();
+  }
 
-		this._sending = false;
-		this._editor.updateOptions({ readOnly: false });
-		this._updateSendButtonState();
-		this._updateInputLoadingState();
-	}
+  private _updateSendButtonState(): void {
+    if (!this._sendButton) {
+      return;
+    }
+    const hasText = !!this._editor?.getModel()?.getValue().trim();
+    this._sendButton.enabled =
+      !this._sending && hasText && this.options.canSendRequest.get();
+  }
 
-	private _updateSendButtonState(): void {
-		if (!this._sendButton) {
-			return;
-		}
-		const hasText = !!this._editor?.getModel()?.getValue().trim();
-		this._sendButton.enabled = !this._sending && hasText && this.options.canSendRequest.get();
-	}
-
-	private _restoreState(): void {
-		const draft = this._getDraftState();
-		if (draft) {
-			this._editor?.getModel()?.setValue(draft.inputText);
-			if (draft.attachments?.length) {
-				this._contextAttachments.setAttachments(
+  private _restoreState(): void {
+    const draft = this._getDraftState();
+    if (draft) {
+      this._editor?.getModel()?.setValue(draft.inputText);
+      if (draft.attachments?.length) {
+        this._contextAttachments.setAttachments(
           draft.attachments.map(IChatRequestVariableEntry.fromExport),
         );
-			}
-		}
-	}
+      }
+    }
+  }
 
-	private _getDraftState(): IDraftState | undefined {
-		const raw = this.storageService.get(
+  private _getDraftState(): IDraftState | undefined {
+    const raw = this.storageService.get(
       STORAGE_KEY_DRAFT_STATE,
       StorageScope.WORKSPACE,
     );
-		if (!raw) {
-			return undefined;
-		}
-		try {
-			return JSON.parse(raw);
-		} catch {
-			return undefined;
-		}
-	}
+    if (!raw) {
+      return undefined;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return undefined;
+    }
+  }
 
-	private _clearDraftState(): void {
-		this._draftState = { inputText: "", attachments: [] };
-		this.storageService.store(
+  private _clearDraftState(): void {
+    this._draftState = { inputText: "", attachments: [] };
+    this.storageService.store(
       STORAGE_KEY_DRAFT_STATE,
       JSON.stringify(this._draftState),
       StorageScope.WORKSPACE,
       StorageTarget.MACHINE,
     );
-	}
+  }
 
-	saveState(): void {
-		if (this._draftState) {
-			const state = {
+  saveState(): void {
+    if (this._draftState) {
+      const state = {
         ...this._draftState,
-        attachments: this._draftState.attachments.map(IChatRequestVariableEntry.toExport),
+        attachments: this._draftState.attachments.map(
+          IChatRequestVariableEntry.toExport,
+        ),
       };
-			this.storageService.store(
+      this.storageService.store(
         STORAGE_KEY_DRAFT_STATE,
         JSON.stringify(state),
         StorageScope.WORKSPACE,
         StorageTarget.MACHINE,
       );
-		}
-	}
+    }
+  }
 
-	layout(_height: number, _width: number): void {
-		this._editor?.layout();
-	}
+  layout(_height: number, _width: number): void {
+    this._editor?.layout();
+  }
 
-	focus(): void {
-		this._editor?.focus();
-	}
+  focus(): void {
+    this._editor?.focus();
+  }
 
-	prefillInput(text: string): void {
-		const editor = this._editor;
-		const model = editor?.getModel();
-		if (editor && model) {
-			model.setValue(text);
-			const lastLine = model.getLineCount();
-			const maxColumn = model.getLineMaxColumn(lastLine);
-			editor.setPosition({ lineNumber: lastLine, column: maxColumn });
-			editor.focus();
-		}
-	}
+  prefillInput(text: string): void {
+    const editor = this._editor;
+    const model = editor?.getModel();
+    if (editor && model) {
+      model.setValue(text);
+      const lastLine = model.getLineCount();
+      const maxColumn = model.getLineMaxColumn(lastLine);
+      editor.setPosition({ lineNumber: lastLine, column: maxColumn });
+      editor.focus();
+    }
+  }
 
-	sendQuery(text: string): void {
-		const model = this._editor?.getModel();
-		if (model) {
-			model.setValue(text);
-			this._send();
-		}
-	}
+  sendQuery(text: string): void {
+    const model = this._editor?.getModel();
+    if (model) {
+      model.setValue(text);
+      this._send();
+    }
+  }
 }
 
 // #endregion

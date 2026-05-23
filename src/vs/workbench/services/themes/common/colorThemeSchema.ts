@@ -5,7 +5,10 @@
 import * as nls from "../../../../nls.js";
 
 import { Registry } from "../../../../platform/registry/common/platform.js";
-import { Extensions as JSONExtensions, IJSONContributionRegistry } from "../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
+import {
+  Extensions as JSONExtensions,
+  IJSONContributionRegistry,
+} from "../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
 import { IJSONSchema } from "../../../../base/common/jsonSchema.js";
 
 import { workbenchColorsSchemaId } from "../../../../platform/theme/common/colorRegistry.js";
@@ -118,158 +121,215 @@ export const textmateColorsSchemaId = "vscode://schemas/textmate-colors";
 export const textmateColorGroupSchemaId = `${textmateColorsSchemaId}#/definitions/colorGroup`;
 
 const textmateColorSchema: IJSONSchema = {
-	type: "array",
-	definitions: {
-		colorGroup: {
-			default: "#FF0000",
-			anyOf: [
-				{
-					type: "string",
-					format: "color-hex",
-				},
-				{
-					$ref: "#/definitions/settings",
-				},
-			],
-		},
-		settings: {
-			type: "object",
-			description: nls.localize("schema.token.settings", "Colors and styles for the token."),
-			properties: {
-				foreground: {
-					type: "string",
-					description: nls.localize("schema.token.foreground", "Foreground color for the token."),
-					format: "color-hex",
-					default: "#ff0000",
-				},
-				background: {
-					type: "string",
-					deprecationMessage: nls.localize("schema.token.background.warning", "Token background colors are currently not supported."),
-				},
-				fontStyle: {
-					type: "string",
-					description: nls.localize("schema.token.fontStyle", "Font style of the rule: 'italic', 'bold', 'underline', 'strikethrough' or a combination. The empty string unsets inherited settings."),
-					pattern: "^(\\s*\\b(italic|bold|underline|strikethrough))*\\s*$",
-					patternErrorMessage: nls.localize("schema.fontStyle.error", "Font style must be 'italic', 'bold', 'underline', 'strikethrough' or a combination or the empty string."),
-					defaultSnippets: [
-						{ label: nls.localize("schema.token.fontStyle.none", "None (clear inherited style)"), bodyText: '""' },
-						{ body: "italic" },
-						{ body: "bold" },
-						{ body: "underline" },
-						{ body: "strikethrough" },
-						{ body: "italic bold" },
-						{ body: "italic underline" },
-						{ body: "italic strikethrough" },
-						{ body: "bold underline" },
-						{ body: "bold strikethrough" },
-						{ body: "underline strikethrough" },
-						{ body: "italic bold underline" },
-						{ body: "italic bold strikethrough" },
-						{ body: "italic underline strikethrough" },
-						{ body: "bold underline strikethrough" },
-						{ body: "italic bold underline strikethrough" },
-					],
-				},
-				fontFamily: {
-					type: "string",
-					description: nls.localize("schema.token.fontFamily", 'Font family for the token (e.g., "Fira Code", "JetBrains Mono").'),
-				},
-				fontSize: {
-					type: "number",
-					description: nls.localize("schema.token.fontSize", "Font size multiplier for the token (e.g., 1.2 will use 1.2 times the default font size)."),
-				},
-				lineHeight: {
-					type: "number",
-					description: nls.localize("schema.token.lineHeight", "Line height multiplier for the token (e.g., 1.2 will use 1.2 times the default height). If the font size is set and the line height is not explicitly set, the line height will be computed based on the font size."),
-				},
-			},
-			additionalProperties: false,
-			defaultSnippets: [{ body: { foreground: "${1:#FF0000}", fontStyle: "${2:bold}" } }],
-		},
-	},
-	items: {
-		type: "object",
-		defaultSnippets: [{ body: { scope: "${1:keyword.operator}", settings: { foreground: "${2:#FF0000}" } } }],
-		properties: {
-			name: {
-				type: "string",
-				description: nls.localize("schema.properties.name", "Description of the rule."),
-			},
-			scope: {
-				description: nls.localize("schema.properties.scope", "Scope selector against which this rule matches."),
-				anyOf: [
-					{
-						enum: textMateScopes,
-					},
-					{
-						type: "string",
-					},
-					{
-						type: "array",
-						items: {
-							enum: textMateScopes,
-						},
-					},
-					{
-						type: "array",
-						items: {
-							type: "string",
-						},
-					},
-				],
-			},
-			settings: {
-				$ref: "#/definitions/settings",
-			},
-		},
-		required: [
-			"settings",
-		],
-		additionalProperties: false,
-	},
+  type: "array",
+  definitions: {
+    colorGroup: {
+      default: "#FF0000",
+      anyOf: [
+        {
+          type: "string",
+          format: "color-hex",
+        },
+        {
+          $ref: "#/definitions/settings",
+        },
+      ],
+    },
+    settings: {
+      type: "object",
+      description: nls.localize(
+        "schema.token.settings",
+        "Colors and styles for the token.",
+      ),
+      properties: {
+        foreground: {
+          type: "string",
+          description: nls.localize(
+            "schema.token.foreground",
+            "Foreground color for the token.",
+          ),
+          format: "color-hex",
+          default: "#ff0000",
+        },
+        background: {
+          type: "string",
+          deprecationMessage: nls.localize(
+            "schema.token.background.warning",
+            "Token background colors are currently not supported.",
+          ),
+        },
+        fontStyle: {
+          type: "string",
+          description: nls.localize(
+            "schema.token.fontStyle",
+            "Font style of the rule: 'italic', 'bold', 'underline', 'strikethrough' or a combination. The empty string unsets inherited settings.",
+          ),
+          pattern: "^(\\s*\\b(italic|bold|underline|strikethrough))*\\s*$",
+          patternErrorMessage: nls.localize(
+            "schema.fontStyle.error",
+            "Font style must be 'italic', 'bold', 'underline', 'strikethrough' or a combination or the empty string.",
+          ),
+          defaultSnippets: [
+            {
+              label: nls.localize(
+                "schema.token.fontStyle.none",
+                "None (clear inherited style)",
+              ),
+              bodyText: '""',
+            },
+            { body: "italic" },
+            { body: "bold" },
+            { body: "underline" },
+            { body: "strikethrough" },
+            { body: "italic bold" },
+            { body: "italic underline" },
+            { body: "italic strikethrough" },
+            { body: "bold underline" },
+            { body: "bold strikethrough" },
+            { body: "underline strikethrough" },
+            { body: "italic bold underline" },
+            { body: "italic bold strikethrough" },
+            { body: "italic underline strikethrough" },
+            { body: "bold underline strikethrough" },
+            { body: "italic bold underline strikethrough" },
+          ],
+        },
+        fontFamily: {
+          type: "string",
+          description: nls.localize(
+            "schema.token.fontFamily",
+            'Font family for the token (e.g., "Fira Code", "JetBrains Mono").',
+          ),
+        },
+        fontSize: {
+          type: "number",
+          description: nls.localize(
+            "schema.token.fontSize",
+            "Font size multiplier for the token (e.g., 1.2 will use 1.2 times the default font size).",
+          ),
+        },
+        lineHeight: {
+          type: "number",
+          description: nls.localize(
+            "schema.token.lineHeight",
+            "Line height multiplier for the token (e.g., 1.2 will use 1.2 times the default height). If the font size is set and the line height is not explicitly set, the line height will be computed based on the font size.",
+          ),
+        },
+      },
+      additionalProperties: false,
+      defaultSnippets: [
+        { body: { foreground: "${1:#FF0000}", fontStyle: "${2:bold}" } },
+      ],
+    },
+  },
+  items: {
+    type: "object",
+    defaultSnippets: [
+      {
+        body: {
+          scope: "${1:keyword.operator}",
+          settings: { foreground: "${2:#FF0000}" },
+        },
+      },
+    ],
+    properties: {
+      name: {
+        type: "string",
+        description: nls.localize(
+          "schema.properties.name",
+          "Description of the rule.",
+        ),
+      },
+      scope: {
+        description: nls.localize(
+          "schema.properties.scope",
+          "Scope selector against which this rule matches.",
+        ),
+        anyOf: [
+          {
+            enum: textMateScopes,
+          },
+          {
+            type: "string",
+          },
+          {
+            type: "array",
+            items: {
+              enum: textMateScopes,
+            },
+          },
+          {
+            type: "array",
+            items: {
+              type: "string",
+            },
+          },
+        ],
+      },
+      settings: {
+        $ref: "#/definitions/settings",
+      },
+    },
+    required: ["settings"],
+    additionalProperties: false,
+  },
 };
 
 export const colorThemeSchemaId = "vscode://schemas/color-theme";
 
 const colorThemeSchema: IJSONSchema = {
-	type: "object",
-	allowComments: true,
-	allowTrailingCommas: true,
-	properties: {
-		colors: {
-			description: nls.localize("schema.workbenchColors", "Colors in the workbench"),
-			$ref: workbenchColorsSchemaId,
-			additionalProperties: false,
-		},
-		tokenColors: {
-			anyOf: [{
-				type: "string",
-				description: nls.localize("schema.tokenColors.path", "Path to a tmTheme file (relative to the current file)."),
-			},
-			{
-				description: nls.localize("schema.colors", "Colors for syntax highlighting"),
-				$ref: textmateColorsSchemaId,
-			},
-			],
-		},
-		semanticHighlighting: {
-			type: "boolean",
-			description: nls.localize("schema.supportsSemanticHighlighting", "Whether semantic highlighting should be enabled for this theme."),
-		},
-		semanticTokenColors: {
-			type: "object",
-			description: nls.localize("schema.semanticTokenColors", "Colors for semantic tokens"),
-			$ref: tokenStylingSchemaId,
-		},
-	},
+  type: "object",
+  allowComments: true,
+  allowTrailingCommas: true,
+  properties: {
+    colors: {
+      description: nls.localize(
+        "schema.workbenchColors",
+        "Colors in the workbench",
+      ),
+      $ref: workbenchColorsSchemaId,
+      additionalProperties: false,
+    },
+    tokenColors: {
+      anyOf: [
+        {
+          type: "string",
+          description: nls.localize(
+            "schema.tokenColors.path",
+            "Path to a tmTheme file (relative to the current file).",
+          ),
+        },
+        {
+          description: nls.localize(
+            "schema.colors",
+            "Colors for syntax highlighting",
+          ),
+          $ref: textmateColorsSchemaId,
+        },
+      ],
+    },
+    semanticHighlighting: {
+      type: "boolean",
+      description: nls.localize(
+        "schema.supportsSemanticHighlighting",
+        "Whether semantic highlighting should be enabled for this theme.",
+      ),
+    },
+    semanticTokenColors: {
+      type: "object",
+      description: nls.localize(
+        "schema.semanticTokenColors",
+        "Colors for semantic tokens",
+      ),
+      $ref: tokenStylingSchemaId,
+    },
+  },
 };
 
-
-
 export function registerColorThemeSchemas() {
-	const schemaRegistry = Registry.as<IJSONContributionRegistry>(
+  const schemaRegistry = Registry.as<IJSONContributionRegistry>(
     JSONExtensions.JSONContribution,
   );
-	schemaRegistry.registerSchema(colorThemeSchemaId, colorThemeSchema);
-	schemaRegistry.registerSchema(textmateColorsSchemaId, textmateColorSchema);
+  schemaRegistry.registerSchema(colorThemeSchemaId, colorThemeSchema);
+  schemaRegistry.registerSchema(textmateColorsSchemaId, textmateColorSchema);
 }

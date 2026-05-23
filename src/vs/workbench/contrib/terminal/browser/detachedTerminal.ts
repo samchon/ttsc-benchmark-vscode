@@ -6,7 +6,11 @@
 import * as dom from "../../../../base/browser/dom.js";
 import { Delayer } from "../../../../base/common/async.js";
 import { onUnexpectedError } from "../../../../base/common/errors.js";
-import { Disposable, DisposableStore, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  DisposableStore,
+  MutableDisposable,
+} from "../../../../base/common/lifecycle.js";
 import { OperatingSystem } from "../../../../base/common/platform.js";
 import { MicrotaskDelay } from "../../../../base/common/symbols.js";
 import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
@@ -28,120 +32,130 @@ import { IEnvironmentVariableInfo } from "../common/environmentVariable.js";
 import { ITerminalProcessInfo, ProcessState } from "../common/terminal.js";
 import { Event } from "../../../../base/common/event.js";
 
-export class DetachedTerminal extends Disposable implements IDetachedTerminalInstance {
-	private readonly _widgets = this._register(new TerminalWidgetManager());
-	public readonly capabilities: ITerminalCapabilityStore;
-	private readonly _contributions: Map<string, ITerminalContribution> = new Map();
-	private readonly _attachDisposables = this._register(
+export class DetachedTerminal
+  extends Disposable
+  implements IDetachedTerminalInstance
+{
+  private readonly _widgets = this._register(new TerminalWidgetManager());
+  public readonly capabilities: ITerminalCapabilityStore;
+  private readonly _contributions: Map<string, ITerminalContribution> =
+    new Map();
+  private readonly _attachDisposables = this._register(
     new MutableDisposable<DisposableStore>(),
   );
 
-	public domElement?: HTMLElement;
+  public domElement?: HTMLElement;
 
-	public get xterm(): IDetachedXtermTerminal {
-		return this._xterm;
-	}
-	public readonly onData: Event<string>;
+  public get xterm(): IDetachedXtermTerminal {
+    return this._xterm;
+  }
+  public readonly onData: Event<string>;
 
-	constructor(
-		private readonly _xterm: XtermTerminal,
-		options: IDetachedXTermOptions,
-		@IInstantiationService instantiationService: IInstantiationService,
-	) {
-		super();
-		this.onData = this._xterm.raw.onData;
-		const capabilities = options.capabilities ?? new TerminalCapabilityStore();
-		this._register(capabilities);
-		this.capabilities = capabilities;
-		this._register(_xterm);
+  constructor(
+    private readonly _xterm: XtermTerminal,
+    options: IDetachedXTermOptions,
+    @IInstantiationService instantiationService: IInstantiationService,
+  ) {
+    super();
+    this.onData = this._xterm.raw.onData;
+    const capabilities = options.capabilities ?? new TerminalCapabilityStore();
+    this._register(capabilities);
+    this.capabilities = capabilities;
+    this._register(_xterm);
 
-		// Initialize contributions
-		const contributionDescs = TerminalExtensionsRegistry.getTerminalContributions();
-		for (const desc of contributionDescs) {
-			if (this._contributions.has(desc.id)) {
-				onUnexpectedError(
+    // Initialize contributions
+    const contributionDescs =
+      TerminalExtensionsRegistry.getTerminalContributions();
+    for (const desc of contributionDescs) {
+      if (this._contributions.has(desc.id)) {
+        onUnexpectedError(
           new Error(
             `Cannot have two terminal contributions with the same id ${desc.id}`,
           ),
         );
-				continue;
-			}
-			if (desc.canRunInDetachedTerminals === false) {
-				continue;
-			}
+        continue;
+      }
+      if (desc.canRunInDetachedTerminals === false) {
+        continue;
+      }
 
-			let contribution: ITerminalContribution;
-			try {
-				contribution = instantiationService.createInstance(desc.ctor, {
+      let contribution: ITerminalContribution;
+      try {
+        contribution = instantiationService.createInstance(desc.ctor, {
           instance: this,
           processManager: options.processInfo,
           widgetManager: this._widgets,
         });
-				this._contributions.set(desc.id, contribution);
-				this._register(contribution);
-			} catch (err) {
-				onUnexpectedError(err);
-			}
-		}
+        this._contributions.set(desc.id, contribution);
+        this._register(contribution);
+      } catch (err) {
+        onUnexpectedError(err);
+      }
+    }
 
-		// xterm is already by the time DetachedTerminal is created, so trigger everything
-		// on the next microtask, allowing the caller to do any extra initialization
-		this._register(new Delayer(MicrotaskDelay)).trigger(() => {
-			for (const contr of this._contributions.values()) {
-				contr.xtermReady?.(this._xterm);
-			}
-		});
-	}
+    // xterm is already by the time DetachedTerminal is created, so trigger everything
+    // on the next microtask, allowing the caller to do any extra initialization
+    this._register(new Delayer(MicrotaskDelay)).trigger(() => {
+      for (const contr of this._contributions.values()) {
+        contr.xtermReady?.(this._xterm);
+      }
+    });
+  }
 
-	get selection(): string | undefined {
-		return this._xterm && this.hasSelection() ? this._xterm.raw.getSelection() : undefined;
-	}
+  get selection(): string | undefined {
+    return this._xterm && this.hasSelection()
+      ? this._xterm.raw.getSelection()
+      : undefined;
+  }
 
-	hasSelection(): boolean {
-		return this._xterm.hasSelection();
-	}
+  hasSelection(): boolean {
+    return this._xterm.hasSelection();
+  }
 
-	clearSelection(): void {
-		this._xterm.clearSelection();
-	}
+  clearSelection(): void {
+    this._xterm.clearSelection();
+  }
 
-	focus(force?: boolean): void {
-		if (force || !dom.getActiveWindow().getSelection()?.toString()) {
-			this.xterm.focus();
-		}
-	}
+  focus(force?: boolean): void {
+    if (force || !dom.getActiveWindow().getSelection()?.toString()) {
+      this.xterm.focus();
+    }
+  }
 
-	attachToElement(container: HTMLElement, options?: Partial<IXtermAttachToElementOptions> | undefined): void {
-		this.domElement = container;
-		const screenElement = this._xterm.attachToElement(container, options);
-		this._widgets.attachToElement(screenElement);
+  attachToElement(
+    container: HTMLElement,
+    options?: Partial<IXtermAttachToElementOptions> | undefined,
+  ): void {
+    this.domElement = container;
+    const screenElement = this._xterm.attachToElement(container, options);
+    this._widgets.attachToElement(screenElement);
 
-		const attachStore = new DisposableStore();
-		const scheduleFocus = () => {
-			// Defer so scrollable containers can handle focus first; ensures textarea focus sticks
-			setTimeout(() => this.focus(true), 0);
-		};
-		attachStore.add(
+    const attachStore = new DisposableStore();
+    const scheduleFocus = () => {
+      // Defer so scrollable containers can handle focus first; ensures textarea focus sticks
+      setTimeout(() => this.focus(true), 0);
+    };
+    attachStore.add(
       dom.addDisposableListener(
         container,
         dom.EventType.MOUSE_DOWN,
         scheduleFocus,
       ),
     );
-		this._attachDisposables.value = attachStore;
-	}
+    this._attachDisposables.value = attachStore;
+  }
 
-	forceScrollbarVisibility(): void {
-		this.domElement?.classList.add("force-scrollbar");
-	}
+  forceScrollbarVisibility(): void {
+    this.domElement?.classList.add("force-scrollbar");
+  }
 
-	resetScrollbarVisibility(): void {
-		this.domElement?.classList.remove("force-scrollbar");
-	}
+  resetScrollbarVisibility(): void {
+    this.domElement?.classList.remove("force-scrollbar");
+  }
 
-	getContribution<T extends ITerminalContribution>(id: string): T | null {
-		return this._contributions.get(id) as T | null;
-	}
+  getContribution<T extends ITerminalContribution>(id: string): T | null {
+    return this._contributions.get(id) as T | null;
+  }
 }
 
 /**
@@ -149,27 +163,32 @@ export class DetachedTerminal extends Disposable implements IDetachedTerminalIns
  * properties are stubbed. Properties are mutable and can be updated by
  * the instantiator.
  */
-export class DetachedProcessInfo extends Disposable implements ITerminalProcessInfo {
-	processState = ProcessState.Running;
-	ptyProcessReady = Promise.resolve();
-	shellProcessId: number | undefined;
-	remoteAuthority: string | undefined;
-	os: OperatingSystem | undefined;
-	userHome: string | undefined;
-	initialCwd = "";
-	environmentVariableInfo: IEnvironmentVariableInfo | undefined;
-	persistentProcessId: number | undefined;
-	shouldPersist = false;
-	hasWrittenData = false;
-	hasChildProcesses = false;
-	backend: ITerminalBackend | undefined;
-	capabilities: ITerminalCapabilityStore;
-	shellIntegrationNonce = "";
-	extEnvironmentVariableCollection: IMergedEnvironmentVariableCollection | undefined;
+export class DetachedProcessInfo
+  extends Disposable
+  implements ITerminalProcessInfo
+{
+  processState = ProcessState.Running;
+  ptyProcessReady = Promise.resolve();
+  shellProcessId: number | undefined;
+  remoteAuthority: string | undefined;
+  os: OperatingSystem | undefined;
+  userHome: string | undefined;
+  initialCwd = "";
+  environmentVariableInfo: IEnvironmentVariableInfo | undefined;
+  persistentProcessId: number | undefined;
+  shouldPersist = false;
+  hasWrittenData = false;
+  hasChildProcesses = false;
+  backend: ITerminalBackend | undefined;
+  capabilities: ITerminalCapabilityStore;
+  shellIntegrationNonce = "";
+  extEnvironmentVariableCollection:
+    | IMergedEnvironmentVariableCollection
+    | undefined;
 
-	constructor(initialValues: Partial<ITerminalProcessInfo>) {
-		super();
-		Object.assign(this, initialValues);
-		this.capabilities = this._register(new TerminalCapabilityStore());
-	}
+  constructor(initialValues: Partial<ITerminalProcessInfo>) {
+    super();
+    Object.assign(this, initialValues);
+    this.capabilities = this._register(new TerminalCapabilityStore());
+  }
 }

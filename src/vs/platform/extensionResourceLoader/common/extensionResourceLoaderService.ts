@@ -4,10 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { URI } from "../../../base/common/uri.js";
-import { InstantiationType, registerSingleton } from "../../instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../instantiation/common/extensions.js";
 import { IFileService } from "../../files/common/files.js";
 import { IProductService } from "../../product/common/productService.js";
-import { asTextOrError, IRequestService } from "../../request/common/request.js";
+import {
+  asTextOrError,
+  IRequestService,
+} from "../../request/common/request.js";
 import { IStorageService } from "../../storage/common/storage.js";
 import { IEnvironmentService } from "../../environment/common/environment.js";
 import { IConfigurationService } from "../../configuration/common/configuration.js";
@@ -20,18 +26,18 @@ import { IExtensionGalleryManifestService } from "../../extensionManagement/comm
 import { ILogService } from "../../log/common/log.js";
 
 export class ExtensionResourceLoaderService extends AbstractExtensionResourceLoaderService {
-
-	constructor(
-		@IFileService fileService: IFileService,
-		@IStorageService storageService: IStorageService,
-		@IProductService productService: IProductService,
-		@IEnvironmentService environmentService: IEnvironmentService,
-		@IConfigurationService configurationService: IConfigurationService,
-		@IExtensionGalleryManifestService extensionGalleryManifestService: IExtensionGalleryManifestService,
-		@IRequestService private readonly _requestService: IRequestService,
-		@ILogService logService: ILogService,
-	) {
-		super(
+  constructor(
+    @IFileService fileService: IFileService,
+    @IStorageService storageService: IStorageService,
+    @IProductService productService: IProductService,
+    @IEnvironmentService environmentService: IEnvironmentService,
+    @IConfigurationService configurationService: IConfigurationService,
+    @IExtensionGalleryManifestService
+    extensionGalleryManifestService: IExtensionGalleryManifestService,
+    @IRequestService private readonly _requestService: IRequestService,
+    @ILogService logService: ILogService,
+  ) {
+    super(
       fileService,
       storageService,
       productService,
@@ -40,12 +46,12 @@ export class ExtensionResourceLoaderService extends AbstractExtensionResourceLoa
       extensionGalleryManifestService,
       logService,
     );
-	}
+  }
 
-	async readExtensionResource(uri: URI): Promise<string> {
-		if (await this.isExtensionGalleryResource(uri)) {
-			const headers = await this.getExtensionGalleryRequestHeaders();
-			const requestContext = await this._requestService.request(
+  async readExtensionResource(uri: URI): Promise<string> {
+    if (await this.isExtensionGalleryResource(uri)) {
+      const headers = await this.getExtensionGalleryRequestHeaders();
+      const requestContext = await this._requestService.request(
         {
           url: uri.toString(),
           headers,
@@ -53,12 +59,11 @@ export class ExtensionResourceLoaderService extends AbstractExtensionResourceLoa
         },
         CancellationToken.None,
       );
-			return (await asTextOrError(requestContext)) || "";
-		}
-		const result = await this._fileService.readFile(uri);
-		return result.value.toString();
-	}
-
+      return (await asTextOrError(requestContext)) || "";
+    }
+    const result = await this._fileService.readFile(uri);
+    return result.value.toString();
+  }
 }
 
 registerSingleton(

@@ -49,8 +49,14 @@ import type {
   CompletionsParams,
   CompletionsResult,
 } from "../channels-session/commands.js";
-import type { CreateTerminalParams, DisposeTerminalParams } from "../channels-terminal/commands.js";
-import type { InvokeChangesetOperationParams, InvokeChangesetOperationResult } from "../channels-changeset/commands.js";
+import type {
+  CreateTerminalParams,
+  DisposeTerminalParams,
+} from "../channels-terminal/commands.js";
+import type {
+  InvokeChangesetOperationParams,
+  InvokeChangesetOperationResult,
+} from "../channels-changeset/commands.js";
 
 import type { ActionEnvelope } from "./actions.js";
 import type {
@@ -70,28 +76,28 @@ import type { AhpError } from "./errors.js";
 
 /** A JSON-RPC request: has both `method` and `id`. */
 export interface JsonRpcRequest {
-	readonly jsonrpc: "2.0";
-	readonly id: number;
-	readonly method: string;
-	readonly params?: unknown;
+  readonly jsonrpc: "2.0";
+  readonly id: number;
+  readonly method: string;
+  readonly params?: unknown;
 }
 
 /** A JSON-RPC success response. */
 export interface JsonRpcSuccessResponse {
-	readonly jsonrpc: "2.0";
-	readonly id: number;
-	readonly result: unknown;
+  readonly jsonrpc: "2.0";
+  readonly id: number;
+  readonly result: unknown;
 }
 
 /** A JSON-RPC error response. */
 export interface JsonRpcErrorResponse {
-	readonly jsonrpc: "2.0";
-	readonly id: number;
-	readonly error: {
-		readonly code: number;
-		readonly message: string;
-		readonly data?: unknown;
-	};
+  readonly jsonrpc: "2.0";
+  readonly id: number;
+  readonly error: {
+    readonly code: number;
+    readonly message: string;
+    readonly data?: unknown;
+  };
 }
 
 /**
@@ -100,9 +106,9 @@ export interface JsonRpcErrorResponse {
  * application error and wants `data` narrowed by `code`.
  */
 export interface AhpErrorResponse {
-	readonly jsonrpc: "2.0";
-	readonly id: number;
-	readonly error: AhpError;
+  readonly jsonrpc: "2.0";
+  readonly id: number;
+  readonly error: AhpError;
 }
 
 /** A JSON-RPC response (success or error). */
@@ -110,9 +116,9 @@ export type JsonRpcResponse = JsonRpcSuccessResponse | JsonRpcErrorResponse;
 
 /** A JSON-RPC notification: has `method` but no `id`. */
 export interface JsonRpcNotification {
-	readonly jsonrpc: "2.0";
-	readonly method: string;
-	readonly params?: unknown;
+  readonly jsonrpc: "2.0";
+  readonly method: string;
+  readonly params?: unknown;
 }
 
 // ─── Command Map ─────────────────────────────────────────────────────────────
@@ -127,28 +133,43 @@ export interface JsonRpcNotification {
  * @category Commands
  */
 export interface CommandMap {
-	"initialize": { params: InitializeParams; result: InitializeResult };
-	"ping": { params: PingParams; result: null };
-	"reconnect": { params: ReconnectParams; result: ReconnectResult };
-	"subscribe": { params: SubscribeParams; result: SubscribeResult };
-	"createSession": { params: CreateSessionParams; result: null };
-	"disposeSession": { params: DisposeSessionParams; result: null };
-	"createTerminal": { params: CreateTerminalParams; result: null };
-	"disposeTerminal": { params: DisposeTerminalParams; result: null };
-	"listSessions": { params: ListSessionsParams; result: ListSessionsResult };
-	"resourceRead": { params: ResourceReadParams; result: ResourceReadResult };
-	"resourceWrite": { params: ResourceWriteParams; result: ResourceWriteResult };
-	"resourceList": { params: ResourceListParams; result: ResourceListResult };
-	"resourceCopy": { params: ResourceCopyParams; result: ResourceCopyResult };
-	"resourceDelete": { params: ResourceDeleteParams; result: ResourceDeleteResult };
-	"resourceMove": { params: ResourceMoveParams; result: ResourceMoveResult };
-	"resourceRequest": { params: ResourceRequestParams; result: ResourceRequestResult };
-	"fetchTurns": { params: FetchTurnsParams; result: FetchTurnsResult };
-	"authenticate": { params: AuthenticateParams; result: AuthenticateResult };
-	"resolveSessionConfig": { params: ResolveSessionConfigParams; result: ResolveSessionConfigResult };
-	"sessionConfigCompletions": { params: SessionConfigCompletionsParams; result: SessionConfigCompletionsResult };
-	"completions": { params: CompletionsParams; result: CompletionsResult };
-	"invokeChangesetOperation": { params: InvokeChangesetOperationParams; result: InvokeChangesetOperationResult };
+  initialize: { params: InitializeParams; result: InitializeResult };
+  ping: { params: PingParams; result: null };
+  reconnect: { params: ReconnectParams; result: ReconnectResult };
+  subscribe: { params: SubscribeParams; result: SubscribeResult };
+  createSession: { params: CreateSessionParams; result: null };
+  disposeSession: { params: DisposeSessionParams; result: null };
+  createTerminal: { params: CreateTerminalParams; result: null };
+  disposeTerminal: { params: DisposeTerminalParams; result: null };
+  listSessions: { params: ListSessionsParams; result: ListSessionsResult };
+  resourceRead: { params: ResourceReadParams; result: ResourceReadResult };
+  resourceWrite: { params: ResourceWriteParams; result: ResourceWriteResult };
+  resourceList: { params: ResourceListParams; result: ResourceListResult };
+  resourceCopy: { params: ResourceCopyParams; result: ResourceCopyResult };
+  resourceDelete: {
+    params: ResourceDeleteParams;
+    result: ResourceDeleteResult;
+  };
+  resourceMove: { params: ResourceMoveParams; result: ResourceMoveResult };
+  resourceRequest: {
+    params: ResourceRequestParams;
+    result: ResourceRequestResult;
+  };
+  fetchTurns: { params: FetchTurnsParams; result: FetchTurnsResult };
+  authenticate: { params: AuthenticateParams; result: AuthenticateResult };
+  resolveSessionConfig: {
+    params: ResolveSessionConfigParams;
+    result: ResolveSessionConfigResult;
+  };
+  sessionConfigCompletions: {
+    params: SessionConfigCompletionsParams;
+    result: SessionConfigCompletionsResult;
+  };
+  completions: { params: CompletionsParams; result: CompletionsResult };
+  invokeChangesetOperation: {
+    params: InvokeChangesetOperationParams;
+    result: InvokeChangesetOperationResult;
+  };
 }
 
 /**
@@ -163,7 +184,10 @@ export interface CommandMap {
  * @category Commands
  */
 export interface ServerCommandMap {
-	"resourceRequest": { params: ResourceRequestParams; result: ResourceRequestResult };
+  resourceRequest: {
+    params: ResourceRequestParams;
+    result: ResourceRequestResult;
+  };
 }
 
 // ─── Notification Maps ───────────────────────────────────────────────────────
@@ -178,8 +202,8 @@ export interface ServerCommandMap {
  * @category Notifications
  */
 export interface ClientNotificationMap {
-	"unsubscribe": { params: UnsubscribeParams };
-	"dispatchAction": { params: DispatchActionParams };
+  unsubscribe: { params: UnsubscribeParams };
+  dispatchAction: { params: DispatchActionParams };
 }
 
 /**
@@ -191,14 +215,14 @@ export interface ClientNotificationMap {
  * @category Notifications
  */
 export interface ServerNotificationMap {
-	"action": { params: ActionEnvelope };
-	"root/sessionAdded": { params: SessionAddedParams };
-	"root/sessionRemoved": { params: SessionRemovedParams };
-	"root/sessionSummaryChanged": { params: SessionSummaryChangedParams };
-	"auth/required": { params: AuthRequiredParams };
-	"otlp/exportLogs": { params: OtlpExportLogsParams };
-	"otlp/exportTraces": { params: OtlpExportTracesParams };
-	"otlp/exportMetrics": { params: OtlpExportMetricsParams };
+  action: { params: ActionEnvelope };
+  "root/sessionAdded": { params: SessionAddedParams };
+  "root/sessionRemoved": { params: SessionRemovedParams };
+  "root/sessionSummaryChanged": { params: SessionSummaryChangedParams };
+  "auth/required": { params: AuthRequiredParams };
+  "otlp/exportLogs": { params: OtlpExportLogsParams };
+  "otlp/exportTraces": { params: OtlpExportTracesParams };
+  "otlp/exportMetrics": { params: OtlpExportMetricsParams };
 }
 
 // ─── Typed Requests ──────────────────────────────────────────────────────────
@@ -220,24 +244,29 @@ export interface ServerNotificationMap {
  * {@link AhpServerRequest} for server → client requests.
  */
 export type AhpRequest<M extends keyof CommandMap = keyof CommandMap> =
-	M extends unknown ? {
-		readonly jsonrpc: "2.0";
-		readonly id: number;
-		readonly method: M;
-		readonly params: CommandMap[M]["params"];
-	} : never;
+  M extends unknown
+    ? {
+        readonly jsonrpc: "2.0";
+        readonly id: number;
+        readonly method: M;
+        readonly params: CommandMap[M]["params"];
+      }
+    : never;
 
 /**
  * A fully typed JSON-RPC request initiated by the server. Identical in shape
  * to {@link AhpRequest} but parameterised over {@link ServerCommandMap}.
  */
-export type AhpServerRequest<M extends keyof ServerCommandMap = keyof ServerCommandMap> =
-	M extends unknown ? {
-		readonly jsonrpc: "2.0";
-		readonly id: number;
-		readonly method: M;
-		readonly params: ServerCommandMap[M]["params"];
-	} : never;
+export type AhpServerRequest<
+  M extends keyof ServerCommandMap = keyof ServerCommandMap,
+> = M extends unknown
+  ? {
+      readonly jsonrpc: "2.0";
+      readonly id: number;
+      readonly method: M;
+      readonly params: ServerCommandMap[M]["params"];
+    }
+  : never;
 
 // ─── Typed Responses ─────────────────────────────────────────────────────────
 
@@ -253,50 +282,61 @@ export type AhpServerRequest<M extends keyof ServerCommandMap = keyof ServerComm
  * ```
  */
 export type AhpSuccessResponse<M extends keyof CommandMap = keyof CommandMap> =
-	M extends unknown ? {
-		readonly jsonrpc: "2.0";
-		readonly id: number;
-		readonly result: CommandMap[M]["result"];
-	} : never;
+  M extends unknown
+    ? {
+        readonly jsonrpc: "2.0";
+        readonly id: number;
+        readonly result: CommandMap[M]["result"];
+      }
+    : never;
 
 /** Typed JSON-RPC response (success with known result type, or error). */
 export type AhpResponse<M extends keyof CommandMap = keyof CommandMap> =
-	| AhpSuccessResponse<M>
-	| JsonRpcErrorResponse;
+  | AhpSuccessResponse<M>
+  | JsonRpcErrorResponse;
 
 /**
  * A fully typed JSON-RPC success response for a server → client request
  * ({@link ServerCommandMap}).
  */
-export type AhpServerSuccessResponse<M extends keyof ServerCommandMap = keyof ServerCommandMap> =
-	M extends unknown ? {
-		readonly jsonrpc: "2.0";
-		readonly id: number;
-		readonly result: ServerCommandMap[M]["result"];
-	} : never;
+export type AhpServerSuccessResponse<
+  M extends keyof ServerCommandMap = keyof ServerCommandMap,
+> = M extends unknown
+  ? {
+      readonly jsonrpc: "2.0";
+      readonly id: number;
+      readonly result: ServerCommandMap[M]["result"];
+    }
+  : never;
 
 /** Typed JSON-RPC response to a server → client request. */
-export type AhpServerResponse<M extends keyof ServerCommandMap = keyof ServerCommandMap> =
-	| AhpServerSuccessResponse<M>
-	| JsonRpcErrorResponse;
+export type AhpServerResponse<
+  M extends keyof ServerCommandMap = keyof ServerCommandMap,
+> = AhpServerSuccessResponse<M> | JsonRpcErrorResponse;
 
 // ─── Typed Notifications ─────────────────────────────────────────────────────
 
 /** A client → server notification. */
-export type AhpClientNotification<M extends keyof ClientNotificationMap = keyof ClientNotificationMap> =
-	M extends unknown ? {
-		readonly jsonrpc: "2.0";
-		readonly method: M;
-		readonly params: ClientNotificationMap[M]["params"];
-	} : never;
+export type AhpClientNotification<
+  M extends keyof ClientNotificationMap = keyof ClientNotificationMap,
+> = M extends unknown
+  ? {
+      readonly jsonrpc: "2.0";
+      readonly method: M;
+      readonly params: ClientNotificationMap[M]["params"];
+    }
+  : never;
 
 /** A server → client notification. */
-export type AhpServerNotification<M extends keyof ServerNotificationMap = keyof ServerNotificationMap> =
-	M extends unknown ? {
-		readonly jsonrpc: "2.0";
-		readonly method: M;
-		readonly params: ServerNotificationMap[M]["params"];
-	} : never;
+export type AhpServerNotification<
+  M extends keyof ServerNotificationMap = keyof ServerNotificationMap,
+> = M extends unknown
+  ? {
+      readonly jsonrpc: "2.0";
+      readonly method: M;
+      readonly params: ServerNotificationMap[M]["params"];
+    }
+  : never;
 
 /**
  * A fully typed JSON-RPC notification — either direction.
@@ -331,9 +371,9 @@ export type AhpNotification = AhpClientNotification | AhpServerNotification;
  * ```
  */
 export type ProtocolMessage =
-	| AhpRequest
-	| AhpServerRequest
-	| AhpSuccessResponse
-	| AhpServerSuccessResponse
-	| JsonRpcErrorResponse
-	| AhpNotification;
+  | AhpRequest
+  | AhpServerRequest
+  | AhpSuccessResponse
+  | AhpServerSuccessResponse
+  | JsonRpcErrorResponse
+  | AhpNotification;

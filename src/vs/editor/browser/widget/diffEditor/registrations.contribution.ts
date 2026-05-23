@@ -50,28 +50,31 @@ export const diffInsertIcon = registerIcon(
 export const diffRemoveIcon = registerIcon(
   "diff-remove",
   Codicon.remove,
-  localize("diffRemoveIcon", "Line decoration for removals in the diff editor."),
+  localize(
+    "diffRemoveIcon",
+    "Line decoration for removals in the diff editor.",
+  ),
 );
 
-export const diffLineAddDecorationBackgroundWithIndicator = ModelDecorationOptions.register(
-  {
+export const diffLineAddDecorationBackgroundWithIndicator =
+  ModelDecorationOptions.register({
     className: "line-insert",
     description: "line-insert",
     isWholeLine: true,
-    linesDecorationsClassName: "insert-sign " + ThemeIcon.asClassName(diffInsertIcon),
+    linesDecorationsClassName:
+      "insert-sign " + ThemeIcon.asClassName(diffInsertIcon),
     marginClassName: "gutter-insert",
-  },
-);
+  });
 
-export const diffLineDeleteDecorationBackgroundWithIndicator = ModelDecorationOptions.register(
-  {
+export const diffLineDeleteDecorationBackgroundWithIndicator =
+  ModelDecorationOptions.register({
     className: "line-delete",
     description: "line-delete",
     isWholeLine: true,
-    linesDecorationsClassName: "delete-sign " + ThemeIcon.asClassName(diffRemoveIcon),
+    linesDecorationsClassName:
+      "delete-sign " + ThemeIcon.asClassName(diffRemoveIcon),
     marginClassName: "gutter-delete",
-  },
-);
+  });
 
 export const diffLineAddDecorationBackground = ModelDecorationOptions.register({
   className: "line-insert",
@@ -80,14 +83,13 @@ export const diffLineAddDecorationBackground = ModelDecorationOptions.register({
   marginClassName: "gutter-insert",
 });
 
-export const diffLineDeleteDecorationBackground = ModelDecorationOptions.register(
-  {
+export const diffLineDeleteDecorationBackground =
+  ModelDecorationOptions.register({
     className: "line-delete",
     description: "line-delete",
     isWholeLine: true,
     marginClassName: "gutter-delete",
-  },
-);
+  });
 
 export const diffAddDecoration = ModelDecorationOptions.register({
   className: "char-insert",

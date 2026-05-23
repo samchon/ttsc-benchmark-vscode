@@ -7,24 +7,48 @@ import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
 import { FileAccess } from "../../../../base/common/network.js";
 import { isMacintosh, isWeb } from "../../../../base/common/platform.js";
 import { URI } from "../../../../base/common/uri.js";
-import { EditorContributionInstantiation, registerEditorContribution } from "../../../../editor/browser/editorExtensions.js";
+import {
+  EditorContributionInstantiation,
+  registerEditorContribution,
+} from "../../../../editor/browser/editorExtensions.js";
 import * as nls from "../../../../nls.js";
 import { AccessibleViewRegistry } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
-import { ICommandActionTitle, Icon } from "../../../../platform/action/common/action.js";
-import { MenuId, MenuRegistry } from "../../../../platform/actions/common/actions.js";
+import {
+  ICommandActionTitle,
+  Icon,
+} from "../../../../platform/action/common/action.js";
+import {
+  MenuId,
+  MenuRegistry,
+} from "../../../../platform/actions/common/actions.js";
 import {
   Extensions as ConfigurationExtensions,
   ConfigurationScope,
   IConfigurationRegistry,
 } from "../../../../platform/configuration/common/configurationRegistry.js";
-import { ContextKeyExpr, ContextKeyExpression } from "../../../../platform/contextkey/common/contextkey.js";
+import {
+  ContextKeyExpr,
+  ContextKeyExpression,
+} from "../../../../platform/contextkey/common/contextkey.js";
 import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
-import { KeybindingWeight, KeybindingsRegistry } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
-import { IQuickAccessRegistry, Extensions as QuickAccessExtensions } from "../../../../platform/quickinput/common/quickAccess.js";
+import {
+  KeybindingWeight,
+  KeybindingsRegistry,
+} from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import {
+  IQuickAccessRegistry,
+  Extensions as QuickAccessExtensions,
+} from "../../../../platform/quickinput/common/quickAccess.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
-import { EditorPaneDescriptor, IEditorPaneRegistry } from "../../../browser/editor.js";
+import {
+  EditorPaneDescriptor,
+  IEditorPaneRegistry,
+} from "../../../browser/editor.js";
 import { ViewPaneContainer } from "../../../browser/parts/views/viewPaneContainer.js";
-import { FocusedViewContext, IsSessionsWindowContext } from "../../../common/contextkeys.js";
+import {
+  FocusedViewContext,
+  IsSessionsWindowContext,
+} from "../../../common/contextkeys.js";
 import {
   IWorkbenchContributionsRegistry,
   Extensions as WorkbenchExtensions,
@@ -41,7 +65,10 @@ import {
 } from "../../../common/views.js";
 import { launchSchemaId } from "../../../services/configuration/common/configuration.js";
 import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
-import { COPY_NOTEBOOK_VARIABLE_VALUE_ID, COPY_NOTEBOOK_VARIABLE_VALUE_LABEL } from "../../notebook/browser/contrib/notebookVariables/notebookVariableCommands.js";
+import {
+  COPY_NOTEBOOK_VARIABLE_VALUE_ID,
+  COPY_NOTEBOOK_VARIABLE_VALUE_LABEL,
+} from "../../notebook/browser/contrib/notebookVariables/notebookVariableCommands.js";
 import {
   BREAKPOINTS_VIEW_ID,
   BREAKPOINT_EDITOR_CONTRIBUTION_ID,
@@ -181,7 +208,10 @@ import { DebugStatusContribution } from "./debugStatus.js";
 import { DebugTitleContribution } from "./debugTitle.js";
 import { DebugToolBar } from "./debugToolBar.js";
 import { DebugViewPaneContainer } from "./debugViewlet.js";
-import { DisassemblyView, DisassemblyViewContribution } from "./disassemblyView.js";
+import {
+  DisassemblyView,
+  DisassemblyViewContribution,
+} from "./disassemblyView.js";
 import { LoadedScriptsView } from "./loadedScriptsView.js";
 import "./media/debug.contribution.css";
 import "./media/debugHover.css";
@@ -190,7 +220,11 @@ import { ReplAccessibilityHelp } from "./replAccessibilityHelp.js";
 import { ReplAccessibleView } from "./replAccessibleView.js";
 import { RunAndDebugAccessibilityHelp } from "./runAndDebugAccessibilityHelp.js";
 import { StatusBarColorProvider } from "./statusbarColorProvider.js";
-import { SET_VARIABLE_ID, VIEW_MEMORY_ID, VariablesView } from "./variablesView.js";
+import {
+  SET_VARIABLE_ID,
+  VIEW_MEMORY_ID,
+  VariablesView,
+} from "./variablesView.js";
 import {
   ADD_WATCH_ID,
   ADD_WATCH_LABEL,
@@ -207,42 +241,51 @@ import "./debug.service.contribution.js";
 const debugCategory = nls.localize("debugCategory", "Debug");
 registerColors();
 
-
 // Register Debug Workbench Contributions
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(
   DebugStatusContribution,
   LifecyclePhase.Eventually,
 );
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(
   DebugProgressContribution,
   LifecyclePhase.Eventually,
 );
 if (isWeb) {
-	Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+  Registry.as<IWorkbenchContributionsRegistry>(
+    WorkbenchExtensions.Workbench,
+  ).registerWorkbenchContribution(
     DebugTitleContribution,
     LifecyclePhase.Eventually,
   );
 }
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
-  DebugToolBar,
-  LifecyclePhase.Restored,
-);
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(DebugToolBar, LifecyclePhase.Restored);
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(
   DebugContentProvider,
   LifecyclePhase.Eventually,
 );
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(
   StatusBarColorProvider,
   LifecyclePhase.Eventually,
 );
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(
   DisassemblyViewContribution,
   LifecyclePhase.Eventually,
 );
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
-  DebugLifecycle,
-  LifecyclePhase.Eventually,
-);
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(DebugLifecycle, LifecyclePhase.Eventually);
 registerWorkbenchContribution2(
   DebugChatContextContribution.ID,
   DebugChatContextContribution,
@@ -250,25 +293,45 @@ registerWorkbenchContribution2(
 );
 
 // Register Quick Access
-Registry.as<IQuickAccessRegistry>(QuickAccessExtensions.Quickaccess).registerQuickAccessProvider({
-	ctor: StartDebugQuickAccessProvider,
-	prefix: DEBUG_QUICK_ACCESS_PREFIX,
-	contextKey: "inLaunchConfigurationsPicker",
-	placeholder: nls.localize("startDebugPlaceholder", "Type the name of a launch configuration to run."),
-	helpEntries: [{
-		description: nls.localize("startDebuggingHelp", "Start Debugging"),
-		commandId: SELECT_AND_START_ID,
-		commandCenterOrder: 50,
-	}],
+Registry.as<IQuickAccessRegistry>(
+  QuickAccessExtensions.Quickaccess,
+).registerQuickAccessProvider({
+  ctor: StartDebugQuickAccessProvider,
+  prefix: DEBUG_QUICK_ACCESS_PREFIX,
+  contextKey: "inLaunchConfigurationsPicker",
+  placeholder: nls.localize(
+    "startDebugPlaceholder",
+    "Type the name of a launch configuration to run.",
+  ),
+  helpEntries: [
+    {
+      description: nls.localize("startDebuggingHelp", "Start Debugging"),
+      commandId: SELECT_AND_START_ID,
+      commandCenterOrder: 50,
+    },
+  ],
 });
 
 // Register quick access for debug console
-Registry.as<IQuickAccessRegistry>(QuickAccessExtensions.Quickaccess).registerQuickAccessProvider({
-	ctor: DebugConsoleQuickAccess,
-	prefix: DEBUG_CONSOLE_QUICK_ACCESS_PREFIX,
-	contextKey: "inDebugConsolePicker",
-	placeholder: nls.localize("tasksQuickAccessPlaceholder", "Type the name of a debug console to open."),
-	helpEntries: [{ description: nls.localize("tasksQuickAccessHelp", "Show All Debug Consoles"), commandId: SELECT_DEBUG_CONSOLE_ID }],
+Registry.as<IQuickAccessRegistry>(
+  QuickAccessExtensions.Quickaccess,
+).registerQuickAccessProvider({
+  ctor: DebugConsoleQuickAccess,
+  prefix: DEBUG_CONSOLE_QUICK_ACCESS_PREFIX,
+  contextKey: "inDebugConsolePicker",
+  placeholder: nls.localize(
+    "tasksQuickAccessPlaceholder",
+    "Type the name of a debug console to open.",
+  ),
+  helpEntries: [
+    {
+      description: nls.localize(
+        "tasksQuickAccessHelp",
+        "Show All Debug Consoles",
+      ),
+      commandId: SELECT_DEBUG_CONSOLE_ID,
+    },
+  ],
 });
 
 registerEditorContribution(
@@ -287,17 +350,22 @@ registerEditorContribution(
   EditorContributionInstantiation.BeforeFirstInteraction,
 );
 
-const registerDebugCommandPaletteItem = (id: string, title: ICommandActionTitle, when?: ContextKeyExpression, precondition?: ContextKeyExpression) => {
-	MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
-		when: ContextKeyExpr.and(CONTEXT_DEBUGGERS_AVAILABLE, when),
-		group: debugCategory,
-		command: {
-			id,
-			title,
-			category: DEBUG_COMMAND_CATEGORY,
-			precondition,
-		},
-	});
+const registerDebugCommandPaletteItem = (
+  id: string,
+  title: ICommandActionTitle,
+  when?: ContextKeyExpression,
+  precondition?: ContextKeyExpression,
+) => {
+  MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
+    when: ContextKeyExpr.and(CONTEXT_DEBUGGERS_AVAILABLE, when),
+    group: debugCategory,
+    command: {
+      id,
+      title,
+      category: DEBUG_COMMAND_CATEGORY,
+      precondition,
+    },
+  });
 };
 
 registerDebugCommandPaletteItem(RESTART_SESSION_ID, RESTART_LABEL);
@@ -480,19 +548,28 @@ registerDebugCommandPaletteItem(
 );
 
 // Debug callstack context menu
-const registerDebugViewMenuItem = (menuId: MenuId, id: string, title: string | ICommandActionTitle, order: number, when?: ContextKeyExpression, precondition?: ContextKeyExpression, group = "navigation", icon?: Icon) => {
-	MenuRegistry.appendMenuItem(menuId, {
-		group,
-		when,
-		order,
-		icon,
-		command: {
-			id,
-			title,
-			icon,
-			precondition,
-		},
-	});
+const registerDebugViewMenuItem = (
+  menuId: MenuId,
+  id: string,
+  title: string | ICommandActionTitle,
+  order: number,
+  when?: ContextKeyExpression,
+  precondition?: ContextKeyExpression,
+  group = "navigation",
+  icon?: Icon,
+) => {
+  MenuRegistry.appendMenuItem(menuId, {
+    group,
+    when,
+    order,
+    icon,
+    command: {
+      id,
+      title,
+      icon,
+      precondition,
+    },
+  });
 };
 registerDebugViewMenuItem(
   MenuId.DebugCallStackContext,
@@ -879,35 +956,40 @@ registerDebugViewMenuItem(
 );
 
 KeybindingsRegistry.registerKeybindingRule({
-	id: COPY_VALUE_ID,
-	weight: KeybindingWeight.WorkbenchContrib,
-	when: ContextKeyExpr.and(
-		CONTEXT_EXPRESSION_SELECTED.negate(),
-		ContextKeyExpr.or(
-			FocusedViewContext.isEqualTo(WATCH_VIEW_ID),
-			FocusedViewContext.isEqualTo(VARIABLES_VIEW_ID),
-		),
-	),
-	primary: KeyMod.CtrlCmd | KeyCode.KeyC,
+  id: COPY_VALUE_ID,
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: ContextKeyExpr.and(
+    CONTEXT_EXPRESSION_SELECTED.negate(),
+    ContextKeyExpr.or(
+      FocusedViewContext.isEqualTo(WATCH_VIEW_ID),
+      FocusedViewContext.isEqualTo(VARIABLES_VIEW_ID),
+    ),
+  ),
+  primary: KeyMod.CtrlCmd | KeyCode.KeyC,
 });
 
 // Touch Bar
 if (isMacintosh) {
+  const registerTouchBarEntry = (
+    id: string,
+    title: string | ICommandActionTitle,
+    order: number,
+    when: ContextKeyExpression | undefined,
+    iconUri: URI,
+  ) => {
+    MenuRegistry.appendMenuItem(MenuId.TouchBarContext, {
+      command: {
+        id,
+        title,
+        icon: { dark: iconUri },
+      },
+      when: ContextKeyExpr.and(CONTEXT_DEBUGGERS_AVAILABLE, when),
+      group: "9_debug",
+      order,
+    });
+  };
 
-	const registerTouchBarEntry = (id: string, title: string | ICommandActionTitle, order: number, when: ContextKeyExpression | undefined, iconUri: URI) => {
-		MenuRegistry.appendMenuItem(MenuId.TouchBarContext, {
-			command: {
-				id,
-				title,
-				icon: { dark: iconUri },
-			},
-			when: ContextKeyExpr.and(CONTEXT_DEBUGGERS_AVAILABLE, when),
-			group: "9_debug",
-			order,
-		});
-	};
-
-	registerTouchBarEntry(
+  registerTouchBarEntry(
     DEBUG_RUN_COMMAND_ID,
     DEBUG_RUN_LABEL,
     0,
@@ -916,7 +998,7 @@ if (isMacintosh) {
       "vs/workbench/contrib/debug/browser/media/continue-tb.png",
     ),
   );
-	registerTouchBarEntry(
+  registerTouchBarEntry(
     DEBUG_START_COMMAND_ID,
     DEBUG_START_LABEL,
     1,
@@ -925,7 +1007,7 @@ if (isMacintosh) {
       "vs/workbench/contrib/debug/browser/media/run-with-debugging-tb.png",
     ),
   );
-	registerTouchBarEntry(
+  registerTouchBarEntry(
     CONTINUE_ID,
     CONTINUE_LABEL,
     0,
@@ -934,7 +1016,7 @@ if (isMacintosh) {
       "vs/workbench/contrib/debug/browser/media/continue-tb.png",
     ),
   );
-	registerTouchBarEntry(
+  registerTouchBarEntry(
     PAUSE_ID,
     PAUSE_LABEL,
     1,
@@ -949,7 +1031,7 @@ if (isMacintosh) {
       "vs/workbench/contrib/debug/browser/media/pause-tb.png",
     ),
   );
-	registerTouchBarEntry(
+  registerTouchBarEntry(
     STEP_OVER_ID,
     STEP_OVER_LABEL,
     2,
@@ -958,7 +1040,7 @@ if (isMacintosh) {
       "vs/workbench/contrib/debug/browser/media/stepover-tb.png",
     ),
   );
-	registerTouchBarEntry(
+  registerTouchBarEntry(
     STEP_INTO_ID,
     STEP_INTO_LABEL,
     3,
@@ -967,7 +1049,7 @@ if (isMacintosh) {
       "vs/workbench/contrib/debug/browser/media/stepinto-tb.png",
     ),
   );
-	registerTouchBarEntry(
+  registerTouchBarEntry(
     STEP_OUT_ID,
     STEP_OUT_LABEL,
     4,
@@ -976,7 +1058,7 @@ if (isMacintosh) {
       "vs/workbench/contrib/debug/browser/media/stepout-tb.png",
     ),
   );
-	registerTouchBarEntry(
+  registerTouchBarEntry(
     RESTART_SESSION_ID,
     RESTART_LABEL,
     5,
@@ -985,12 +1067,14 @@ if (isMacintosh) {
       "vs/workbench/contrib/debug/browser/media/restart-tb.png",
     ),
   );
-	registerTouchBarEntry(
+  registerTouchBarEntry(
     STOP_ID,
     STOP_LABEL,
     6,
     CONTEXT_IN_DEBUG_MODE,
-    FileAccess.asFileUri("vs/workbench/contrib/debug/browser/media/stop-tb.png"),
+    FileAccess.asFileUri(
+      "vs/workbench/contrib/debug/browser/media/stop-tb.png",
+    ),
   );
 }
 
@@ -1008,129 +1092,165 @@ MenuRegistry.appendMenuItem(MenuId.EditorTitle, {
 // Debug menu
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
-	submenu: MenuId.MenubarDebugMenu,
-	title: {
-		...nls.localize2("runMenu", "Run"),
-		mnemonicTitle: nls.localize({ key: "mRun", comment: ["&& denotes a mnemonic"] }, "&&Run"),
-	},
-	order: 6,
-	when: IsSessionsWindowContext.negate(),
+  submenu: MenuId.MenubarDebugMenu,
+  title: {
+    ...nls.localize2("runMenu", "Run"),
+    mnemonicTitle: nls.localize(
+      { key: "mRun", comment: ["&& denotes a mnemonic"] },
+      "&&Run",
+    ),
+  },
+  order: 6,
+  when: IsSessionsWindowContext.negate(),
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
-	group: "1_debug",
-	command: {
-		id: DEBUG_START_COMMAND_ID,
-		title: nls.localize({ key: "miStartDebugging", comment: ["&& denotes a mnemonic"] }, "&&Start Debugging"),
-	},
-	order: 1,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
+  group: "1_debug",
+  command: {
+    id: DEBUG_START_COMMAND_ID,
+    title: nls.localize(
+      { key: "miStartDebugging", comment: ["&& denotes a mnemonic"] },
+      "&&Start Debugging",
+    ),
+  },
+  order: 1,
+  when: CONTEXT_DEBUGGERS_AVAILABLE,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
-	group: "1_debug",
-	command: {
-		id: DEBUG_RUN_COMMAND_ID,
-		title: nls.localize({ key: "miRun", comment: ["&& denotes a mnemonic"] }, "Run &&Without Debugging"),
-	},
-	order: 2,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
+  group: "1_debug",
+  command: {
+    id: DEBUG_RUN_COMMAND_ID,
+    title: nls.localize(
+      { key: "miRun", comment: ["&& denotes a mnemonic"] },
+      "Run &&Without Debugging",
+    ),
+  },
+  order: 2,
+  when: CONTEXT_DEBUGGERS_AVAILABLE,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
-	group: "1_debug",
-	command: {
-		id: STOP_ID,
-		title: nls.localize({ key: "miStopDebugging", comment: ["&& denotes a mnemonic"] }, "&&Stop Debugging"),
-		precondition: CONTEXT_IN_DEBUG_MODE,
-	},
-	order: 3,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
+  group: "1_debug",
+  command: {
+    id: STOP_ID,
+    title: nls.localize(
+      { key: "miStopDebugging", comment: ["&& denotes a mnemonic"] },
+      "&&Stop Debugging",
+    ),
+    precondition: CONTEXT_IN_DEBUG_MODE,
+  },
+  order: 3,
+  when: CONTEXT_DEBUGGERS_AVAILABLE,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
-	group: "1_debug",
-	command: {
-		id: RESTART_SESSION_ID,
-		title: nls.localize({ key: "miRestart Debugging", comment: ["&& denotes a mnemonic"] }, "&&Restart Debugging"),
-		precondition: CONTEXT_IN_DEBUG_MODE,
-	},
-	order: 4,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
+  group: "1_debug",
+  command: {
+    id: RESTART_SESSION_ID,
+    title: nls.localize(
+      { key: "miRestart Debugging", comment: ["&& denotes a mnemonic"] },
+      "&&Restart Debugging",
+    ),
+    precondition: CONTEXT_IN_DEBUG_MODE,
+  },
+  order: 4,
+  when: CONTEXT_DEBUGGERS_AVAILABLE,
 });
 
 // Configuration
 
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
-	group: "2_configuration",
-	command: {
-		id: ADD_CONFIGURATION_ID,
-		title: nls.localize({ key: "miAddConfiguration", comment: ["&& denotes a mnemonic"] }, "A&&dd Configuration..."),
-	},
-	order: 2,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
+  group: "2_configuration",
+  command: {
+    id: ADD_CONFIGURATION_ID,
+    title: nls.localize(
+      { key: "miAddConfiguration", comment: ["&& denotes a mnemonic"] },
+      "A&&dd Configuration...",
+    ),
+  },
+  order: 2,
+  when: CONTEXT_DEBUGGERS_AVAILABLE,
 });
 
 // Step Commands
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
-	group: "3_step",
-	command: {
-		id: STEP_OVER_ID,
-		title: nls.localize({ key: "miStepOver", comment: ["&& denotes a mnemonic"] }, "Step &&Over"),
-		precondition: CONTEXT_DEBUG_STATE.isEqualTo("stopped"),
-	},
-	order: 1,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
+  group: "3_step",
+  command: {
+    id: STEP_OVER_ID,
+    title: nls.localize(
+      { key: "miStepOver", comment: ["&& denotes a mnemonic"] },
+      "Step &&Over",
+    ),
+    precondition: CONTEXT_DEBUG_STATE.isEqualTo("stopped"),
+  },
+  order: 1,
+  when: CONTEXT_DEBUGGERS_AVAILABLE,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
-	group: "3_step",
-	command: {
-		id: STEP_INTO_ID,
-		title: nls.localize({ key: "miStepInto", comment: ["&& denotes a mnemonic"] }, "Step &&Into"),
-		precondition: CONTEXT_DEBUG_STATE.isEqualTo("stopped"),
-	},
-	order: 2,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
+  group: "3_step",
+  command: {
+    id: STEP_INTO_ID,
+    title: nls.localize(
+      { key: "miStepInto", comment: ["&& denotes a mnemonic"] },
+      "Step &&Into",
+    ),
+    precondition: CONTEXT_DEBUG_STATE.isEqualTo("stopped"),
+  },
+  order: 2,
+  when: CONTEXT_DEBUGGERS_AVAILABLE,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
-	group: "3_step",
-	command: {
-		id: STEP_OUT_ID,
-		title: nls.localize({ key: "miStepOut", comment: ["&& denotes a mnemonic"] }, "Step O&&ut"),
-		precondition: CONTEXT_DEBUG_STATE.isEqualTo("stopped"),
-	},
-	order: 3,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
+  group: "3_step",
+  command: {
+    id: STEP_OUT_ID,
+    title: nls.localize(
+      { key: "miStepOut", comment: ["&& denotes a mnemonic"] },
+      "Step O&&ut",
+    ),
+    precondition: CONTEXT_DEBUG_STATE.isEqualTo("stopped"),
+  },
+  order: 3,
+  when: CONTEXT_DEBUGGERS_AVAILABLE,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
-	group: "3_step",
-	command: {
-		id: CONTINUE_ID,
-		title: nls.localize({ key: "miContinue", comment: ["&& denotes a mnemonic"] }, "&&Continue"),
-		precondition: CONTEXT_DEBUG_STATE.isEqualTo("stopped"),
-	},
-	order: 4,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
+  group: "3_step",
+  command: {
+    id: CONTINUE_ID,
+    title: nls.localize(
+      { key: "miContinue", comment: ["&& denotes a mnemonic"] },
+      "&&Continue",
+    ),
+    precondition: CONTEXT_DEBUG_STATE.isEqualTo("stopped"),
+  },
+  order: 4,
+  when: CONTEXT_DEBUGGERS_AVAILABLE,
 });
 
 // New Breakpoints
 
 MenuRegistry.appendMenuItem(MenuId.MenubarNewBreakpointMenu, {
-	group: "1_breakpoints",
-	command: {
-		id: TOGGLE_INLINE_BREAKPOINT_ID,
-		title: nls.localize({ key: "miInlineBreakpoint", comment: ["&& denotes a mnemonic"] }, "Inline Breakp&&oint"),
-	},
-	order: 2,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
+  group: "1_breakpoints",
+  command: {
+    id: TOGGLE_INLINE_BREAKPOINT_ID,
+    title: nls.localize(
+      { key: "miInlineBreakpoint", comment: ["&& denotes a mnemonic"] },
+      "Inline Breakp&&oint",
+    ),
+  },
+  order: 2,
+  when: CONTEXT_DEBUGGERS_AVAILABLE,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
   group: "4_new_breakpoint",
-  title: nls.localize({ key: "miNewBreakpoint", comment: ["&& denotes a mnemonic"] }, "&&New Breakpoint"),
+  title: nls.localize(
+    { key: "miNewBreakpoint", comment: ["&& denotes a mnemonic"] },
+    "&&New Breakpoint",
+  ),
   submenu: MenuId.MenubarNewBreakpointMenu,
   order: 2,
   when: CONTEXT_DEBUGGERS_AVAILABLE,
@@ -1139,45 +1259,65 @@ MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
 // Disassembly
 
 MenuRegistry.appendMenuItem(MenuId.DebugDisassemblyContext, {
-	group: "1_edit",
-	command: {
-		id: COPY_ADDRESS_ID,
-		title: COPY_ADDRESS_LABEL,
-	},
-	order: 2,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
+  group: "1_edit",
+  command: {
+    id: COPY_ADDRESS_ID,
+    title: COPY_ADDRESS_LABEL,
+  },
+  order: 2,
+  when: CONTEXT_DEBUGGERS_AVAILABLE,
 });
 
 MenuRegistry.appendMenuItem(MenuId.DebugDisassemblyContext, {
-	group: "3_breakpoints",
-	command: {
-		id: TOGGLE_BREAKPOINT_ID,
-		title: nls.localize({ key: "miToggleBreakpoint", comment: ["&& denotes a mnemonic"] }, "Toggle Breakpoint"),
-	},
-	order: 2,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
+  group: "3_breakpoints",
+  command: {
+    id: TOGGLE_BREAKPOINT_ID,
+    title: nls.localize(
+      { key: "miToggleBreakpoint", comment: ["&& denotes a mnemonic"] },
+      "Toggle Breakpoint",
+    ),
+  },
+  order: 2,
+  when: CONTEXT_DEBUGGERS_AVAILABLE,
 });
 
 // Breakpoint actions are registered from breakpointsView.ts
 
 // Install Debuggers
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {
-	group: "z_install",
-	command: {
-		id: "debug.installAdditionalDebuggers",
-		title: nls.localize({ key: "miInstallAdditionalDebuggers", comment: ["&& denotes a mnemonic"] }, "&&Install Additional Debuggers..."),
-	},
-	order: 1,
+  group: "z_install",
+  command: {
+    id: "debug.installAdditionalDebuggers",
+    title: nls.localize(
+      {
+        key: "miInstallAdditionalDebuggers",
+        comment: ["&& denotes a mnemonic"],
+      },
+      "&&Install Additional Debuggers...",
+    ),
+  },
+  order: 1,
 });
 
 // register repl panel
 
-const VIEW_CONTAINER: ViewContainer = Registry.as<IViewContainersRegistry>(ViewExtensions.ViewContainersRegistry).registerViewContainer(
+const VIEW_CONTAINER: ViewContainer = Registry.as<IViewContainersRegistry>(
+  ViewExtensions.ViewContainersRegistry,
+).registerViewContainer(
   {
     id: DEBUG_PANEL_ID,
-    title: nls.localize2({ comment: ["Debug is a noun in this context, not a verb."], key: "debugPanel" }, "Debug Console"),
+    title: nls.localize2(
+      {
+        comment: ["Debug is a noun in this context, not a verb."],
+        key: "debugPanel",
+      },
+      "Debug Console",
+    ),
     icon: icons.debugConsoleViewIcon,
-    ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [DEBUG_PANEL_ID, { mergeViewWithContainerWhenSingleView: true }]),
+    ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [
+      DEBUG_PANEL_ID,
+      { mergeViewWithContainerWhenSingleView: true },
+    ]),
     storageId: DEBUG_PANEL_ID,
     hideIfEmpty: true,
     order: 2,
@@ -1186,37 +1326,58 @@ const VIEW_CONTAINER: ViewContainer = Registry.as<IViewContainersRegistry>(ViewE
   { doNotRegisterOpenCommand: true },
 );
 
-Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry).registerViews([{
-	id: REPL_VIEW_ID,
-	name: nls.localize2({ comment: ["Debug is a noun in this context, not a verb."], key: "debugPanel" }, "Debug Console"),
-	containerIcon: icons.debugConsoleViewIcon,
-	canToggleVisibility: true,
-	canMoveView: true,
-	when: CONTEXT_DEBUGGERS_AVAILABLE,
-	ctorDescriptor: new SyncDescriptor(Repl),
-	openCommandActionDescriptor: {
-		id: "workbench.debug.action.toggleRepl",
-		mnemonicTitle: nls.localize({ key: "miToggleDebugConsole", comment: ["&& denotes a mnemonic"] }, "De&&bug Console"),
-		keybindings: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyY },
-		order: 2,
-	},
-}], VIEW_CONTAINER);
+Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry).registerViews(
+  [
+    {
+      id: REPL_VIEW_ID,
+      name: nls.localize2(
+        {
+          comment: ["Debug is a noun in this context, not a verb."],
+          key: "debugPanel",
+        },
+        "Debug Console",
+      ),
+      containerIcon: icons.debugConsoleViewIcon,
+      canToggleVisibility: true,
+      canMoveView: true,
+      when: CONTEXT_DEBUGGERS_AVAILABLE,
+      ctorDescriptor: new SyncDescriptor(Repl),
+      openCommandActionDescriptor: {
+        id: "workbench.debug.action.toggleRepl",
+        mnemonicTitle: nls.localize(
+          { key: "miToggleDebugConsole", comment: ["&& denotes a mnemonic"] },
+          "De&&bug Console",
+        ),
+        keybindings: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyY },
+        order: 2,
+      },
+    },
+  ],
+  VIEW_CONTAINER,
+);
 
-
-const viewContainer = Registry.as<IViewContainersRegistry>(ViewExtensions.ViewContainersRegistry).registerViewContainer({
-	id: VIEWLET_ID,
-	title: nls.localize2("run and debug", "Run and Debug"),
-	openCommandActionDescriptor: {
-		id: VIEWLET_ID,
-		mnemonicTitle: nls.localize({ key: "miViewRun", comment: ["&& denotes a mnemonic"] }, "&&Run"),
-		keybindings: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyD },
-		order: 3,
-	},
-	ctorDescriptor: new SyncDescriptor(DebugViewPaneContainer),
-	icon: icons.runViewIcon,
-	alwaysUseContainerInfo: true,
-	order: 3,
-}, ViewContainerLocation.Sidebar);
+const viewContainer = Registry.as<IViewContainersRegistry>(
+  ViewExtensions.ViewContainersRegistry,
+).registerViewContainer(
+  {
+    id: VIEWLET_ID,
+    title: nls.localize2("run and debug", "Run and Debug"),
+    openCommandActionDescriptor: {
+      id: VIEWLET_ID,
+      mnemonicTitle: nls.localize(
+        { key: "miViewRun", comment: ["&& denotes a mnemonic"] },
+        "&&Run",
+      ),
+      keybindings: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyD },
+      order: 3,
+    },
+    ctorDescriptor: new SyncDescriptor(DebugViewPaneContainer),
+    icon: icons.runViewIcon,
+    alwaysUseContainerInfo: true,
+    order: 3,
+  },
+  ViewContainerLocation.Sidebar,
+);
 
 // Register default debug views
 const viewsRegistry = Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry);
@@ -1283,7 +1444,11 @@ viewsRegistry.registerViews(
       canToggleVisibility: true,
       canMoveView: true,
       focusCommand: { id: "workbench.debug.action.focusBreakpointsView" },
-      when: ContextKeyExpr.or(CONTEXT_BREAKPOINTS_EXIST, CONTEXT_DEBUG_UX.isEqualTo("default"), CONTEXT_HAS_DEBUGGED),
+      when: ContextKeyExpr.or(
+        CONTEXT_BREAKPOINTS_EXIST,
+        CONTEXT_DEBUG_UX.isEqualTo("default"),
+        CONTEXT_HAS_DEBUGGED,
+      ),
     },
   ],
   viewContainer,
@@ -1315,7 +1480,10 @@ viewsRegistry.registerViews(
       canToggleVisibility: true,
       canMoveView: true,
       collapsed: true,
-      when: ContextKeyExpr.and(CONTEXT_LOADED_SCRIPTS_SUPPORTED, CONTEXT_DEBUG_UX.isEqualTo("default")),
+      when: ContextKeyExpr.and(
+        CONTEXT_LOADED_SCRIPTS_SUPPORTED,
+        CONTEXT_DEBUG_UX.isEqualTo("default"),
+      ),
     },
   ],
   viewContainer,
@@ -1323,7 +1491,9 @@ viewsRegistry.registerViews(
 
 // Register disassembly view
 
-Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane(
+Registry.as<IEditorPaneRegistry>(
+  EditorExtensions.EditorPane,
+).registerEditorPane(
   EditorPaneDescriptor.create(
     DisassemblyView,
     DISASSEMBLY_VIEW_ID,
@@ -1337,224 +1507,444 @@ const configurationRegistry = Registry.as<IConfigurationRegistry>(
   ConfigurationExtensions.Configuration,
 );
 configurationRegistry.registerConfiguration({
-	id: "debug",
-	order: 20,
-	title: nls.localize("debugConfigurationTitle", "Debug"),
-	type: "object",
-	properties: {
-		"debug.showVariableTypes": {
-			type: "boolean",
-			description: nls.localize({ comment: ["This is the description for a setting"], key: "showVariableTypes" }, "Show variable type in variable pane during debug session"),
-			default: false,
-		},
-		"debug.allowBreakpointsEverywhere": {
-			type: "boolean",
-			description: nls.localize({ comment: ["This is the description for a setting"], key: "allowBreakpointsEverywhere" }, "Allow setting breakpoints in any file."),
-			default: false,
-		},
-		"debug.gutterMiddleClickAction": {
-			type: "string",
-			enum: ["logpoint", "conditionalBreakpoint", "triggeredBreakpoint", "none"],
-			description: nls.localize({ comment: ["This is the description for a setting"], key: "gutterMiddleClickAction" }, "Controls the action to perform when clicking the editor gutter with the middle mouse button."),
-			enumDescriptions: [
-				nls.localize("debug.gutterMiddleClickAction.logpoint", "Add Logpoint."),
-				nls.localize("debug.gutterMiddleClickAction.conditionalBreakpoint", "Add Conditional Breakpoint."),
-				nls.localize("debug.gutterMiddleClickAction.triggeredBreakpoint", "Add Triggered Breakpoint."),
-				nls.localize("debug.gutterMiddleClickAction.none", "Don't perform any action."),
-			],
-			default: "logpoint",
-		},
-		"debug.openExplorerOnEnd": {
-			type: "boolean",
-			description: nls.localize({ comment: ["This is the description for a setting"], key: "openExplorerOnEnd" }, "Automatically open the explorer view at the end of a debug session."),
-			default: false,
-		},
-		"debug.closeReadonlyTabsOnEnd": {
-			type: "boolean",
-			description: nls.localize({ comment: ["This is the description for a setting"], key: "closeReadonlyTabsOnEnd" }, "At the end of a debug session, all the read-only tabs associated with that session will be closed"),
-			default: false,
-		},
-		"debug.inlineValues": {
-			type: "string",
-			"enum": ["on", "off", "auto"],
-			description: nls.localize({ comment: ["This is the description for a setting"], key: "inlineValues" }, "Show variable values inline in editor while debugging."),
-			"enumDescriptions": [
-				nls.localize("inlineValues.on", "Always show variable values inline in editor while debugging."),
-				nls.localize("inlineValues.off", "Never show variable values inline in editor while debugging."),
-				nls.localize("inlineValues.focusNoScroll", "Show variable values inline in editor while debugging when the language supports inline value locations."),
-			],
-			default: "auto",
-		},
-		"debug.toolBarLocation": {
-			enum: ["floating", "docked", "commandCenter", "hidden"],
-			markdownDescription: nls.localize({ comment: ["This is the description for a setting"], key: "toolBarLocation" }, "Controls the location of the debug toolbar. Either `floating` in all views, `docked` in the debug view, `commandCenter` (requires {0}), or `hidden`.", "`#window.commandCenter#`"),
-			default: "floating",
-			markdownEnumDescriptions: [
-				nls.localize("debugToolBar.floating", "Show debug toolbar in all views."),
-				nls.localize("debugToolBar.docked", "Show debug toolbar only in debug views."),
-				nls.localize("debugToolBar.commandCenter", "`(Experimental)` Show debug toolbar in the command center."),
-				nls.localize("debugToolBar.hidden", "Do not show debug toolbar."),
-			],
-		},
-		"debug.showInStatusBar": {
-			enum: ["never", "always", "onFirstSessionStart"],
-			enumDescriptions: [nls.localize("never", "Never show debug item in status bar"), nls.localize("always", "Always show debug item in status bar"), nls.localize("onFirstSessionStart", "Show debug item in status bar only after debug was started for the first time")],
-			description: nls.localize({ comment: ["This is the description for a setting"], key: "showInStatusBar" }, "Controls when the debug status bar item should be visible."),
-			default: "onFirstSessionStart",
-		},
-		"debug.internalConsoleOptions": INTERNAL_CONSOLE_OPTIONS_SCHEMA,
-		"debug.console.closeOnEnd": {
-			type: "boolean",
-			description: nls.localize("debug.console.closeOnEnd", "Controls if the Debug Console should be automatically closed when the debug session ends."),
-			default: false,
-		},
-		"debug.terminal.clearBeforeReusing": {
-			type: "boolean",
-			description: nls.localize({ comment: ["This is the description for a setting"], key: "debug.terminal.clearBeforeReusing" }, "Before starting a new debug session in an integrated or external terminal, clear the terminal."),
-			default: false,
-		},
-		"debug.openDebug": {
-			enum: ["neverOpen", "openOnSessionStart", "openOnFirstSessionStart", "openOnDebugBreak"],
-			default: "openOnDebugBreak",
-			description: nls.localize("openDebug", "Controls when the debug view should open."),
-		},
-		"debug.showSubSessionsInToolBar": {
-			type: "boolean",
-			description: nls.localize({ comment: ["This is the description for a setting"], key: "showSubSessionsInToolBar" }, "Controls whether the debug sub-sessions are shown in the debug tool bar. When this setting is false the stop command on a sub-session will also stop the parent session."),
-			default: false,
-		},
-		"debug.console.fontSize": {
-			type: "number",
-			description: nls.localize("debug.console.fontSize", "Controls the font size in pixels in the Debug Console."),
-			default: isMacintosh ? 12 : 14,
-		},
-		"debug.console.fontFamily": {
-			type: "string",
-			description: nls.localize("debug.console.fontFamily", "Controls the font family in the Debug Console."),
-			default: "default",
-		},
-		"debug.console.lineHeight": {
-			type: "number",
-			description: nls.localize("debug.console.lineHeight", "Controls the line height in pixels in the Debug Console. Use 0 to compute the line height from the font size."),
-			default: 0,
-		},
-		"debug.console.wordWrap": {
-			type: "boolean",
-			description: nls.localize("debug.console.wordWrap", "Controls if the lines should wrap in the Debug Console."),
-			default: true,
-		},
-		"debug.console.historySuggestions": {
-			type: "boolean",
-			description: nls.localize("debug.console.historySuggestions", "Controls if the Debug Console should suggest previously typed input."),
-			default: true,
-		},
-		"debug.console.collapseIdenticalLines": {
-			type: "boolean",
-			description: nls.localize("debug.console.collapseIdenticalLines", "Controls if the Debug Console should collapse identical lines and show a number of occurrences with a badge."),
-			default: true,
-		},
-		"debug.console.acceptSuggestionOnEnter": {
-			enum: ["off", "on"],
-			description: nls.localize("debug.console.acceptSuggestionOnEnter", "Controls whether suggestions should be accepted on Enter in the Debug Console. Enter is also used to evaluate whatever is typed in the Debug Console."),
-			default: "off",
-		},
-		"debug.console.maximumLines": {
-			type: "number",
-			description: nls.localize("debug.console.maximumLines", "Controls the maximum number of lines in the Debug Console."),
-			default: 10000,
-		},
-		"launch": {
-			type: "object",
-			description: nls.localize({ comment: ["This is the description for a setting"], key: "launch" }, "Global debug launch configuration. Should be used as an alternative to 'launch.json' that is shared across workspaces."),
-			default: { configurations: [], compounds: [] },
-			$ref: launchSchemaId,
-			disallowConfigurationDefault: true,
-		},
-		"debug.focusWindowOnBreak": {
-			type: "boolean",
-			description: nls.localize("debug.focusWindowOnBreak", "Controls whether the workbench window should be focused when the debugger breaks."),
-			default: true,
-		},
-		"debug.focusEditorOnBreak": {
-			type: "boolean",
-			description: nls.localize("debug.focusEditorOnBreak", "Controls whether the editor should be focused when the debugger breaks."),
-			default: true,
-		},
-		"debug.onTaskErrors": {
-			enum: ["debugAnyway", "showErrors", "prompt", "abort"],
-			enumDescriptions: [nls.localize("debugAnyway", "Ignore task errors and start debugging."), nls.localize("showErrors", "Show the Problems view and do not start debugging."), nls.localize("prompt", "Prompt user."), nls.localize("cancel", "Cancel debugging.")],
-			description: nls.localize("debug.onTaskErrors", "Controls what to do when errors are encountered after running a preLaunchTask."),
-			default: "prompt",
-		},
-		"debug.showBreakpointsInOverviewRuler": {
-			type: "boolean",
-			description: nls.localize({ comment: ["This is the description for a setting"], key: "showBreakpointsInOverviewRuler" }, "Controls whether breakpoints should be shown in the overview ruler."),
-			default: false,
-		},
-		"debug.breakpointsView.presentation": {
-			type: "string",
-			description: nls.localize("debug.breakpointsView.presentation", "Controls whether breakpoints are displayed in a tree view grouped by file, or as a flat list."),
-			enum: ["tree", "list"],
-			default: "list",
-		},
-		"debug.showInlineBreakpointCandidates": {
-			type: "boolean",
-			description: nls.localize({ comment: ["This is the description for a setting"], key: "showInlineBreakpointCandidates" }, "Controls whether inline breakpoints candidate decorations should be shown in the editor while debugging."),
-			default: true,
-		},
-		"debug.saveBeforeStart": {
-			description: nls.localize("debug.saveBeforeStart", "Controls what editors to save before starting a debug session."),
-			enum: ["allEditorsInActiveGroup", "nonUntitledEditorsInActiveGroup", "none"],
-			enumDescriptions: [
-				nls.localize("debug.saveBeforeStart.allEditorsInActiveGroup", "Save all editors in the active group before starting a debug session."),
-				nls.localize("debug.saveBeforeStart.nonUntitledEditorsInActiveGroup", "Save all editors in the active group except untitled ones before starting a debug session."),
-				nls.localize("debug.saveBeforeStart.none", "Don't save any editors before starting a debug session."),
-			],
-			default: "allEditorsInActiveGroup",
-			scope: ConfigurationScope.LANGUAGE_OVERRIDABLE,
-		},
-		"debug.confirmOnExit": {
-			description: nls.localize("debug.confirmOnExit", "Controls whether to confirm when the window closes if there are active debug sessions."),
-			type: "string",
-			enum: ["never", "always"],
-			enumDescriptions: [
-				nls.localize("debug.confirmOnExit.never", "Never confirm."),
-				nls.localize("debug.confirmOnExit.always", "Always confirm if there are debug sessions."),
-			],
-			default: "never",
-		},
-		"debug.disassemblyView.showSourceCode": {
-			type: "boolean",
-			default: true,
-			description: nls.localize("debug.disassemblyView.showSourceCode", "Show Source Code in Disassembly View."),
-		},
-		"debug.autoExpandLazyVariables": {
-			type: "string",
-			enum: ["auto", "on", "off"],
-			default: "auto",
-			enumDescriptions: [
-				nls.localize("debug.autoExpandLazyVariables.auto", "When in screen reader optimized mode, automatically expand lazy variables."),
-				nls.localize("debug.autoExpandLazyVariables.on", "Always automatically expand lazy variables."),
-				nls.localize("debug.autoExpandLazyVariables.off", "Never automatically expand lazy variables."),
-			],
-			description: nls.localize("debug.autoExpandLazyVariables", "Controls whether variables that are lazily resolved, such as getters, are automatically resolved and expanded by the debugger."),
-		},
-		"debug.enableStatusBarColor": {
-			type: "boolean",
-			description: nls.localize("debug.enableStatusBarColor", "Color of the status bar when the debugger is active."),
-			default: true,
-		},
-		"debug.hideLauncherWhileDebugging": {
-			type: "boolean",
-			markdownDescription: nls.localize({ comment: ["This is the description for a setting"], key: "debug.hideLauncherWhileDebugging" }, "Hide 'Start Debugging' control in title bar of 'Run and Debug' view while debugging is active. Only relevant when {0} is not `docked`.", "`#debug.toolBarLocation#`"),
-			default: false,
-		},
-		"debug.hideSlowPreLaunchWarning": {
-			type: "boolean",
-			markdownDescription: nls.localize("debug.hideSlowPreLaunchWarning", "Hide the warning shown when a `preLaunchTask` has been running for a while."),
-			default: false,
-		},
-	},
+  id: "debug",
+  order: 20,
+  title: nls.localize("debugConfigurationTitle", "Debug"),
+  type: "object",
+  properties: {
+    "debug.showVariableTypes": {
+      type: "boolean",
+      description: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "showVariableTypes",
+        },
+        "Show variable type in variable pane during debug session",
+      ),
+      default: false,
+    },
+    "debug.allowBreakpointsEverywhere": {
+      type: "boolean",
+      description: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "allowBreakpointsEverywhere",
+        },
+        "Allow setting breakpoints in any file.",
+      ),
+      default: false,
+    },
+    "debug.gutterMiddleClickAction": {
+      type: "string",
+      enum: [
+        "logpoint",
+        "conditionalBreakpoint",
+        "triggeredBreakpoint",
+        "none",
+      ],
+      description: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "gutterMiddleClickAction",
+        },
+        "Controls the action to perform when clicking the editor gutter with the middle mouse button.",
+      ),
+      enumDescriptions: [
+        nls.localize("debug.gutterMiddleClickAction.logpoint", "Add Logpoint."),
+        nls.localize(
+          "debug.gutterMiddleClickAction.conditionalBreakpoint",
+          "Add Conditional Breakpoint.",
+        ),
+        nls.localize(
+          "debug.gutterMiddleClickAction.triggeredBreakpoint",
+          "Add Triggered Breakpoint.",
+        ),
+        nls.localize(
+          "debug.gutterMiddleClickAction.none",
+          "Don't perform any action.",
+        ),
+      ],
+      default: "logpoint",
+    },
+    "debug.openExplorerOnEnd": {
+      type: "boolean",
+      description: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "openExplorerOnEnd",
+        },
+        "Automatically open the explorer view at the end of a debug session.",
+      ),
+      default: false,
+    },
+    "debug.closeReadonlyTabsOnEnd": {
+      type: "boolean",
+      description: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "closeReadonlyTabsOnEnd",
+        },
+        "At the end of a debug session, all the read-only tabs associated with that session will be closed",
+      ),
+      default: false,
+    },
+    "debug.inlineValues": {
+      type: "string",
+      enum: ["on", "off", "auto"],
+      description: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "inlineValues",
+        },
+        "Show variable values inline in editor while debugging.",
+      ),
+      enumDescriptions: [
+        nls.localize(
+          "inlineValues.on",
+          "Always show variable values inline in editor while debugging.",
+        ),
+        nls.localize(
+          "inlineValues.off",
+          "Never show variable values inline in editor while debugging.",
+        ),
+        nls.localize(
+          "inlineValues.focusNoScroll",
+          "Show variable values inline in editor while debugging when the language supports inline value locations.",
+        ),
+      ],
+      default: "auto",
+    },
+    "debug.toolBarLocation": {
+      enum: ["floating", "docked", "commandCenter", "hidden"],
+      markdownDescription: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "toolBarLocation",
+        },
+        "Controls the location of the debug toolbar. Either `floating` in all views, `docked` in the debug view, `commandCenter` (requires {0}), or `hidden`.",
+        "`#window.commandCenter#`",
+      ),
+      default: "floating",
+      markdownEnumDescriptions: [
+        nls.localize(
+          "debugToolBar.floating",
+          "Show debug toolbar in all views.",
+        ),
+        nls.localize(
+          "debugToolBar.docked",
+          "Show debug toolbar only in debug views.",
+        ),
+        nls.localize(
+          "debugToolBar.commandCenter",
+          "`(Experimental)` Show debug toolbar in the command center.",
+        ),
+        nls.localize("debugToolBar.hidden", "Do not show debug toolbar."),
+      ],
+    },
+    "debug.showInStatusBar": {
+      enum: ["never", "always", "onFirstSessionStart"],
+      enumDescriptions: [
+        nls.localize("never", "Never show debug item in status bar"),
+        nls.localize("always", "Always show debug item in status bar"),
+        nls.localize(
+          "onFirstSessionStart",
+          "Show debug item in status bar only after debug was started for the first time",
+        ),
+      ],
+      description: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "showInStatusBar",
+        },
+        "Controls when the debug status bar item should be visible.",
+      ),
+      default: "onFirstSessionStart",
+    },
+    "debug.internalConsoleOptions": INTERNAL_CONSOLE_OPTIONS_SCHEMA,
+    "debug.console.closeOnEnd": {
+      type: "boolean",
+      description: nls.localize(
+        "debug.console.closeOnEnd",
+        "Controls if the Debug Console should be automatically closed when the debug session ends.",
+      ),
+      default: false,
+    },
+    "debug.terminal.clearBeforeReusing": {
+      type: "boolean",
+      description: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "debug.terminal.clearBeforeReusing",
+        },
+        "Before starting a new debug session in an integrated or external terminal, clear the terminal.",
+      ),
+      default: false,
+    },
+    "debug.openDebug": {
+      enum: [
+        "neverOpen",
+        "openOnSessionStart",
+        "openOnFirstSessionStart",
+        "openOnDebugBreak",
+      ],
+      default: "openOnDebugBreak",
+      description: nls.localize(
+        "openDebug",
+        "Controls when the debug view should open.",
+      ),
+    },
+    "debug.showSubSessionsInToolBar": {
+      type: "boolean",
+      description: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "showSubSessionsInToolBar",
+        },
+        "Controls whether the debug sub-sessions are shown in the debug tool bar. When this setting is false the stop command on a sub-session will also stop the parent session.",
+      ),
+      default: false,
+    },
+    "debug.console.fontSize": {
+      type: "number",
+      description: nls.localize(
+        "debug.console.fontSize",
+        "Controls the font size in pixels in the Debug Console.",
+      ),
+      default: isMacintosh ? 12 : 14,
+    },
+    "debug.console.fontFamily": {
+      type: "string",
+      description: nls.localize(
+        "debug.console.fontFamily",
+        "Controls the font family in the Debug Console.",
+      ),
+      default: "default",
+    },
+    "debug.console.lineHeight": {
+      type: "number",
+      description: nls.localize(
+        "debug.console.lineHeight",
+        "Controls the line height in pixels in the Debug Console. Use 0 to compute the line height from the font size.",
+      ),
+      default: 0,
+    },
+    "debug.console.wordWrap": {
+      type: "boolean",
+      description: nls.localize(
+        "debug.console.wordWrap",
+        "Controls if the lines should wrap in the Debug Console.",
+      ),
+      default: true,
+    },
+    "debug.console.historySuggestions": {
+      type: "boolean",
+      description: nls.localize(
+        "debug.console.historySuggestions",
+        "Controls if the Debug Console should suggest previously typed input.",
+      ),
+      default: true,
+    },
+    "debug.console.collapseIdenticalLines": {
+      type: "boolean",
+      description: nls.localize(
+        "debug.console.collapseIdenticalLines",
+        "Controls if the Debug Console should collapse identical lines and show a number of occurrences with a badge.",
+      ),
+      default: true,
+    },
+    "debug.console.acceptSuggestionOnEnter": {
+      enum: ["off", "on"],
+      description: nls.localize(
+        "debug.console.acceptSuggestionOnEnter",
+        "Controls whether suggestions should be accepted on Enter in the Debug Console. Enter is also used to evaluate whatever is typed in the Debug Console.",
+      ),
+      default: "off",
+    },
+    "debug.console.maximumLines": {
+      type: "number",
+      description: nls.localize(
+        "debug.console.maximumLines",
+        "Controls the maximum number of lines in the Debug Console.",
+      ),
+      default: 10000,
+    },
+    launch: {
+      type: "object",
+      description: nls.localize(
+        { comment: ["This is the description for a setting"], key: "launch" },
+        "Global debug launch configuration. Should be used as an alternative to 'launch.json' that is shared across workspaces.",
+      ),
+      default: { configurations: [], compounds: [] },
+      $ref: launchSchemaId,
+      disallowConfigurationDefault: true,
+    },
+    "debug.focusWindowOnBreak": {
+      type: "boolean",
+      description: nls.localize(
+        "debug.focusWindowOnBreak",
+        "Controls whether the workbench window should be focused when the debugger breaks.",
+      ),
+      default: true,
+    },
+    "debug.focusEditorOnBreak": {
+      type: "boolean",
+      description: nls.localize(
+        "debug.focusEditorOnBreak",
+        "Controls whether the editor should be focused when the debugger breaks.",
+      ),
+      default: true,
+    },
+    "debug.onTaskErrors": {
+      enum: ["debugAnyway", "showErrors", "prompt", "abort"],
+      enumDescriptions: [
+        nls.localize("debugAnyway", "Ignore task errors and start debugging."),
+        nls.localize(
+          "showErrors",
+          "Show the Problems view and do not start debugging.",
+        ),
+        nls.localize("prompt", "Prompt user."),
+        nls.localize("cancel", "Cancel debugging."),
+      ],
+      description: nls.localize(
+        "debug.onTaskErrors",
+        "Controls what to do when errors are encountered after running a preLaunchTask.",
+      ),
+      default: "prompt",
+    },
+    "debug.showBreakpointsInOverviewRuler": {
+      type: "boolean",
+      description: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "showBreakpointsInOverviewRuler",
+        },
+        "Controls whether breakpoints should be shown in the overview ruler.",
+      ),
+      default: false,
+    },
+    "debug.breakpointsView.presentation": {
+      type: "string",
+      description: nls.localize(
+        "debug.breakpointsView.presentation",
+        "Controls whether breakpoints are displayed in a tree view grouped by file, or as a flat list.",
+      ),
+      enum: ["tree", "list"],
+      default: "list",
+    },
+    "debug.showInlineBreakpointCandidates": {
+      type: "boolean",
+      description: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "showInlineBreakpointCandidates",
+        },
+        "Controls whether inline breakpoints candidate decorations should be shown in the editor while debugging.",
+      ),
+      default: true,
+    },
+    "debug.saveBeforeStart": {
+      description: nls.localize(
+        "debug.saveBeforeStart",
+        "Controls what editors to save before starting a debug session.",
+      ),
+      enum: [
+        "allEditorsInActiveGroup",
+        "nonUntitledEditorsInActiveGroup",
+        "none",
+      ],
+      enumDescriptions: [
+        nls.localize(
+          "debug.saveBeforeStart.allEditorsInActiveGroup",
+          "Save all editors in the active group before starting a debug session.",
+        ),
+        nls.localize(
+          "debug.saveBeforeStart.nonUntitledEditorsInActiveGroup",
+          "Save all editors in the active group except untitled ones before starting a debug session.",
+        ),
+        nls.localize(
+          "debug.saveBeforeStart.none",
+          "Don't save any editors before starting a debug session.",
+        ),
+      ],
+      default: "allEditorsInActiveGroup",
+      scope: ConfigurationScope.LANGUAGE_OVERRIDABLE,
+    },
+    "debug.confirmOnExit": {
+      description: nls.localize(
+        "debug.confirmOnExit",
+        "Controls whether to confirm when the window closes if there are active debug sessions.",
+      ),
+      type: "string",
+      enum: ["never", "always"],
+      enumDescriptions: [
+        nls.localize("debug.confirmOnExit.never", "Never confirm."),
+        nls.localize(
+          "debug.confirmOnExit.always",
+          "Always confirm if there are debug sessions.",
+        ),
+      ],
+      default: "never",
+    },
+    "debug.disassemblyView.showSourceCode": {
+      type: "boolean",
+      default: true,
+      description: nls.localize(
+        "debug.disassemblyView.showSourceCode",
+        "Show Source Code in Disassembly View.",
+      ),
+    },
+    "debug.autoExpandLazyVariables": {
+      type: "string",
+      enum: ["auto", "on", "off"],
+      default: "auto",
+      enumDescriptions: [
+        nls.localize(
+          "debug.autoExpandLazyVariables.auto",
+          "When in screen reader optimized mode, automatically expand lazy variables.",
+        ),
+        nls.localize(
+          "debug.autoExpandLazyVariables.on",
+          "Always automatically expand lazy variables.",
+        ),
+        nls.localize(
+          "debug.autoExpandLazyVariables.off",
+          "Never automatically expand lazy variables.",
+        ),
+      ],
+      description: nls.localize(
+        "debug.autoExpandLazyVariables",
+        "Controls whether variables that are lazily resolved, such as getters, are automatically resolved and expanded by the debugger.",
+      ),
+    },
+    "debug.enableStatusBarColor": {
+      type: "boolean",
+      description: nls.localize(
+        "debug.enableStatusBarColor",
+        "Color of the status bar when the debugger is active.",
+      ),
+      default: true,
+    },
+    "debug.hideLauncherWhileDebugging": {
+      type: "boolean",
+      markdownDescription: nls.localize(
+        {
+          comment: ["This is the description for a setting"],
+          key: "debug.hideLauncherWhileDebugging",
+        },
+        "Hide 'Start Debugging' control in title bar of 'Run and Debug' view while debugging is active. Only relevant when {0} is not `docked`.",
+        "`#debug.toolBarLocation#`",
+      ),
+      default: false,
+    },
+    "debug.hideSlowPreLaunchWarning": {
+      type: "boolean",
+      markdownDescription: nls.localize(
+        "debug.hideSlowPreLaunchWarning",
+        "Hide the warning shown when a `preLaunchTask` has been running for a while.",
+      ),
+      default: false,
+    },
+  },
 });
 
 AccessibleViewRegistry.register(new ReplAccessibleView());

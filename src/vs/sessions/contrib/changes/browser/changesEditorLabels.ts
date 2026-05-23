@@ -8,12 +8,15 @@ import { URI } from "../../../../base/common/uri.js";
 import { ILabelService } from "../../../../platform/label/common/label.js";
 
 export interface IChangesEditorLabels {
-	readonly label: string;
-	readonly description: string;
+  readonly label: string;
+  readonly description: string;
 }
 
-export function getChangesEditorLabels(uri: URI, labelService: Pick<ILabelService, "getUriBasenameLabel" | "getUriLabel">): IChangesEditorLabels {
-	return {
+export function getChangesEditorLabels(
+  uri: URI,
+  labelService: Pick<ILabelService, "getUriBasenameLabel" | "getUriLabel">,
+): IChangesEditorLabels {
+  return {
     label: labelService.getUriBasenameLabel(uri),
     description: labelService.getUriLabel(dirname(uri), { relative: true }),
   };

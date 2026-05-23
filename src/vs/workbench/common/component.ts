@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Memento } from "./memento.js";
-import { IThemeService, Themable } from "../../platform/theme/common/themeService.js";
+import {
+  IThemeService,
+  Themable,
+} from "../../platform/theme/common/themeService.js";
 import {
   IStorageService,
   IStorageValueChangeEvent,
@@ -15,45 +18,51 @@ import { DisposableStore } from "../../base/common/lifecycle.js";
 import { Event } from "../../base/common/event.js";
 
 export class Component<MementoType extends object = object> extends Themable {
+  private readonly memento: Memento<MementoType>;
 
-	private readonly memento: Memento<MementoType>;
+  constructor(
+    private readonly id: string,
+    themeService: IThemeService,
+    storageService: IStorageService,
+  ) {
+    super(themeService);
 
-	constructor(
-		private readonly id: string,
-		themeService: IThemeService,
-		storageService: IStorageService,
-	) {
-		super(themeService);
+    this.memento = new Memento(this.id, storageService);
 
-		this.memento = new Memento(this.id, storageService);
+    this._register(
+      storageService.onWillSaveState(() => {
+        // Ask the component to persist state into the memento
+        this.saveState();
 
-		this._register(storageService.onWillSaveState(() => {
+        // Then save the memento into storage
+        this.memento.saveMemento();
+      }),
+    );
+  }
 
-			// Ask the component to persist state into the memento
-			this.saveState();
+  getId(): string {
+    return this.id;
+  }
 
-			// Then save the memento into storage
-			this.memento.saveMemento();
-		}));
-	}
+  protected getMemento(
+    scope: StorageScope,
+    target: StorageTarget,
+  ): Partial<MementoType> {
+    return this.memento.getMemento(scope, target);
+  }
 
-	getId(): string {
-		return this.id;
-	}
+  protected reloadMemento(scope: StorageScope): void {
+    this.memento.reloadMemento(scope);
+  }
 
-	protected getMemento(scope: StorageScope, target: StorageTarget): Partial<MementoType> {
-		return this.memento.getMemento(scope, target);
-	}
+  protected onDidChangeMementoValue(
+    scope: StorageScope,
+    disposables: DisposableStore,
+  ): Event<IStorageValueChangeEvent> {
+    return this.memento.onDidChangeValue(scope, disposables);
+  }
 
-	protected reloadMemento(scope: StorageScope): void {
-		this.memento.reloadMemento(scope);
-	}
-
-	protected onDidChangeMementoValue(scope: StorageScope, disposables: DisposableStore): Event<IStorageValueChangeEvent> {
-		return this.memento.onDidChangeValue(scope, disposables);
-	}
-
-	protected saveState(): void {
-		// Subclasses to implement for storing state
-	}
+  protected saveState(): void {
+    // Subclasses to implement for storing state
+  }
 }

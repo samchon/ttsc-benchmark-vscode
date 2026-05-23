@@ -10,7 +10,10 @@ import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
 import { IPromptsService } from "../../common/promptSyntax/service/promptsService.js";
 import { PromptFilePickers } from "./pickers/promptFilePickers.js";
 import { ServicesAccessor } from "../../../../../editor/browser/editorExtensions.js";
-import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import {
+  Action2,
+  registerAction2,
+} from "../../../../../platform/actions/common/actions.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import {
   IChatContextPickerItem,
@@ -34,121 +37,131 @@ import { IOpenerService } from "../../../../../platform/opener/common/opener.js"
 /**
  * Action ID for the `Attach Instruction` action.
  */
-export const ATTACH_INSTRUCTIONS_ACTION_ID = "workbench.action.chat.attach.instructions";
+export const ATTACH_INSTRUCTIONS_ACTION_ID =
+  "workbench.action.chat.attach.instructions";
 
 /**
  * Action ID for the `Configure Instruction` action.
  */
-export const CONFIGURE_INSTRUCTIONS_ACTION_ID = "workbench.action.chat.configure.instructions";
-
+export const CONFIGURE_INSTRUCTIONS_ACTION_ID =
+  "workbench.action.chat.configure.instructions";
 
 class ManageInstructionsFilesAction extends Action2 {
-	constructor() {
-		super({
-			id: CONFIGURE_INSTRUCTIONS_ACTION_ID,
-			title: localize2("configure-instructions", "Configure Instructions & Rules..."),
-			shortTitle: localize2("configure-instructions.short", "Instructions & Rules"),
-			icon: Codicon.bookmark,
-			f1: true,
-			precondition: ChatContextKeys.enabled,
-			category: CHAT_CATEGORY,
-			menu: {
-				id: CHAT_CONFIG_MENU_ID,
-				when: ContextKeyExpr.and(ChatContextKeys.enabled, ContextKeyExpr.equals("view", ChatViewId)),
-				order: 10,
-				group: "1_level",
-			},
-		});
-	}
+  constructor() {
+    super({
+      id: CONFIGURE_INSTRUCTIONS_ACTION_ID,
+      title: localize2(
+        "configure-instructions",
+        "Configure Instructions & Rules...",
+      ),
+      shortTitle: localize2(
+        "configure-instructions.short",
+        "Instructions & Rules",
+      ),
+      icon: Codicon.bookmark,
+      f1: true,
+      precondition: ChatContextKeys.enabled,
+      category: CHAT_CATEGORY,
+      menu: {
+        id: CHAT_CONFIG_MENU_ID,
+        when: ContextKeyExpr.and(
+          ChatContextKeys.enabled,
+          ContextKeyExpr.equals("view", ChatViewId),
+        ),
+        order: 10,
+        group: "1_level",
+      },
+    });
+  }
 
-	public override async run(
-		accessor: ServicesAccessor,
-	): Promise<void> {
-		const openerService = accessor.get(IOpenerService);
-		const instaService = accessor.get(IInstantiationService);
+  public override async run(accessor: ServicesAccessor): Promise<void> {
+    const openerService = accessor.get(IOpenerService);
+    const instaService = accessor.get(IInstantiationService);
 
-		const pickers = instaService.createInstance(PromptFilePickers);
+    const pickers = instaService.createInstance(PromptFilePickers);
 
-		const placeholder = localize(
+    const placeholder = localize(
       "commands.prompt.manage-dialog.placeholder",
       "Select the instructions file to open",
     );
 
-		const result = await pickers.selectPromptFile({
+    const result = await pickers.selectPromptFile({
       placeholder,
       type: PromptsType.instructions,
       optionEdit: false,
     });
-		if (result !== undefined) {
-			await openerService.open(result.promptFile);
-		}
-
-	}
+    if (result !== undefined) {
+      await openerService.open(result.promptFile);
+    }
+  }
 }
 
 /**
  * Helper to register the `Attach Prompt` action.
  */
 export function registerAttachPromptActions(): void {
-	registerAction2(ManageInstructionsFilesAction);
+  registerAction2(ManageInstructionsFilesAction);
 }
 
-
 export class ChatInstructionsPickerPick implements IChatContextPickerItem {
-
-	readonly type = "pickerPick";
-	readonly label = localize(
+  readonly type = "pickerPick";
+  readonly label = localize(
     "chatContext.attach.instructions.label",
     "Instructions...",
   );
-	readonly icon = Codicon.bookmark;
-	readonly commandId = ATTACH_INSTRUCTIONS_ACTION_ID;
+  readonly icon = Codicon.bookmark;
+  readonly commandId = ATTACH_INSTRUCTIONS_ACTION_ID;
 
-	constructor(
-		@IPromptsService private readonly promptsService: IPromptsService,
-	) { }
+  constructor(
+    @IPromptsService private readonly promptsService: IPromptsService,
+  ) {}
 
-	isEnabled(widget: IChatWidget): Promise<boolean> | boolean {
-		return !!widget.attachmentCapabilities.supportsInstructionAttachments;
-	}
+  isEnabled(widget: IChatWidget): Promise<boolean> | boolean {
+    return !!widget.attachmentCapabilities.supportsInstructionAttachments;
+  }
 
-	asPicker(): IChatContextPicker {
+  asPicker(): IChatContextPicker {
+    const picks = this.promptsService
+      .listPromptFiles(PromptsType.instructions, CancellationToken.None)
+      .then((value) => {
+        const result: (IChatContextPickerPickItem | IQuickPickSeparator)[] = [];
 
-		const picks = this.promptsService.listPromptFiles(PromptsType.instructions, CancellationToken.None).then(value => {
+        value = value.slice(0).sort((a, b) => compare(a.storage, b.storage));
 
-			const result: (IChatContextPickerPickItem | IQuickPickSeparator)[] = [];
+        let storageType: string | undefined;
 
-			value = value.slice(0).sort((a, b) => compare(a.storage, b.storage));
+        for (const promptsPath of value) {
+          if (storageType !== promptsPath.storage) {
+            storageType = promptsPath.storage;
+            result.push({
+              type: "separator",
+              label: this.promptsService.getPromptLocationLabel(promptsPath),
+            });
+          }
 
-			let storageType: string | undefined;
+          result.push({
+            label: promptsPath.name ?? getCleanPromptName(promptsPath.uri),
+            asAttachment: (): IPromptFileVariableEntry => {
+              return toPromptFileVariableEntry(
+                promptsPath.uri,
+                PromptFileVariableKind.Instruction,
+              );
+            },
+          });
+        }
+        return result;
+      });
 
-			for (const promptsPath of value) {
-
-				if (storageType !== promptsPath.storage) {
-					storageType = promptsPath.storage;
-					result.push({
-						type: "separator",
-						label: this.promptsService.getPromptLocationLabel(promptsPath),
-					});
-				}
-
-				result.push({
-					label: promptsPath.name ?? getCleanPromptName(promptsPath.uri),
-					asAttachment: (): IPromptFileVariableEntry => {
-						return toPromptFileVariableEntry(promptsPath.uri, PromptFileVariableKind.Instruction);
-					},
-				});
-			}
-			return result;
-		});
-
-		return {
-			placeholder: localize("placeholder", "Select instructions files to attach"),
-			picks,
-			configure: {
-				label: localize("configureInstructions", "Configure Instructions..."),
-				commandId: CONFIGURE_INSTRUCTIONS_ACTION_ID,
-			},
-		};
-	}
+    return {
+      placeholder: localize(
+        "placeholder",
+        "Select instructions files to attach",
+      ),
+      picks,
+      configure: {
+        label: localize("configureInstructions", "Configure Instructions..."),
+        commandId: CONFIGURE_INSTRUCTIONS_ACTION_ID,
+      },
+    };
+  }
 }

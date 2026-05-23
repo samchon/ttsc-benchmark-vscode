@@ -3,7 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  DisposableStore,
+  toDisposable,
+} from "../../../base/common/lifecycle.js";
 import { DeferredPromise } from "../../../base/common/async.js";
 import { Emitter } from "../../../base/common/event.js";
 import { IpcMainEvent } from "electron";
@@ -32,40 +36,43 @@ import {
 } from "../common/agentService.js";
 import { deepClone } from "../../../base/common/objects.js";
 
-export class ElectronAgentHostStarter extends Disposable implements IAgentHostStarter {
+export class ElectronAgentHostStarter
+  extends Disposable
+  implements IAgentHostStarter
+{
+  private utilityProcess: UtilityProcess | undefined = undefined;
+  private utilityProcessStarted: DeferredPromise<void> | undefined = undefined;
 
-	private utilityProcess: UtilityProcess | undefined = undefined;
-	private utilityProcessStarted: DeferredPromise<void> | undefined = undefined;
+  private readonly _onRequestConnection = this._register(new Emitter<void>());
+  readonly onRequestConnection = this._onRequestConnection.event;
+  private readonly _onWillShutdown = this._register(new Emitter<void>());
+  readonly onWillShutdown = this._onWillShutdown.event;
 
-	private readonly _onRequestConnection = this._register(new Emitter<void>());
-	readonly onRequestConnection = this._onRequestConnection.event;
-	private readonly _onWillShutdown = this._register(new Emitter<void>());
-	readonly onWillShutdown = this._onWillShutdown.event;
+  constructor(
+    @IConfigurationService
+    private readonly _configurationService: IConfigurationService,
+    @IEnvironmentMainService
+    private readonly _environmentMainService: IEnvironmentMainService,
+    @ILifecycleMainService
+    private readonly _lifecycleMainService: ILifecycleMainService,
+    @ILogService private readonly _logService: ILogService,
+  ) {
+    super();
 
-	constructor(
-		@IConfigurationService private readonly _configurationService: IConfigurationService,
-		@IEnvironmentMainService private readonly _environmentMainService: IEnvironmentMainService,
-		@ILifecycleMainService private readonly _lifecycleMainService: ILifecycleMainService,
-		@ILogService private readonly _logService: ILogService,
-	) {
-		super();
-
-		this._register(
-      this._lifecycleMainService.onWillShutdown(
-        () => this._onWillShutdown.fire(),
+    this._register(
+      this._lifecycleMainService.onWillShutdown(() =>
+        this._onWillShutdown.fire(),
       ),
     );
 
-		// Listen for new windows to establish a direct MessagePort connection to the agent host
-		const onWindowConnection = (e: IpcMainEvent, nonce: string) => this._onWindowConnection(
-      e,
-      nonce,
-    );
-		validatedIpcMain.on(
+    // Listen for new windows to establish a direct MessagePort connection to the agent host
+    const onWindowConnection = (e: IpcMainEvent, nonce: string) =>
+      this._onWindowConnection(e, nonce);
+    validatedIpcMain.on(
       "vscode:createAgentHostMessageChannel",
       onWindowConnection,
     );
-		this._register(
+    this._register(
       toDisposable(() => {
         validatedIpcMain.removeListener(
           "vscode:createAgentHostMessageChannel",
@@ -73,93 +80,116 @@ export class ElectronAgentHostStarter extends Disposable implements IAgentHostSt
         );
       }),
     );
-	}
+  }
 
-	async start(): Promise<IAgentHostConnection> {
-		this.utilityProcess = new UtilityProcess(
+  async start(): Promise<IAgentHostConnection> {
+    this.utilityProcess = new UtilityProcess(
       this._logService,
       NullTelemetryService,
       this._lifecycleMainService,
     );
-		this.utilityProcessStarted = new DeferredPromise<void>();
+    this.utilityProcessStarted = new DeferredPromise<void>();
 
-		const inspectParams = parseAgentHostDebugPort(
+    const inspectParams = parseAgentHostDebugPort(
       this._environmentMainService.args,
       this._environmentMainService.isBuilt,
     );
-		const execArgv = inspectParams.port ? [
-      "--nolazy",
-      `--inspect${inspectParams.break ? "-brk" : ""}=${inspectParams.port}`,
-    ] : undefined;
+    const execArgv = inspectParams.port
+      ? [
+          "--nolazy",
+          `--inspect${inspectParams.break ? "-brk" : ""}=${inspectParams.port}`,
+        ]
+      : undefined;
 
-		// Resolve user shell environment so spawned tools/terminals inherit
-		// PATH and other vars from the user's login shell (macOS/Linux GUI launches).
-		const shellEnv = await this._resolveShellEnv();
+    // Resolve user shell environment so spawned tools/terminals inherit
+    // PATH and other vars from the user's login shell (macOS/Linux GUI launches).
+    const shellEnv = await this._resolveShellEnv();
 
-		// Gate optional providers via env vars consumed by `agentHostMain.ts`.
-		// The Claude agent is opt-in: enabled when the user points the SDK path
-		// setting at a locally-installed `@anthropic-ai/claude-agent-sdk` package,
-		// or when the env var is already set on the parent process (developer
-		// override). The SDK itself is intentionally not bundled with VS Code.
-		const claudeSdkPath = this._configurationService.getValue<string>(
-      AgentHostClaudeAgentSdkPathSettingId,
-    )
-			|| process.env[AgentHostClaudeSdkPathEnvVar]
-			|| "";
+    // Gate optional providers via env vars consumed by `agentHostMain.ts`.
+    // The Claude agent is opt-in: enabled when the user points the SDK path
+    // setting at a locally-installed `@anthropic-ai/claude-agent-sdk` package,
+    // or when the env var is already set on the parent process (developer
+    // override). The SDK itself is intentionally not bundled with VS Code.
+    const claudeSdkPath =
+      this._configurationService.getValue<string>(
+        AgentHostClaudeAgentSdkPathSettingId,
+      ) ||
+      process.env[AgentHostClaudeSdkPathEnvVar] ||
+      "";
 
-		// Translate `chat.agentHost.otel.*` settings into the env vars consumed by
-		// the agent host process. Any value already present on `process.env` wins
-		// (developer override) — see `buildAgentHostOTelEnv` for the precedence.
-		const otelEnv = buildAgentHostOTelEnv({
-			enabled: this._configurationService.getValue<boolean>(AgentHostOTelEnabledSettingId),
-			exporterType: this._configurationService.getValue<string>(AgentHostOTelExporterTypeSettingId),
-			otlpEndpoint: this._configurationService.getValue<string>(AgentHostOTelOtlpEndpointSettingId),
-			captureContent: this._configurationService.getValue<boolean>(AgentHostOTelCaptureContentSettingId),
-			outfile: this._configurationService.getValue<string>(AgentHostOTelOutfileSettingId),
-			dbSpanExporterEnabled: this._configurationService.getValue<boolean>(AgentHostOTelDbSpanExporterEnabledSettingId),
-		}, process.env);
+    // Translate `chat.agentHost.otel.*` settings into the env vars consumed by
+    // the agent host process. Any value already present on `process.env` wins
+    // (developer override) — see `buildAgentHostOTelEnv` for the precedence.
+    const otelEnv = buildAgentHostOTelEnv(
+      {
+        enabled: this._configurationService.getValue<boolean>(
+          AgentHostOTelEnabledSettingId,
+        ),
+        exporterType: this._configurationService.getValue<string>(
+          AgentHostOTelExporterTypeSettingId,
+        ),
+        otlpEndpoint: this._configurationService.getValue<string>(
+          AgentHostOTelOtlpEndpointSettingId,
+        ),
+        captureContent: this._configurationService.getValue<boolean>(
+          AgentHostOTelCaptureContentSettingId,
+        ),
+        outfile: this._configurationService.getValue<string>(
+          AgentHostOTelOutfileSettingId,
+        ),
+        dbSpanExporterEnabled: this._configurationService.getValue<boolean>(
+          AgentHostOTelDbSpanExporterEnabledSettingId,
+        ),
+      },
+      process.env,
+    );
 
-		const args = [
+    const args = [
       "--logsPath",
-      this._environmentMainService.logsHome.with({ scheme: Schemas.file }).fsPath,
+      this._environmentMainService.logsHome.with({ scheme: Schemas.file })
+        .fsPath,
       "--user-data-dir",
       this._environmentMainService.userDataPath,
     ];
-		if (this._environmentMainService.disableTelemetry) {
-			args.push("--disable-telemetry");
-		}
+    if (this._environmentMainService.disableTelemetry) {
+      args.push("--disable-telemetry");
+    }
 
-		this.utilityProcess.start({
-			type: "agentHost",
-			name: "agent-host",
-			entryPoint: "vs/platform/agentHost/node/agentHostMain",
-			execArgv,
-			args,
-			env: {
-				...deepClone(process.env),
-				...shellEnv,
-				VSCODE_ESM_ENTRYPOINT: "vs/platform/agentHost/node/agentHostMain",
-				VSCODE_PIPE_LOGGING: "true",
-				VSCODE_VERBOSE_LOGGING: "true",
-				...(claudeSdkPath ? { [AgentHostClaudeSdkPathEnvVar]: claudeSdkPath } : {}),
-				...otelEnv,
-			},
-		});
+    this.utilityProcess.start({
+      type: "agentHost",
+      name: "agent-host",
+      entryPoint: "vs/platform/agentHost/node/agentHostMain",
+      execArgv,
+      args,
+      env: {
+        ...deepClone(process.env),
+        ...shellEnv,
+        VSCODE_ESM_ENTRYPOINT: "vs/platform/agentHost/node/agentHostMain",
+        VSCODE_PIPE_LOGGING: "true",
+        VSCODE_VERBOSE_LOGGING: "true",
+        ...(claudeSdkPath
+          ? { [AgentHostClaudeSdkPathEnvVar]: claudeSdkPath }
+          : {}),
+        ...otelEnv,
+      },
+    });
 
-		this.utilityProcessStarted.complete();
+    this.utilityProcessStarted.complete();
 
-		const port = this.utilityProcess.connect();
-		const client = new MessagePortClient(port, "agentHost");
+    const port = this.utilityProcess.connect();
+    const client = new MessagePortClient(port, "agentHost");
 
-		const store = new DisposableStore();
-		store.add(client);
-		store.add(this.utilityProcess.onStderr(data => {
-			if (this._isExpectedStderr(data)) {
-				return;
-			}
-			this._logService.error(`[AgentHost:stderr] ${data}`);
-		}));
-		store.add(
+    const store = new DisposableStore();
+    store.add(client);
+    store.add(
+      this.utilityProcess.onStderr((data) => {
+        if (this._isExpectedStderr(data)) {
+          return;
+        }
+        this._logService.error(`[AgentHost:stderr] ${data}`);
+      }),
+    );
+    store.add(
       toDisposable(() => {
         this.utilityProcess?.kill();
         this.utilityProcess?.dispose();
@@ -168,66 +198,69 @@ export class ElectronAgentHostStarter extends Disposable implements IAgentHostSt
       }),
     );
 
-		return {
+    return {
       client,
       store,
       onDidProcessExit: this.utilityProcess.onExit,
     };
-	}
+  }
 
-	private async _resolveShellEnv(): Promise<typeof process.env> {
-		try {
-			return await getResolvedShellEnv(
+  private async _resolveShellEnv(): Promise<typeof process.env> {
+    try {
+      return await getResolvedShellEnv(
         this._configurationService,
         this._logService,
         this._environmentMainService.args,
         process.env,
       );
-		} catch (error) {
-			this._logService.error(
+    } catch (error) {
+      this._logService.error(
         "AgentHostStarter was unable to resolve shell environment",
         error,
       );
-			return {};
-		}
-	}
+      return {};
+    }
+  }
 
-	private async _onWindowConnection(e: IpcMainEvent, nonce: string): Promise<void> {
-		this._onRequestConnection.fire();
+  private async _onWindowConnection(
+    e: IpcMainEvent,
+    nonce: string,
+  ): Promise<void> {
+    this._onRequestConnection.fire();
 
-		// Wait for utilityProcess.start() to actually run before calling connect(),
-		// otherwise the MessagePort posted via connect() is silently dropped.
-		await this.utilityProcessStarted?.p;
+    // Wait for utilityProcess.start() to actually run before calling connect(),
+    // otherwise the MessagePort posted via connect() is silently dropped.
+    await this.utilityProcessStarted?.p;
 
-		if (!this.utilityProcess) {
-			this._logService.error(
+    if (!this.utilityProcess) {
+      this._logService.error(
         "AgentHostStarter: cannot create window connection, agent host process is not running",
       );
-			return;
-		}
+      return;
+    }
 
-		const port = this.utilityProcess.connect();
+    const port = this.utilityProcess.connect();
 
-		if (e.sender.isDestroyed()) {
-			port.close();
-			return;
-		}
+    if (e.sender.isDestroyed()) {
+      port.close();
+      return;
+    }
 
-		e.sender.postMessage("vscode:createAgentHostMessageChannelResult", nonce, [
+    e.sender.postMessage("vscode:createAgentHostMessageChannelResult", nonce, [
       port,
     ]);
-	}
+  }
 
-	private static readonly _expectedStderrPatterns = [
+  private static readonly _expectedStderrPatterns = [
     "Most NODE_OPTIONs are not supported in packaged apps",
     "Debugger listening on ws://",
     "For help, see: https://nodejs.org/en/docs/inspector",
     "ExperimentalWarning: SQLite is an experimental feature",
   ];
 
-	private _isExpectedStderr(data: string): boolean {
-		return ElectronAgentHostStarter._expectedStderrPatterns.some(
-      pattern => data.includes(pattern),
+  private _isExpectedStderr(data: string): boolean {
+    return ElectronAgentHostStarter._expectedStderrPatterns.some((pattern) =>
+      data.includes(pattern),
     );
-	}
+  }
 }

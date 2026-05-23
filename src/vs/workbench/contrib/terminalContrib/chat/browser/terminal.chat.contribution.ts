@@ -35,9 +35,15 @@ registerWorkbenchContribution2(
 import "./terminalChatActions.js";
 import { AccessibleViewRegistry } from "../../../../../platform/accessibility/browser/accessibleViewRegistry.js";
 import { TerminalChatAccessibilityHelp } from "./terminalChatAccessibilityHelp.js";
-import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../../common/contributions.js";
+import {
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../common/contributions.js";
 import { TerminalChatEnabler } from "./terminalChatEnabler.js";
-import { InstantiationType, registerSingleton } from "../../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../../platform/instantiation/common/extensions.js";
 import { ITerminalChatService } from "../../../terminal/browser/terminal.js";
 import { TerminalChatService } from "./terminalChatService.js";
 

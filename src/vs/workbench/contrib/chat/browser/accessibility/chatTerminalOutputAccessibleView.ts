@@ -15,24 +15,24 @@ import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
 import { ITerminalChatService } from "../../../terminal/browser/terminal.js";
 
 export class ChatTerminalOutputAccessibleView implements IAccessibleViewImplementation {
-	readonly priority = 115;
-	readonly name = "chatTerminalOutput";
-	readonly type = AccessibleViewType.View;
-	readonly when = ChatContextKeys.inChatTerminalToolOutput;
+  readonly priority = 115;
+  readonly name = "chatTerminalOutput";
+  readonly type = AccessibleViewType.View;
+  readonly when = ChatContextKeys.inChatTerminalToolOutput;
 
-	getProvider(accessor: ServicesAccessor) {
-		const terminalChatService = accessor.get(ITerminalChatService);
-		const part = terminalChatService.getFocusedProgressPart();
-		if (!part) {
-			return;
-		}
+  getProvider(accessor: ServicesAccessor) {
+    const terminalChatService = accessor.get(ITerminalChatService);
+    const part = terminalChatService.getFocusedProgressPart();
+    if (!part) {
+      return;
+    }
 
-		const content = part.getCommandAndOutputAsText();
-		if (!content) {
-			return;
-		}
+    const content = part.getCommandAndOutputAsText();
+    if (!content) {
+      return;
+    }
 
-		return new AccessibleContentProvider(
+    return new AccessibleContentProvider(
       AccessibleViewProviderId.ChatTerminalOutput,
       {
         type: AccessibleViewType.View,
@@ -43,5 +43,5 @@ export class ChatTerminalOutputAccessibleView implements IAccessibleViewImplemen
       () => part.focusOutput(),
       AccessibilityVerbositySettingId.TerminalChatOutput,
     );
-	}
+  }
 }

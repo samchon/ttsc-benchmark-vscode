@@ -3,25 +3,61 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstantiationType, registerSingleton } from "../../../platform/instantiation/common/extensions.js";
-import { IExtHostOutputService, ExtHostOutputService } from "./extHostOutput.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../platform/instantiation/common/extensions.js";
+import {
+  IExtHostOutputService,
+  ExtHostOutputService,
+} from "./extHostOutput.js";
 import { IExtHostWorkspace, ExtHostWorkspace } from "./extHostWorkspace.js";
-import { IExtHostDecorations, ExtHostDecorations } from "./extHostDecorations.js";
-import { IExtHostConfiguration, ExtHostConfiguration } from "./extHostConfiguration.js";
+import {
+  IExtHostDecorations,
+  ExtHostDecorations,
+} from "./extHostDecorations.js";
+import {
+  IExtHostConfiguration,
+  ExtHostConfiguration,
+} from "./extHostConfiguration.js";
 import { IExtHostCommands, ExtHostCommands } from "./extHostCommands.js";
-import { IExtHostDocumentsAndEditors, ExtHostDocumentsAndEditors } from "./extHostDocumentsAndEditors.js";
-import { IExtHostTerminalService, WorkerExtHostTerminalService } from "./extHostTerminalService.js";
+import {
+  IExtHostDocumentsAndEditors,
+  ExtHostDocumentsAndEditors,
+} from "./extHostDocumentsAndEditors.js";
+import {
+  IExtHostTerminalService,
+  WorkerExtHostTerminalService,
+} from "./extHostTerminalService.js";
 import { IExtHostTask, WorkerExtHostTask } from "./extHostTask.js";
-import { IExtHostDebugService, WorkerExtHostDebugService } from "./extHostDebugService.js";
+import {
+  IExtHostDebugService,
+  WorkerExtHostDebugService,
+} from "./extHostDebugService.js";
 import { IExtHostSearch, ExtHostSearch } from "./extHostSearch.js";
 import { IExtHostStorage, ExtHostStorage } from "./extHostStorage.js";
-import { IExtHostTunnelService, ExtHostTunnelService } from "./extHostTunnelService.js";
-import { IExtHostApiDeprecationService, ExtHostApiDeprecationService } from "./extHostApiDeprecationService.js";
+import {
+  IExtHostTunnelService,
+  ExtHostTunnelService,
+} from "./extHostTunnelService.js";
+import {
+  IExtHostApiDeprecationService,
+  ExtHostApiDeprecationService,
+} from "./extHostApiDeprecationService.js";
 import { IExtHostWindow, ExtHostWindow } from "./extHostWindow.js";
 import { IExtHostPower, ExtHostPower } from "./extHostPower.js";
-import { IExtHostConsumerFileSystem, ExtHostConsumerFileSystem } from "./extHostFileSystemConsumer.js";
-import { IExtHostFileSystemInfo, ExtHostFileSystemInfo } from "./extHostFileSystemInfo.js";
-import { IExtHostSecretState, ExtHostSecretState } from "./extHostSecretState.js";
+import {
+  IExtHostConsumerFileSystem,
+  ExtHostConsumerFileSystem,
+} from "./extHostFileSystemConsumer.js";
+import {
+  IExtHostFileSystemInfo,
+  ExtHostFileSystemInfo,
+} from "./extHostFileSystemInfo.js";
+import {
+  IExtHostSecretState,
+  ExtHostSecretState,
+} from "./extHostSecretState.js";
 import { ExtHostEditorTabs, IExtHostEditorTabs } from "./extHostEditorTabs.js";
 import { ExtHostLoggerService } from "./extHostLoggerService.js";
 import { ILoggerService } from "../../../platform/log/common/log.js";
@@ -29,17 +65,38 @@ import {
   ExtHostVariableResolverProviderService,
   IExtHostVariableResolverProvider,
 } from "./extHostVariableResolverService.js";
-import { ExtHostLocalizationService, IExtHostLocalizationService } from "./extHostLocalizationService.js";
-import { ExtHostManagedSockets, IExtHostManagedSockets } from "./extHostManagedSockets.js";
-import { ExtHostLanguageModels, IExtHostLanguageModels } from "./extHostLanguageModels.js";
-import { IExtHostTerminalShellIntegration, ExtHostTerminalShellIntegration } from "./extHostTerminalShellIntegration.js";
+import {
+  ExtHostLocalizationService,
+  IExtHostLocalizationService,
+} from "./extHostLocalizationService.js";
+import {
+  ExtHostManagedSockets,
+  IExtHostManagedSockets,
+} from "./extHostManagedSockets.js";
+import {
+  ExtHostLanguageModels,
+  IExtHostLanguageModels,
+} from "./extHostLanguageModels.js";
+import {
+  IExtHostTerminalShellIntegration,
+  ExtHostTerminalShellIntegration,
+} from "./extHostTerminalShellIntegration.js";
 import { ExtHostTesting, IExtHostTesting } from "./extHostTesting.js";
 import { ExtHostMcpService, IExtHostMpcService } from "./extHostMcp.js";
 import { ExtHostUrls, IExtHostUrlsService } from "./extHostUrls.js";
 import { ExtHostProgress, IExtHostProgress } from "./extHostProgress.js";
-import { ExtHostDataChannels, IExtHostDataChannels } from "./extHostDataChannels.js";
-import { ExtHostMeteredConnection, IExtHostMeteredConnection } from "./extHostMeteredConnection.js";
-import { ExtHostGitExtensionService, IExtHostGitExtensionService } from "./extHostGitExtensionService.js";
+import {
+  ExtHostDataChannels,
+  IExtHostDataChannels,
+} from "./extHostDataChannels.js";
+import {
+  ExtHostMeteredConnection,
+  IExtHostMeteredConnection,
+} from "./extHostMeteredConnection.js";
+import {
+  ExtHostGitExtensionService,
+  IExtHostGitExtensionService,
+} from "./extHostGitExtensionService.js";
 
 registerSingleton(
   IExtHostLocalizationService,

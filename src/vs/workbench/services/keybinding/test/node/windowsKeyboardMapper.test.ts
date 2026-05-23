@@ -3,8 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyChord, KeyCode, KeyMod, ScanCode } from "../../../../../base/common/keyCodes.js";
-import { KeyCodeChord, decodeKeybinding, ScanCodeChord, Keybinding } from "../../../../../base/common/keybindings.js";
+import {
+  KeyChord,
+  KeyCode,
+  KeyMod,
+  ScanCode,
+} from "../../../../../base/common/keyCodes.js";
+import {
+  KeyCodeChord,
+  decodeKeybinding,
+  ScanCodeChord,
+  Keybinding,
+} from "../../../../../base/common/keybindings.js";
 import { OperatingSystem } from "../../../../../base/common/platform.js";
 import { WindowsKeyboardMapper } from "../../common/windowsKeyboardMapper.js";
 import {
@@ -19,18 +29,26 @@ import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/tes
 
 const WRITE_FILE_IF_DIFFERENT = false;
 
-async function createKeyboardMapper(isUSStandard: boolean, file: string, mapAltGrToCtrlAlt: boolean): Promise<WindowsKeyboardMapper> {
-	const rawMappings = await readRawMapping<IWindowsKeyboardMapping>(file);
-	return new WindowsKeyboardMapper(
+async function createKeyboardMapper(
+  isUSStandard: boolean,
+  file: string,
+  mapAltGrToCtrlAlt: boolean,
+): Promise<WindowsKeyboardMapper> {
+  const rawMappings = await readRawMapping<IWindowsKeyboardMapping>(file);
+  return new WindowsKeyboardMapper(
     isUSStandard,
     rawMappings,
     mapAltGrToCtrlAlt,
   );
 }
 
-function _assertResolveKeybinding(mapper: WindowsKeyboardMapper, k: number, expected: IResolvedKeybinding[]): void {
-	const keyBinding = decodeKeybinding(k, OperatingSystem.Windows);
-	assertResolveKeybinding(mapper, keyBinding!, expected);
+function _assertResolveKeybinding(
+  mapper: WindowsKeyboardMapper,
+  k: number,
+  expected: IResolvedKeybinding[],
+): void {
+  const keyBinding = decodeKeybinding(k, OperatingSystem.Windows);
+  assertResolveKeybinding(mapper, keyBinding!, expected);
 }
 
 suite("keyboardMapper - WINDOWS de_ch", () => {
@@ -77,25 +95,29 @@ suite("keyboardMapper - WINDOWS de_ch", () => {
   });
 
   test("resolveKeyboardEvent Ctrl+Z", () => {
-    assertResolveKeyboardEvent(mapper, {
-      _standardKeyboardEventBrand: true,
-      ctrlKey: true,
-      shiftKey: false,
-      altKey: false,
-      metaKey: false,
-      altGraphKey: false,
-      keyCode: KeyCode.KeyZ,
-      code: null!,
-    }, {
-      label: "Ctrl+Z",
-      ariaLabel: "Control+Z",
-      electronAccelerator: "Ctrl+Z",
-      userSettingsLabel: "ctrl+z",
-      isWYSIWYG: true,
-      isMultiChord: false,
-      dispatchParts: ["ctrl+Z"],
-      singleModifierDispatchParts: [null],
-    });
+    assertResolveKeyboardEvent(
+      mapper,
+      {
+        _standardKeyboardEventBrand: true,
+        ctrlKey: true,
+        shiftKey: false,
+        altKey: false,
+        metaKey: false,
+        altGraphKey: false,
+        keyCode: KeyCode.KeyZ,
+        code: null!,
+      },
+      {
+        label: "Ctrl+Z",
+        ariaLabel: "Control+Z",
+        electronAccelerator: "Ctrl+Z",
+        userSettingsLabel: "ctrl+z",
+        isWYSIWYG: true,
+        isMultiChord: false,
+        dispatchParts: ["ctrl+Z"],
+        singleModifierDispatchParts: [null],
+      },
+    );
   });
 
   test("resolveKeybinding Ctrl+]", () => {
@@ -114,25 +136,29 @@ suite("keyboardMapper - WINDOWS de_ch", () => {
   });
 
   test("resolveKeyboardEvent Ctrl+]", () => {
-    assertResolveKeyboardEvent(mapper, {
-      _standardKeyboardEventBrand: true,
-      ctrlKey: true,
-      shiftKey: false,
-      altKey: false,
-      metaKey: false,
-      altGraphKey: false,
-      keyCode: KeyCode.BracketRight,
-      code: null!,
-    }, {
-      label: "Ctrl+^",
-      ariaLabel: "Control+^",
-      electronAccelerator: "Ctrl+]",
-      userSettingsLabel: "ctrl+oem_6",
-      isWYSIWYG: false,
-      isMultiChord: false,
-      dispatchParts: ["ctrl+]"],
-      singleModifierDispatchParts: [null],
-    });
+    assertResolveKeyboardEvent(
+      mapper,
+      {
+        _standardKeyboardEventBrand: true,
+        ctrlKey: true,
+        shiftKey: false,
+        altKey: false,
+        metaKey: false,
+        altGraphKey: false,
+        keyCode: KeyCode.BracketRight,
+        code: null!,
+      },
+      {
+        label: "Ctrl+^",
+        ariaLabel: "Control+^",
+        electronAccelerator: "Ctrl+]",
+        userSettingsLabel: "ctrl+oem_6",
+        isWYSIWYG: false,
+        isMultiChord: false,
+        dispatchParts: ["ctrl+]"],
+        singleModifierDispatchParts: [null],
+      },
+    );
   });
 
   test("resolveKeybinding Shift+]", () => {
@@ -260,25 +286,29 @@ suite("keyboardMapper - WINDOWS de_ch", () => {
   });
 
   test("resolveKeyboardEvent Ctrl+Home", () => {
-    assertResolveKeyboardEvent(mapper, {
-      _standardKeyboardEventBrand: true,
-      ctrlKey: true,
-      shiftKey: false,
-      altKey: false,
-      metaKey: false,
-      altGraphKey: false,
-      keyCode: KeyCode.Home,
-      code: null!,
-    }, {
-      label: "Ctrl+Home",
-      ariaLabel: "Control+Home",
-      electronAccelerator: "Ctrl+Home",
-      userSettingsLabel: "ctrl+home",
-      isWYSIWYG: true,
-      isMultiChord: false,
-      dispatchParts: ["ctrl+Home"],
-      singleModifierDispatchParts: [null],
-    });
+    assertResolveKeyboardEvent(
+      mapper,
+      {
+        _standardKeyboardEventBrand: true,
+        ctrlKey: true,
+        shiftKey: false,
+        altKey: false,
+        metaKey: false,
+        altGraphKey: false,
+        keyCode: KeyCode.Home,
+        code: null!,
+      },
+      {
+        label: "Ctrl+Home",
+        ariaLabel: "Control+Home",
+        electronAccelerator: "Ctrl+Home",
+        userSettingsLabel: "ctrl+home",
+        isWYSIWYG: true,
+        isMultiChord: false,
+        dispatchParts: ["ctrl+Home"],
+        singleModifierDispatchParts: [null],
+      },
+    );
   });
 
   test("resolveUserBinding Ctrl+[Comma] Ctrl+/", () => {
@@ -304,25 +334,29 @@ suite("keyboardMapper - WINDOWS de_ch", () => {
   });
 
   test("resolveKeyboardEvent Single Modifier Ctrl+", () => {
-    assertResolveKeyboardEvent(mapper, {
-      _standardKeyboardEventBrand: true,
-      ctrlKey: true,
-      shiftKey: false,
-      altKey: false,
-      metaKey: false,
-      altGraphKey: false,
-      keyCode: KeyCode.Ctrl,
-      code: null!,
-    }, {
-      label: "Ctrl",
-      ariaLabel: "Control",
-      electronAccelerator: null,
-      userSettingsLabel: "ctrl",
-      isWYSIWYG: true,
-      isMultiChord: false,
-      dispatchParts: [null],
-      singleModifierDispatchParts: ["ctrl"],
-    });
+    assertResolveKeyboardEvent(
+      mapper,
+      {
+        _standardKeyboardEventBrand: true,
+        ctrlKey: true,
+        shiftKey: false,
+        altKey: false,
+        metaKey: false,
+        altGraphKey: false,
+        keyCode: KeyCode.Ctrl,
+        code: null!,
+      },
+      {
+        label: "Ctrl",
+        ariaLabel: "Control",
+        electronAccelerator: null,
+        userSettingsLabel: "ctrl",
+        isWYSIWYG: true,
+        isMultiChord: false,
+        dispatchParts: [null],
+        singleModifierDispatchParts: ["ctrl"],
+      },
+    );
   });
 });
 
@@ -405,137 +439,161 @@ suite("keyboardMapper - WINDOWS en_us", () => {
   });
 
   test("resolveKeyboardEvent Single Modifier Ctrl+", () => {
-    assertResolveKeyboardEvent(mapper, {
-      _standardKeyboardEventBrand: true,
-      ctrlKey: true,
-      shiftKey: false,
-      altKey: false,
-      metaKey: false,
-      altGraphKey: false,
-      keyCode: KeyCode.Ctrl,
-      code: null!,
-    }, {
-      label: "Ctrl",
-      ariaLabel: "Control",
-      electronAccelerator: null,
-      userSettingsLabel: "ctrl",
-      isWYSIWYG: true,
-      isMultiChord: false,
-      dispatchParts: [null],
-      singleModifierDispatchParts: ["ctrl"],
-    });
+    assertResolveKeyboardEvent(
+      mapper,
+      {
+        _standardKeyboardEventBrand: true,
+        ctrlKey: true,
+        shiftKey: false,
+        altKey: false,
+        metaKey: false,
+        altGraphKey: false,
+        keyCode: KeyCode.Ctrl,
+        code: null!,
+      },
+      {
+        label: "Ctrl",
+        ariaLabel: "Control",
+        electronAccelerator: null,
+        userSettingsLabel: "ctrl",
+        isWYSIWYG: true,
+        isMultiChord: false,
+        dispatchParts: [null],
+        singleModifierDispatchParts: ["ctrl"],
+      },
+    );
   });
 
   test("resolveKeyboardEvent Single Modifier Shift+", () => {
-    assertResolveKeyboardEvent(mapper, {
-      _standardKeyboardEventBrand: true,
-      ctrlKey: false,
-      shiftKey: true,
-      altKey: false,
-      metaKey: false,
-      altGraphKey: false,
-      keyCode: KeyCode.Shift,
-      code: null!,
-    }, {
-      label: "Shift",
-      ariaLabel: "Shift",
-      electronAccelerator: null,
-      userSettingsLabel: "shift",
-      isWYSIWYG: true,
-      isMultiChord: false,
-      dispatchParts: [null],
-      singleModifierDispatchParts: ["shift"],
-    });
+    assertResolveKeyboardEvent(
+      mapper,
+      {
+        _standardKeyboardEventBrand: true,
+        ctrlKey: false,
+        shiftKey: true,
+        altKey: false,
+        metaKey: false,
+        altGraphKey: false,
+        keyCode: KeyCode.Shift,
+        code: null!,
+      },
+      {
+        label: "Shift",
+        ariaLabel: "Shift",
+        electronAccelerator: null,
+        userSettingsLabel: "shift",
+        isWYSIWYG: true,
+        isMultiChord: false,
+        dispatchParts: [null],
+        singleModifierDispatchParts: ["shift"],
+      },
+    );
   });
 
   test("resolveKeyboardEvent Single Modifier Alt+", () => {
-    assertResolveKeyboardEvent(mapper, {
-      _standardKeyboardEventBrand: true,
-      ctrlKey: false,
-      shiftKey: false,
-      altKey: true,
-      metaKey: false,
-      altGraphKey: false,
-      keyCode: KeyCode.Alt,
-      code: null!,
-    }, {
-      label: "Alt",
-      ariaLabel: "Alt",
-      electronAccelerator: null,
-      userSettingsLabel: "alt",
-      isWYSIWYG: true,
-      isMultiChord: false,
-      dispatchParts: [null],
-      singleModifierDispatchParts: ["alt"],
-    });
+    assertResolveKeyboardEvent(
+      mapper,
+      {
+        _standardKeyboardEventBrand: true,
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: true,
+        metaKey: false,
+        altGraphKey: false,
+        keyCode: KeyCode.Alt,
+        code: null!,
+      },
+      {
+        label: "Alt",
+        ariaLabel: "Alt",
+        electronAccelerator: null,
+        userSettingsLabel: "alt",
+        isWYSIWYG: true,
+        isMultiChord: false,
+        dispatchParts: [null],
+        singleModifierDispatchParts: ["alt"],
+      },
+    );
   });
 
   test("resolveKeyboardEvent Single Modifier Meta+", () => {
-    assertResolveKeyboardEvent(mapper, {
-      _standardKeyboardEventBrand: true,
-      ctrlKey: false,
-      shiftKey: false,
-      altKey: false,
-      metaKey: true,
-      altGraphKey: false,
-      keyCode: KeyCode.Meta,
-      code: null!,
-    }, {
-      label: "Windows",
-      ariaLabel: "Windows",
-      electronAccelerator: null,
-      userSettingsLabel: "win",
-      isWYSIWYG: true,
-      isMultiChord: false,
-      dispatchParts: [null],
-      singleModifierDispatchParts: ["meta"],
-    });
+    assertResolveKeyboardEvent(
+      mapper,
+      {
+        _standardKeyboardEventBrand: true,
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: false,
+        metaKey: true,
+        altGraphKey: false,
+        keyCode: KeyCode.Meta,
+        code: null!,
+      },
+      {
+        label: "Windows",
+        ariaLabel: "Windows",
+        electronAccelerator: null,
+        userSettingsLabel: "win",
+        isWYSIWYG: true,
+        isMultiChord: false,
+        dispatchParts: [null],
+        singleModifierDispatchParts: ["meta"],
+      },
+    );
   });
 
   test("resolveKeyboardEvent Only Modifiers Ctrl+Shift+", () => {
-    assertResolveKeyboardEvent(mapper, {
-      _standardKeyboardEventBrand: true,
-      ctrlKey: true,
-      shiftKey: true,
-      altKey: false,
-      metaKey: false,
-      altGraphKey: false,
-      keyCode: KeyCode.Shift,
-      code: null!,
-    }, {
-      label: "Ctrl+Shift",
-      ariaLabel: "Control+Shift",
-      electronAccelerator: null,
-      userSettingsLabel: "ctrl+shift",
-      isWYSIWYG: true,
-      isMultiChord: false,
-      dispatchParts: [null],
-      singleModifierDispatchParts: [null],
-    });
+    assertResolveKeyboardEvent(
+      mapper,
+      {
+        _standardKeyboardEventBrand: true,
+        ctrlKey: true,
+        shiftKey: true,
+        altKey: false,
+        metaKey: false,
+        altGraphKey: false,
+        keyCode: KeyCode.Shift,
+        code: null!,
+      },
+      {
+        label: "Ctrl+Shift",
+        ariaLabel: "Control+Shift",
+        electronAccelerator: null,
+        userSettingsLabel: "ctrl+shift",
+        isWYSIWYG: true,
+        isMultiChord: false,
+        dispatchParts: [null],
+        singleModifierDispatchParts: [null],
+      },
+    );
   });
 
   test("resolveKeyboardEvent mapAltGrToCtrlAlt AltGr+Z", async () => {
     const mapper = await createKeyboardMapper(true, "win_en_us", true);
 
-    assertResolveKeyboardEvent(mapper, {
-      _standardKeyboardEventBrand: true,
-      ctrlKey: false,
-      shiftKey: false,
-      altKey: false,
-      metaKey: false,
-      altGraphKey: true,
-      keyCode: KeyCode.KeyZ,
-      code: null!,
-    }, {
-      label: "Ctrl+Alt+Z",
-      ariaLabel: "Control+Alt+Z",
-      electronAccelerator: "Ctrl+Alt+Z",
-      userSettingsLabel: "ctrl+alt+z",
-      isWYSIWYG: true,
-      isMultiChord: false,
-      dispatchParts: ["ctrl+alt+Z"],
-      singleModifierDispatchParts: [null],
-    });
+    assertResolveKeyboardEvent(
+      mapper,
+      {
+        _standardKeyboardEventBrand: true,
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: false,
+        metaKey: false,
+        altGraphKey: true,
+        keyCode: KeyCode.KeyZ,
+        code: null!,
+      },
+      {
+        label: "Ctrl+Alt+Z",
+        ariaLabel: "Control+Alt+Z",
+        electronAccelerator: "Ctrl+Alt+Z",
+        userSettingsLabel: "ctrl+alt+z",
+        isWYSIWYG: true,
+        isMultiChord: false,
+        dispatchParts: ["ctrl+alt+Z"],
+        singleModifierDispatchParts: [null],
+      },
+    );
   });
 });
 
@@ -553,47 +611,55 @@ suite("keyboardMapper - WINDOWS por_ptb", () => {
   });
 
   test("resolveKeyboardEvent Ctrl+[IntlRo]", () => {
-    assertResolveKeyboardEvent(mapper, {
-      _standardKeyboardEventBrand: true,
-      ctrlKey: true,
-      shiftKey: false,
-      altKey: false,
-      metaKey: false,
-      altGraphKey: false,
-      keyCode: KeyCode.ABNT_C1,
-      code: null!,
-    }, {
-      label: "Ctrl+/",
-      ariaLabel: "Control+/",
-      electronAccelerator: "Ctrl+ABNT_C1",
-      userSettingsLabel: "ctrl+abnt_c1",
-      isWYSIWYG: false,
-      isMultiChord: false,
-      dispatchParts: ["ctrl+ABNT_C1"],
-      singleModifierDispatchParts: [null],
-    });
+    assertResolveKeyboardEvent(
+      mapper,
+      {
+        _standardKeyboardEventBrand: true,
+        ctrlKey: true,
+        shiftKey: false,
+        altKey: false,
+        metaKey: false,
+        altGraphKey: false,
+        keyCode: KeyCode.ABNT_C1,
+        code: null!,
+      },
+      {
+        label: "Ctrl+/",
+        ariaLabel: "Control+/",
+        electronAccelerator: "Ctrl+ABNT_C1",
+        userSettingsLabel: "ctrl+abnt_c1",
+        isWYSIWYG: false,
+        isMultiChord: false,
+        dispatchParts: ["ctrl+ABNT_C1"],
+        singleModifierDispatchParts: [null],
+      },
+    );
   });
 
   test("resolveKeyboardEvent Ctrl+[NumpadComma]", () => {
-    assertResolveKeyboardEvent(mapper, {
-      _standardKeyboardEventBrand: true,
-      ctrlKey: true,
-      shiftKey: false,
-      altKey: false,
-      metaKey: false,
-      altGraphKey: false,
-      keyCode: KeyCode.ABNT_C2,
-      code: null!,
-    }, {
-      label: "Ctrl+.",
-      ariaLabel: "Control+.",
-      electronAccelerator: "Ctrl+ABNT_C2",
-      userSettingsLabel: "ctrl+abnt_c2",
-      isWYSIWYG: false,
-      isMultiChord: false,
-      dispatchParts: ["ctrl+ABNT_C2"],
-      singleModifierDispatchParts: [null],
-    });
+    assertResolveKeyboardEvent(
+      mapper,
+      {
+        _standardKeyboardEventBrand: true,
+        ctrlKey: true,
+        shiftKey: false,
+        altKey: false,
+        metaKey: false,
+        altGraphKey: false,
+        keyCode: KeyCode.ABNT_C2,
+        code: null!,
+      },
+      {
+        label: "Ctrl+.",
+        ariaLabel: "Control+.",
+        electronAccelerator: "Ctrl+ABNT_C2",
+        userSettingsLabel: "ctrl+abnt_c2",
+        isWYSIWYG: false,
+        isMultiChord: false,
+        dispatchParts: ["ctrl+ABNT_C2"],
+        singleModifierDispatchParts: [null],
+      },
+    );
   });
 });
 
@@ -631,40 +697,41 @@ suite("keyboardMapper - WINDOWS ru", () => {
 });
 
 suite("keyboardMapper - misc", () => {
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-	ensureNoDisposablesAreLeakedInTestSuite();
+  test("issue #23513: Toggle Sidebar Visibility and Go to Line display same key mapping in Arabic keyboard", () => {
+    const mapper = new WindowsKeyboardMapper(
+      false,
+      {
+        KeyB: {
+          vkey: "VK_B",
+          value: "لا",
+          withShift: "لآ",
+          withAltGr: "",
+          withShiftAltGr: "",
+        },
+        KeyG: {
+          vkey: "VK_G",
+          value: "ل",
+          withShift: "لأ",
+          withAltGr: "",
+          withShiftAltGr: "",
+        },
+      },
+      false,
+    );
 
-	test("issue #23513: Toggle Sidebar Visibility and Go to Line display same key mapping in Arabic keyboard", () => {
-		const mapper = new WindowsKeyboardMapper(false, {
-			"KeyB": {
-				"vkey": "VK_B",
-				"value": "لا",
-				"withShift": "لآ",
-				"withAltGr": "",
-				"withShiftAltGr": "",
-			},
-			"KeyG": {
-				"vkey": "VK_G",
-				"value": "ل",
-				"withShift": "لأ",
-				"withAltGr": "",
-				"withShiftAltGr": "",
-			},
-		}, false);
-
-		_assertResolveKeybinding(
-			mapper,
-			KeyMod.CtrlCmd | KeyCode.KeyB,
-			[{
-				label: "Ctrl+B",
-				ariaLabel: "Control+B",
-				electronAccelerator: "Ctrl+B",
-				userSettingsLabel: "ctrl+b",
-				isWYSIWYG: true,
-				isMultiChord: false,
-				dispatchParts: ["ctrl+B"],
-				singleModifierDispatchParts: [null],
-			}],
-		);
-	});
+    _assertResolveKeybinding(mapper, KeyMod.CtrlCmd | KeyCode.KeyB, [
+      {
+        label: "Ctrl+B",
+        ariaLabel: "Control+B",
+        electronAccelerator: "Ctrl+B",
+        userSettingsLabel: "ctrl+b",
+        isWYSIWYG: true,
+        isMultiChord: false,
+        dispatchParts: ["ctrl+B"],
+        singleModifierDispatchParts: [null],
+      },
+    ]);
+  });
 });

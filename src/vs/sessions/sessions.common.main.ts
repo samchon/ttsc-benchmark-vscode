@@ -23,7 +23,6 @@ getColorRegistry().updateDefaultColor(
 
 //#endregion
 
-
 //#region --- workbench actions
 
 import "../workbench/browser/actions/textInputActions.js";
@@ -40,7 +39,6 @@ import "../workbench/browser/actions/widgetNavigationCommands.js";
 
 //#endregion
 
-
 //#region --- API Extension Points
 
 import "../workbench/services/actions/common/menusExtensionPoint.js";
@@ -48,7 +46,6 @@ import "../workbench/api/common/configurationExtensionPoint.js";
 import "../workbench/api/browser/viewsExtensionPoint.js";
 
 //#endregion
-
 
 //#region --- workbench parts
 
@@ -59,7 +56,6 @@ import "../workbench/browser/parts/banner/bannerPart.js";
 import "../workbench/browser/parts/statusbar/statusbarPart.js";
 
 //#endregion
-
 
 //#region --- workbench services
 
@@ -146,12 +142,21 @@ import "../workbench/services/chat/common/chatEntitlementService.js";
 import "../workbench/services/log/common/defaultLogLevels.js";
 import "../workbench/services/agentHost/common/agentHostPermissionService.js";
 
-import { InstantiationType, registerSingleton } from "../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../platform/instantiation/common/extensions.js";
 import { GlobalExtensionEnablementService } from "../platform/extensionManagement/common/extensionEnablementService.js";
-import { IAllowedExtensionsService, IGlobalExtensionEnablementService } from "../platform/extensionManagement/common/extensionManagement.js";
+import {
+  IAllowedExtensionsService,
+  IGlobalExtensionEnablementService,
+} from "../platform/extensionManagement/common/extensionManagement.js";
 import { ContextViewService } from "../platform/contextview/browser/contextViewService.js";
 import { IContextViewService } from "../platform/contextview/browser/contextView.js";
-import { IListService, ListService } from "../platform/list/browser/listService.js";
+import {
+  IListService,
+  ListService,
+} from "../platform/list/browser/listService.js";
 import { MarkerDecorationsService } from "../editor/common/services/markerDecorationsService.js";
 import { IMarkerDecorationsService } from "../editor/common/services/markerDecorations.js";
 import { IMarkerService } from "../platform/markers/common/markers.js";
@@ -168,16 +173,25 @@ import {
   IgnoredExtensionsManagementService,
   IIgnoredExtensionsManagementService,
 } from "../platform/userDataSync/common/ignoredExtensions.js";
-import { ExtensionStorageService, IExtensionStorageService } from "../platform/extensionManagement/common/extensionStorage.js";
+import {
+  ExtensionStorageService,
+  IExtensionStorageService,
+} from "../platform/extensionManagement/common/extensionStorage.js";
 import { IUserDataSyncLogService } from "../platform/userDataSync/common/userDataSync.js";
 import { UserDataSyncLogService } from "../platform/userDataSync/common/userDataSyncLog.js";
 import { AllowedExtensionsService } from "../platform/extensionManagement/common/allowedExtensionsService.js";
-import { IAllowedMcpServersService, IMcpGalleryService } from "../platform/mcp/common/mcpManagement.js";
+import {
+  IAllowedMcpServersService,
+  IMcpGalleryService,
+} from "../platform/mcp/common/mcpManagement.js";
 import { McpGalleryService } from "../platform/mcp/common/mcpGalleryService.js";
 import { AllowedMcpServersService } from "../platform/mcp/common/allowedMcpServersService.js";
 import { IWebWorkerService } from "../platform/webWorker/browser/webWorkerService.js";
 import { WebWorkerService } from "../platform/webWorker/browser/webWorkerServiceImpl.js";
-import { ISessionsSetUpService, SessionsSetUpService } from "./browser/sessionsSetUpService.js";
+import {
+  ISessionsSetUpService,
+  SessionsSetUpService,
+} from "./browser/sessionsSetUpService.js";
 
 registerSingleton(
   IUserDataSyncLogService,
@@ -251,7 +265,6 @@ registerSingleton(
 
 //#endregion
 
-
 //#region --- workbench contributions
 
 // Default Account
@@ -289,7 +302,11 @@ import "../workbench/contrib/interactive/browser/interactive.contribution.js";
 import "../workbench/contrib/replNotebook/browser/repl.contribution.js";
 
 // Testing (service)
-import { NullTestProfileService, NullTestResultService, NullTestService } from "../workbench/contrib/testing/common/nullTestingService.js";
+import {
+  NullTestProfileService,
+  NullTestResultService,
+  NullTestService,
+} from "../workbench/contrib/testing/common/nullTestingService.js";
 import { ITestProfileService } from "../workbench/contrib/testing/common/testProfileService.js";
 import { ITestResultService } from "../workbench/contrib/testing/common/testResultService.js";
 import { ITestService } from "../workbench/contrib/testing/common/testService.js";
@@ -342,7 +359,10 @@ import "../workbench/contrib/scm/browser/quickDiff.contribution.js";
 import "../workbench/contrib/scm/browser/scm.service.contribution.js";
 
 // Debug (service)
-import { NullDebugService, NullDebugVisualizerService } from "../workbench/contrib/debug/common/nullDebugService.js";
+import {
+  NullDebugService,
+  NullDebugVisualizerService,
+} from "../workbench/contrib/debug/common/nullDebugService.js";
 import { IDebugService } from "../workbench/contrib/debug/common/debug.js";
 import { IDebugVisualizerService } from "../workbench/contrib/debug/common/debugVisualizers.js";
 registerSingleton(IDebugService, NullDebugService, InstantiationType.Delayed);
@@ -382,7 +402,11 @@ import "../workbench/contrib/externalUriOpener/common/externalUriOpener.contribu
 // Extensions Management
 import { IExtensionsWorkbenchService } from "../workbench/contrib/extensions/common/extensions.js";
 import { ExtensionsWorkbenchService } from "../workbench/contrib/extensions/browser/extensionsWorkbenchService.js";
-registerSingleton(IExtensionsWorkbenchService, ExtensionsWorkbenchService, InstantiationType.Eager /* Auto updates extensions */);
+registerSingleton(
+  IExtensionsWorkbenchService,
+  ExtensionsWorkbenchService,
+  InstantiationType.Eager /* Auto updates extensions */,
+);
 
 // Output View
 import "../workbench/contrib/output/browser/output.contribution.js";

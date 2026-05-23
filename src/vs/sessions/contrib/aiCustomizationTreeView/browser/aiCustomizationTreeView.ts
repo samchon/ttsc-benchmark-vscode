@@ -19,7 +19,8 @@ export const AI_CUSTOMIZATION_VIEW_ID = "aiCustomization.view";
 /**
  * Storage IDs for view state persistence.
  */
-export const AI_CUSTOMIZATION_STORAGE_ID = "workbench.aiCustomization.views.state";
+export const AI_CUSTOMIZATION_STORAGE_ID =
+  "workbench.aiCustomization.views.state";
 
 /**
  * Category for AI Customization commands.

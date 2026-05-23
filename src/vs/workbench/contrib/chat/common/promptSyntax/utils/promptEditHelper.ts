@@ -8,27 +8,33 @@ import { ISequenceValue } from "../promptFileParser.js";
 
 const isSimpleNameRegex = /^[\w\/\.-]+$/;
 
-export function formatArrayValue(name: string, quotePreference?: QuotePreference) {
-	switch (quotePreference) {
-		case "'":
-			return `'${name}'`;
-		case '"':
-			return `"${name}"`;
-	}
-	return isSimpleNameRegex.test(name) ? name : `'${name}'`;
+export function formatArrayValue(
+  name: string,
+  quotePreference?: QuotePreference,
+) {
+  switch (quotePreference) {
+    case "'":
+      return `'${name}'`;
+    case '"':
+      return `"${name}"`;
+  }
+  return isSimpleNameRegex.test(name) ? name : `'${name}'`;
 }
 
-export type QuotePreference = "'" | "\"" | "";
+export type QuotePreference = "'" | '\"' | "";
 
-export function getQuotePreference(arrayValue: ISequenceValue, model: ITextModel): QuotePreference {
-	const firstStringItem = arrayValue.items.find(
-    item => item.type === "scalar" && isSimpleNameRegex.test(item.value),
+export function getQuotePreference(
+  arrayValue: ISequenceValue,
+  model: ITextModel,
+): QuotePreference {
+  const firstStringItem = arrayValue.items.find(
+    (item) => item.type === "scalar" && isSimpleNameRegex.test(item.value),
   );
-	const firstChar = firstStringItem ? model.getValueInRange(firstStringItem.range).charAt(
-    0,
-  ) : undefined;
-	if (firstChar === `'` || firstChar === `"`) {
-		return firstChar;
-	}
-	return "";
+  const firstChar = firstStringItem
+    ? model.getValueInRange(firstStringItem.range).charAt(0)
+    : undefined;
+  if (firstChar === `'` || firstChar === `"`) {
+    return firstChar;
+  }
+  return "";
 }

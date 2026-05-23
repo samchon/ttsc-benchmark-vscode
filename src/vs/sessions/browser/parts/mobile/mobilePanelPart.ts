@@ -17,40 +17,44 @@ import { isPhoneLayout } from "./mobileLayout.js";
  * working.
  */
 export class MobilePanelPart extends PanelPart {
+  override updateStyles(): void {
+    super.updateStyles();
 
-	override updateStyles(): void {
-		super.updateStyles();
+    if (!isPhoneLayout(this.layoutService)) {
+      return;
+    }
 
-		if (!isPhoneLayout(this.layoutService)) {
-			return;
-		}
+    const container = this.getContainer();
+    if (container) {
+      container.style.backgroundColor = "";
+      container.style.removeProperty("--part-background");
+      container.style.removeProperty("--part-border-color");
+    }
+  }
 
-		const container = this.getContainer();
-		if (container) {
-			container.style.backgroundColor = "";
-			container.style.removeProperty("--part-background");
-			container.style.removeProperty("--part-border-color");
-		}
-	}
+  override layout(
+    width: number,
+    height: number,
+    top: number,
+    left: number,
+  ): void {
+    if (!isPhoneLayout(this.layoutService)) {
+      super.layout(width, height, top, left);
+      return;
+    }
 
-	override layout(width: number, height: number, top: number, left: number): void {
-		if (!isPhoneLayout(this.layoutService)) {
-			super.layout(width, height, top, left);
-			return;
-		}
+    if (!this.layoutService.isVisible(Parts.PANEL_PART)) {
+      return;
+    }
 
-		if (!this.layoutService.isVisible(Parts.PANEL_PART)) {
-			return;
-		}
-
-		// Full dimensions — no card margins or border subtraction.
-		// AbstractPaneCompositePart.layout internally calls Part.layout.
-		AbstractPaneCompositePart.prototype.layout.call(
+    // Full dimensions — no card margins or border subtraction.
+    // AbstractPaneCompositePart.layout internally calls Part.layout.
+    AbstractPaneCompositePart.prototype.layout.call(
       this,
       width,
       height,
       top,
       left,
     );
-	}
+  }
 }

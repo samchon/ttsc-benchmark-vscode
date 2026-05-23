@@ -38,21 +38,32 @@ import { getClaudeToolDisplayName } from "./claudeToolDisplay.js";
  * must be approved on its own merit. Mirrors the production extension's
  * `exitPlanModeHandler.ts`.
  */
-export function buildExitPlanModeConfirmationState(input: Record<string, unknown>, toolUseID: string): ToolCallPendingConfirmationState {
-	const plan = typeof input.plan === "string" ? input.plan : "";
-	return {
-		status: ToolCallStatus.PendingConfirmation,
-		toolCallId: toolUseID,
-		toolName: "ExitPlanMode",
-		displayName: getClaudeToolDisplayName("ExitPlanMode"),
-		invocationMessage: { markdown: plan },
-		toolInput: JSON.stringify(input),
-		confirmationTitle: localize("claude.exitPlanMode.title", "Ready to code?"),
-		options: [
-			{ id: "approve", label: localize("claude.exitPlanMode.approve", "Approve"), kind: ConfirmationOptionKind.Approve },
-			{ id: "deny", label: localize("claude.exitPlanMode.deny", "Deny"), kind: ConfirmationOptionKind.Deny },
-		],
-	};
+export function buildExitPlanModeConfirmationState(
+  input: Record<string, unknown>,
+  toolUseID: string,
+): ToolCallPendingConfirmationState {
+  const plan = typeof input.plan === "string" ? input.plan : "";
+  return {
+    status: ToolCallStatus.PendingConfirmation,
+    toolCallId: toolUseID,
+    toolName: "ExitPlanMode",
+    displayName: getClaudeToolDisplayName("ExitPlanMode"),
+    invocationMessage: { markdown: plan },
+    toolInput: JSON.stringify(input),
+    confirmationTitle: localize("claude.exitPlanMode.title", "Ready to code?"),
+    options: [
+      {
+        id: "approve",
+        label: localize("claude.exitPlanMode.approve", "Approve"),
+        kind: ConfirmationOptionKind.Approve,
+      },
+      {
+        id: "deny",
+        label: localize("claude.exitPlanMode.deny", "Deny"),
+        kind: ConfirmationOptionKind.Deny,
+      },
+    ],
+  };
 }
 
 // #endregion
@@ -65,13 +76,13 @@ export function buildExitPlanModeConfirmationState(input: Record<string, unknown
  * — the SDK is the upstream authority) and surface the subset we use.
  */
 export interface ParsedAskUserQuestionInput {
-	readonly questions: ReadonlyArray<{
-		readonly question: string;
-		readonly header: string;
-		readonly options: ReadonlyArray<{ label: string; description?: string }>;
-		readonly multiSelect?: boolean;
-		readonly allowFreeformInput?: boolean;
-	}>;
+  readonly questions: ReadonlyArray<{
+    readonly question: string;
+    readonly header: string;
+    readonly options: ReadonlyArray<{ label: string; description?: string }>;
+    readonly multiSelect?: boolean;
+    readonly allowFreeformInput?: boolean;
+  }>;
 }
 
 /**
@@ -79,12 +90,14 @@ export interface ParsedAskUserQuestionInput {
  * `undefined` when there are no questions — the agent translates that
  * to a `deny` `PermissionResult`.
  */
-export function parseAskUserQuestionInput(input: Record<string, unknown>): ParsedAskUserQuestionInput | undefined {
-	const askInput = input as Partial<ParsedAskUserQuestionInput>;
-	if (!askInput.questions?.length) {
-		return undefined;
-	}
-	return { questions: askInput.questions };
+export function parseAskUserQuestionInput(
+  input: Record<string, unknown>,
+): ParsedAskUserQuestionInput | undefined {
+  const askInput = input as Partial<ParsedAskUserQuestionInput>;
+  if (!askInput.questions?.length) {
+    return undefined;
+  }
+  return { questions: askInput.questions };
 }
 
 /**
@@ -96,7 +109,7 @@ export function parseAskUserQuestionInput(input: Record<string, unknown>): Parse
  * otherwise collide on `''`.
  */
 function askUserQuestionId(header: string, idx: number): string {
-	return header || `q-${idx}`;
+  return header || `q-${idx}`;
 }
 
 /**
@@ -104,32 +117,36 @@ function askUserQuestionId(header: string, idx: number): string {
  * {@link SessionInputQuestion} shape. `multiSelect` flips the question
  * kind; the rest of the fields map 1:1.
  */
-export function buildAskUserSessionInputQuestions(askInput: ParsedAskUserQuestionInput): SessionInputQuestion[] {
-	return askInput.questions.map((q, idx) => {
-		const opts: SessionInputOption[] = q.options.map(opt => ({
-			id: opt.label,
-			label: opt.label,
-			...(opt.description !== undefined ? { description: opt.description } : {}),
-		}));
-		const id = askUserQuestionId(q.header, idx);
-		return q.multiSelect
-			? {
-				id,
-				kind: SessionInputQuestionKind.MultiSelect,
-				title: q.header,
-				message: q.question,
-				options: opts,
-				allowFreeformInput: q.allowFreeformInput ?? false,
-			}
-			: {
-				id,
-				kind: SessionInputQuestionKind.SingleSelect,
-				title: q.header,
-				message: q.question,
-				options: opts,
-				allowFreeformInput: q.allowFreeformInput ?? false,
-			};
-	});
+export function buildAskUserSessionInputQuestions(
+  askInput: ParsedAskUserQuestionInput,
+): SessionInputQuestion[] {
+  return askInput.questions.map((q, idx) => {
+    const opts: SessionInputOption[] = q.options.map((opt) => ({
+      id: opt.label,
+      label: opt.label,
+      ...(opt.description !== undefined
+        ? { description: opt.description }
+        : {}),
+    }));
+    const id = askUserQuestionId(q.header, idx);
+    return q.multiSelect
+      ? {
+          id,
+          kind: SessionInputQuestionKind.MultiSelect,
+          title: q.header,
+          message: q.question,
+          options: opts,
+          allowFreeformInput: q.allowFreeformInput ?? false,
+        }
+      : {
+          id,
+          kind: SessionInputQuestionKind.SingleSelect,
+          title: q.header,
+          message: q.question,
+          options: opts,
+          allowFreeformInput: q.allowFreeformInput ?? false,
+        };
+  });
 }
 
 /**
@@ -140,30 +157,39 @@ export function buildAskUserSessionInputQuestions(askInput: ParsedAskUserQuestio
  * text answer shapes flatten to a comma-joined string (matching the
  * production extension's wire format).
  */
-export function flattenAskUserAnswers(askInput: ParsedAskUserQuestionInput, answers: Record<string, SessionInputAnswer>): Record<string, string> {
-	const result: Record<string, string> = {};
-	for (let idx = 0; idx < askInput.questions.length; idx++) {
-		const q = askInput.questions[idx];
-		const a = answers[askUserQuestionId(q.header, idx)];
-		if (!a || a.state === SessionInputAnswerState.Skipped) {
-			continue;
-		}
-		const parts: string[] = [];
-		const value = a.value;
-		if (value.kind === SessionInputAnswerValueKind.Selected) {
-			if (value.value) { parts.push(value.value); }
-			if (value.freeformValues) { parts.push(...value.freeformValues); }
-		} else if (value.kind === SessionInputAnswerValueKind.SelectedMany) {
-			parts.push(...value.value);
-			if (value.freeformValues) { parts.push(...value.freeformValues); }
-		} else if (value.kind === SessionInputAnswerValueKind.Text) {
-			parts.push(value.value);
-		}
-		if (parts.length > 0) {
-			result[q.question] = parts.join(", ");
-		}
-	}
-	return result;
+export function flattenAskUserAnswers(
+  askInput: ParsedAskUserQuestionInput,
+  answers: Record<string, SessionInputAnswer>,
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (let idx = 0; idx < askInput.questions.length; idx++) {
+    const q = askInput.questions[idx];
+    const a = answers[askUserQuestionId(q.header, idx)];
+    if (!a || a.state === SessionInputAnswerState.Skipped) {
+      continue;
+    }
+    const parts: string[] = [];
+    const value = a.value;
+    if (value.kind === SessionInputAnswerValueKind.Selected) {
+      if (value.value) {
+        parts.push(value.value);
+      }
+      if (value.freeformValues) {
+        parts.push(...value.freeformValues);
+      }
+    } else if (value.kind === SessionInputAnswerValueKind.SelectedMany) {
+      parts.push(...value.value);
+      if (value.freeformValues) {
+        parts.push(...value.freeformValues);
+      }
+    } else if (value.kind === SessionInputAnswerValueKind.Text) {
+      parts.push(value.value);
+    }
+    if (parts.length > 0) {
+      result[q.question] = parts.join(", ");
+    }
+  }
+  return result;
 }
 
 // #endregion

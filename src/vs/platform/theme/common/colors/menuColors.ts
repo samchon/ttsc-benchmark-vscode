@@ -9,10 +9,16 @@ import * as nls from "../../../../nls.js";
 import { registerColor, transparent } from "../colorUtils.js";
 
 // Import the colors we need
-import { contrastBorder, activeContrastBorder, foreground } from "./baseColors.js";
+import {
+  contrastBorder,
+  activeContrastBorder,
+  foreground,
+} from "./baseColors.js";
 import { selectForeground, selectBackground } from "./inputColors.js";
-import { listActiveSelectionBackground, listActiveSelectionForeground } from "./listColors.js";
-
+import {
+  listActiveSelectionBackground,
+  listActiveSelectionForeground,
+} from "./listColors.js";
 
 export const menuBorder = registerColor(
   "menu.border",

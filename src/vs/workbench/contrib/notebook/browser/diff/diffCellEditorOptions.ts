@@ -20,33 +20,35 @@ const fixedEditorPadding = {
 };
 
 export function getEditorPadding(lineCount: number) {
-	return lineCount === 1 ? fixedEditorPaddingSingleLineCells : fixedEditorPadding;
+  return lineCount === 1
+    ? fixedEditorPaddingSingleLineCells
+    : fixedEditorPadding;
 }
 
 export const fixedEditorOptions: IEditorOptions = {
-	padding: fixedEditorPadding,
-	scrollBeyondLastLine: false,
-	scrollbar: {
-		verticalScrollbarSize: 14,
-		horizontal: "auto",
-		vertical: "auto",
-		useShadows: true,
-		verticalHasArrows: false,
-		horizontalHasArrows: false,
-		alwaysConsumeMouseWheel: false,
-	},
-	renderLineHighlightOnlyWhenFocus: true,
-	overviewRulerLanes: 0,
-	overviewRulerBorder: false,
-	selectOnLineNumbers: false,
-	wordWrap: "off",
-	lineNumbers: "off",
-	glyphMargin: true,
-	fixedOverflowWidgets: true,
-	minimap: { enabled: false },
-	renderValidationDecorations: "on",
-	renderLineHighlight: "none",
-	readOnly: true,
+  padding: fixedEditorPadding,
+  scrollBeyondLastLine: false,
+  scrollbar: {
+    verticalScrollbarSize: 14,
+    horizontal: "auto",
+    vertical: "auto",
+    useShadows: true,
+    verticalHasArrows: false,
+    horizontalHasArrows: false,
+    alwaysConsumeMouseWheel: false,
+  },
+  renderLineHighlightOnlyWhenFocus: true,
+  overviewRulerLanes: 0,
+  overviewRulerBorder: false,
+  selectOnLineNumbers: false,
+  wordWrap: "off",
+  lineNumbers: "off",
+  glyphMargin: true,
+  fixedOverflowWidgets: true,
+  minimap: { enabled: false },
+  renderValidationDecorations: "on",
+  renderLineHighlight: "none",
+  readOnly: true,
 };
 
 export const fixedDiffEditorOptions: IDiffEditorConstructionOptions = {

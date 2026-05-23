@@ -12,7 +12,6 @@ import { registerColor, transparent } from "../colorUtils.js";
 // Import the colors we need
 import { contrastBorder, focusBorder } from "./baseColors.js";
 
-
 // ----- sash
 
 export const sashHoverBorder = registerColor(
@@ -21,12 +20,16 @@ export const sashHoverBorder = registerColor(
   nls.localize("sashActiveBorder", "Border color of active sashes."),
 );
 
-
 // ----- badge
 
 export const badgeBackground = registerColor(
   "badge.background",
-  { dark: "#4D4D4D", light: "#C4C4C4", hcDark: Color.black, hcLight: "#0F4A85" },
+  {
+    dark: "#4D4D4D",
+    light: "#C4C4C4",
+    hcDark: Color.black,
+    hcLight: "#0F4A85",
+  },
   nls.localize(
     "badgeBackground",
     "Badge background color. Badges are small information labels, e.g. for search results count.",
@@ -93,7 +96,6 @@ export const activityErrorBadgeBackground = registerColor(
   ),
 );
 
-
 // ----- scrollbar
 
 export const scrollbarShadow = registerColor(
@@ -152,7 +154,6 @@ export const scrollbarBackground = registerColor(
   null,
   nls.localize("scrollbarBackground", "Scrollbar track background color."),
 );
-
 
 // ----- progress bar
 

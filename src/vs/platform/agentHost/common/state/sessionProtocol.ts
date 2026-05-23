@@ -99,15 +99,19 @@ import type {
 } from "./protocol/messages.js";
 
 export function isJsonRpcRequest(msg: ProtocolMessage): msg is AhpRequest {
-	return "method" in msg && "id" in msg;
+  return "method" in msg && "id" in msg;
 }
 
-export function isJsonRpcNotification(msg: ProtocolMessage): msg is AhpNotification {
-	return "method" in msg && !("id" in msg);
+export function isJsonRpcNotification(
+  msg: ProtocolMessage,
+): msg is AhpNotification {
+  return "method" in msg && !("id" in msg);
 }
 
-export function isJsonRpcResponse(msg: ProtocolMessage): msg is AhpSuccessResponse | JsonRpcErrorResponse {
-	return "id" in msg && !("method" in msg);
+export function isJsonRpcResponse(
+  msg: ProtocolMessage,
+): msg is AhpSuccessResponse | JsonRpcErrorResponse {
+  return "id" in msg && !("method" in msg);
 }
 
 // ---- VS Code-specific types ------------------------------------------------
@@ -117,9 +121,13 @@ export function isJsonRpcResponse(msg: ProtocolMessage): msg is AhpSuccessRespon
  * Optionally carries a `data` payload for structured error details.
  */
 export class ProtocolError extends Error {
-	constructor(readonly code: number, message: string, readonly data?: unknown) {
-		super(message);
-	}
+  constructor(
+    readonly code: number,
+    message: string,
+    readonly data?: unknown,
+  ) {
+    super(message);
+  }
 }
 
 /**
@@ -127,7 +135,7 @@ export class ProtocolError extends Error {
  * Not yet part of the official protocol.
  */
 export interface ISetAuthTokenParams {
-	readonly token: string;
+  readonly token: string;
 }
 
 // ---- Server → Client notification param aliases (backward compat) -----------
@@ -135,5 +143,5 @@ export interface ISetAuthTokenParams {
 import type { INotification } from "./sessionActions.js";
 
 export interface INotificationBroadcastParams {
-	readonly notification: INotification;
+  readonly notification: INotification;
 }

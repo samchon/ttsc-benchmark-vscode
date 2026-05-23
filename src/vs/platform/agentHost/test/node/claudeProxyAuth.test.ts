@@ -14,10 +14,7 @@ suite("parseProxyBearer", () => {
 
   test("accepts Bearer <nonce>.<sessionId> with non-empty sessionId", () => {
     assert.deepStrictEqual(
-      parseProxyBearer(
-        { "authorization": `Bearer ${NONCE}.session-abc` },
-        NONCE,
-      ),
+      parseProxyBearer({ authorization: `Bearer ${NONCE}.session-abc` }, NONCE),
       { valid: true, sessionId: "session-abc" },
     );
   });
@@ -25,7 +22,7 @@ suite("parseProxyBearer", () => {
   test("preserves dots inside the sessionId portion", () => {
     assert.deepStrictEqual(
       parseProxyBearer(
-        { "authorization": `Bearer ${NONCE}.session.with.dots` },
+        { authorization: `Bearer ${NONCE}.session.with.dots` },
         NONCE,
       ),
       { valid: true, sessionId: "session.with.dots" },
@@ -41,7 +38,7 @@ suite("parseProxyBearer", () => {
 
   test("rejects non-Bearer Authorization scheme", () => {
     assert.deepStrictEqual(
-      parseProxyBearer({ "authorization": `Basic ${NONCE}.s` }, NONCE),
+      parseProxyBearer({ authorization: `Basic ${NONCE}.s` }, NONCE),
       { valid: false, sessionId: undefined },
     );
   });
@@ -49,26 +46,23 @@ suite("parseProxyBearer", () => {
   test("rejects Bearer with wrong nonce", () => {
     assert.deepStrictEqual(
       parseProxyBearer(
-        { "authorization": "Bearer wrong-nonce.session-abc" },
+        { authorization: "Bearer wrong-nonce.session-abc" },
         NONCE,
       ),
       { valid: false, sessionId: undefined },
     );
   });
 
-  test(
-    "rejects Bearer <nonce> with no dot (legacy format not supported)",
-    () => {
-      assert.deepStrictEqual(
-        parseProxyBearer({ "authorization": `Bearer ${NONCE}` }, NONCE),
-        { valid: false, sessionId: undefined },
-      );
-    },
-  );
+  test("rejects Bearer <nonce> with no dot (legacy format not supported)", () => {
+    assert.deepStrictEqual(
+      parseProxyBearer({ authorization: `Bearer ${NONCE}` }, NONCE),
+      { valid: false, sessionId: undefined },
+    );
+  });
 
   test("rejects Bearer <nonce>. with empty sessionId", () => {
     assert.deepStrictEqual(
-      parseProxyBearer({ "authorization": `Bearer ${NONCE}.` }, NONCE),
+      parseProxyBearer({ authorization: `Bearer ${NONCE}.` }, NONCE),
       { valid: false, sessionId: undefined },
     );
   });
@@ -80,19 +74,16 @@ suite("parseProxyBearer", () => {
     });
   });
 
-  test(
-    "uses Authorization header when both x-api-key and Authorization are present",
-    () => {
-      assert.deepStrictEqual(parseProxyBearer(
+  test("uses Authorization header when both x-api-key and Authorization are present", () => {
+    assert.deepStrictEqual(
+      parseProxyBearer(
         {
           "x-api-key": "sk-ant-real-api-key",
-          "authorization": `Bearer ${NONCE}.s`,
+          authorization: `Bearer ${NONCE}.s`,
         },
         NONCE,
-      ), {
-        valid: true,
-        sessionId: "s",
-      });
-    },
-  );
+      ),
+      { valid: true, sessionId: "s" },
+    );
+  });
 });

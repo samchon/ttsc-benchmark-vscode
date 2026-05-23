@@ -11,8 +11,13 @@ import { DuplicateSelectionAction } from "../../browser/linesOperations.js";
 import { withTestCodeEditor } from "../../../../test/browser/testCodeEditor.js";
 import { testCommand } from "../../../../test/browser/testCommand.js";
 
-function testCopyLinesDownCommand(lines: string[], selection: Selection, expectedLines: string[], expectedSelection: Selection): void {
-	testCommand(
+function testCopyLinesDownCommand(
+  lines: string[],
+  selection: Selection,
+  expectedLines: string[],
+  expectedSelection: Selection,
+): void {
+  testCommand(
     lines,
     null,
     selection,
@@ -22,8 +27,13 @@ function testCopyLinesDownCommand(lines: string[], selection: Selection, expecte
   );
 }
 
-function testCopyLinesUpCommand(lines: string[], selection: Selection, expectedLines: string[], expectedSelection: Selection): void {
-	testCommand(
+function testCopyLinesUpCommand(
+  lines: string[],
+  selection: Selection,
+  expectedLines: string[],
+  expectedSelection: Selection,
+): void {
+  testCommand(
     lines,
     null,
     selection,
@@ -126,61 +136,50 @@ suite("Editor Contrib - Copy Lines Command", () => {
 });
 
 suite("Editor Contrib - Duplicate Selection", () => {
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-	ensureNoDisposablesAreLeakedInTestSuite();
+  const duplicateSelectionAction = new DuplicateSelectionAction();
 
-	const duplicateSelectionAction = new DuplicateSelectionAction();
+  function testDuplicateSelectionAction(
+    lines: string[],
+    selections: Selection[],
+    expectedLines: string[],
+    expectedSelections: Selection[],
+  ): void {
+    withTestCodeEditor(lines.join("\n"), {}, (editor) => {
+      editor.setSelections(selections);
+      duplicateSelectionAction.run(null!, editor, {});
+      assert.deepStrictEqual(editor.getValue(), expectedLines.join("\n"));
+      assert.deepStrictEqual(
+        editor.getSelections()!.map((s) => s.toString()),
+        expectedSelections.map((s) => s.toString()),
+      );
+    });
+  }
 
-	function testDuplicateSelectionAction(lines: string[], selections: Selection[], expectedLines: string[], expectedSelections: Selection[]): void {
-		withTestCodeEditor(lines.join("\n"), {}, (editor) => {
-			editor.setSelections(selections);
-			duplicateSelectionAction.run(null!, editor, {});
-			assert.deepStrictEqual(editor.getValue(), expectedLines.join("\n"));
-			assert.deepStrictEqual(editor.getSelections()!.map(s => s.toString()), expectedSelections.map(s => s.toString()));
-		});
-	}
+  test("empty selection", function () {
+    testDuplicateSelectionAction(
+      ["first", "second line", "third line", "fourth line", "fifth"],
+      [new Selection(2, 2, 2, 2), new Selection(3, 2, 3, 2)],
+      [
+        "first",
+        "second line",
+        "second line",
+        "third line",
+        "third line",
+        "fourth line",
+        "fifth",
+      ],
+      [new Selection(3, 2, 3, 2), new Selection(5, 2, 5, 2)],
+    );
+  });
 
-	test("empty selection", function () {
-		testDuplicateSelectionAction(
-			[
-				"first",
-				"second line",
-				"third line",
-				"fourth line",
-				"fifth",
-			],
-			[new Selection(2, 2, 2, 2), new Selection(3, 2, 3, 2)],
-			[
-				"first",
-				"second line",
-				"second line",
-				"third line",
-				"third line",
-				"fourth line",
-				"fifth",
-			],
-			[new Selection(3, 2, 3, 2), new Selection(5, 2, 5, 2)],
-		);
-	});
-
-	test("with selection", function () {
-		testDuplicateSelectionAction(
-			[
-				"first",
-				"second line",
-				"third line",
-				"fourth line",
-				"fifth",
-			],
-			[new Selection(2, 1, 2, 4), new Selection(3, 1, 3, 4)],
-			[
-				"first",
-				"secsecond line",
-				"thithird line",
-				"fourth line",
-				"fifth",
-			],
-			[new Selection(2, 4, 2, 7), new Selection(3, 4, 3, 7)],
-		);
-	});
+  test("with selection", function () {
+    testDuplicateSelectionAction(
+      ["first", "second line", "third line", "fourth line", "fifth"],
+      [new Selection(2, 1, 2, 4), new Selection(3, 1, 3, 4)],
+      ["first", "secsecond line", "thithird line", "fourth line", "fifth"],
+      [new Selection(2, 4, 2, 7), new Selection(3, 4, 3, 7)],
+    );
+  });
 });

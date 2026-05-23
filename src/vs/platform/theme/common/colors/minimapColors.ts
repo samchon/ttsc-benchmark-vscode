@@ -25,7 +25,6 @@ import {
   scrollbarSliderHoverBackground,
 } from "./miscColors.js";
 
-
 export const minimapFindMatch = registerColor(
   "minimap.findMatchHighlight",
   editorFindMatchHighlight,

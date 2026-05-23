@@ -3,12 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AccessibilitySignalService, IAccessibilitySignalService } from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import {
+  AccessibilitySignalService,
+  IAccessibilitySignalService,
+} from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
 import { registerAction2 } from "../../../../platform/actions/common/actions.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
-import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../common/contributions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
+import {
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../common/contributions.js";
 import { AccessibilitySignalLineDebuggerContribution } from "./accessibilitySignalDebuggerContribution.js";
-import { ShowAccessibilityAnnouncementHelp, ShowSignalSoundHelp } from "./commands.js";
+import {
+  ShowAccessibilityAnnouncementHelp,
+  ShowSignalSoundHelp,
+} from "./commands.js";
 import { EditorTextPropertySignalsContribution } from "./editorTextPropertySignalsContribution.js";
 import { wrapInReloadableClass0 } from "../../../../platform/observable/common/wrapInReloadableClass.js";
 
@@ -31,4 +43,3 @@ registerWorkbenchContribution2(
 
 registerAction2(ShowSignalSoundHelp);
 registerAction2(ShowAccessibilityAnnouncementHelp);
-

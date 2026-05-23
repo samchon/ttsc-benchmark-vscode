@@ -10,5 +10,5 @@ export const INotebookKeymapService = createDecorator<INotebookKeymapService>(
 );
 
 export interface INotebookKeymapService {
-	readonly _serviceBrand: undefined;
+  readonly _serviceBrand: undefined;
 }

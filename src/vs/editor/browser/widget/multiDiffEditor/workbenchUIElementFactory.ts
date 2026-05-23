@@ -13,19 +13,19 @@ import { URI } from "../../../../base/common/uri.js";
  * This would make monaco-editor consumption much more difficult though.
  */
 export interface IWorkbenchUIElementFactory {
-	createResourceLabel?(element: HTMLElement): IResourceLabel;
+  createResourceLabel?(element: HTMLElement): IResourceLabel;
 
-	/**
-	 * When true, the entire header area is clickable to toggle collapse/expand
-	 * and receives keyboard activation (Enter/Space) and ARIA button semantics.
-	 */
-	readonly headerClickToCollapse?: boolean;
+  /**
+   * When true, the entire header area is clickable to toggle collapse/expand
+   * and receives keyboard activation (Enter/Space) and ARIA button semantics.
+   */
+  readonly headerClickToCollapse?: boolean;
 }
 
 export interface IResourceLabel extends IDisposable {
-	setUri(uri: URI | undefined, options?: IResourceLabelOptions): void;
+  setUri(uri: URI | undefined, options?: IResourceLabelOptions): void;
 }
 
 export interface IResourceLabelOptions {
-	strikethrough?: boolean;
+  strikethrough?: boolean;
 }

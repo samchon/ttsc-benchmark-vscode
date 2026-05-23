@@ -20,52 +20,55 @@ export const CUSTOMIZATION_GROUP_HEADER_HEIGHT_WITH_SEPARATOR = 40;
  * MCP-server and plugin list widgets.
  */
 export interface ICustomizationGroupHeaderEntry {
-	readonly type: "group-header";
-	readonly id: string;
-	readonly label: string;
-	readonly icon: ThemeIcon;
-	readonly count: number;
-	readonly isFirst: boolean;
-	readonly description: string;
-	collapsed: boolean;
+  readonly type: "group-header";
+  readonly id: string;
+  readonly label: string;
+  readonly icon: ThemeIcon;
+  readonly count: number;
+  readonly isFirst: boolean;
+  readonly description: string;
+  collapsed: boolean;
 }
 
 interface ICustomizationGroupHeaderTemplateData {
-	readonly container: HTMLElement;
-	readonly chevron: HTMLElement;
-	readonly icon: HTMLElement;
-	readonly label: HTMLElement;
-	readonly count: HTMLElement;
-	readonly infoIcon: HTMLElement;
-	readonly disposables: DisposableStore;
-	readonly elementDisposables: DisposableStore;
+  readonly container: HTMLElement;
+  readonly chevron: HTMLElement;
+  readonly icon: HTMLElement;
+  readonly label: HTMLElement;
+  readonly count: HTMLElement;
+  readonly infoIcon: HTMLElement;
+  readonly disposables: DisposableStore;
+  readonly elementDisposables: DisposableStore;
 }
 
 /**
  * Shared renderer for collapsible group headers in the AI Customization
  * list widgets (MCP servers, plugins, etc.).
  */
-export class CustomizationGroupHeaderRenderer<T extends ICustomizationGroupHeaderEntry> implements IListRenderer<T, ICustomizationGroupHeaderTemplateData> {
+export class CustomizationGroupHeaderRenderer<
+  T extends ICustomizationGroupHeaderEntry,
+> implements IListRenderer<T, ICustomizationGroupHeaderTemplateData> {
+  constructor(
+    readonly templateId: string,
+    private readonly hoverService: IHoverService,
+  ) {}
 
-	constructor(
-		readonly templateId: string,
-		private readonly hoverService: IHoverService,
-	) { }
+  renderTemplate(
+    container: HTMLElement,
+  ): ICustomizationGroupHeaderTemplateData {
+    const disposables = new DisposableStore();
+    const elementDisposables = new DisposableStore();
+    container.classList.add("ai-customization-group-header");
 
-	renderTemplate(container: HTMLElement): ICustomizationGroupHeaderTemplateData {
-		const disposables = new DisposableStore();
-		const elementDisposables = new DisposableStore();
-		container.classList.add("ai-customization-group-header");
+    const chevron = DOM.append(container, $(".group-chevron"));
+    const icon = DOM.append(container, $(".group-icon"));
+    const labelGroup = DOM.append(container, $(".group-label-group"));
+    const label = DOM.append(labelGroup, $(".group-label"));
+    const count = DOM.append(container, $(".group-count"));
+    const infoIcon = DOM.append(container, $(".group-info"));
+    infoIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.info));
 
-		const chevron = DOM.append(container, $(".group-chevron"));
-		const icon = DOM.append(container, $(".group-icon"));
-		const labelGroup = DOM.append(container, $(".group-label-group"));
-		const label = DOM.append(labelGroup, $(".group-label"));
-		const count = DOM.append(container, $(".group-count"));
-		const infoIcon = DOM.append(container, $(".group-info"));
-		infoIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.info));
-
-		return {
+    return {
       container,
       chevron,
       icon,
@@ -75,41 +78,49 @@ export class CustomizationGroupHeaderRenderer<T extends ICustomizationGroupHeade
       disposables,
       elementDisposables,
     };
-	}
+  }
 
-	renderElement(element: T, _index: number, templateData: ICustomizationGroupHeaderTemplateData): void {
-		templateData.elementDisposables.clear();
+  renderElement(
+    element: T,
+    _index: number,
+    templateData: ICustomizationGroupHeaderTemplateData,
+  ): void {
+    templateData.elementDisposables.clear();
 
-		templateData.chevron.className = "group-chevron";
-		templateData.chevron.classList.add(
-      ...ThemeIcon.asClassNameArray(element.collapsed ? Codicon.chevronRight : Codicon.chevronDown),
+    templateData.chevron.className = "group-chevron";
+    templateData.chevron.classList.add(
+      ...ThemeIcon.asClassNameArray(
+        element.collapsed ? Codicon.chevronRight : Codicon.chevronDown,
+      ),
     );
 
-		templateData.icon.className = "group-icon";
-		templateData.icon.classList.add(
+    templateData.icon.className = "group-icon";
+    templateData.icon.classList.add(
       ...ThemeIcon.asClassNameArray(element.icon),
     );
 
-		templateData.label.textContent = element.label;
-		templateData.count.textContent = `${element.count}`;
+    templateData.label.textContent = element.label;
+    templateData.count.textContent = `${element.count}`;
 
-		templateData.elementDisposables.add(this.hoverService.setupDelayedHover(templateData.infoIcon, () => ({
-			content: element.description,
-			appearance: {
-				compact: true,
-				skipFadeInAnimation: true,
-			},
-		})));
+    templateData.elementDisposables.add(
+      this.hoverService.setupDelayedHover(templateData.infoIcon, () => ({
+        content: element.description,
+        appearance: {
+          compact: true,
+          skipFadeInAnimation: true,
+        },
+      })),
+    );
 
-		templateData.container.classList.toggle("collapsed", element.collapsed);
-		templateData.container.classList.toggle(
+    templateData.container.classList.toggle("collapsed", element.collapsed);
+    templateData.container.classList.toggle(
       "has-previous-group",
       !element.isFirst,
     );
-	}
+  }
 
-	disposeTemplate(templateData: ICustomizationGroupHeaderTemplateData): void {
-		templateData.elementDisposables.dispose();
-		templateData.disposables.dispose();
-	}
+  disposeTemplate(templateData: ICustomizationGroupHeaderTemplateData): void {
+    templateData.elementDisposables.dispose();
+    templateData.disposables.dispose();
+  }
 }

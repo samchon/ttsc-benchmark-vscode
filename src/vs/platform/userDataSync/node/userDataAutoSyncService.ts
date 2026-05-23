@@ -21,22 +21,26 @@ import { IUserDataSyncAccountService } from "../common/userDataSyncAccount.js";
 import { IUserDataSyncMachinesService } from "../common/userDataSyncMachines.js";
 
 export class UserDataAutoSyncService extends BaseUserDataAutoSyncService {
-
-	constructor(
-		@IProductService productService: IProductService,
-		@IUserDataSyncStoreManagementService userDataSyncStoreManagementService: IUserDataSyncStoreManagementService,
-		@IUserDataSyncStoreService userDataSyncStoreService: IUserDataSyncStoreService,
-		@IUserDataSyncEnablementService userDataSyncEnablementService: IUserDataSyncEnablementService,
-		@IUserDataSyncService userDataSyncService: IUserDataSyncService,
-		@INativeHostService nativeHostService: INativeHostService,
-		@IUserDataSyncLogService logService: IUserDataSyncLogService,
-		@IUserDataSyncAccountService authTokenService: IUserDataSyncAccountService,
-		@ITelemetryService telemetryService: ITelemetryService,
-		@IUserDataSyncMachinesService userDataSyncMachinesService: IUserDataSyncMachinesService,
-		@IStorageService storageService: IStorageService,
-		@IMeteredConnectionService meteredConnectionService: IMeteredConnectionService,
-	) {
-		super(
+  constructor(
+    @IProductService productService: IProductService,
+    @IUserDataSyncStoreManagementService
+    userDataSyncStoreManagementService: IUserDataSyncStoreManagementService,
+    @IUserDataSyncStoreService
+    userDataSyncStoreService: IUserDataSyncStoreService,
+    @IUserDataSyncEnablementService
+    userDataSyncEnablementService: IUserDataSyncEnablementService,
+    @IUserDataSyncService userDataSyncService: IUserDataSyncService,
+    @INativeHostService nativeHostService: INativeHostService,
+    @IUserDataSyncLogService logService: IUserDataSyncLogService,
+    @IUserDataSyncAccountService authTokenService: IUserDataSyncAccountService,
+    @ITelemetryService telemetryService: ITelemetryService,
+    @IUserDataSyncMachinesService
+    userDataSyncMachinesService: IUserDataSyncMachinesService,
+    @IStorageService storageService: IStorageService,
+    @IMeteredConnectionService
+    meteredConnectionService: IMeteredConnectionService,
+  ) {
+    super(
       productService,
       userDataSyncStoreManagementService,
       userDataSyncStoreService,
@@ -50,10 +54,18 @@ export class UserDataAutoSyncService extends BaseUserDataAutoSyncService {
       meteredConnectionService,
     );
 
-		this._register(Event.debounce<string, string[]>(Event.any<string>(
-			Event.map(nativeHostService.onDidFocusMainWindow, () => "windowFocus"),
-			Event.map(nativeHostService.onDidOpenMainWindow, () => "windowOpen"),
-		), (last, source) => last ? [...last, source] : [source], 1000)(sources => this.triggerSync(sources, { skipIfSyncedRecently: true })));
-	}
-
+    this._register(
+      Event.debounce<string, string[]>(
+        Event.any<string>(
+          Event.map(
+            nativeHostService.onDidFocusMainWindow,
+            () => "windowFocus",
+          ),
+          Event.map(nativeHostService.onDidOpenMainWindow, () => "windowOpen"),
+        ),
+        (last, source) => (last ? [...last, source] : [source]),
+        1000,
+      )((sources) => this.triggerSync(sources, { skipIfSyncedRecently: true })),
+    );
+  }
 }

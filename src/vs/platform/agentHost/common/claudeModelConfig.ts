@@ -45,10 +45,16 @@ export type ClaudeRuntimeEffortLevel = "low" | "medium" | "high" | "xhigh";
  * CAPI later adds a `'max'` model, the SDK runtime union widens and this
  * clamp becomes a passthrough (CONTEXT.md M11 effort-clamp; Phase 9 D7).
  */
-export function clampEffortForRuntime(effort: ClaudeEffortLevel | undefined): ClaudeRuntimeEffortLevel | undefined {
-	if (effort === undefined) { return undefined; }
-	if (effort === "max") { return "xhigh"; }
-	return effort;
+export function clampEffortForRuntime(
+  effort: ClaudeEffortLevel | undefined,
+): ClaudeRuntimeEffortLevel | undefined {
+  if (effort === undefined) {
+    return undefined;
+  }
+  if (effort === "max") {
+    return "xhigh";
+  }
+  return effort;
 }
 
 /**
@@ -58,18 +64,20 @@ export function clampEffortForRuntime(effort: ClaudeEffortLevel | undefined): Cl
  * to its own default). Mirror of CopilotAgent's `_getReasoningEffort`
  * (copilotAgent.ts:487).
  */
-export function resolveClaudeEffort(model: ModelSelection | undefined): ClaudeEffortLevel | undefined {
-	const raw = model?.config?.[CLAUDE_THINKING_LEVEL_KEY];
-	switch (raw) {
-		case "low":
-		case "medium":
-		case "high":
-		case "xhigh":
-		case "max":
-			return raw;
-		default:
-			return undefined;
-	}
+export function resolveClaudeEffort(
+  model: ModelSelection | undefined,
+): ClaudeEffortLevel | undefined {
+  const raw = model?.config?.[CLAUDE_THINKING_LEVEL_KEY];
+  switch (raw) {
+    case "low":
+    case "medium":
+    case "high":
+    case "xhigh":
+    case "max":
+      return raw;
+    default:
+      return undefined;
+  }
 }
 
 /** Canonical ordered list of {@link ClaudeEffortLevel} values; used for sort + guard. */
@@ -83,23 +91,22 @@ const CLAUDE_EFFORT_LEVELS: readonly ClaudeEffortLevel[] = [
 
 /** Type guard narrowing an arbitrary string to {@link ClaudeEffortLevel}. */
 export function isClaudeEffortLevel(value: string): value is ClaudeEffortLevel {
-	return (CLAUDE_EFFORT_LEVELS as readonly string[]).includes(value);
+  return (CLAUDE_EFFORT_LEVELS as readonly string[]).includes(value);
 }
 
 function labelForClaudeEffort(level: ClaudeEffortLevel): string {
-	switch (level) {
-		case "low": return localize("claude.modelThinkingLevel.low", "Low");
-		case "medium": return localize(
-      "claude.modelThinkingLevel.medium",
-      "Medium",
-    );
-		case "high": return localize("claude.modelThinkingLevel.high", "High");
-		case "xhigh": return localize(
-      "claude.modelThinkingLevel.xhigh",
-      "Extra High",
-    );
-		case "max": return localize("claude.modelThinkingLevel.max", "Max");
-	}
+  switch (level) {
+    case "low":
+      return localize("claude.modelThinkingLevel.low", "Low");
+    case "medium":
+      return localize("claude.modelThinkingLevel.medium", "Medium");
+    case "high":
+      return localize("claude.modelThinkingLevel.high", "High");
+    case "xhigh":
+      return localize("claude.modelThinkingLevel.xhigh", "Extra High");
+    case "max":
+      return localize("claude.modelThinkingLevel.max", "Max");
+  }
 }
 
 /**
@@ -123,24 +130,28 @@ function labelForClaudeEffort(level: ClaudeEffortLevel): string {
  * Returns `undefined` for an empty list — the picker then renders no
  * thinkingLevel control for that model.
  */
-export function createClaudeThinkingLevelSchema(supportedEfforts: readonly ClaudeEffortLevel[]): ConfigSchema | undefined {
-	if (supportedEfforts.length === 0) {
-		return undefined;
-	}
-	const defaultEffort: ClaudeEffortLevel | undefined = supportedEfforts.includes(
-    "high",
-  ) ? "high" : undefined;
-	return {
-		type: "object",
-		properties: {
-			[CLAUDE_THINKING_LEVEL_KEY]: {
-				type: "string",
-				title: localize("claude.modelThinkingLevel.title", "Thinking Level"),
-				description: localize("claude.modelThinkingLevel.description", "Controls how much reasoning effort Claude uses."),
-				enum: [...supportedEfforts],
-				enumLabels: supportedEfforts.map(labelForClaudeEffort),
-				...(defaultEffort !== undefined ? { default: defaultEffort } : {}),
-			},
-		},
-	};
+export function createClaudeThinkingLevelSchema(
+  supportedEfforts: readonly ClaudeEffortLevel[],
+): ConfigSchema | undefined {
+  if (supportedEfforts.length === 0) {
+    return undefined;
+  }
+  const defaultEffort: ClaudeEffortLevel | undefined =
+    supportedEfforts.includes("high") ? "high" : undefined;
+  return {
+    type: "object",
+    properties: {
+      [CLAUDE_THINKING_LEVEL_KEY]: {
+        type: "string",
+        title: localize("claude.modelThinkingLevel.title", "Thinking Level"),
+        description: localize(
+          "claude.modelThinkingLevel.description",
+          "Controls how much reasoning effort Claude uses.",
+        ),
+        enum: [...supportedEfforts],
+        enumLabels: supportedEfforts.map(labelForClaudeEffort),
+        ...(defaultEffort !== undefined ? { default: defaultEffort } : {}),
+      },
+    },
+  };
 }

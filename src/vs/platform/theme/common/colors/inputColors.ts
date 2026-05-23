@@ -7,13 +7,23 @@ import * as nls from "../../../../nls.js";
 
 // Import the effects we need
 import { Color, RGBA } from "../../../../base/common/color.js";
-import { registerColor, transparent, lighten, darken, ColorTransformType } from "../colorUtils.js";
+import {
+  registerColor,
+  transparent,
+  lighten,
+  darken,
+  ColorTransformType,
+} from "../colorUtils.js";
 
 // Import the colors we need
-import { foreground, contrastBorder, focusBorder, iconForeground } from "./baseColors.js";
+import {
+  foreground,
+  contrastBorder,
+  focusBorder,
+  iconForeground,
+} from "./baseColors.js";
 import { editorWidgetBackground } from "./editorColors.js";
 import { listHoverBackground } from "./listColors.js";
-
 
 // ----- input
 
@@ -104,7 +114,6 @@ export const inputPlaceholderForeground = registerColor(
     "Input box foreground color for placeholder text.",
   ),
 );
-
 
 // ----- input validation
 
@@ -219,7 +228,6 @@ export const inputValidationErrorBorder = registerColor(
   ),
 );
 
-
 // ----- select
 
 export const selectBackground = registerColor(
@@ -261,7 +269,6 @@ export const selectBorder = registerColor(
   nls.localize("dropdownBorder", "Dropdown border."),
 );
 
-
 // ------ button
 
 export const buttonForeground = registerColor(
@@ -272,13 +279,18 @@ export const buttonForeground = registerColor(
 
 export const buttonSeparator = registerColor(
   "button.separator",
-  transparent(buttonForeground, .4),
+  transparent(buttonForeground, 0.4),
   nls.localize("buttonSeparator", "Button separator color."),
 );
 
 export const buttonBackground = registerColor(
   "button.background",
-  { dark: "#0E639C", light: "#007ACC", hcDark: Color.black, hcLight: "#0F4A85" },
+  {
+    dark: "#0E639C",
+    light: "#007ACC",
+    hcDark: Color.black,
+    hcLight: "#0F4A85",
+  },
   nls.localize("buttonBackground", "Button background color."),
 );
 
@@ -394,10 +406,10 @@ export const radioInactiveBackground = registerColor(
 export const radioInactiveBorder = registerColor(
   "radio.inactiveBorder",
   {
-    light: transparent(radioActiveForeground, .2),
-    dark: transparent(radioActiveForeground, .2),
-    hcDark: transparent(radioActiveForeground, .4),
-    hcLight: transparent(radioActiveForeground, .2),
+    light: transparent(radioActiveForeground, 0.2),
+    dark: transparent(radioActiveForeground, 0.2),
+    hcDark: transparent(radioActiveForeground, 0.4),
+    hcLight: transparent(radioActiveForeground, 0.2),
   },
   nls.localize(
     "radioInactiveBorder",
@@ -479,7 +491,6 @@ export const checkboxDisabledForeground = registerColor(
     "Foreground of a disabled checkbox.",
   ),
 );
-
 
 // ------ keybinding label
 

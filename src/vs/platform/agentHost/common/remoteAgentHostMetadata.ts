@@ -16,30 +16,30 @@ export const remoteAgentHostStateSchemaVersion = 1;
  * coordinated across both languages.
  */
 export interface IRemoteAgentHostState {
-	readonly schemaVersion: typeof remoteAgentHostStateSchemaVersion;
-	readonly pid: number;
-	readonly port: number;
-	/**
-	 * Host the supervisor's TCP listener was bound to (e.g. `127.0.0.1`,
-	 * `0.0.0.0`). Optional so older lockfiles still parse; consumers fall
-	 * back to loopback when absent.
-	 */
-	readonly host?: string;
-	readonly connectionToken?: string | null;
-	readonly protocolVersion: string;
-	readonly quality?: string;
-	readonly tunnelName?: string;
+  readonly schemaVersion: typeof remoteAgentHostStateSchemaVersion;
+  readonly pid: number;
+  readonly port: number;
+  /**
+   * Host the supervisor's TCP listener was bound to (e.g. `127.0.0.1`,
+   * `0.0.0.0`). Optional so older lockfiles still parse; consumers fall
+   * back to loopback when absent.
+   */
+  readonly host?: string;
+  readonly connectionToken?: string | null;
+  readonly protocolVersion: string;
+  readonly quality?: string;
+  readonly tunnelName?: string;
 }
 
 export function createRemoteAgentHostState(options: {
-	readonly pid: number;
-	readonly port: number;
-	readonly host?: string;
-	readonly connectionToken: string | undefined;
-	readonly quality?: string;
-	readonly tunnelName?: string;
+  readonly pid: number;
+  readonly port: number;
+  readonly host?: string;
+  readonly connectionToken: string | undefined;
+  readonly quality?: string;
+  readonly tunnelName?: string;
 }): IRemoteAgentHostState {
-	return {
+  return {
     schemaVersion: remoteAgentHostStateSchemaVersion,
     pid: options.pid,
     port: options.port,
@@ -51,42 +51,53 @@ export function createRemoteAgentHostState(options: {
   };
 }
 
-export function parseRemoteAgentHostState(raw: unknown): IRemoteAgentHostState | undefined {
-	if (typeof raw !== "object" || raw === null) {
-		return undefined;
-	}
+export function parseRemoteAgentHostState(
+  raw: unknown,
+): IRemoteAgentHostState | undefined {
+  if (typeof raw !== "object" || raw === null) {
+    return undefined;
+  }
 
-	const obj = raw as Record<string, unknown>;
-	if (obj.schemaVersion !== remoteAgentHostStateSchemaVersion) {
-		return undefined;
-	}
-	if (typeof obj.pid !== "number" || !Number.isSafeInteger(
-    obj.pid,
-  ) || obj.pid <= 0) {
-		return undefined;
-	}
-	if (typeof obj.port !== "number" || !Number.isSafeInteger(
-    obj.port,
-  ) || obj.port <= 0 || obj.port > 65535) {
-		return undefined;
-	}
-	if (obj.host !== undefined && typeof obj.host !== "string") {
-		return undefined;
-	}
-	if (obj.connectionToken !== undefined && obj.connectionToken !== null && typeof obj.connectionToken !== "string") {
-		return undefined;
-	}
-	if (typeof obj.protocolVersion !== "string") {
-		return undefined;
-	}
-	if (obj.quality !== undefined && typeof obj.quality !== "string") {
-		return undefined;
-	}
-	if (obj.tunnelName !== undefined && typeof obj.tunnelName !== "string") {
-		return undefined;
-	}
+  const obj = raw as Record<string, unknown>;
+  if (obj.schemaVersion !== remoteAgentHostStateSchemaVersion) {
+    return undefined;
+  }
+  if (
+    typeof obj.pid !== "number" ||
+    !Number.isSafeInteger(obj.pid) ||
+    obj.pid <= 0
+  ) {
+    return undefined;
+  }
+  if (
+    typeof obj.port !== "number" ||
+    !Number.isSafeInteger(obj.port) ||
+    obj.port <= 0 ||
+    obj.port > 65535
+  ) {
+    return undefined;
+  }
+  if (obj.host !== undefined && typeof obj.host !== "string") {
+    return undefined;
+  }
+  if (
+    obj.connectionToken !== undefined &&
+    obj.connectionToken !== null &&
+    typeof obj.connectionToken !== "string"
+  ) {
+    return undefined;
+  }
+  if (typeof obj.protocolVersion !== "string") {
+    return undefined;
+  }
+  if (obj.quality !== undefined && typeof obj.quality !== "string") {
+    return undefined;
+  }
+  if (obj.tunnelName !== undefined && typeof obj.tunnelName !== "string") {
+    return undefined;
+  }
 
-	return {
+  return {
     schemaVersion: remoteAgentHostStateSchemaVersion,
     pid: obj.pid,
     port: obj.port,

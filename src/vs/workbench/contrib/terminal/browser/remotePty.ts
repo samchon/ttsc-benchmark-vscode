@@ -18,82 +18,93 @@ import { IRemoteAgentService } from "../../../services/remote/common/remoteAgent
 import { hasKey } from "../../../../base/common/types.js";
 
 export class RemotePty extends BasePty implements ITerminalChildProcess {
-	private readonly _startBarrier: Barrier;
+  private readonly _startBarrier: Barrier;
 
-	constructor(
-		id: number,
-		shouldPersist: boolean,
-		private readonly _remoteTerminalChannel: RemoteTerminalChannelClient,
-		@IRemoteAgentService private readonly _remoteAgentService: IRemoteAgentService,
-		@ITerminalLogService private readonly _logService: ITerminalLogService,
-	) {
-		super(id, shouldPersist);
-		this._startBarrier = new Barrier();
-	}
+  constructor(
+    id: number,
+    shouldPersist: boolean,
+    private readonly _remoteTerminalChannel: RemoteTerminalChannelClient,
+    @IRemoteAgentService
+    private readonly _remoteAgentService: IRemoteAgentService,
+    @ITerminalLogService private readonly _logService: ITerminalLogService,
+  ) {
+    super(id, shouldPersist);
+    this._startBarrier = new Barrier();
+  }
 
-	async start(): Promise<ITerminalLaunchError | ITerminalLaunchResult | undefined> {
-		// Fetch the environment to check shell permissions
-		const env = await this._remoteAgentService.getEnvironment();
-		if (!env) {
-			// Extension host processes are only allowed in remote extension hosts currently
-			throw new Error("Could not fetch remote environment");
-		}
+  async start(): Promise<
+    ITerminalLaunchError | ITerminalLaunchResult | undefined
+  > {
+    // Fetch the environment to check shell permissions
+    const env = await this._remoteAgentService.getEnvironment();
+    if (!env) {
+      // Extension host processes are only allowed in remote extension hosts currently
+      throw new Error("Could not fetch remote environment");
+    }
 
-		this._logService.trace("Spawning remote agent process", {
+    this._logService.trace("Spawning remote agent process", {
       terminalId: this.id,
     });
 
-		const startResult = await this._remoteTerminalChannel.start(this.id);
+    const startResult = await this._remoteTerminalChannel.start(this.id);
 
-		if (startResult && hasKey(startResult, { message: true })) {
-			// An error occurred
-			return startResult;
-		}
+    if (startResult && hasKey(startResult, { message: true })) {
+      // An error occurred
+      return startResult;
+    }
 
-		this._startBarrier.open();
-		return startResult;
-	}
+    this._startBarrier.open();
+    return startResult;
+  }
 
-	async detach(forcePersist?: boolean): Promise<void> {
-		await this._startBarrier.wait();
-		return this._remoteTerminalChannel.detachFromProcess(this.id, forcePersist);
-	}
+  async detach(forcePersist?: boolean): Promise<void> {
+    await this._startBarrier.wait();
+    return this._remoteTerminalChannel.detachFromProcess(this.id, forcePersist);
+  }
 
-	shutdown(immediate: boolean): void {
-		this._startBarrier.wait().then(_ => {
+  shutdown(immediate: boolean): void {
+    this._startBarrier.wait().then((_) => {
       this._remoteTerminalChannel.shutdown(this.id, immediate);
     });
-	}
+  }
 
-	input(data: string): void {
-		if (this._inReplay) {
-			return;
-		}
+  input(data: string): void {
+    if (this._inReplay) {
+      return;
+    }
 
-		this._startBarrier.wait().then(_ => {
+    this._startBarrier.wait().then((_) => {
       this._remoteTerminalChannel.input(this.id, data);
     });
-	}
+  }
 
-	sendSignal(signal: string): void {
-		if (this._inReplay) {
-			return;
-		}
+  sendSignal(signal: string): void {
+    if (this._inReplay) {
+      return;
+    }
 
-		this._startBarrier.wait().then(_ => {
+    this._startBarrier.wait().then((_) => {
       this._remoteTerminalChannel.sendSignal(this.id, signal);
     });
-	}
+  }
 
-	processBinary(e: string): Promise<void> {
-		return this._remoteTerminalChannel.processBinary(this.id, e);
-	}
+  processBinary(e: string): Promise<void> {
+    return this._remoteTerminalChannel.processBinary(this.id, e);
+  }
 
-	resize(cols: number, rows: number, pixelWidth?: number, pixelHeight?: number): void {
-		if (this._inReplay || this._lastDimensions.cols === cols && this._lastDimensions.rows === rows) {
-			return;
-		}
-		this._startBarrier.wait().then(_ => {
+  resize(
+    cols: number,
+    rows: number,
+    pixelWidth?: number,
+    pixelHeight?: number,
+  ): void {
+    if (
+      this._inReplay ||
+      (this._lastDimensions.cols === cols && this._lastDimensions.rows === rows)
+    ) {
+      return;
+    }
+    this._startBarrier.wait().then((_) => {
       this._lastDimensions.cols = cols;
       this._lastDimensions.rows = rows;
       this._remoteTerminalChannel.resize(
@@ -104,45 +115,52 @@ export class RemotePty extends BasePty implements ITerminalChildProcess {
         pixelHeight,
       );
     });
-	}
+  }
 
-	async clearBuffer(): Promise<void> {
-		await this._remoteTerminalChannel.clearBuffer(this.id);
-	}
+  async clearBuffer(): Promise<void> {
+    await this._remoteTerminalChannel.clearBuffer(this.id);
+  }
 
-	freePortKillProcess(port: string): Promise<{ port: string; processId: string }> {
-		if (!this._remoteTerminalChannel.freePortKillProcess) {
-			throw new Error(
+  freePortKillProcess(
+    port: string,
+  ): Promise<{ port: string; processId: string }> {
+    if (!this._remoteTerminalChannel.freePortKillProcess) {
+      throw new Error(
         "freePortKillProcess does not exist on the local pty service",
       );
-		}
-		return this._remoteTerminalChannel.freePortKillProcess(port);
-	}
+    }
+    return this._remoteTerminalChannel.freePortKillProcess(port);
+  }
 
-	acknowledgeDataEvent(charCount: number): void {
-		// Support flow control for server spawned processes
-		if (this._inReplay) {
-			return;
-		}
+  acknowledgeDataEvent(charCount: number): void {
+    // Support flow control for server spawned processes
+    if (this._inReplay) {
+      return;
+    }
 
-		this._startBarrier.wait().then(_ => {
+    this._startBarrier.wait().then((_) => {
       this._remoteTerminalChannel.acknowledgeDataEvent(this.id, charCount);
     });
-	}
+  }
 
-	async setUnicodeVersion(version: "6" | "11"): Promise<void> {
-		return this._remoteTerminalChannel.setUnicodeVersion(this.id, version);
-	}
+  async setUnicodeVersion(version: "6" | "11"): Promise<void> {
+    return this._remoteTerminalChannel.setUnicodeVersion(this.id, version);
+  }
 
-	async refreshProperty<T extends ProcessPropertyType>(type: T): Promise<IProcessPropertyMap[T]> {
-		return this._remoteTerminalChannel.refreshProperty(this.id, type);
-	}
+  async refreshProperty<T extends ProcessPropertyType>(
+    type: T,
+  ): Promise<IProcessPropertyMap[T]> {
+    return this._remoteTerminalChannel.refreshProperty(this.id, type);
+  }
 
-	async updateProperty<T extends ProcessPropertyType>(type: T, value: IProcessPropertyMap[T]): Promise<void> {
-		return this._remoteTerminalChannel.updateProperty(this.id, type, value);
-	}
+  async updateProperty<T extends ProcessPropertyType>(
+    type: T,
+    value: IProcessPropertyMap[T],
+  ): Promise<void> {
+    return this._remoteTerminalChannel.updateProperty(this.id, type, value);
+  }
 
-	handleOrphanQuestion() {
-		this._remoteTerminalChannel.orphanQuestionReply(this.id);
-	}
+  handleOrphanQuestion() {
+    this._remoteTerminalChannel.orphanQuestionReply(this.id);
+  }
 }

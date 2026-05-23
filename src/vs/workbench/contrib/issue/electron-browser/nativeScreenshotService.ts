@@ -9,18 +9,18 @@ import { IScreenshotService } from "../browser/screenshotService.js";
 import { encodeBase64 } from "../../../../base/common/buffer.js";
 
 export class NativeScreenshotService implements IScreenshotService {
-	readonly _serviceBrand: undefined;
+  readonly _serviceBrand: undefined;
 
-	constructor(
-		@INativeHostService private readonly nativeHostService: INativeHostService,
-	) { }
+  constructor(
+    @INativeHostService private readonly nativeHostService: INativeHostService,
+  ) {}
 
-	async captureScreenshot(rect?: IRectangle): Promise<string | undefined> {
-		const buffer = await this.nativeHostService.getScreenshot(rect);
-		if (!buffer) {
-			return undefined;
-		}
+  async captureScreenshot(rect?: IRectangle): Promise<string | undefined> {
+    const buffer = await this.nativeHostService.getScreenshot(rect);
+    if (!buffer) {
+      return undefined;
+    }
 
-		return `data:image/jpeg;base64,${encodeBase64(buffer)}`;
-	}
+    return `data:image/jpeg;base64,${encodeBase64(buffer)}`;
+  }
 }

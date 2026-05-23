@@ -5,10 +5,19 @@
 
 import { ILogService } from "../../../../platform/log/common/log.js";
 import { localize } from "../../../../nls.js";
-import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../common/contributions.js";
+import {
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../common/contributions.js";
 import { ChatConfiguration } from "../common/constants.js";
-import { COPILOT_VENDOR_ID, ILanguageModelsService } from "../common/languageModels.js";
-import { createDefaultModelArrays, DefaultModelContribution } from "./defaultModelContribution.js";
+import {
+  COPILOT_VENDOR_ID,
+  ILanguageModelsService,
+} from "../common/languageModels.js";
+import {
+  createDefaultModelArrays,
+  DefaultModelContribution,
+} from "./defaultModelContribution.js";
 
 // The empty value for these settings means "use the built-in utility-family
 // default" (i.e. whatever the copilot-utility / copilot-utility-small family
@@ -38,23 +47,23 @@ const utilitySmallArrays = createDefaultModelArrays(
  * family used for general background/fallback flows (titles, summaries, etc.).
  */
 export class UtilityModelContribution extends DefaultModelContribution {
-	static readonly ID = "workbench.contrib.utilityModel";
+  static readonly ID = "workbench.contrib.utilityModel";
 
-	static readonly modelIds = utilityArrays.modelIds;
-	static readonly modelLabels = utilityArrays.modelLabels;
-	static readonly modelDescriptions = utilityArrays.modelDescriptions;
+  static readonly modelIds = utilityArrays.modelIds;
+  static readonly modelLabels = utilityArrays.modelLabels;
+  static readonly modelDescriptions = utilityArrays.modelDescriptions;
 
-	constructor(
-		@ILanguageModelsService languageModelsService: ILanguageModelsService,
-		@ILogService logService: ILogService,
-	) {
-		super(
+  constructor(
+    @ILanguageModelsService languageModelsService: ILanguageModelsService,
+    @ILogService logService: ILogService,
+  ) {
+    super(
       utilityArrays,
       {
         configKey: ChatConfiguration.UtilityModel,
         configSectionId: "chatSidebar",
         logPrefix: "[UtilityModel]",
-        filter: metadata => metadata.vendor !== COPILOT_VENDOR_ID,
+        filter: (metadata) => metadata.vendor !== COPILOT_VENDOR_ID,
         storageFormat: "vendorAndId",
         defaultEntryLabel,
         defaultEntryDescription,
@@ -62,7 +71,7 @@ export class UtilityModelContribution extends DefaultModelContribution {
       languageModelsService,
       logService,
     );
-	}
+  }
 }
 
 /**
@@ -72,23 +81,23 @@ export class UtilityModelContribution extends DefaultModelContribution {
  * flows (commit messages, intent detection, inline-chat progress, etc.).
  */
 export class UtilitySmallModelContribution extends DefaultModelContribution {
-	static readonly ID = "workbench.contrib.utilitySmallModel";
+  static readonly ID = "workbench.contrib.utilitySmallModel";
 
-	static readonly modelIds = utilitySmallArrays.modelIds;
-	static readonly modelLabels = utilitySmallArrays.modelLabels;
-	static readonly modelDescriptions = utilitySmallArrays.modelDescriptions;
+  static readonly modelIds = utilitySmallArrays.modelIds;
+  static readonly modelLabels = utilitySmallArrays.modelLabels;
+  static readonly modelDescriptions = utilitySmallArrays.modelDescriptions;
 
-	constructor(
-		@ILanguageModelsService languageModelsService: ILanguageModelsService,
-		@ILogService logService: ILogService,
-	) {
-		super(
+  constructor(
+    @ILanguageModelsService languageModelsService: ILanguageModelsService,
+    @ILogService logService: ILogService,
+  ) {
+    super(
       utilitySmallArrays,
       {
         configKey: ChatConfiguration.UtilitySmallModel,
         configSectionId: "chatSidebar",
         logPrefix: "[UtilitySmallModel]",
-        filter: metadata => metadata.vendor !== COPILOT_VENDOR_ID,
+        filter: (metadata) => metadata.vendor !== COPILOT_VENDOR_ID,
         storageFormat: "vendorAndId",
         defaultEntryLabel,
         defaultEntryDescription,
@@ -96,7 +105,7 @@ export class UtilitySmallModelContribution extends DefaultModelContribution {
       languageModelsService,
       logService,
     );
-	}
+  }
 }
 
 registerWorkbenchContribution2(

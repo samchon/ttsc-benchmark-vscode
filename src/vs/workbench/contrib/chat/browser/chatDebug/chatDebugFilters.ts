@@ -4,13 +4,23 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Emitter, Event } from "../../../../../base/common/event.js";
-import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  DisposableStore,
+} from "../../../../../base/common/lifecycle.js";
 import { localize } from "../../../../../nls.js";
-import { IContextKey, IContextKeyService, RawContextKey } from "../../../../../platform/contextkey/common/contextkey.js";
+import {
+  IContextKey,
+  IContextKeyService,
+  RawContextKey,
+} from "../../../../../platform/contextkey/common/contextkey.js";
 import { MenuRegistry } from "../../../../../platform/actions/common/actions.js";
 import { CommandsRegistry } from "../../../../../platform/commands/common/commands.js";
 import { viewFilterSubmenu } from "../../../../browser/parts/views/viewFilter.js";
-import { parseTimeToken, stripTimestampTokens } from "../../common/chatDebugEvents.js";
+import {
+  parseTimeToken,
+  stripTimestampTokens,
+} from "../../common/chatDebugEvents.js";
 import {
   CHAT_DEBUG_FILTER_ACTIVE,
   CHAT_DEBUG_KIND_TOOL_CALL,
@@ -31,81 +41,88 @@ import {
  * consumer can re-render.
  */
 export class ChatDebugFilterState extends Disposable {
+  private readonly _onDidChange = this._register(new Emitter<void>());
+  readonly onDidChange: Event<void> = this._onDidChange.event;
 
-	private readonly _onDidChange = this._register(new Emitter<void>());
-	readonly onDidChange: Event<void> = this._onDidChange.event;
+  // Kind visibility
+  filterKindToolCall: boolean = true;
+  filterKindModelTurn: boolean = true;
+  filterKindPromptDiscovery: boolean = true;
+  filterKindSubagent: boolean = true;
 
-	// Kind visibility
-	filterKindToolCall: boolean = true;
-	filterKindModelTurn: boolean = true;
-	filterKindPromptDiscovery: boolean = true;
-	filterKindSubagent: boolean = true;
+  // Text filter
+  textFilter: string = "";
 
-	// Text filter
-	textFilter: string = "";
+  // Parsed timestamp filters (epoch ms)
+  beforeTimestamp: number | undefined;
+  afterTimestamp: number | undefined;
 
-	// Parsed timestamp filters (epoch ms)
-	beforeTimestamp: number | undefined;
-	afterTimestamp: number | undefined;
+  isKindVisible(kind: string, category?: string): boolean {
+    switch (kind) {
+      case "toolCall":
+        return this.filterKindToolCall;
+      case "modelTurn":
+        return this.filterKindModelTurn;
+      case "generic":
+        // The "Chat Customization" toggle hides events produced by
+        // the prompt discovery pipeline (category === 'discovery')
+        // and the customization summary (category === 'customization').
+        // Other generic events (e.g. from external providers) are
+        // always visible and are not affected by this toggle.
+        if (category !== "discovery" && category !== "customization") {
+          return true;
+        }
+        return this.filterKindPromptDiscovery;
+      case "subagentInvocation":
+        return this.filterKindSubagent;
 
-	isKindVisible(kind: string, category?: string): boolean {
-		switch (kind) {
-			case "toolCall": return this.filterKindToolCall;
-			case "modelTurn": return this.filterKindModelTurn;
-			case "generic":
-				// The "Chat Customization" toggle hides events produced by
-				// the prompt discovery pipeline (category === 'discovery')
-				// and the customization summary (category === 'customization').
-				// Other generic events (e.g. from external providers) are
-				// always visible and are not affected by this toggle.
-				if (category !== "discovery" && category !== "customization") {
-					return true;
-				}
-				return this.filterKindPromptDiscovery;
-			case "subagentInvocation": return this.filterKindSubagent;
+      default:
+        return true;
+    }
+  }
 
-			default: return true;
-		}
-	}
+  isAllKindsVisible(): boolean {
+    return (
+      this.filterKindToolCall &&
+      this.filterKindModelTurn &&
+      this.filterKindPromptDiscovery &&
+      this.filterKindSubagent
+    );
+  }
 
-	isAllKindsVisible(): boolean {
-		return this.filterKindToolCall && this.filterKindModelTurn &&
-			this.filterKindPromptDiscovery && this.filterKindSubagent;
-	}
+  isAllFiltersDefault(): boolean {
+    return this.isAllKindsVisible();
+  }
 
-	isAllFiltersDefault(): boolean {
-		return this.isAllKindsVisible();
-	}
+  setTextFilter(text: string): void {
+    const normalized = text.toLowerCase();
+    if (this.textFilter !== normalized) {
+      this.textFilter = normalized;
+      this.beforeTimestamp = parseTimeToken(normalized, "before");
+      this.afterTimestamp = parseTimeToken(normalized, "after");
+      this._onDidChange.fire();
+    }
+  }
 
-	setTextFilter(text: string): void {
-		const normalized = text.toLowerCase();
-		if (this.textFilter !== normalized) {
-			this.textFilter = normalized;
-			this.beforeTimestamp = parseTimeToken(normalized, "before");
-			this.afterTimestamp = parseTimeToken(normalized, "after");
-			this._onDidChange.fire();
-		}
-	}
+  /** Returns the text filter with before:/after: tokens removed. */
+  get textFilterWithoutTimestamps(): string {
+    return stripTimestampTokens(this.textFilter);
+  }
 
-	/** Returns the text filter with before:/after: tokens removed. */
-	get textFilterWithoutTimestamps(): string {
-		return stripTimestampTokens(this.textFilter);
-	}
+  isTimestampVisible(created: Date): boolean {
+    const time = created.getTime();
+    if (this.beforeTimestamp !== undefined && time > this.beforeTimestamp) {
+      return false;
+    }
+    if (this.afterTimestamp !== undefined && time < this.afterTimestamp) {
+      return false;
+    }
+    return true;
+  }
 
-	isTimestampVisible(created: Date): boolean {
-		const time = created.getTime();
-		if (this.beforeTimestamp !== undefined && time > this.beforeTimestamp) {
-			return false;
-		}
-		if (this.afterTimestamp !== undefined && time < this.afterTimestamp) {
-			return false;
-		}
-		return true;
-	}
-
-	fire(): void {
-		this._onDidChange.fire();
-	}
+  fire(): void {
+    this._onDidChange.fire();
+  }
 }
 
 /**
@@ -113,35 +130,40 @@ export class ChatDebugFilterState extends Disposable {
  * {@link ChatDebugFilterState}. Returns a disposable that unregisters them.
  */
 export function registerFilterMenuItems(
-	state: ChatDebugFilterState,
-	scopedContextKeyService: IContextKeyService,
+  state: ChatDebugFilterState,
+  scopedContextKeyService: IContextKeyService,
 ): DisposableStore {
-	const store = new DisposableStore();
+  const store = new DisposableStore();
 
-	// Bind context keys so the "More Filters" submenu shows toggle checkboxes
-	CHAT_DEBUG_FILTER_ACTIVE.bindTo(scopedContextKeyService).set(true);
+  // Bind context keys so the "More Filters" submenu shows toggle checkboxes
+  CHAT_DEBUG_FILTER_ACTIVE.bindTo(scopedContextKeyService).set(true);
 
-	const kindToolCallKey = CHAT_DEBUG_KIND_TOOL_CALL.bindTo(
+  const kindToolCallKey = CHAT_DEBUG_KIND_TOOL_CALL.bindTo(
     scopedContextKeyService,
   );
-	kindToolCallKey.set(true);
-	const kindModelTurnKey = CHAT_DEBUG_KIND_MODEL_TURN.bindTo(
+  kindToolCallKey.set(true);
+  const kindModelTurnKey = CHAT_DEBUG_KIND_MODEL_TURN.bindTo(
     scopedContextKeyService,
   );
-	kindModelTurnKey.set(true);
-	const kindPromptDiscoveryKey = CHAT_DEBUG_KIND_PROMPT_DISCOVERY.bindTo(
+  kindModelTurnKey.set(true);
+  const kindPromptDiscoveryKey = CHAT_DEBUG_KIND_PROMPT_DISCOVERY.bindTo(
     scopedContextKeyService,
   );
-	kindPromptDiscoveryKey.set(true);
-	const kindSubagentKey = CHAT_DEBUG_KIND_SUBAGENT.bindTo(
+  kindPromptDiscoveryKey.set(true);
+  const kindSubagentKey = CHAT_DEBUG_KIND_SUBAGENT.bindTo(
     scopedContextKeyService,
   );
-	kindSubagentKey.set(true);
-	const registerToggle = (
-		id: string, title: string, key: RawContextKey<boolean>, group: string,
-		getter: () => boolean, setter: (v: boolean) => void, ctxKey: IContextKey<boolean>,
-	) => {
-		store.add(
+  kindSubagentKey.set(true);
+  const registerToggle = (
+    id: string,
+    title: string,
+    key: RawContextKey<boolean>,
+    group: string,
+    getter: () => boolean,
+    setter: (v: boolean) => void,
+    ctxKey: IContextKey<boolean>,
+  ) => {
+    store.add(
       CommandsRegistry.registerCommand(id, () => {
         const newVal = !getter();
         setter(newVal);
@@ -149,61 +171,61 @@ export function registerFilterMenuItems(
         state.fire();
       }),
     );
-		store.add(
+    store.add(
       MenuRegistry.appendMenuItem(viewFilterSubmenu, {
         command: { id, title, toggled: key },
         group,
         when: CHAT_DEBUG_FILTER_ACTIVE,
       }),
     );
-	};
+  };
 
-	registerToggle(
+  registerToggle(
     CHAT_DEBUG_CMD_TOGGLE_TOOL_CALL,
     localize("chatDebug.filter.toolCall", "Tool Calls"),
     CHAT_DEBUG_KIND_TOOL_CALL,
     "1_kind",
     () => state.filterKindToolCall,
-    v => {
+    (v) => {
       state.filterKindToolCall = v;
     },
     kindToolCallKey,
   );
-	registerToggle(
+  registerToggle(
     CHAT_DEBUG_CMD_TOGGLE_MODEL_TURN,
     localize("chatDebug.filter.modelTurn", "Model Turns"),
     CHAT_DEBUG_KIND_MODEL_TURN,
     "1_kind",
     () => state.filterKindModelTurn,
-    v => {
+    (v) => {
       state.filterKindModelTurn = v;
     },
     kindModelTurnKey,
   );
-	registerToggle(
+  registerToggle(
     CHAT_DEBUG_CMD_TOGGLE_PROMPT_DISCOVERY,
     localize("chatDebug.filter.promptDiscovery", "Chat Customization"),
     CHAT_DEBUG_KIND_PROMPT_DISCOVERY,
     "1_kind",
     () => state.filterKindPromptDiscovery,
-    v => {
+    (v) => {
       state.filterKindPromptDiscovery = v;
     },
     kindPromptDiscoveryKey,
   );
-	registerToggle(
+  registerToggle(
     CHAT_DEBUG_CMD_TOGGLE_SUBAGENT,
     localize("chatDebug.filter.subagent", "Subagent Invocations"),
     CHAT_DEBUG_KIND_SUBAGENT,
     "1_kind",
     () => state.filterKindSubagent,
-    v => {
+    (v) => {
       state.filterKindSubagent = v;
     },
     kindSubagentKey,
   );
 
-	return store;
+  return store;
 }
 
 /**
@@ -211,26 +233,26 @@ export function registerFilterMenuItems(
  * Returns a function to sync all keys from the current state.
  */
 export function bindFilterContextKeys(
-	state: ChatDebugFilterState,
-	scopedContextKeyService: IContextKeyService,
+  state: ChatDebugFilterState,
+  scopedContextKeyService: IContextKeyService,
 ): () => void {
-	CHAT_DEBUG_FILTER_ACTIVE.bindTo(scopedContextKeyService).set(true);
-	const kindToolCallKey = CHAT_DEBUG_KIND_TOOL_CALL.bindTo(
+  CHAT_DEBUG_FILTER_ACTIVE.bindTo(scopedContextKeyService).set(true);
+  const kindToolCallKey = CHAT_DEBUG_KIND_TOOL_CALL.bindTo(
     scopedContextKeyService,
   );
-	const kindModelTurnKey = CHAT_DEBUG_KIND_MODEL_TURN.bindTo(
+  const kindModelTurnKey = CHAT_DEBUG_KIND_MODEL_TURN.bindTo(
     scopedContextKeyService,
   );
-	const kindPromptDiscoveryKey = CHAT_DEBUG_KIND_PROMPT_DISCOVERY.bindTo(
+  const kindPromptDiscoveryKey = CHAT_DEBUG_KIND_PROMPT_DISCOVERY.bindTo(
     scopedContextKeyService,
   );
-	const kindSubagentKey = CHAT_DEBUG_KIND_SUBAGENT.bindTo(
+  const kindSubagentKey = CHAT_DEBUG_KIND_SUBAGENT.bindTo(
     scopedContextKeyService,
   );
-	return () => {
-		kindToolCallKey.set(state.filterKindToolCall);
-		kindModelTurnKey.set(state.filterKindModelTurn);
-		kindPromptDiscoveryKey.set(state.filterKindPromptDiscovery);
-		kindSubagentKey.set(state.filterKindSubagent);
-	};
+  return () => {
+    kindToolCallKey.set(state.filterKindToolCall);
+    kindModelTurnKey.set(state.filterKindModelTurn);
+    kindPromptDiscoveryKey.set(state.filterKindPromptDiscovery);
+    kindSubagentKey.set(state.filterKindSubagent);
+  };
 }

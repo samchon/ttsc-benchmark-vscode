@@ -28,7 +28,10 @@ import {
 } from "../../agentSessions/agentSessions.js";
 import { ISessionTypePickerDelegate } from "../../chat.js";
 import { IChatInputPickerOptions } from "./chatInputPickerActionItem.js";
-import { ISessionTypeItem, SessionTypePickerActionItem } from "./sessionTargetPickerActionItem.js";
+import {
+  ISessionTypeItem,
+  SessionTypePickerActionItem,
+} from "./sessionTargetPickerActionItem.js";
 import { IGitService } from "../../../../git/common/gitService.js";
 
 /**
@@ -36,24 +39,23 @@ import { IGitService } from "../../../../git/common/gitService.js";
  * This picker allows switching to remote execution providers when the session is not empty.
  */
 export class DelegationSessionPickerActionItem extends SessionTypePickerActionItem {
+  private readonly _isSessionsWindow: boolean;
 
-	private readonly _isSessionsWindow: boolean;
-
-	constructor(
-		action: MenuItemAction,
-		chatSessionPosition: "sidebar" | "editor",
-		delegate: ISessionTypePickerDelegate,
-		pickerOptions: IChatInputPickerOptions,
-		@IActionWidgetService actionWidgetService: IActionWidgetService,
-		@IKeybindingService keybindingService: IKeybindingService,
-		@IContextKeyService contextKeyService: IContextKeyService,
-		@IChatSessionsService chatSessionsService: IChatSessionsService,
-		@ICommandService commandService: ICommandService,
-		@IOpenerService openerService: IOpenerService,
-		@ITelemetryService telemetryService: ITelemetryService,
-		@IGitService private readonly gitService: IGitService,
-	) {
-		super(
+  constructor(
+    action: MenuItemAction,
+    chatSessionPosition: "sidebar" | "editor",
+    delegate: ISessionTypePickerDelegate,
+    pickerOptions: IChatInputPickerOptions,
+    @IActionWidgetService actionWidgetService: IActionWidgetService,
+    @IKeybindingService keybindingService: IKeybindingService,
+    @IContextKeyService contextKeyService: IContextKeyService,
+    @IChatSessionsService chatSessionsService: IChatSessionsService,
+    @ICommandService commandService: ICommandService,
+    @IOpenerService openerService: IOpenerService,
+    @ITelemetryService telemetryService: ITelemetryService,
+    @IGitService private readonly gitService: IGitService,
+  ) {
+    super(
       action,
       chatSessionPosition,
       delegate,
@@ -66,127 +68,160 @@ export class DelegationSessionPickerActionItem extends SessionTypePickerActionIt
       openerService,
       telemetryService,
     );
-		this._isSessionsWindow = IsSessionsWindowContext.getValue(
-      contextKeyService,
-    ) === true;
-	}
+    this._isSessionsWindow =
+      IsSessionsWindowContext.getValue(contextKeyService) === true;
+  }
 
-	protected override _run(sessionTypeItem: ISessionTypeItem): void {
-		if (this.delegate.setPendingDelegationTarget) {
-			this.delegate.setPendingDelegationTarget(sessionTypeItem.type);
-		}
-		if (this.element) {
-			this.renderLabel(this.element);
-		}
-	}
+  protected override _run(sessionTypeItem: ISessionTypeItem): void {
+    if (this.delegate.setPendingDelegationTarget) {
+      this.delegate.setPendingDelegationTarget(sessionTypeItem.type);
+    }
+    if (this.element) {
+      this.renderLabel(this.element);
+    }
+  }
 
-	protected override _getSelectedSessionType(): AgentSessionTarget | undefined {
-		const delegationTarget = this.delegate.getPendingDelegationTarget ? this.delegate.getPendingDelegationTarget() : undefined;
-		if (delegationTarget) {
-			return delegationTarget;
-		}
-		return this.delegate.getActiveSessionProvider();
-	}
+  protected override _getSelectedSessionType(): AgentSessionTarget | undefined {
+    const delegationTarget = this.delegate.getPendingDelegationTarget
+      ? this.delegate.getPendingDelegationTarget()
+      : undefined;
+    if (delegationTarget) {
+      return delegationTarget;
+    }
+    return this.delegate.getActiveSessionProvider();
+  }
 
-	protected override _isSessionTypeEnabled(type: AgentSessionTarget): boolean {
-		const allContributions = this.chatSessionsService.getAllChatSessionContributions();
-		const contribution = allContributions.find(
-      contribution => getAgentSessionProvider(contribution.type) === type,
+  protected override _isSessionTypeEnabled(type: AgentSessionTarget): boolean {
+    const allContributions =
+      this.chatSessionsService.getAllChatSessionContributions();
+    const contribution = allContributions.find(
+      (contribution) => getAgentSessionProvider(contribution.type) === type,
     );
 
-		// In core VS Code, only allow delegation from local sessions.
-		// In the sessions window, only allow delegation from background sessions (not cloud).
-		const activeProvider = this.delegate.getActiveSessionProvider();
-		if (!this._isSessionsWindow && activeProvider !== AgentSessionProviders.Local) {
-			return false;
-		}
-		if (this._isSessionsWindow && activeProvider !== AgentSessionProviders.Background) {
-			return false;
-		}
+    // In core VS Code, only allow delegation from local sessions.
+    // In the sessions window, only allow delegation from background sessions (not cloud).
+    const activeProvider = this.delegate.getActiveSessionProvider();
+    if (
+      !this._isSessionsWindow &&
+      activeProvider !== AgentSessionProviders.Local
+    ) {
+      return false;
+    }
+    if (
+      this._isSessionsWindow &&
+      activeProvider !== AgentSessionProviders.Background
+    ) {
+      return false;
+    }
 
-		// In the sessions window, cloud delegation requires a git repository
-		if (this._isSessionsWindow && type === AgentSessionProviders.Cloud && !this._hasGitRepository()) {
-			return false;
-		}
+    // In the sessions window, cloud delegation requires a git repository
+    if (
+      this._isSessionsWindow &&
+      type === AgentSessionProviders.Cloud &&
+      !this._hasGitRepository()
+    ) {
+      return false;
+    }
 
-		if (contribution && !contribution.canDelegate && activeProvider !== type /* Allow switching back to active type */) {
-			return false;
-		}
+    if (
+      contribution &&
+      !contribution.canDelegate &&
+      activeProvider !== type /* Allow switching back to active type */
+    ) {
+      return false;
+    }
 
-		return this._getSelectedSessionType() !== type; // Always allow switching back to active session
-	}
+    return this._getSelectedSessionType() !== type; // Always allow switching back to active session
+  }
 
-	private _hasGitRepository(): boolean {
-		if (this.delegate.hasGitRepository) {
-			return this.delegate.hasGitRepository();
-		}
-		return !Iterable.isEmpty(this.gitService.repositories);
-	}
+  private _hasGitRepository(): boolean {
+    if (this.delegate.hasGitRepository) {
+      return this.delegate.hasGitRepository();
+    }
+    return !Iterable.isEmpty(this.gitService.repositories);
+  }
 
-	protected override _isVisible(type: AgentSessionTarget): boolean {
-		// In the sessions window, only show Background and Cloud targets
-		if (this._isSessionsWindow && type === AgentSessionProviders.Local) {
-			return false;
-		}
+  protected override _isVisible(type: AgentSessionTarget): boolean {
+    // In the sessions window, only show Background and Cloud targets
+    if (this._isSessionsWindow && type === AgentSessionProviders.Local) {
+      return false;
+    }
 
-		if (this.delegate.getActiveSessionProvider() === type) {
-			return true; // Always show active session type
-		}
+    if (this.delegate.getActiveSessionProvider() === type) {
+      return true; // Always show active session type
+    }
 
-		return getAgentCanContinueIn(type);
-	}
+    return getAgentCanContinueIn(type);
+  }
 
-	protected override _getSessionCategory(sessionTypeItem: ISessionTypeItem) {
-		if (isFirstPartyAgentSessionProvider(sessionTypeItem.type)) {
-			return {
+  protected override _getSessionCategory(sessionTypeItem: ISessionTypeItem) {
+    if (isFirstPartyAgentSessionProvider(sessionTypeItem.type)) {
+      return {
         label: localize("continueIn", "Continue In"),
         order: 1,
         showHeader: true,
       };
-		}
-		return {
+    }
+    return {
       label: localize("continueInThirdParty", "Continue In (Third Party)"),
       order: 2,
       showHeader: false,
     };
-	}
+  }
 
-	protected override _getSessionDescription(sessionTypeItem: ISessionTypeItem): string | undefined {
-		return undefined;
-	}
+  protected override _getSessionDescription(
+    sessionTypeItem: ISessionTypeItem,
+  ): string | undefined {
+    return undefined;
+  }
 
-	protected override _getLearnMore(): IAction {
-		const learnMoreUrl = "https://aka.ms/vscode-continue-chat-in";
-		return {
-			id: "workbench.action.chat.agentOverview.learnMoreHandOff",
-			label: localize("chat.learnMoreAgentHandOff", "Learn about agent handoff..."),
-			tooltip: learnMoreUrl,
-			class: undefined,
-			enabled: true,
-			run: async () => {
-				await this.openerService.open(URI.parse(learnMoreUrl));
-			},
-		};
-	}
+  protected override _getLearnMore(): IAction {
+    const learnMoreUrl = "https://aka.ms/vscode-continue-chat-in";
+    return {
+      id: "workbench.action.chat.agentOverview.learnMoreHandOff",
+      label: localize(
+        "chat.learnMoreAgentHandOff",
+        "Learn about agent handoff...",
+      ),
+      tooltip: learnMoreUrl,
+      class: undefined,
+      enabled: true,
+      run: async () => {
+        await this.openerService.open(URI.parse(learnMoreUrl));
+      },
+    };
+  }
 
-	protected override _getAdditionalActions(): IActionWidgetDropdownAction[] {
-		if (this._isSessionsWindow) {
-			return [];
-		}
-		return [{
-			id: "newChatSession",
-			class: undefined,
-			label: localize("chat.newChatSession", "New Chat Session"),
-			tooltip: "",
-			hover: { content: "" },
-			checked: false,
-			icon: Codicon.plus,
-			enabled: true,
-			category: { label: localize("chat.newChatSession.category", "New Chat Session"), order: 0, showHeader: false },
-			description: this.keybindingService.lookupKeybinding(ACTION_ID_NEW_CHAT)?.getLabel() || undefined,
-			run: async () => {
-				this.commandService.executeCommand(ACTION_ID_NEW_CHAT, this.chatSessionPosition);
-			},
-		}];
-	}
+  protected override _getAdditionalActions(): IActionWidgetDropdownAction[] {
+    if (this._isSessionsWindow) {
+      return [];
+    }
+    return [
+      {
+        id: "newChatSession",
+        class: undefined,
+        label: localize("chat.newChatSession", "New Chat Session"),
+        tooltip: "",
+        hover: { content: "" },
+        checked: false,
+        icon: Codicon.plus,
+        enabled: true,
+        category: {
+          label: localize("chat.newChatSession.category", "New Chat Session"),
+          order: 0,
+          showHeader: false,
+        },
+        description:
+          this.keybindingService
+            .lookupKeybinding(ACTION_ID_NEW_CHAT)
+            ?.getLabel() || undefined,
+        run: async () => {
+          this.commandService.executeCommand(
+            ACTION_ID_NEW_CHAT,
+            this.chatSessionPosition,
+          );
+        },
+      },
+    ];
+  }
 }

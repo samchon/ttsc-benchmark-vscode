@@ -6,7 +6,10 @@
 import { Codicon } from "../../../../base/common/codicons.js";
 import { localize } from "../../../../nls.js";
 import { IActionWidgetService } from "../../../../platform/actionWidget/browser/actionWidget.js";
-import { ActionListItemKind, IActionListItem } from "../../../../platform/actionWidget/browser/actionList.js";
+import {
+  ActionListItemKind,
+  IActionListItem,
+} from "../../../../platform/actionWidget/browser/actionList.js";
 import { IMenuService } from "../../../../platform/actions/common/actions.js";
 import { IRemoteAgentHostService } from "../../../../platform/agentHost/common/remoteAgentHostService.js";
 import { ICommandService } from "../../../../platform/commands/common/commands.js";
@@ -20,8 +23,14 @@ import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uri
 import { IWorkbenchLayoutService } from "../../../../workbench/services/layout/browser/layoutService.js";
 import { ISessionsProvidersService } from "../../../services/sessions/browser/sessionsProvidersService.js";
 import { IAgentHostFilterService } from "../../../services/agentHostFilter/common/agentHostFilter.js";
-import { IWorkspacePickerItem, WorkspacePicker } from "./sessionWorkspacePicker.js";
-import { showMobileWorkspacePickerSheet, shouldUseMobileWorkspacePickerSheet } from "./mobile/mobileWorkspacePickerSheet.js";
+import {
+  IWorkspacePickerItem,
+  WorkspacePicker,
+} from "./sessionWorkspacePicker.js";
+import {
+  showMobileWorkspacePickerSheet,
+  shouldUseMobileWorkspacePickerSheet,
+} from "./mobile/mobileWorkspacePickerSheet.js";
 import { IWorkspacesService } from "../../../../platform/workspaces/common/workspaces.js";
 
 /**
@@ -43,25 +52,27 @@ import { IWorkspacesService } from "../../../../platform/workspaces/common/works
  * surfaced).
  */
 export class WebWorkspacePicker extends WorkspacePicker {
-
-	constructor(
-		@IActionWidgetService actionWidgetService: IActionWidgetService,
-		@IStorageService storageService: IStorageService,
-		@IUriIdentityService uriIdentityService: IUriIdentityService,
-		@ISessionsProvidersService sessionsProvidersService: ISessionsProvidersService,
-		@IRemoteAgentHostService remoteAgentHostService: IRemoteAgentHostService,
-		@IConfigurationService configurationService: IConfigurationService,
-		@ICommandService commandService: ICommandService,
-		@IWorkspacesService workspacesService: IWorkspacesService,
-		@IMenuService menuService: IMenuService,
-		@IContextKeyService contextKeyService: IContextKeyService,
-		@IInstantiationService instantiationService: IInstantiationService,
-		@IFileDialogService fileDialogService: IFileDialogService,
-		@ITelemetryService telemetryService: ITelemetryService,
-		@IAgentHostFilterService private readonly _agentHostFilterService: IAgentHostFilterService,
-		@IWorkbenchLayoutService private readonly _layoutService: IWorkbenchLayoutService,
-	) {
-		super(
+  constructor(
+    @IActionWidgetService actionWidgetService: IActionWidgetService,
+    @IStorageService storageService: IStorageService,
+    @IUriIdentityService uriIdentityService: IUriIdentityService,
+    @ISessionsProvidersService
+    sessionsProvidersService: ISessionsProvidersService,
+    @IRemoteAgentHostService remoteAgentHostService: IRemoteAgentHostService,
+    @IConfigurationService configurationService: IConfigurationService,
+    @ICommandService commandService: ICommandService,
+    @IWorkspacesService workspacesService: IWorkspacesService,
+    @IMenuService menuService: IMenuService,
+    @IContextKeyService contextKeyService: IContextKeyService,
+    @IInstantiationService instantiationService: IInstantiationService,
+    @IFileDialogService fileDialogService: IFileDialogService,
+    @ITelemetryService telemetryService: ITelemetryService,
+    @IAgentHostFilterService
+    private readonly _agentHostFilterService: IAgentHostFilterService,
+    @IWorkbenchLayoutService
+    private readonly _layoutService: IWorkbenchLayoutService,
+  ) {
+    super(
       actionWidgetService,
       storageService,
       uriIdentityService,
@@ -77,92 +88,98 @@ export class WebWorkspacePicker extends WorkspacePicker {
       telemetryService,
     );
 
-		// When the scoped host changes, if the current selection no longer
-		// belongs to the selected host, reset it: prefer the most recent
-		// workspace for the new host, otherwise clear the selection.
-		this._register(
-      this._agentHostFilterService.onDidChange(
-        () => this._onScopedHostChanged(),
+    // When the scoped host changes, if the current selection no longer
+    // belongs to the selected host, reset it: prefer the most recent
+    // workspace for the new host, otherwise clear the selection.
+    this._register(
+      this._agentHostFilterService.onDidChange(() =>
+        this._onScopedHostChanged(),
       ),
     );
-	}
+  }
 
-	protected override _showTabs(): boolean {
-		// Scoped picker is already filtered to a single host — the categorical
-		// tab bar would be redundant.
-		return false;
-	}
+  protected override _showTabs(): boolean {
+    // Scoped picker is already filtered to a single host — the categorical
+    // tab bar would be redundant.
+    return false;
+  }
 
-	override showPicker(): void {
-		if (!this._triggerElement) {
-			return;
-		}
-		// On phone, render the picker as a bottom sheet instead of the
-		// desktop action-widget popup. Falls through to `super` on non-
-		// phone viewports so a single instance handles both desktop
-		// browsers and rotation across the phone breakpoint.
-		if (!shouldUseMobileWorkspacePickerSheet(this._layoutService)) {
-			super.showPicker();
-			return;
-		}
-		const items = this._buildItems();
-		showMobileWorkspacePickerSheet(
+  override showPicker(): void {
+    if (!this._triggerElement) {
+      return;
+    }
+    // On phone, render the picker as a bottom sheet instead of the
+    // desktop action-widget popup. Falls through to `super` on non-
+    // phone viewports so a single instance handles both desktop
+    // browsers and rotation across the phone breakpoint.
+    if (!shouldUseMobileWorkspacePickerSheet(this._layoutService)) {
+      super.showPicker();
+      return;
+    }
+    const items = this._buildItems();
+    showMobileWorkspacePickerSheet(
       this._layoutService,
       this._triggerElement,
       items,
-      item => this._dispatchPickerItem(item),
+      (item) => this._dispatchPickerItem(item),
       this._getAllBrowseActions(),
     );
-	}
+  }
 
-	private _onScopedHostChanged(): void {
-		const scopedProviderId = this._agentHostFilterService.selectedProviderId;
-		const currentResolved = this.selectedResolved;
-		if (currentResolved && scopedProviderId !== undefined && currentResolved.providerId === scopedProviderId) {
-			this._onDidChangeSelection.fire();
-			return;
-		}
+  private _onScopedHostChanged(): void {
+    const scopedProviderId = this._agentHostFilterService.selectedProviderId;
+    const currentResolved = this.selectedResolved;
+    if (
+      currentResolved &&
+      scopedProviderId !== undefined &&
+      currentResolved.providerId === scopedProviderId
+    ) {
+      this._onDidChangeSelection.fire();
+      return;
+    }
 
-		const firstRecent = scopedProviderId !== undefined
-			? this._getRecentWorkspaces().find(w => w.providerId === scopedProviderId)
-			: undefined;
-		if (firstRecent) {
-			const folderUri = firstRecent.workspace.folders[0]?.root;
-			if (folderUri) {
-				this.setSelectedWorkspace(folderUri);
-				return;
-			}
-		}
+    const firstRecent =
+      scopedProviderId !== undefined
+        ? this._getRecentWorkspaces().find(
+            (w) => w.providerId === scopedProviderId,
+          )
+        : undefined;
+    if (firstRecent) {
+      const folderUri = firstRecent.workspace.folders[0]?.root;
+      if (folderUri) {
+        this.setSelectedWorkspace(folderUri);
+        return;
+      }
+    }
 
-		this.clearSelection();
-		this._onDidSelectWorkspace.fire(undefined);
-	}
+    this.clearSelection();
+    this._onDidSelectWorkspace.fire(undefined);
+  }
 
-	protected override _buildItems(): IActionListItem<IWorkspacePickerItem>[] {
-		const items: IActionListItem<IWorkspacePickerItem>[] = [];
+  protected override _buildItems(): IActionListItem<IWorkspacePickerItem>[] {
+    const items: IActionListItem<IWorkspacePickerItem>[] = [];
 
-		const scopedProviderId = this._agentHostFilterService.selectedProviderId;
-		if (scopedProviderId === undefined) {
-			return [];
-		}
-		const provider = this.sessionsProvidersService.getProvider(
-      scopedProviderId,
+    const scopedProviderId = this._agentHostFilterService.selectedProviderId;
+    if (scopedProviderId === undefined) {
+      return [];
+    }
+    const provider =
+      this.sessionsProvidersService.getProvider(scopedProviderId);
+    if (!provider) {
+      return items;
+    }
+
+    // 1. Recent workspaces for the scoped provider
+    const recents = this._getRecentWorkspaces().filter(
+      (w) => w.providerId === scopedProviderId,
     );
-		if (!provider) {
-			return items;
-		}
-
-		// 1. Recent workspaces for the scoped provider
-		const recents = this._getRecentWorkspaces().filter(
-      w => w.providerId === scopedProviderId,
-    );
-		for (const { workspace, providerId } of recents) {
-			const folderUri = workspace.folders[0]?.root;
-			if (!folderUri) {
-				continue;
-			}
-			const checked = this._isSelectedFolder(folderUri);
-			items.push({
+    for (const { workspace, providerId } of recents) {
+      const folderUri = workspace.folders[0]?.root;
+      if (!folderUri) {
+        continue;
+      }
+      const checked = this._isSelectedFolder(folderUri);
+      items.push({
         kind: ActionListItemKind.Action,
         label: workspace.label,
         description: workspace.description,
@@ -170,25 +187,28 @@ export class WebWorkspacePicker extends WorkspacePicker {
         item: { folderUri, providerId, checked: checked || undefined },
         onRemove: () => this._removeRecentWorkspace(folderUri),
       });
-		}
+    }
 
-		// 2. "Select Folder..." — dispatches the scoped provider's first browse action
-		const allBrowseActions = this._getAllBrowseActions();
-		const browseIndex = allBrowseActions.findIndex(
-      a => a.providerId === scopedProviderId,
+    // 2. "Select Folder..." — dispatches the scoped provider's first browse action
+    const allBrowseActions = this._getAllBrowseActions();
+    const browseIndex = allBrowseActions.findIndex(
+      (a) => a.providerId === scopedProviderId,
     );
-		if (browseIndex >= 0 && !this._isProviderUnavailable(scopedProviderId)) {
-			if (items.length > 0) {
-				items.push({ kind: ActionListItemKind.Separator, label: "" });
-			}
-			items.push({
+    if (browseIndex >= 0 && !this._isProviderUnavailable(scopedProviderId)) {
+      if (items.length > 0) {
+        items.push({ kind: ActionListItemKind.Separator, label: "" });
+      }
+      items.push({
         kind: ActionListItemKind.Action,
-        label: localize("scopedWorkspacePicker.selectFolder", "Select Folder..."),
+        label: localize(
+          "scopedWorkspacePicker.selectFolder",
+          "Select Folder...",
+        ),
         group: { title: "", icon: Codicon.folderOpened },
         item: { browseActionIndex: browseIndex },
       });
-		}
+    }
 
-		return items;
-	}
+    return items;
+  }
 }

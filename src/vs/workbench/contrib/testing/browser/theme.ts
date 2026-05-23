@@ -22,7 +22,10 @@ import {
   registerColor,
   transparent,
 } from "../../../../platform/theme/common/colorRegistry.js";
-import { listErrorForeground, listWarningForeground } from "../../../../platform/theme/common/colors/listColors.js";
+import {
+  listErrorForeground,
+  listWarningForeground,
+} from "../../../../platform/theme/common/colors/listColors.js";
 import { registerThemingParticipant } from "../../../../platform/theme/common/themeService.js";
 import { TestResultState } from "../common/testTypes.js";
 
@@ -282,7 +285,6 @@ export const testingCoverCountBadgeForeground = registerColor(
   ),
 );
 
-
 const messageBadgeBackground = registerColor(
   "testing.message.error.badgeBackground",
   activityErrorBadgeBackground,
@@ -395,7 +397,9 @@ export const testingRetiredColorIconSkipped = registerColor(
   ),
 );
 
-export const testStatesToRetiredIconColors: { [K in TestResultState]?: string } = {
+export const testStatesToRetiredIconColors: {
+  [K in TestResultState]?: string;
+} = {
   [TestResultState.Errored]: testingRetiredColorIconErrored,
   [TestResultState.Failed]: testingRetiredColorIconFailed,
   [TestResultState.Passed]: testingRetiredColorIconPassed,
@@ -405,10 +409,9 @@ export const testStatesToRetiredIconColors: { [K in TestResultState]?: string } 
 };
 
 registerThemingParticipant((theme, collector) => {
+  const editorBg = theme.getColor(editorBackground);
 
-	const editorBg = theme.getColor(editorBackground);
-
-	collector.addRule(`
+  collector.addRule(`
 	.coverage-deco-inline.coverage-deco-hit.coverage-deco-hovered {
 		background: ${theme.getColor(testingCoveredBackground)?.transparent(1.3)};
 		outline-color: ${theme.getColor(testingCoveredBorder)?.transparent(2)};
@@ -419,10 +422,15 @@ registerThemingParticipant((theme, collector) => {
 	}
 		`);
 
-	if (editorBg) {
-		const missBadgeBackground = theme.getColor(testingUncoveredBackground)?.transparent(2).makeOpaque(editorBg);
-		const errorBadgeBackground = theme.getColor(messageBadgeBackground)?.makeOpaque(editorBg);
-		collector.addRule(`
+  if (editorBg) {
+    const missBadgeBackground = theme
+      .getColor(testingUncoveredBackground)
+      ?.transparent(2)
+      .makeOpaque(editorBg);
+    const errorBadgeBackground = theme
+      .getColor(messageBadgeBackground)
+      ?.makeOpaque(editorBg);
+    collector.addRule(`
 			.coverage-deco-branch-miss-indicator::before {
 				border-color: ${missBadgeBackground?.transparent(1.3)};
 				background-color: ${missBadgeBackground};
@@ -434,5 +442,5 @@ registerThemingParticipant((theme, collector) => {
 				fill: ${errorBadgeBackground};
 			}
 		`);
-	}
+  }
 });

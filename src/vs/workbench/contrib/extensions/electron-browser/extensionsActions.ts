@@ -15,53 +15,50 @@ import { IExtensionManagementService } from "../../../../platform/extensionManag
 import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
 
 export class OpenExtensionsFolderAction extends Action2 {
-
-	constructor() {
-		super({
+  constructor() {
+    super({
       id: "workbench.extensions.action.openExtensionsFolder",
       title: localize2("openExtensionsFolder", "Open Extensions Folder"),
       category: Categories.Developer,
       f1: true,
     });
-	}
+  }
 
-	async run(accessor: ServicesAccessor): Promise<void> {
-		const nativeHostService = accessor.get(INativeHostService);
-		const fileService = accessor.get(IFileService);
-		const environmentService = accessor.get(INativeWorkbenchEnvironmentService);
+  async run(accessor: ServicesAccessor): Promise<void> {
+    const nativeHostService = accessor.get(INativeHostService);
+    const fileService = accessor.get(IFileService);
+    const environmentService = accessor.get(INativeWorkbenchEnvironmentService);
 
-		const extensionsHome = URI.file(environmentService.extensionsPath);
-		const file = await fileService.resolve(extensionsHome);
+    const extensionsHome = URI.file(environmentService.extensionsPath);
+    const file = await fileService.resolve(extensionsHome);
 
-		let itemToShow: URI;
-		if (file.children && file.children.length > 0) {
-			itemToShow = file.children[0].resource;
-		} else {
-			itemToShow = extensionsHome;
-		}
+    let itemToShow: URI;
+    if (file.children && file.children.length > 0) {
+      itemToShow = file.children[0].resource;
+    } else {
+      itemToShow = extensionsHome;
+    }
 
-		if (itemToShow.scheme === Schemas.file) {
-			return nativeHostService.showItemInFolder(itemToShow.fsPath);
-		}
-	}
+    if (itemToShow.scheme === Schemas.file) {
+      return nativeHostService.showItemInFolder(itemToShow.fsPath);
+    }
+  }
 }
 
 export class CleanUpExtensionsFolderAction extends Action2 {
-
-	constructor() {
-		super({
+  constructor() {
+    super({
       id: "_workbench.extensions.action.cleanUpExtensionsFolder",
       title: localize2("cleanUpExtensionsFolder", "Cleanup Extensions Folder"),
       category: Categories.Developer,
       f1: true,
     });
-	}
+  }
 
-	async run(accessor: ServicesAccessor): Promise<void> {
-		const extensionManagementService = accessor.get(
+  async run(accessor: ServicesAccessor): Promise<void> {
+    const extensionManagementService = accessor.get(
       IExtensionManagementService,
     );
-		return extensionManagementService.cleanUp();
-	}
+    return extensionManagementService.cleanUp();
+  }
 }
-

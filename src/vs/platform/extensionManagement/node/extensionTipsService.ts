@@ -14,18 +14,19 @@ import { ITelemetryService } from "../../telemetry/common/telemetry.js";
 import { AbstractNativeExtensionTipsService } from "../common/extensionTipsService.js";
 
 export class ExtensionTipsService extends AbstractNativeExtensionTipsService {
-
-	constructor(
-		@INativeEnvironmentService environmentService: INativeEnvironmentService,
-		@ITelemetryService telemetryService: ITelemetryService,
-		@IExtensionManagementService extensionManagementService: IExtensionManagementService,
-		@IStorageService storageService: IStorageService,
-		@INativeHostService nativeHostService: INativeHostService,
-		@IExtensionRecommendationNotificationService extensionRecommendationNotificationService: IExtensionRecommendationNotificationService,
-		@IFileService fileService: IFileService,
-		@IProductService productService: IProductService,
-	) {
-		super(
+  constructor(
+    @INativeEnvironmentService environmentService: INativeEnvironmentService,
+    @ITelemetryService telemetryService: ITelemetryService,
+    @IExtensionManagementService
+    extensionManagementService: IExtensionManagementService,
+    @IStorageService storageService: IStorageService,
+    @INativeHostService nativeHostService: INativeHostService,
+    @IExtensionRecommendationNotificationService
+    extensionRecommendationNotificationService: IExtensionRecommendationNotificationService,
+    @IFileService fileService: IFileService,
+    @IProductService productService: IProductService,
+  ) {
+    super(
       environmentService.userHome,
       nativeHostService,
       telemetryService,
@@ -35,5 +36,5 @@ export class ExtensionTipsService extends AbstractNativeExtensionTipsService {
       fileService,
       productService,
     );
-	}
+  }
 }

@@ -6,9 +6,16 @@
 import { CancellationToken } from "../../../../base/common/cancellation.js";
 import { localize } from "../../../../nls.js";
 import { AgentSession } from "../../common/agentService.js";
-import { CompletionItem, CompletionItemKind, CompletionsParams } from "../../common/state/protocol/commands.js";
+import {
+  CompletionItem,
+  CompletionItemKind,
+  CompletionsParams,
+} from "../../common/state/protocol/commands.js";
 import { MessageAttachmentKind } from "../../common/state/protocol/state.js";
-import { CompletionTriggerCharacter, IAgentHostCompletionItemProvider } from "../agentHostCompletions.js";
+import {
+  CompletionTriggerCharacter,
+  IAgentHostCompletionItemProvider,
+} from "../agentHostCompletions.js";
 import { extractLeadingSlashToken } from "../agentHostSlashCompletion.js";
 
 /**
@@ -19,16 +26,18 @@ export type CopilotSlashCommandName = "plan" | "compact";
 
 const COMMANDS: readonly CopilotSlashCommandName[] = ["plan", "compact"];
 function getCommandDescription(command: CopilotSlashCommandName): string {
-	switch (command) {
-		case "plan": return localize(
-      "copilotSlashCommand.plan.description",
-      "Create an implementation plan before coding",
-    );
-		case "compact": return localize(
-      "copilotSlashCommand.compact.description",
-      "Free up context by compacting the conversation history",
-    );
-	}
+  switch (command) {
+    case "plan":
+      return localize(
+        "copilotSlashCommand.plan.description",
+        "Create an implementation plan before coding",
+      );
+    case "compact":
+      return localize(
+        "copilotSlashCommand.compact.description",
+        "Free up context by compacting the conversation history",
+      );
+  }
 }
 /**
  * Lookup hook used by {@link CopilotSlashCommandCompletionProvider} to
@@ -37,17 +46,17 @@ function getCommandDescription(command: CopilotSlashCommandName): string {
  * the user hasn't sent a first message — have no history.
  */
 export interface ICopilotSlashCommandSessionInfo {
-	/** `sessionId` is the raw id (URI path without the leading slash). */
-	hasHistory(sessionId: string): boolean;
+  /** `sessionId` is the raw id (URI path without the leading slash). */
+  hasHistory(sessionId: string): boolean;
 }
 
 /**
  * Result of {@link parseLeadingSlashCommand}.
  */
 export interface IParsedLeadingSlashCommand {
-	readonly command: CopilotSlashCommandName;
-	/** Trimmed text following the command (empty if none). */
-	readonly rest: string;
+  readonly command: CopilotSlashCommandName;
+  /** Trimmed text following the command (empty if none). */
+  readonly rest: string;
 }
 
 /**
@@ -57,12 +66,14 @@ export interface IParsedLeadingSlashCommand {
  * or by at least one whitespace character. `/compact-hello`, `/plans`, or a
  * leading-space `/compact` all return `undefined`. Match is case-sensitive.
  */
-export function parseLeadingSlashCommand(prompt: string): IParsedLeadingSlashCommand | undefined {
-	const match = /^\/(plan|compact)(?:$|\s+([\s\S]*))/.exec(prompt);
-	if (!match) {
-		return undefined;
-	}
-	return {
+export function parseLeadingSlashCommand(
+  prompt: string,
+): IParsedLeadingSlashCommand | undefined {
+  const match = /^\/(plan|compact)(?:$|\s+([\s\S]*))/.exec(prompt);
+  if (!match) {
+    return undefined;
+  }
+  return {
     command: match[1] as CopilotSlashCommandName,
     rest: (match[2] ?? "").trim(),
   };
@@ -80,48 +91,54 @@ export function parseLeadingSlashCommand(prompt: string): IParsedLeadingSlashCom
  * feature works whether the user picks the item or types it manually.
  */
 export class CopilotSlashCommandCompletionProvider implements IAgentHostCompletionItemProvider {
-	readonly kinds: ReadonlySet<CompletionItemKind> = new Set([
+  readonly kinds: ReadonlySet<CompletionItemKind> = new Set([
     CompletionItemKind.UserMessage,
   ]);
-	readonly triggerCharacters = [CompletionTriggerCharacter.Slash] as const;
+  readonly triggerCharacters = [CompletionTriggerCharacter.Slash] as const;
 
-	constructor(private readonly copilotcliId: string, private readonly _sessionInfo?: ICopilotSlashCommandSessionInfo) { }
+  constructor(
+    private readonly copilotcliId: string,
+    private readonly _sessionInfo?: ICopilotSlashCommandSessionInfo,
+  ) {}
 
-	async provideCompletionItems(params: CompletionsParams, _token: CancellationToken): Promise<readonly CompletionItem[]> {
-		if (AgentSession.provider(params.channel) !== this.copilotcliId) {
-			return [];
-		}
-		const leading = extractLeadingSlashToken(params.text, params.offset);
-		if (!leading) {
-			return [];
-		}
+  async provideCompletionItems(
+    params: CompletionsParams,
+    _token: CancellationToken,
+  ): Promise<readonly CompletionItem[]> {
+    if (AgentSession.provider(params.channel) !== this.copilotcliId) {
+      return [];
+    }
+    const leading = extractLeadingSlashToken(params.text, params.offset);
+    if (!leading) {
+      return [];
+    }
 
-		// Raw session id is the URI path without the leading slash.
-		const sessionId = AgentSession.id(params.channel);
-		const hasHistory = this._sessionInfo?.hasHistory(sessionId) ?? true;
+    // Raw session id is the URI path without the leading slash.
+    const sessionId = AgentSession.id(params.channel);
+    const hasHistory = this._sessionInfo?.hasHistory(sessionId) ?? true;
 
-		// `/abc` → typed = 'abc'; empty after just '/' → typed = ''.
-		const typed = leading.typed;
-		const items: CompletionItem[] = [];
-		for (const command of COMMANDS) {
-			if (typed.length > 0 && !command.startsWith(typed)) {
-				continue;
-			}
-			// `/compact` only makes sense once the session has prior turns to compact.
-			if (command === "compact" && !hasHistory) {
-				continue;
-			}
-			items.push({
-				insertText: command === "plan" ? "/" + command + " " : "/" + command,
-				rangeStart: 0,
-				rangeEnd: leading.rangeEnd,
-				attachment: {
-					type: MessageAttachmentKind.Simple,
-					label: "/" + command,
-					_meta: { command, description: getCommandDescription(command) },
-				},
-			});
-		}
-		return items;
-	}
+    // `/abc` → typed = 'abc'; empty after just '/' → typed = ''.
+    const typed = leading.typed;
+    const items: CompletionItem[] = [];
+    for (const command of COMMANDS) {
+      if (typed.length > 0 && !command.startsWith(typed)) {
+        continue;
+      }
+      // `/compact` only makes sense once the session has prior turns to compact.
+      if (command === "compact" && !hasHistory) {
+        continue;
+      }
+      items.push({
+        insertText: command === "plan" ? "/" + command + " " : "/" + command,
+        rangeStart: 0,
+        rangeEnd: leading.rangeEnd,
+        attachment: {
+          type: MessageAttachmentKind.Simple,
+          label: "/" + command,
+          _meta: { command, description: getCommandDescription(command) },
+        },
+      });
+    }
+    return items;
+  }
 }

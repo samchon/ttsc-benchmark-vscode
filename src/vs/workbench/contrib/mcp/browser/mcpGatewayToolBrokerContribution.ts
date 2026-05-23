@@ -11,14 +11,16 @@ import { IMcpService } from "../common/mcpTypes.js";
 import { McpGatewayToolBrokerChannel } from "../common/mcpGatewayToolBrokerChannel.js";
 
 export class McpGatewayToolBrokerContribution implements IWorkbenchContribution {
-	constructor(
-		@IRemoteAgentService remoteAgentService: IRemoteAgentService,
-		@IMcpService mcpService: IMcpService,
-		@ILogService logService: ILogService,
-	) {
-		remoteAgentService.getConnection()?.registerChannel(
-      McpGatewayToolBrokerChannelName,
-      new McpGatewayToolBrokerChannel(mcpService, logService),
-    );
-	}
+  constructor(
+    @IRemoteAgentService remoteAgentService: IRemoteAgentService,
+    @IMcpService mcpService: IMcpService,
+    @ILogService logService: ILogService,
+  ) {
+    remoteAgentService
+      .getConnection()
+      ?.registerChannel(
+        McpGatewayToolBrokerChannelName,
+        new McpGatewayToolBrokerChannel(mcpService, logService),
+      );
+  }
 }

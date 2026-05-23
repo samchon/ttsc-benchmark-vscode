@@ -14,14 +14,16 @@ import { IWorkbenchEnvironmentService } from "../../environment/common/environme
  * When true, TelemetryService should buffer events until setExperimentProperty is called.
  */
 export function experimentsEnabled(
-	configurationService: IConfigurationService,
-	productService: IProductService,
-	environmentService: IWorkbenchEnvironmentService,
+  configurationService: IConfigurationService,
+  productService: IProductService,
+  environmentService: IWorkbenchEnvironmentService,
 ): boolean {
-	return getTelemetryLevel(configurationService) === TelemetryLevel.USAGE &&
-		!!productService.tasConfig &&
-		!environmentService.disableExperiments &&
-		!environmentService.extensionTestsLocationURI &&
-		!environmentService.enableSmokeTestDriver &&
-		configurationService.getValue("workbench.enableExperiments") === true;
+  return (
+    getTelemetryLevel(configurationService) === TelemetryLevel.USAGE &&
+    !!productService.tasConfig &&
+    !environmentService.disableExperiments &&
+    !environmentService.extensionTestsLocationURI &&
+    !environmentService.enableSmokeTestDriver &&
+    configurationService.getValue("workbench.enableExperiments") === true
+  );
 }

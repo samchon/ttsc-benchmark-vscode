@@ -12,15 +12,26 @@ import { Disposable } from "../../../../base/common/lifecycle.js";
 import { isMacintosh } from "../../../../base/common/platform.js";
 import { ICommandService } from "../../../../platform/commands/common/commands.js";
 import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
-import { KeybindingsRegistry, KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
-import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../common/contributions.js";
+import {
+  KeybindingsRegistry,
+  KeybindingWeight,
+} from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import {
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../common/contributions.js";
 import { IEditorService } from "../../../services/editor/common/editorService.js";
 import { IssueReporterEditorInput } from "./issueReporterEditorInput.js";
-import { IssueReporterEditorPane, IssueReporterOpenContext } from "./issueReporterEditorPane.js";
+import {
+  IssueReporterEditorPane,
+  IssueReporterOpenContext,
+} from "./issueReporterEditorPane.js";
 import { IssueReporterOverlay } from "./issueReporterOverlay.js";
 
-export const ISSUE_REPORTER_CAPTURE_SCREENSHOT_COMMAND_ID = "workbench.action.issueReporter.captureScreenshot";
-export const ISSUE_REPORTER_TOGGLE_RECORDING_COMMAND_ID = "workbench.action.issueReporter.toggleRecording";
+export const ISSUE_REPORTER_CAPTURE_SCREENSHOT_COMMAND_ID =
+  "workbench.action.issueReporter.captureScreenshot";
+export const ISSUE_REPORTER_TOGGLE_RECORDING_COMMAND_ID =
+  "workbench.action.issueReporter.toggleRecording";
 
 /**
  * Watches the editor service to keep the `issueReporterOpen` context key in
@@ -32,28 +43,27 @@ export const ISSUE_REPORTER_TOGGLE_RECORDING_COMMAND_ID = "workbench.action.issu
  * behavior (Save As, etc.) is preserved.
  */
 class IssueReporterOpenStateContribution extends Disposable {
+  static readonly ID = "workbench.contrib.issueReporterOpenState";
 
-	static readonly ID = "workbench.contrib.issueReporterOpenState";
+  private issueReporterOpen = false;
 
-	private issueReporterOpen = false;
-
-	constructor(
-		@IEditorService private readonly editorService: IEditorService,
-		@IContextKeyService contextKeyService: IContextKeyService,
-		@ICommandService private readonly commandService: ICommandService,
-	) {
-		super();
-		const ctx = IssueReporterOpenContext.bindTo(contextKeyService);
-		const update = () => {
-			this.issueReporterOpen = this.editorService.editors.some(
-        e => e instanceof IssueReporterEditorInput,
+  constructor(
+    @IEditorService private readonly editorService: IEditorService,
+    @IContextKeyService contextKeyService: IContextKeyService,
+    @ICommandService private readonly commandService: ICommandService,
+  ) {
+    super();
+    const ctx = IssueReporterOpenContext.bindTo(contextKeyService);
+    const update = () => {
+      this.issueReporterOpen = this.editorService.editors.some(
+        (e) => e instanceof IssueReporterEditorInput,
       );
-			ctx.set(this.issueReporterOpen);
-		};
-		this._register(this.editorService.onDidEditorsChange(update));
-		update();
+      ctx.set(this.issueReporterOpen);
+    };
+    this._register(this.editorService.onDidEditorsChange(update));
+    update();
 
-		this._register(
+    this._register(
       Event.runAndSubscribe(
         dom.onDidRegisterWindow,
         ({ window, disposables }) => {
@@ -61,39 +71,39 @@ class IssueReporterOpenStateContribution extends Disposable {
             dom.addDisposableListener(
               window,
               dom.EventType.KEY_DOWN,
-              e => this.dispatchCapturePhase(e),
-              true,
+              (e) => this.dispatchCapturePhase(e),
+              true /* capture */,
             ),
           );
         },
         { window: mainWindow, disposables: this._store },
       ),
     );
-	}
+  }
 
-	private dispatchCapturePhase(e: KeyboardEvent): void {
-		if (!this.issueReporterOpen) {
-			return;
-		}
-		const evt = new StandardKeyboardEvent(e);
-		const primaryMod = isMacintosh ? evt.metaKey : evt.ctrlKey;
-		const otherMod = isMacintosh ? evt.ctrlKey : evt.metaKey;
-		if (!primaryMod || !evt.shiftKey || evt.altKey || otherMod) {
-			return;
-		}
-		let commandId: string | undefined;
-		if (evt.keyCode === KeyCode.KeyS) {
-			commandId = ISSUE_REPORTER_CAPTURE_SCREENSHOT_COMMAND_ID;
-		} else if (evt.keyCode === KeyCode.KeyR) {
-			commandId = ISSUE_REPORTER_TOGGLE_RECORDING_COMMAND_ID;
-		}
-		if (!commandId) {
-			return;
-		}
-		e.preventDefault();
-		e.stopPropagation();
-		void this.commandService.executeCommand(commandId);
-	}
+  private dispatchCapturePhase(e: KeyboardEvent): void {
+    if (!this.issueReporterOpen) {
+      return;
+    }
+    const evt = new StandardKeyboardEvent(e);
+    const primaryMod = isMacintosh ? evt.metaKey : evt.ctrlKey;
+    const otherMod = isMacintosh ? evt.ctrlKey : evt.metaKey;
+    if (!primaryMod || !evt.shiftKey || evt.altKey || otherMod) {
+      return;
+    }
+    let commandId: string | undefined;
+    if (evt.keyCode === KeyCode.KeyS) {
+      commandId = ISSUE_REPORTER_CAPTURE_SCREENSHOT_COMMAND_ID;
+    } else if (evt.keyCode === KeyCode.KeyR) {
+      commandId = ISSUE_REPORTER_TOGGLE_RECORDING_COMMAND_ID;
+    }
+    if (!commandId) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    void this.commandService.executeCommand(commandId);
+  }
 }
 
 registerWorkbenchContribution2(
@@ -102,16 +112,18 @@ registerWorkbenchContribution2(
   WorkbenchPhase.AfterRestored,
 );
 
-function withWizard(fn: (pane: IssueReporterEditorPane, wizard: IssueReporterOverlay) => void): void {
-	// Look up any live issue reporter pane regardless of whether its tab is the
-	// active editor in its group. visibleEditorPanes only exposes the active
-	// pane per group, so we can't rely on it when the user has switched to
-	// another tab to set up a screenshot.
-	const pane = IssueReporterEditorPane.getAnyLiveInstance();
-	const wizard = pane?.getWizard();
-	if (pane && wizard) {
-		fn(pane, wizard);
-	}
+function withWizard(
+  fn: (pane: IssueReporterEditorPane, wizard: IssueReporterOverlay) => void,
+): void {
+  // Look up any live issue reporter pane regardless of whether its tab is the
+  // active editor in its group. visibleEditorPanes only exposes the active
+  // pane per group, so we can't rely on it when the user has switched to
+  // another tab to set up a screenshot.
+  const pane = IssueReporterEditorPane.getAnyLiveInstance();
+  const wizard = pane?.getWizard();
+  if (pane && wizard) {
+    fn(pane, wizard);
+  }
 }
 
 KeybindingsRegistry.registerCommandAndKeybindingRule({
@@ -119,7 +131,8 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
   weight: KeybindingWeight.WorkbenchContrib,
   when: IssueReporterOpenContext,
   primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyS,
-  handler: () => withWizard((_pane, wizard) => wizard.triggerCaptureScreenshot()),
+  handler: () =>
+    withWizard((_pane, wizard) => wizard.triggerCaptureScreenshot()),
 });
 
 KeybindingsRegistry.registerCommandAndKeybindingRule({

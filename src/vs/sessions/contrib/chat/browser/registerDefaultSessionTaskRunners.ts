@@ -15,18 +15,20 @@ import { WorkbenchSessionTaskRunner } from "./workbenchSessionTaskRunner.js";
  * priority fallback; specialized runners (e.g. for agent hosts) register
  * themselves separately from their own contributions.
  */
-export class RegisterDefaultSessionTaskRunnersContribution extends Disposable implements IWorkbenchContribution {
+export class RegisterDefaultSessionTaskRunnersContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "workbench.contrib.sessions.registerDefaultTaskRunners";
 
-	static readonly ID = "workbench.contrib.sessions.registerDefaultTaskRunners";
-
-	constructor(
-		@IInstantiationService instantiationService: IInstantiationService,
-		@ISessionTaskRunnerRegistry registry: ISessionTaskRunnerRegistry,
-	) {
-		super();
-		const runner = instantiationService.createInstance(
+  constructor(
+    @IInstantiationService instantiationService: IInstantiationService,
+    @ISessionTaskRunnerRegistry registry: ISessionTaskRunnerRegistry,
+  ) {
+    super();
+    const runner = instantiationService.createInstance(
       WorkbenchSessionTaskRunner,
     );
-		this._register(registry.register(runner));
-	}
+    this._register(registry.register(runner));
+  }
 }

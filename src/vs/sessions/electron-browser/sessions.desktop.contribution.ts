@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { registerAction2 } from "../../platform/actions/common/actions.js";
-import { registerWorkbenchContribution2, WorkbenchPhase } from "../../workbench/common/contributions.js";
+import {
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../workbench/common/contributions.js";
 import {
   OpenSessionInVSCodeAction,
   OpenInVSCodeWidgetContribution,
@@ -13,10 +16,14 @@ import {
 
 // Actions
 (function registerActions(): void {
-	registerAction2(OpenSessionInVSCodeAction);
-	registerAction2(OpenVSCodeWindowAction);
+  registerAction2(OpenSessionInVSCodeAction);
+  registerAction2(OpenVSCodeWindowAction);
 })();
 
 (function registerWorkbenchContributions(): void {
-	registerWorkbenchContribution2(OpenInVSCodeWidgetContribution.ID, OpenInVSCodeWidgetContribution, WorkbenchPhase.BlockRestore);
+  registerWorkbenchContribution2(
+    OpenInVSCodeWidgetContribution.ID,
+    OpenInVSCodeWidgetContribution,
+    WorkbenchPhase.BlockRestore,
+  );
 })();

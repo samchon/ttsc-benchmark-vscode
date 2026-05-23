@@ -11,9 +11,19 @@
 // for both the main workbench and the sessions workbench.
 
 import { localize } from "../../nls.js";
-import { registerColor, transparent } from "../../platform/theme/common/colorUtils.js";
-import { contrastBorder, focusBorder } from "../../platform/theme/common/colorRegistry.js";
-import { editorWidgetBorder, editorBackground, toolbarHoverBackground } from "../../platform/theme/common/colors/editorColors.js";
+import {
+  registerColor,
+  transparent,
+} from "../../platform/theme/common/colorUtils.js";
+import {
+  contrastBorder,
+  focusBorder,
+} from "../../platform/theme/common/colorRegistry.js";
+import {
+  editorWidgetBorder,
+  editorBackground,
+  toolbarHoverBackground,
+} from "../../platform/theme/common/colors/editorColors.js";
 import { foreground } from "../../platform/theme/common/colors/baseColors.js";
 import {
   buttonBackground,

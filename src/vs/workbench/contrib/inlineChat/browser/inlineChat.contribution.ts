@@ -3,13 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { EditorContributionInstantiation, registerEditorContribution } from "../../../../editor/browser/editorExtensions.js";
+import {
+  EditorContributionInstantiation,
+  registerEditorContribution,
+} from "../../../../editor/browser/editorExtensions.js";
 import { registerAction2 } from "../../../../platform/actions/common/actions.js";
 import { InlineChatController } from "./inlineChatController.js";
 import * as InlineChatActions from "./inlineChatActions.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import { InlineChatNotebookContribution } from "./inlineChatNotebook.js";
-import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../common/contributions.js";
+import {
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../common/contributions.js";
 import { IInlineChatSessionService } from "./inlineChatSessionService.js";
 import {
   InlineChatEnabler,

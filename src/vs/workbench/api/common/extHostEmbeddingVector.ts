@@ -14,42 +14,49 @@ import type { CancellationToken, EmbeddingVectorProvider } from "vscode";
 import { Disposable } from "./extHostTypes.js";
 
 export class ExtHostAiEmbeddingVector implements ExtHostAiEmbeddingVectorShape {
-	private _AiEmbeddingVectorProviders: Map<number, EmbeddingVectorProvider> = new Map();
-	private _nextHandle = 0;
+  private _AiEmbeddingVectorProviders: Map<number, EmbeddingVectorProvider> =
+    new Map();
+  private _nextHandle = 0;
 
-	private readonly _proxy: MainThreadAiEmbeddingVectorShape;
+  private readonly _proxy: MainThreadAiEmbeddingVectorShape;
 
-	constructor(
-		mainContext: IMainContext,
-	) {
-		this._proxy = mainContext.getProxy(MainContext.MainThreadAiEmbeddingVector);
-	}
+  constructor(mainContext: IMainContext) {
+    this._proxy = mainContext.getProxy(MainContext.MainThreadAiEmbeddingVector);
+  }
 
-	async $provideAiEmbeddingVector(handle: number, strings: string[], token: CancellationToken): Promise<number[][]> {
-		if (this._AiEmbeddingVectorProviders.size === 0) {
-			throw new Error("No embedding vector providers registered");
-		}
+  async $provideAiEmbeddingVector(
+    handle: number,
+    strings: string[],
+    token: CancellationToken,
+  ): Promise<number[][]> {
+    if (this._AiEmbeddingVectorProviders.size === 0) {
+      throw new Error("No embedding vector providers registered");
+    }
 
-		const provider = this._AiEmbeddingVectorProviders.get(handle);
-		if (!provider) {
-			throw new Error("Embedding vector provider not found");
-		}
+    const provider = this._AiEmbeddingVectorProviders.get(handle);
+    if (!provider) {
+      throw new Error("Embedding vector provider not found");
+    }
 
-		const result = await provider.provideEmbeddingVector(strings, token);
-		if (!result) {
-			throw new Error("Embedding vector provider returned undefined");
-		}
-		return result;
-	}
+    const result = await provider.provideEmbeddingVector(strings, token);
+    if (!result) {
+      throw new Error("Embedding vector provider returned undefined");
+    }
+    return result;
+  }
 
-	registerEmbeddingVectorProvider(extension: IExtensionDescription, model: string, provider: EmbeddingVectorProvider): Disposable {
-		const handle = this._nextHandle;
-		this._nextHandle++;
-		this._AiEmbeddingVectorProviders.set(handle, provider);
-		this._proxy.$registerAiEmbeddingVectorProvider(model, handle);
-		return new Disposable(() => {
+  registerEmbeddingVectorProvider(
+    extension: IExtensionDescription,
+    model: string,
+    provider: EmbeddingVectorProvider,
+  ): Disposable {
+    const handle = this._nextHandle;
+    this._nextHandle++;
+    this._AiEmbeddingVectorProviders.set(handle, provider);
+    this._proxy.$registerAiEmbeddingVectorProvider(model, handle);
+    return new Disposable(() => {
       this._proxy.$unregisterAiEmbeddingVectorProvider(handle);
       this._AiEmbeddingVectorProviders.delete(handle);
     });
-	}
+  }
 }

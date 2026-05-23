@@ -14,29 +14,44 @@ import {
 import { IToolData } from "../../../common/tools/languageModelToolsService.js";
 
 export class MockLanguageModelToolsConfirmationService implements ILanguageModelToolsConfirmationService {
-	manageConfirmationPreferences(tools: readonly IToolData[], options?: { defaultScope?: "workspace" | "profile" | "session"; focusToolId?: string }): void {
-		throw new Error("Method not implemented.");
-	}
-	registerConfirmationContribution(toolName: string, contribution: ILanguageModelToolConfirmationContribution): IDisposable {
-		throw new Error("Method not implemented.");
-	}
-	toolCanManageConfirmation(): boolean {
-		return false;
-	}
-	resetToolAutoConfirmation(): void {
-
-	}
-	getPreConfirmAction(ref: ILanguageModelToolConfirmationRef): ConfirmedReason | undefined {
-		return undefined;
-	}
-	getPostConfirmAction(ref: ILanguageModelToolConfirmationRef): ConfirmedReason | undefined {
-		return undefined;
-	}
-	getPreConfirmActions(ref: ILanguageModelToolConfirmationRef): ILanguageModelToolConfirmationActions[] {
-		return [];
-	}
-	getPostConfirmActions(ref: ILanguageModelToolConfirmationRef): ILanguageModelToolConfirmationActions[] {
-		return [];
-	}
-	declare readonly _serviceBrand: undefined;
+  manageConfirmationPreferences(
+    tools: readonly IToolData[],
+    options?: {
+      defaultScope?: "workspace" | "profile" | "session";
+      focusToolId?: string;
+    },
+  ): void {
+    throw new Error("Method not implemented.");
+  }
+  registerConfirmationContribution(
+    toolName: string,
+    contribution: ILanguageModelToolConfirmationContribution,
+  ): IDisposable {
+    throw new Error("Method not implemented.");
+  }
+  toolCanManageConfirmation(): boolean {
+    return false;
+  }
+  resetToolAutoConfirmation(): void {}
+  getPreConfirmAction(
+    ref: ILanguageModelToolConfirmationRef,
+  ): ConfirmedReason | undefined {
+    return undefined;
+  }
+  getPostConfirmAction(
+    ref: ILanguageModelToolConfirmationRef,
+  ): ConfirmedReason | undefined {
+    return undefined;
+  }
+  getPreConfirmActions(
+    ref: ILanguageModelToolConfirmationRef,
+  ): ILanguageModelToolConfirmationActions[] {
+    return [];
+  }
+  getPostConfirmActions(
+    ref: ILanguageModelToolConfirmationRef,
+  ): ILanguageModelToolConfirmationActions[] {
+    return [];
+  }
+  declare readonly _serviceBrand: undefined;
 }

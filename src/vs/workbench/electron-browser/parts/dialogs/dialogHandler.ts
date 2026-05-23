@@ -17,44 +17,42 @@ import { INativeHostService } from "../../../../platform/native/common/native.js
 import { getActiveWindow } from "../../../../base/browser/dom.js";
 
 export class NativeDialogHandler extends AbstractDialogHandler {
+  constructor(
+    @ILogService private readonly logService: ILogService,
+    @INativeHostService private readonly nativeHostService: INativeHostService,
+    @IClipboardService private readonly clipboardService: IClipboardService,
+  ) {
+    super();
+  }
 
-	constructor(
-		@ILogService private readonly logService: ILogService,
-		@INativeHostService private readonly nativeHostService: INativeHostService,
-		@IClipboardService private readonly clipboardService: IClipboardService,
-	) {
-		super();
-	}
+  async prompt<T>(prompt: IPrompt<T>): Promise<IAsyncPromptResult<T>> {
+    this.logService.trace("DialogService#prompt", prompt.message);
 
-	async prompt<T>(prompt: IPrompt<T>): Promise<IAsyncPromptResult<T>> {
-		this.logService.trace("DialogService#prompt", prompt.message);
+    const buttons = this.getPromptButtons(prompt);
 
-		const buttons = this.getPromptButtons(prompt);
-
-		const { response, checkboxChecked } = await this.nativeHostService.showMessageBox(
-      {
+    const { response, checkboxChecked } =
+      await this.nativeHostService.showMessageBox({
         type: this.getDialogType(prompt.type),
         title: prompt.title,
         message: prompt.message,
         detail: prompt.detail,
         buttons,
-        cancelId: prompt.cancelButton ? buttons.length - 1 : -1,
+        cancelId: prompt.cancelButton ? buttons.length - 1 : -1 /* Disabled */,
         checkboxLabel: prompt.checkbox?.label,
         checkboxChecked: prompt.checkbox?.checked,
         targetWindowId: getActiveWindow().vscodeWindowId,
-      },
-    );
+      });
 
-		return this.getPromptResult(prompt, response, checkboxChecked);
-	}
+    return this.getPromptResult(prompt, response, checkboxChecked);
+  }
 
-	async confirm(confirmation: IConfirmation): Promise<IConfirmationResult> {
-		this.logService.trace("DialogService#confirm", confirmation.message);
+  async confirm(confirmation: IConfirmation): Promise<IConfirmationResult> {
+    this.logService.trace("DialogService#confirm", confirmation.message);
 
-		const buttons = this.getConfirmationButtons(confirmation);
+    const buttons = this.getConfirmationButtons(confirmation);
 
-		const { response, checkboxChecked } = await this.nativeHostService.showMessageBox(
-      {
+    const { response, checkboxChecked } =
+      await this.nativeHostService.showMessageBox({
         type: this.getDialogType(confirmation.type) ?? "question",
         title: confirmation.title,
         message: confirmation.message,
@@ -64,32 +62,33 @@ export class NativeDialogHandler extends AbstractDialogHandler {
         checkboxLabel: confirmation.checkbox?.label,
         checkboxChecked: confirmation.checkbox?.checked,
         targetWindowId: getActiveWindow().vscodeWindowId,
-      },
-    );
+      });
 
-		return { confirmed: response === 0, checkboxChecked };
-	}
+    return { confirmed: response === 0, checkboxChecked };
+  }
 
-	input(): never {
-		throw new Error(
-      "Unsupported",
-    ); // we have no native API for password dialogs in Electron
-	}
+  input(): never {
+    throw new Error("Unsupported"); // we have no native API for password dialogs in Electron
+  }
 
-	async about(title: string, details: string, detailsToCopy: string): Promise<void> {
-		const { response } = await this.nativeHostService.showMessageBox({
-			type: "info",
-			message: title,
-			detail: `\n${details}`,
-			buttons: [
-				localize({ key: "copy", comment: ["&& denotes a mnemonic"] }, "&&Copy"),
-				localize("okButton", "OK"),
-			],
-			targetWindowId: getActiveWindow().vscodeWindowId,
-		});
+  async about(
+    title: string,
+    details: string,
+    detailsToCopy: string,
+  ): Promise<void> {
+    const { response } = await this.nativeHostService.showMessageBox({
+      type: "info",
+      message: title,
+      detail: `\n${details}`,
+      buttons: [
+        localize({ key: "copy", comment: ["&& denotes a mnemonic"] }, "&&Copy"),
+        localize("okButton", "OK"),
+      ],
+      targetWindowId: getActiveWindow().vscodeWindowId,
+    });
 
-		if (response === 0) {
-			this.clipboardService.writeText(detailsToCopy);
-		}
-	}
+    if (response === 0) {
+      this.clipboardService.writeText(detailsToCopy);
+    }
+  }
 }

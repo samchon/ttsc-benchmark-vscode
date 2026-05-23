@@ -15,122 +15,121 @@ import { TextModelEditSource } from "./textModelEditSource.js";
  * An event describing that the current language associated with a model has changed.
  */
 export interface IModelLanguageChangedEvent {
-	/**
-	 * Previous language
-	 */
-	readonly oldLanguage: string;
-	/**
-	 * New language
-	 */
-	readonly newLanguage: string;
+  /**
+   * Previous language
+   */
+  readonly oldLanguage: string;
+  /**
+   * New language
+   */
+  readonly newLanguage: string;
 
-	/**
-	 * Source of the call that caused the event.
-	 */
-	readonly source: string;
+  /**
+   * Source of the call that caused the event.
+   */
+  readonly source: string;
 }
 
 /**
  * An event describing that the language configuration associated with a model has changed.
  */
-export interface IModelLanguageConfigurationChangedEvent {
-}
+export interface IModelLanguageConfigurationChangedEvent {}
 
 /**
  * An event describing a change in the text of a model.
  */
 export interface IModelContentChangedEvent {
-	/**
-	 * The changes are ordered from the end of the document to the beginning, so they should be safe to apply in sequence.
-	 */
-	readonly changes: IModelContentChange[];
-	/**
-	 * The (new) end-of-line character.
-	 */
-	readonly eol: string;
-	/**
-	 * The new version id the model has transitioned to.
-	 */
-	readonly versionId: number;
-	/**
-	 * Flag that indicates that this event was generated while undoing.
-	 */
-	readonly isUndoing: boolean;
-	/**
-	 * Flag that indicates that this event was generated while redoing.
-	 */
-	readonly isRedoing: boolean;
-	/**
-	 * Flag that indicates that all decorations were lost with this edit.
-	 * The model has been reset to a new value.
-	 */
-	readonly isFlush: boolean;
+  /**
+   * The changes are ordered from the end of the document to the beginning, so they should be safe to apply in sequence.
+   */
+  readonly changes: IModelContentChange[];
+  /**
+   * The (new) end-of-line character.
+   */
+  readonly eol: string;
+  /**
+   * The new version id the model has transitioned to.
+   */
+  readonly versionId: number;
+  /**
+   * Flag that indicates that this event was generated while undoing.
+   */
+  readonly isUndoing: boolean;
+  /**
+   * Flag that indicates that this event was generated while redoing.
+   */
+  readonly isRedoing: boolean;
+  /**
+   * Flag that indicates that all decorations were lost with this edit.
+   * The model has been reset to a new value.
+   */
+  readonly isFlush: boolean;
 
-	/**
-	 * Flag that indicates that this event describes an eol change.
-	 */
-	readonly isEolChange: boolean;
+  /**
+   * Flag that indicates that this event describes an eol change.
+   */
+  readonly isEolChange: boolean;
 
-	/**
-	 * Detailed reason information for the change
-	 * @internal
-	 */
-	readonly detailedReasons: TextModelEditSource[];
+  /**
+   * Detailed reason information for the change
+   * @internal
+   */
+  readonly detailedReasons: TextModelEditSource[];
 
-	/**
-	 * The sum of these lengths equals changes.length.
-	 * The length of this array must equal the length of detailedReasons.
-	*/
-	readonly detailedReasonsChangeLengths: number[];
+  /**
+   * The sum of these lengths equals changes.length.
+   * The length of this array must equal the length of detailedReasons.
+   */
+  readonly detailedReasonsChangeLengths: number[];
 }
 
 export interface ISerializedModelContentChangedEvent {
-	/**
-	 * The changes are ordered from the end of the document to the beginning, so they should be safe to apply in sequence.
-	 */
-	readonly changes: IModelContentChange[];
-	/**
-	 * The (new) end-of-line character.
-	 */
-	readonly eol: string;
-	/**
-	 * The new version id the model has transitioned to.
-	 */
-	readonly versionId: number;
-	/**
-	 * Flag that indicates that this event was generated while undoing.
-	 */
-	readonly isUndoing: boolean;
-	/**
-	 * Flag that indicates that this event was generated while redoing.
-	 */
-	readonly isRedoing: boolean;
-	/**
-	 * Flag that indicates that all decorations were lost with this edit.
-	 * The model has been reset to a new value.
-	 */
-	readonly isFlush: boolean;
+  /**
+   * The changes are ordered from the end of the document to the beginning, so they should be safe to apply in sequence.
+   */
+  readonly changes: IModelContentChange[];
+  /**
+   * The (new) end-of-line character.
+   */
+  readonly eol: string;
+  /**
+   * The new version id the model has transitioned to.
+   */
+  readonly versionId: number;
+  /**
+   * Flag that indicates that this event was generated while undoing.
+   */
+  readonly isUndoing: boolean;
+  /**
+   * Flag that indicates that this event was generated while redoing.
+   */
+  readonly isRedoing: boolean;
+  /**
+   * Flag that indicates that all decorations were lost with this edit.
+   * The model has been reset to a new value.
+   */
+  readonly isFlush: boolean;
 
-	/**
-	 * Flag that indicates that this event describes an eol change.
-	 */
-	readonly isEolChange: boolean;
+  /**
+   * Flag that indicates that this event describes an eol change.
+   */
+  readonly isEolChange: boolean;
 
-	/**
-	 * Detailed reason information for the change
-	 * @internal
-	 */
-	readonly detailedReason: Record<string, unknown> | undefined;
+  /**
+   * Detailed reason information for the change
+   * @internal
+   */
+  readonly detailedReason: Record<string, unknown> | undefined;
 }
 
 /**
  * An event describing that model decorations have changed.
  */
 export interface IModelDecorationsChangedEvent {
-	readonly affectsMinimap: boolean;
-	readonly affectsOverviewRuler: boolean;
-	readonly affectsGlyphMargin: boolean;
-	readonly affectsLineNumber: boolean;
+  readonly affectsMinimap: boolean;
+  readonly affectsOverviewRuler: boolean;
+  readonly affectsGlyphMargin: boolean;
+  readonly affectsLineNumber: boolean;
 }
 
 /**
@@ -138,35 +137,35 @@ export interface IModelDecorationsChangedEvent {
  * @internal
  */
 export interface IModelTokensChangedEvent {
-	readonly semanticTokensApplied: boolean;
-	readonly ranges: {
-		/**
-		 * The start of the range (inclusive)
-		 */
-		readonly fromLineNumber: number;
-		/**
-		 * The end of the range (inclusive)
-		 */
-		readonly toLineNumber: number;
-	}[];
+  readonly semanticTokensApplied: boolean;
+  readonly ranges: {
+    /**
+     * The start of the range (inclusive)
+     */
+    readonly fromLineNumber: number;
+    /**
+     * The end of the range (inclusive)
+     */
+    readonly toLineNumber: number;
+  }[];
 }
 
 /**
  * @internal
  */
 export interface IFontTokenOption {
-	/**
-	 * Font family of the token.
-	 */
-	readonly fontFamily?: string;
-	/**
-	 * Font size of the token.
-	 */
-	readonly fontSizeMultiplier?: number;
-	/**
-	 * Line height of the token.
-	 */
-	readonly lineHeightMultiplier?: number;
+  /**
+   * Font family of the token.
+   */
+  readonly fontFamily?: string;
+  /**
+   * Font size of the token.
+   */
+  readonly fontSizeMultiplier?: number;
+  /**
+   * Line height of the token.
+   */
+  readonly lineHeightMultiplier?: number;
 }
 
 /**
@@ -174,7 +173,7 @@ export interface IFontTokenOption {
  * @internal
  */
 export interface IModelFontTokensChangedEvent {
-	changes: FontTokensUpdate;
+  changes: FontTokensUpdate;
 }
 
 /**
@@ -185,45 +184,55 @@ export type FontTokensUpdate = AnnotationsUpdate<IFontTokenOption | undefined>;
 /**
  * @internal
  */
-export function serializeFontTokenOptions(): (options: IFontTokenOption) => IFontTokenOption {
-	return (annotation: IFontTokenOption) => {
-		return {
+export function serializeFontTokenOptions(): (
+  options: IFontTokenOption,
+) => IFontTokenOption {
+  return (annotation: IFontTokenOption) => {
+    return {
       fontFamily: annotation.fontFamily ?? "",
       fontSizeMultiplier: annotation.fontSizeMultiplier ?? 0,
       lineHeightMultiplier: annotation.lineHeightMultiplier ?? 0,
     };
-	};
+  };
 }
 
 /**
  * @internal
  */
-export function deserializeFontTokenOptions(): (options: IFontTokenOption) => IFontTokenOption {
-	return (annotation: IFontTokenOption) => {
-		return {
-      fontFamily: annotation.fontFamily ? String(annotation.fontFamily) : undefined,
-      fontSizeMultiplier: annotation.fontSizeMultiplier ? Number(annotation.fontSizeMultiplier) : undefined,
-      lineHeightMultiplier: annotation.lineHeightMultiplier ? Number(annotation.lineHeightMultiplier) : undefined,
+export function deserializeFontTokenOptions(): (
+  options: IFontTokenOption,
+) => IFontTokenOption {
+  return (annotation: IFontTokenOption) => {
+    return {
+      fontFamily: annotation.fontFamily
+        ? String(annotation.fontFamily)
+        : undefined,
+      fontSizeMultiplier: annotation.fontSizeMultiplier
+        ? Number(annotation.fontSizeMultiplier)
+        : undefined,
+      lineHeightMultiplier: annotation.lineHeightMultiplier
+        ? Number(annotation.lineHeightMultiplier)
+        : undefined,
     };
-	};
+  };
 }
 
 export interface IModelOptionsChangedEvent {
-	readonly tabSize: boolean;
-	readonly indentSize: boolean;
-	readonly insertSpaces: boolean;
-	readonly trimAutoWhitespace: boolean;
+  readonly tabSize: boolean;
+  readonly indentSize: boolean;
+  readonly insertSpaces: boolean;
+  readonly trimAutoWhitespace: boolean;
 }
 
 /**
  * @internal
  */
 export const enum RawContentChangedType {
-	Flush = 1,
-	LineChanged = 2,
-	LinesDeleted = 3,
-	LinesInserted = 4,
-	EOLChanged = 5
+  Flush = 1,
+  LineChanged = 2,
+  LinesDeleted = 3,
+  LinesInserted = 4,
+  EOLChanged = 5,
 }
 
 /**
@@ -231,7 +240,7 @@ export const enum RawContentChangedType {
  * @internal
  */
 export class ModelRawFlush {
-	public readonly changeType = RawContentChangedType.Flush;
+  public readonly changeType = RawContentChangedType.Flush;
 }
 
 /**
@@ -239,26 +248,34 @@ export class ModelRawFlush {
  * @internal
  */
 export class LineInjectedText {
-	public static applyInjectedText(lineText: string, injectedTexts: LineInjectedText[] | null): string {
-		if (!injectedTexts || injectedTexts.length === 0) {
-			return lineText;
-		}
-		let result = "";
-		let lastOriginalOffset = 0;
-		for (const injectedText of injectedTexts) {
-			result += lineText.substring(lastOriginalOffset, injectedText.column - 1);
-			lastOriginalOffset = injectedText.column - 1;
-			result += injectedText.options.content;
-		}
-		result += lineText.substring(lastOriginalOffset);
-		return result;
-	}
+  public static applyInjectedText(
+    lineText: string,
+    injectedTexts: LineInjectedText[] | null,
+  ): string {
+    if (!injectedTexts || injectedTexts.length === 0) {
+      return lineText;
+    }
+    let result = "";
+    let lastOriginalOffset = 0;
+    for (const injectedText of injectedTexts) {
+      result += lineText.substring(lastOriginalOffset, injectedText.column - 1);
+      lastOriginalOffset = injectedText.column - 1;
+      result += injectedText.options.content;
+    }
+    result += lineText.substring(lastOriginalOffset);
+    return result;
+  }
 
-	public static fromDecorations(decorations: IModelDecoration[]): LineInjectedText[] {
-		const result: LineInjectedText[] = [];
-		for (const decoration of decorations) {
-			if (decoration.options.before && decoration.options.before.content.length > 0) {
-				result.push(
+  public static fromDecorations(
+    decorations: IModelDecoration[],
+  ): LineInjectedText[] {
+    const result: LineInjectedText[] = [];
+    for (const decoration of decorations) {
+      if (
+        decoration.options.before &&
+        decoration.options.before.content.length > 0
+      ) {
+        result.push(
           new LineInjectedText(
             decoration.ownerId,
             decoration.range.startLineNumber,
@@ -267,9 +284,12 @@ export class LineInjectedText {
             0,
           ),
         );
-			}
-			if (decoration.options.after && decoration.options.after.content.length > 0) {
-				result.push(
+      }
+      if (
+        decoration.options.after &&
+        decoration.options.after.content.length > 0
+      ) {
+        result.push(
           new LineInjectedText(
             decoration.ownerId,
             decoration.range.endLineNumber,
@@ -278,37 +298,37 @@ export class LineInjectedText {
             1,
           ),
         );
-			}
-		}
-		result.sort((a, b) => {
-			if (a.lineNumber === b.lineNumber) {
-				if (a.column === b.column) {
-					return a.order - b.order;
-				}
-				return a.column - b.column;
-			}
-			return a.lineNumber - b.lineNumber;
-		});
-		return result;
-	}
+      }
+    }
+    result.sort((a, b) => {
+      if (a.lineNumber === b.lineNumber) {
+        if (a.column === b.column) {
+          return a.order - b.order;
+        }
+        return a.column - b.column;
+      }
+      return a.lineNumber - b.lineNumber;
+    });
+    return result;
+  }
 
-	constructor(
-		public readonly ownerId: number,
-		public readonly lineNumber: number,
-		public readonly column: number,
-		public readonly options: InjectedTextOptions,
-		public readonly order: number,
-	) { }
+  constructor(
+    public readonly ownerId: number,
+    public readonly lineNumber: number,
+    public readonly column: number,
+    public readonly options: InjectedTextOptions,
+    public readonly order: number,
+  ) {}
 
-	public withText(text: string): LineInjectedText {
-		return new LineInjectedText(
+  public withText(text: string): LineInjectedText {
+    return new LineInjectedText(
       this.ownerId,
       this.lineNumber,
       this.column,
       { ...this.options, content: text },
       this.order,
     );
-	}
+  }
 }
 
 /**
@@ -316,51 +336,55 @@ export class LineInjectedText {
  * @internal
  */
 export class ModelRawLineChanged {
-	public readonly changeType = RawContentChangedType.LineChanged;
-	/**
-	 * The line number that has changed (before the change was applied).
-	 */
-	public readonly lineNumber: number;
-	/**
-	 * The new line number the old one is mapped to (after the change was applied).
-	 */
-	public readonly lineNumberPostEdit: number;
+  public readonly changeType = RawContentChangedType.LineChanged;
+  /**
+   * The line number that has changed (before the change was applied).
+   */
+  public readonly lineNumber: number;
+  /**
+   * The new line number the old one is mapped to (after the change was applied).
+   */
+  public readonly lineNumberPostEdit: number;
 
-	constructor(lineNumber: number, lineNumberPostEdit: number) {
-		this.lineNumber = lineNumber;
-		this.lineNumberPostEdit = lineNumberPostEdit;
-	}
+  constructor(lineNumber: number, lineNumberPostEdit: number) {
+    this.lineNumber = lineNumber;
+    this.lineNumberPostEdit = lineNumberPostEdit;
+  }
 }
-
 
 /**
  * An event describing that a line height has changed in the model.
  * @internal
  */
 export class ModelLineHeightChanged {
-	/**
-	 * Editor owner ID
-	 */
-	public readonly ownerId: number;
-	/**
-	 * The decoration ID that has changed.
-	 */
-	public readonly decorationId: string;
-	/**
-	 * The line that has changed.
-	 */
-	public readonly lineNumber: number;
-	/**
-	 * The line height on the line.
-	 */
-	public readonly lineHeightMultiplier: number | null;
+  /**
+   * Editor owner ID
+   */
+  public readonly ownerId: number;
+  /**
+   * The decoration ID that has changed.
+   */
+  public readonly decorationId: string;
+  /**
+   * The line that has changed.
+   */
+  public readonly lineNumber: number;
+  /**
+   * The line height on the line.
+   */
+  public readonly lineHeightMultiplier: number | null;
 
-	constructor(ownerId: number, decorationId: string, lineNumber: number, lineHeightMultiplier: number | null) {
-		this.ownerId = ownerId;
-		this.decorationId = decorationId;
-		this.lineNumber = lineNumber;
-		this.lineHeightMultiplier = lineHeightMultiplier;
-	}
+  constructor(
+    ownerId: number,
+    decorationId: string,
+    lineNumber: number,
+    lineHeightMultiplier: number | null,
+  ) {
+    this.ownerId = ownerId;
+    this.decorationId = decorationId;
+    this.lineNumber = lineNumber;
+    this.lineHeightMultiplier = lineHeightMultiplier;
+  }
 }
 
 /**
@@ -368,19 +392,19 @@ export class ModelLineHeightChanged {
  * @internal
  */
 export class ModelFontChanged {
-	/**
-	 * Editor owner ID
-	 */
-	public readonly ownerId: number;
-	/**
-	 * The line that has changed.
-	 */
-	public readonly lineNumber: number;
+  /**
+   * Editor owner ID
+   */
+  public readonly ownerId: number;
+  /**
+   * The line that has changed.
+   */
+  public readonly lineNumber: number;
 
-	constructor(ownerId: number, lineNumber: number) {
-		this.ownerId = ownerId;
-		this.lineNumber = lineNumber;
-	}
+  constructor(ownerId: number, lineNumber: number) {
+    this.ownerId = ownerId;
+    this.lineNumber = lineNumber;
+  }
 }
 
 /**
@@ -388,25 +412,29 @@ export class ModelFontChanged {
  * @internal
  */
 export class ModelRawLinesDeleted {
-	public readonly changeType = RawContentChangedType.LinesDeleted;
-	/**
-	 * At what line the deletion began (inclusive).
-	 */
-	public readonly fromLineNumber: number;
-	/**
-	 * At what line the deletion stopped (inclusive).
-	 */
-	public readonly toLineNumber: number;
-	/**
-	 * The last unmodified line in the updated buffer after the deletion is made.
-	 */
-	public readonly lastUntouchedLinePostEdit: number;
+  public readonly changeType = RawContentChangedType.LinesDeleted;
+  /**
+   * At what line the deletion began (inclusive).
+   */
+  public readonly fromLineNumber: number;
+  /**
+   * At what line the deletion stopped (inclusive).
+   */
+  public readonly toLineNumber: number;
+  /**
+   * The last unmodified line in the updated buffer after the deletion is made.
+   */
+  public readonly lastUntouchedLinePostEdit: number;
 
-	constructor(fromLineNumber: number, toLineNumber: number, lastUntouchedLinePostEdit: number) {
-		this.fromLineNumber = fromLineNumber;
-		this.toLineNumber = toLineNumber;
-		this.lastUntouchedLinePostEdit = lastUntouchedLinePostEdit;
-	}
+  constructor(
+    fromLineNumber: number,
+    toLineNumber: number,
+    lastUntouchedLinePostEdit: number,
+  ) {
+    this.fromLineNumber = fromLineNumber;
+    this.toLineNumber = toLineNumber;
+    this.lastUntouchedLinePostEdit = lastUntouchedLinePostEdit;
+  }
 }
 
 /**
@@ -414,37 +442,41 @@ export class ModelRawLinesDeleted {
  * @internal
  */
 export class ModelRawLinesInserted {
-	public readonly changeType = RawContentChangedType.LinesInserted;
-	/**
-	 * Before what line did the insertion begin
-	 */
-	public readonly fromLineNumber: number;
-	/**
-	 * The actual start line number in the updated buffer where the newly inserted content can be found.
-	 */
-	public readonly fromLineNumberPostEdit: number;
-	/**
-	 * The count of inserted lines.
-	*/
-	public readonly count: number;
-	/**
-	 * `toLineNumber` - `fromLineNumber` + 1 denotes the number of lines that were inserted
-	 */
-	public get toLineNumber(): number {
-		return this.fromLineNumber + this.count - 1;
-	}
-	/**
-	 * The actual end line number of the insertion in the updated buffer.
-	 */
-	public get toLineNumberPostEdit(): number {
-		return this.fromLineNumberPostEdit + this.count - 1;
-	}
+  public readonly changeType = RawContentChangedType.LinesInserted;
+  /**
+   * Before what line did the insertion begin
+   */
+  public readonly fromLineNumber: number;
+  /**
+   * The actual start line number in the updated buffer where the newly inserted content can be found.
+   */
+  public readonly fromLineNumberPostEdit: number;
+  /**
+   * The count of inserted lines.
+   */
+  public readonly count: number;
+  /**
+   * `toLineNumber` - `fromLineNumber` + 1 denotes the number of lines that were inserted
+   */
+  public get toLineNumber(): number {
+    return this.fromLineNumber + this.count - 1;
+  }
+  /**
+   * The actual end line number of the insertion in the updated buffer.
+   */
+  public get toLineNumberPostEdit(): number {
+    return this.fromLineNumberPostEdit + this.count - 1;
+  }
 
-	constructor(fromLineNumber: number, fromLineNumberPostEdit: number, count: number) {
-		this.fromLineNumber = fromLineNumber;
-		this.fromLineNumberPostEdit = fromLineNumberPostEdit;
-		this.count = count;
-	}
+  constructor(
+    fromLineNumber: number,
+    fromLineNumberPostEdit: number,
+    count: number,
+  ) {
+    this.fromLineNumber = fromLineNumber;
+    this.fromLineNumberPostEdit = fromLineNumberPostEdit;
+    this.count = count;
+  }
 }
 
 /**
@@ -452,68 +484,80 @@ export class ModelRawLinesInserted {
  * @internal
  */
 export class ModelRawEOLChanged {
-	public readonly changeType = RawContentChangedType.EOLChanged;
+  public readonly changeType = RawContentChangedType.EOLChanged;
 }
 
 /**
  * @internal
  */
-export type ModelRawChange = ModelRawFlush | ModelRawLineChanged | ModelRawLinesDeleted | ModelRawLinesInserted | ModelRawEOLChanged;
+export type ModelRawChange =
+  | ModelRawFlush
+  | ModelRawLineChanged
+  | ModelRawLinesDeleted
+  | ModelRawLinesInserted
+  | ModelRawEOLChanged;
 
 /**
  * An event describing a change in the text of a model.
  * @internal
  */
 export class ModelRawContentChangedEvent {
+  public readonly changes: ModelRawChange[];
+  /**
+   * The new version id the model has transitioned to.
+   */
+  public readonly versionId: number;
+  /**
+   * Flag that indicates that this event was generated while undoing.
+   */
+  public readonly isUndoing: boolean;
+  /**
+   * Flag that indicates that this event was generated while redoing.
+   */
+  public readonly isRedoing: boolean;
 
-	public readonly changes: ModelRawChange[];
-	/**
-	 * The new version id the model has transitioned to.
-	 */
-	public readonly versionId: number;
-	/**
-	 * Flag that indicates that this event was generated while undoing.
-	 */
-	public readonly isUndoing: boolean;
-	/**
-	 * Flag that indicates that this event was generated while redoing.
-	 */
-	public readonly isRedoing: boolean;
+  public resultingSelection: Selection[] | null;
 
-	public resultingSelection: Selection[] | null;
+  constructor(
+    changes: ModelRawChange[],
+    versionId: number,
+    isUndoing: boolean,
+    isRedoing: boolean,
+  ) {
+    this.changes = changes;
+    this.versionId = versionId;
+    this.isUndoing = isUndoing;
+    this.isRedoing = isRedoing;
+    this.resultingSelection = null;
+  }
 
-	constructor(changes: ModelRawChange[], versionId: number, isUndoing: boolean, isRedoing: boolean) {
-		this.changes = changes;
-		this.versionId = versionId;
-		this.isUndoing = isUndoing;
-		this.isRedoing = isRedoing;
-		this.resultingSelection = null;
-	}
+  public containsEvent(type: RawContentChangedType): boolean {
+    for (let i = 0, len = this.changes.length; i < len; i++) {
+      const change = this.changes[i];
+      if (change.changeType === type) {
+        return true;
+      }
+    }
+    return false;
+  }
 
-	public containsEvent(type: RawContentChangedType): boolean {
-		for (let i = 0, len = this.changes.length; i < len; i++) {
-			const change = this.changes[i];
-			if (change.changeType === type) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public static merge(a: ModelRawContentChangedEvent, b: ModelRawContentChangedEvent): ModelRawContentChangedEvent {
-		const changes = ([] as ModelRawChange[]).concat(a.changes).concat(
-      b.changes,
-    );
-		const versionId = b.versionId;
-		const isUndoing = (a.isUndoing || b.isUndoing);
-		const isRedoing = (a.isRedoing || b.isRedoing);
-		return new ModelRawContentChangedEvent(
+  public static merge(
+    a: ModelRawContentChangedEvent,
+    b: ModelRawContentChangedEvent,
+  ): ModelRawContentChangedEvent {
+    const changes = ([] as ModelRawChange[])
+      .concat(a.changes)
+      .concat(b.changes);
+    const versionId = b.versionId;
+    const isUndoing = a.isUndoing || b.isUndoing;
+    const isRedoing = a.isRedoing || b.isRedoing;
+    return new ModelRawContentChangedEvent(
       changes,
       versionId,
       isUndoing,
       isRedoing,
     );
-	}
+  }
 }
 
 /**
@@ -521,12 +565,11 @@ export class ModelRawContentChangedEvent {
  * @internal
  */
 export class ModelInjectedTextChangedEvent {
+  public readonly changes: ModelRawLineChanged[];
 
-	public readonly changes: ModelRawLineChanged[];
-
-	constructor(changes: ModelRawLineChanged[]) {
-		this.changes = changes;
-	}
+  constructor(changes: ModelRawLineChanged[]) {
+    this.changes = changes;
+  }
 }
 
 /**
@@ -534,30 +577,32 @@ export class ModelInjectedTextChangedEvent {
  * @internal
  */
 export class ModelLineHeightChangedEvent {
+  public readonly changes: ModelLineHeightChanged[];
 
-	public readonly changes: ModelLineHeightChanged[];
+  constructor(changes: ModelLineHeightChanged[]) {
+    this.changes = changes;
+  }
 
-	constructor(changes: ModelLineHeightChanged[]) {
-		this.changes = changes;
-	}
-
-	public affects(rangeOrPosition: IRange | IPosition) {
-		if (Range.isIRange(rangeOrPosition)) {
-			for (const change of this.changes) {
-				if (change.lineNumber >= rangeOrPosition.startLineNumber && change.lineNumber <= rangeOrPosition.endLineNumber) {
-					return true;
-				}
-			}
-			return false;
-		} else {
-			for (const change of this.changes) {
-				if (change.lineNumber === rangeOrPosition.lineNumber) {
-					return true;
-				}
-			}
-			return false;
-		}
-	}
+  public affects(rangeOrPosition: IRange | IPosition) {
+    if (Range.isIRange(rangeOrPosition)) {
+      for (const change of this.changes) {
+        if (
+          change.lineNumber >= rangeOrPosition.startLineNumber &&
+          change.lineNumber <= rangeOrPosition.endLineNumber
+        ) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      for (const change of this.changes) {
+        if (change.lineNumber === rangeOrPosition.lineNumber) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
 }
 
 /**
@@ -565,58 +610,65 @@ export class ModelLineHeightChangedEvent {
  * @internal
  */
 export class ModelFontChangedEvent {
+  public readonly changes: ModelFontChanged[];
 
-	public readonly changes: ModelFontChanged[];
-
-	constructor(changes: ModelFontChanged[]) {
-		this.changes = changes;
-	}
+  constructor(changes: ModelFontChanged[]) {
+    this.changes = changes;
+  }
 }
 
 /**
  * @internal
  */
 export class InternalModelContentChangeEvent {
-	constructor(
-		public readonly rawContentChangedEvent: ModelRawContentChangedEvent,
-		public readonly contentChangedEvent: IModelContentChangedEvent,
-	) { }
+  constructor(
+    public readonly rawContentChangedEvent: ModelRawContentChangedEvent,
+    public readonly contentChangedEvent: IModelContentChangedEvent,
+  ) {}
 
-	public merge(other: InternalModelContentChangeEvent): InternalModelContentChangeEvent {
-		const rawContentChangedEvent = ModelRawContentChangedEvent.merge(
+  public merge(
+    other: InternalModelContentChangeEvent,
+  ): InternalModelContentChangeEvent {
+    const rawContentChangedEvent = ModelRawContentChangedEvent.merge(
       this.rawContentChangedEvent,
       other.rawContentChangedEvent,
     );
-		const contentChangedEvent = InternalModelContentChangeEvent._mergeChangeEvents(
-      this.contentChangedEvent,
-      other.contentChangedEvent,
-    );
-		return new InternalModelContentChangeEvent(
+    const contentChangedEvent =
+      InternalModelContentChangeEvent._mergeChangeEvents(
+        this.contentChangedEvent,
+        other.contentChangedEvent,
+      );
+    return new InternalModelContentChangeEvent(
       rawContentChangedEvent,
       contentChangedEvent,
     );
-	}
+  }
 
-	private static _mergeChangeEvents(a: IModelContentChangedEvent, b: IModelContentChangedEvent): IModelContentChangedEvent {
-		const changes = ([] as IModelContentChange[]).concat(a.changes).concat(
-      b.changes,
-    );
-		const eol = b.eol;
-		const versionId = b.versionId;
-		const isUndoing = (a.isUndoing || b.isUndoing);
-		const isRedoing = (a.isRedoing || b.isRedoing);
-		const isFlush = (a.isFlush || b.isFlush);
-		const isEolChange = a.isEolChange && b.isEolChange; // both must be true to not confuse listeners who skip such edits
-		return {
-      changes: changes,
-      eol: eol,
-      isEolChange: isEolChange,
-      versionId: versionId,
-      isUndoing: isUndoing,
-      isRedoing: isRedoing,
-      isFlush: isFlush,
+  private static _mergeChangeEvents(
+    a: IModelContentChangedEvent,
+    b: IModelContentChangedEvent,
+  ): IModelContentChangedEvent {
+    const changes = ([] as IModelContentChange[])
+      .concat(a.changes)
+      .concat(b.changes);
+    const eol = b.eol;
+    const versionId = b.versionId;
+    const isUndoing = a.isUndoing || b.isUndoing;
+    const isRedoing = a.isRedoing || b.isRedoing;
+    const isFlush = a.isFlush || b.isFlush;
+    const isEolChange = a.isEolChange && b.isEolChange; // both must be true to not confuse listeners who skip such edits
+    return {
+      changes,
+      eol,
+      isEolChange,
+      versionId,
+      isUndoing,
+      isRedoing,
+      isFlush,
       detailedReasons: a.detailedReasons.concat(b.detailedReasons),
-      detailedReasonsChangeLengths: a.detailedReasonsChangeLengths.concat(b.detailedReasonsChangeLengths),
+      detailedReasonsChangeLengths: a.detailedReasonsChangeLengths.concat(
+        b.detailedReasonsChangeLengths,
+      ),
     };
-	}
+  }
 }

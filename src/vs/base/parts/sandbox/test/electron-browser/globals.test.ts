@@ -4,7 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from "assert";
-import { ipcRenderer, process, webFrame, webUtils } from "../../electron-browser/globals.js";
+import {
+  ipcRenderer,
+  process,
+  webFrame,
+  webUtils,
+} from "../../electron-browser/globals.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../test/common/utils.js";
 
 suite("Sandbox", () => {

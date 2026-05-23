@@ -3,20 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ContextKeyExpr, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
-import { INTERACTIVE_WINDOW_EDITOR_ID, NOTEBOOK_EDITOR_ID, REPL_EDITOR_ID } from "./notebookCommon.js";
-
-
+import {
+  ContextKeyExpr,
+  RawContextKey,
+} from "../../../../platform/contextkey/common/contextkey.js";
+import {
+  INTERACTIVE_WINDOW_EDITOR_ID,
+  NOTEBOOK_EDITOR_ID,
+  REPL_EDITOR_ID,
+} from "./notebookCommon.js";
 
 //#region Context Keys
 export const HAS_OPENED_NOTEBOOK = new RawContextKey<boolean>(
   "userHasOpenedNotebook",
   false,
 );
-export const KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED = new RawContextKey<boolean>(
-  "notebookFindWidgetFocused",
-  false,
-);
+export const KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED =
+  new RawContextKey<boolean>("notebookFindWidgetFocused", false);
 export const InteractiveWindowOpen = new RawContextKey<boolean>(
   "interactiveWindowOpen",
   false,
@@ -81,18 +84,15 @@ export const NOTEBOOK_HAS_SOMETHING_RUNNING = new RawContextKey<boolean>(
   "notebookHasSomethingRunning",
   false,
 );
-export const NOTEBOOK_USE_CONSOLIDATED_OUTPUT_BUTTON = new RawContextKey<boolean>(
-  "notebookUseConsolidatedOutputButton",
-  false,
-);
+export const NOTEBOOK_USE_CONSOLIDATED_OUTPUT_BUTTON =
+  new RawContextKey<boolean>("notebookUseConsolidatedOutputButton", false);
 export const NOTEBOOK_BREAKPOINT_MARGIN_ACTIVE = new RawContextKey<boolean>(
   "notebookBreakpointMargin",
   false,
 );
-export const NOTEBOOK_CELL_TOOLBAR_LOCATION = new RawContextKey<"left" | "right" | "hidden">(
-  "notebookCellToolbarLocation",
-  "left",
-);
+export const NOTEBOOK_CELL_TOOLBAR_LOCATION = new RawContextKey<
+  "left" | "right" | "hidden"
+>("notebookCellToolbarLocation", "left");
 export const NOTEBOOK_CURSOR_NAVIGATION_MODE = new RawContextKey<boolean>(
   "notebookCursorNavigationMode",
   false,
@@ -127,15 +127,20 @@ export const NOTEBOOK_CELL_MARKDOWN_EDIT_MODE = new RawContextKey<boolean>(
   "notebookCellMarkdownEditMode",
   false,
 );
-export const NOTEBOOK_CELL_LINE_NUMBERS = new RawContextKey<"on" | "off" | "inherit">(
-  "notebookCellLineNumbers",
-  "inherit",
-);
-export type NotebookCellExecutionStateContext = "idle" | "pending" | "executing" | "succeeded" | "failed";
-export const NOTEBOOK_CELL_EXECUTION_STATE = new RawContextKey<NotebookCellExecutionStateContext>(
-  "notebookCellExecutionState",
-  undefined,
-);
+export const NOTEBOOK_CELL_LINE_NUMBERS = new RawContextKey<
+  "on" | "off" | "inherit"
+>("notebookCellLineNumbers", "inherit");
+export type NotebookCellExecutionStateContext =
+  | "idle"
+  | "pending"
+  | "executing"
+  | "succeeded"
+  | "failed";
+export const NOTEBOOK_CELL_EXECUTION_STATE =
+  new RawContextKey<NotebookCellExecutionStateContext>(
+    "notebookCellExecutionState",
+    undefined,
+  );
 export const NOTEBOOK_CELL_EXECUTING = new RawContextKey<boolean>(
   "notebookCellExecuting",
   false,
@@ -172,10 +177,9 @@ export const NOTEBOOK_CELL_HAS_ERROR_DIAGNOSTICS = new RawContextKey<boolean>(
   "notebookCellHasErrorDiagnostics",
   false,
 );
-export const NOTEBOOK_CELL_OUTPUT_MIME_TYPE_LIST_FOR_CHAT = new RawContextKey<string[]>(
-  "notebookCellOutputMimeTypeListForChat",
-  [],
-);
+export const NOTEBOOK_CELL_OUTPUT_MIME_TYPE_LIST_FOR_CHAT = new RawContextKey<
+  string[]
+>("notebookCellOutputMimeTypeListForChat", []);
 
 // Kernels
 export const NOTEBOOK_KERNEL = new RawContextKey<string>(

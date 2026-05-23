@@ -6,13 +6,12 @@
 import { createDecorator } from "../../instantiation/common/instantiation.js";
 
 export interface IDiffCountResult {
-	added: number;
-	removed: number;
+  added: number;
+  removed: number;
 }
 
-export const IDiffComputeService = createDecorator<IDiffComputeService>(
-  "diffComputeService",
-);
+export const IDiffComputeService =
+  createDecorator<IDiffComputeService>("diffComputeService");
 
 /** Default timeout for diff computation in milliseconds. */
 export const DEFAULT_DIFF_TIMEOUT_MS = 5000;
@@ -23,13 +22,17 @@ export const DEFAULT_DIFF_TIMEOUT_MS = 5000;
  * thread to avoid blocking the main thread.
  */
 export interface IDiffComputeService {
-	readonly _serviceBrand: undefined;
+  readonly _serviceBrand: undefined;
 
-	/**
-	 * Computes line-level diff counts between two text strings.
-	 * @param original - The original text.
-	 * @param modified - The modified text to compare against the original.
-	 * @param timeoutMs - Maximum time in milliseconds before aborting. Defaults to {@link DEFAULT_DIFF_TIMEOUT_MS}.
-	 */
-	computeDiffCounts(original: string, modified: string, timeoutMs?: number): Promise<IDiffCountResult>;
+  /**
+   * Computes line-level diff counts between two text strings.
+   * @param original - The original text.
+   * @param modified - The modified text to compare against the original.
+   * @param timeoutMs - Maximum time in milliseconds before aborting. Defaults to {@link DEFAULT_DIFF_TIMEOUT_MS}.
+   */
+  computeDiffCounts(
+    original: string,
+    modified: string,
+    timeoutMs?: number,
+  ): Promise<IDiffCountResult>;
 }

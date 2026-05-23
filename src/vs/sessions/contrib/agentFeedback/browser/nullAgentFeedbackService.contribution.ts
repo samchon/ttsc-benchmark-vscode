@@ -7,7 +7,10 @@ import { Emitter } from "../../../../base/common/event.js";
 import { Disposable } from "../../../../base/common/lifecycle.js";
 import { URI } from "../../../../base/common/uri.js";
 import { IRange } from "../../../../editor/common/core/range.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import {
   IAgentFeedback,
   IAgentFeedbackChangeEvent,
@@ -24,40 +27,64 @@ import { ICodeReviewSuggestion } from "../../codeReview/browser/codeReviewServic
  * is not wired up. The changes view model still depends on the service
  * being registered, so we expose a service that reports no feedback.
  */
-class NullAgentFeedbackService extends Disposable implements IAgentFeedbackService {
+class NullAgentFeedbackService
+  extends Disposable
+  implements IAgentFeedbackService
+{
+  declare readonly _serviceBrand: undefined;
 
-	declare readonly _serviceBrand: undefined;
-
-	readonly onDidChangeFeedback = this._register(
+  readonly onDidChangeFeedback = this._register(
     new Emitter<IAgentFeedbackChangeEvent>(),
   ).event;
-	readonly onDidChangeNavigation = this._register(new Emitter<URI>()).event;
+  readonly onDidChangeNavigation = this._register(new Emitter<URI>()).event;
 
-	addFeedback(sessionResource: URI, resourceUri: URI, range: IRange, text: string, _suggestion?: ICodeReviewSuggestion, _context?: IAgentFeedbackContext, _sourcePRReviewCommentId?: string): IAgentFeedback {
-		return {
+  addFeedback(
+    sessionResource: URI,
+    resourceUri: URI,
+    range: IRange,
+    text: string,
+    _suggestion?: ICodeReviewSuggestion,
+    _context?: IAgentFeedbackContext,
+    _sourcePRReviewCommentId?: string,
+  ): IAgentFeedback {
+    return {
       id: "",
       text,
       resourceUri,
       range,
       sessionResource,
     };
-	}
+  }
 
-	removeFeedback(_sessionResource: URI, _feedbackId: string): void { }
-	updateFeedback(_sessionResource: URI, _feedbackId: string, _text: string): void { }
-	getFeedback(_sessionResource: URI): readonly IAgentFeedback[] { return []; }
-	getMostRecentSessionForResource(_resourceUri: URI): URI | undefined { return undefined; }
-	async revealFeedback(_sessionResource: URI, _feedbackId: string): Promise<void> { }
-	async revealSessionComment(): Promise<void> { }
-	getNextFeedback(): IAgentFeedback | undefined { return undefined; }
-	getNextNavigableItem<T extends INavigableSessionComment>(): T | undefined { return undefined; }
-	setNavigationAnchor(): void { }
-	getNavigationBearing(_sessionResource: URI): IAgentFeedbackNavigationBearing { return {
-    activeIdx: -1,
-    totalCount: 0,
-  }; }
-	clearFeedback(): void { }
-	async addFeedbackAndSubmit(): Promise<void> { }
+  removeFeedback(_sessionResource: URI, _feedbackId: string): void {}
+  updateFeedback(
+    _sessionResource: URI,
+    _feedbackId: string,
+    _text: string,
+  ): void {}
+  getFeedback(_sessionResource: URI): readonly IAgentFeedback[] {
+    return [];
+  }
+  getMostRecentSessionForResource(_resourceUri: URI): URI | undefined {
+    return undefined;
+  }
+  async revealFeedback(
+    _sessionResource: URI,
+    _feedbackId: string,
+  ): Promise<void> {}
+  async revealSessionComment(): Promise<void> {}
+  getNextFeedback(): IAgentFeedback | undefined {
+    return undefined;
+  }
+  getNextNavigableItem<T extends INavigableSessionComment>(): T | undefined {
+    return undefined;
+  }
+  setNavigationAnchor(): void {}
+  getNavigationBearing(_sessionResource: URI): IAgentFeedbackNavigationBearing {
+    return { activeIdx: -1, totalCount: 0 };
+  }
+  clearFeedback(): void {}
+  async addFeedbackAndSubmit(): Promise<void> {}
 }
 
 registerSingleton(

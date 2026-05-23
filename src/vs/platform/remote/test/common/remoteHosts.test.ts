@@ -5,7 +5,10 @@
 
 import assert from "assert";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
-import { parseAuthorityWithOptionalPort, parseAuthorityWithPort } from "../../common/remoteHosts.js";
+import {
+  parseAuthorityWithOptionalPort,
+  parseAuthorityWithPort,
+} from "../../common/remoteHosts.js";
 
 suite("remoteHosts", () => {
   ensureNoDisposablesAreLeakedInTestSuite();
@@ -70,16 +73,13 @@ suite("remoteHosts", () => {
     );
   });
 
-  test(
-    "issue #151748: Error: Remote authorities containing '+' need to be resolved!",
-    () => {
-      assert.deepStrictEqual(
-        parseAuthorityWithOptionalPort(
-          "codespaces+aaaaa-aaaaa-aaaa-aaaaa-a111aa111",
-          123,
-        ),
-        { host: "codespaces+aaaaa-aaaaa-aaaa-aaaaa-a111aa111", port: 123 },
-      );
-    },
-  );
+  test("issue #151748: Error: Remote authorities containing '+' need to be resolved!", () => {
+    assert.deepStrictEqual(
+      parseAuthorityWithOptionalPort(
+        "codespaces+aaaaa-aaaaa-aaaa-aaaaa-a111aa111",
+        123,
+      ),
+      { host: "codespaces+aaaaa-aaaaa-aaaa-aaaaa-a111aa111", port: 123 },
+    );
+  });
 });

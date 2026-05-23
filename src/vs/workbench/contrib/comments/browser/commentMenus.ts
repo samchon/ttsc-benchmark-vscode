@@ -17,55 +17,70 @@ import {
 import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
 
 export class CommentMenus implements IDisposable {
-	constructor(
-		@IMenuService private readonly menuService: IMenuService,
-	) { }
+  constructor(@IMenuService private readonly menuService: IMenuService) {}
 
-	getCommentThreadTitleActions(contextKeyService: IContextKeyService): IMenu {
-		return this.getMenu(MenuId.CommentThreadTitle, contextKeyService);
-	}
+  getCommentThreadTitleActions(contextKeyService: IContextKeyService): IMenu {
+    return this.getMenu(MenuId.CommentThreadTitle, contextKeyService);
+  }
 
-	getCommentThreadActions(contextKeyService: IContextKeyService): IMenu {
-		return this.getMenu(MenuId.CommentThreadActions, contextKeyService);
-	}
+  getCommentThreadActions(contextKeyService: IContextKeyService): IMenu {
+    return this.getMenu(MenuId.CommentThreadActions, contextKeyService);
+  }
 
-	getCommentEditorActions(contextKeyService: IContextKeyService): IMenu {
-		return this.getMenu(MenuId.CommentEditorActions, contextKeyService);
-	}
+  getCommentEditorActions(contextKeyService: IContextKeyService): IMenu {
+    return this.getMenu(MenuId.CommentEditorActions, contextKeyService);
+  }
 
-	getCommentThreadAdditionalActions(contextKeyService: IContextKeyService): IMenu {
-		return this.getMenu(
+  getCommentThreadAdditionalActions(
+    contextKeyService: IContextKeyService,
+  ): IMenu {
+    return this.getMenu(
       MenuId.CommentThreadAdditionalActions,
       contextKeyService,
       { emitEventsForSubmenuChanges: true },
     );
-	}
+  }
 
-	getCommentTitleActions(comment: Comment, contextKeyService: IContextKeyService): IMenu {
-		return this.getMenu(MenuId.CommentTitle, contextKeyService);
-	}
+  getCommentTitleActions(
+    comment: Comment,
+    contextKeyService: IContextKeyService,
+  ): IMenu {
+    return this.getMenu(MenuId.CommentTitle, contextKeyService);
+  }
 
-	getCommentActions(comment: Comment, contextKeyService: IContextKeyService): IMenu {
-		return this.getMenu(MenuId.CommentActions, contextKeyService);
-	}
+  getCommentActions(
+    comment: Comment,
+    contextKeyService: IContextKeyService,
+  ): IMenu {
+    return this.getMenu(MenuId.CommentActions, contextKeyService);
+  }
 
-	getCommentThreadTitleContextActions(contextKeyService: IContextKeyService) {
-		return this.getActions(
+  getCommentThreadTitleContextActions(contextKeyService: IContextKeyService) {
+    return this.getActions(
       MenuId.CommentThreadTitleContext,
       contextKeyService,
       { shouldForwardArgs: true },
     );
-	}
+  }
 
-	private getMenu(menuId: MenuId, contextKeyService: IContextKeyService, options?: IMenuCreateOptions): IMenu {
-		return this.menuService.createMenu(menuId, contextKeyService, options);
-	}
+  private getMenu(
+    menuId: MenuId,
+    contextKeyService: IContextKeyService,
+    options?: IMenuCreateOptions,
+  ): IMenu {
+    return this.menuService.createMenu(menuId, contextKeyService, options);
+  }
 
-	private getActions(menuId: MenuId, contextKeyService: IContextKeyService, options?: IMenuActionOptions): Array<MenuItemAction | SubmenuItemAction> {
-		return this.menuService.getMenuActions(menuId, contextKeyService, options).map((value) => value[1]).flat();
-	}
+  private getActions(
+    menuId: MenuId,
+    contextKeyService: IContextKeyService,
+    options?: IMenuActionOptions,
+  ): Array<MenuItemAction | SubmenuItemAction> {
+    return this.menuService
+      .getMenuActions(menuId, contextKeyService, options)
+      .map((value) => value[1])
+      .flat();
+  }
 
-	dispose(): void {
-
-	}
+  dispose(): void {}
 }

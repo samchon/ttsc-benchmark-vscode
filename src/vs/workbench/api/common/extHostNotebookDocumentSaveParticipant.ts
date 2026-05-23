@@ -14,99 +14,122 @@ import {
   MainThreadBulkEditsShape,
 } from "./extHost.protocol.js";
 import { ExtHostNotebookController } from "./extHostNotebook.js";
-import { TextDocumentSaveReason, WorkspaceEdit as WorksapceEditConverter } from "./extHostTypeConverters.js";
+import {
+  TextDocumentSaveReason,
+  WorkspaceEdit as WorksapceEditConverter,
+} from "./extHostTypeConverters.js";
 import { WorkspaceEdit } from "./extHostTypes.js";
 import { SaveReason } from "../../common/editor.js";
 import { SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
 import { NotebookDocumentWillSaveEvent } from "vscode";
 
 interface IExtensionListener<E> {
-	extension: IExtensionDescription;
-	(e: E): any;
+  extension: IExtensionDescription;
+  (e: E): any;
 }
 
 export class ExtHostNotebookDocumentSaveParticipant implements ExtHostNotebookDocumentSaveParticipantShape {
+  private readonly _onWillSaveNotebookDocumentEvent =
+    new AsyncEmitter<NotebookDocumentWillSaveEvent>();
 
-	private readonly _onWillSaveNotebookDocumentEvent = new AsyncEmitter<NotebookDocumentWillSaveEvent>();
-
-	constructor(
-		private readonly _logService: ILogService,
-		private readonly _notebooksAndEditors: ExtHostNotebookController,
-		private readonly _mainThreadBulkEdits: MainThreadBulkEditsShape,
-		private readonly _thresholds: { timeout: number; errors: number } = {
+  constructor(
+    private readonly _logService: ILogService,
+    private readonly _notebooksAndEditors: ExtHostNotebookController,
+    private readonly _mainThreadBulkEdits: MainThreadBulkEditsShape,
+    private readonly _thresholds: { timeout: number; errors: number } = {
       timeout: 1500,
       errors: 3,
-    }) {
+    },
+  ) {}
 
-	}
+  dispose(): void {}
 
-	dispose(): void {
-	}
-
-	getOnWillSaveNotebookDocumentEvent(extension: IExtensionDescription): Event<NotebookDocumentWillSaveEvent> {
-		return (listener, thisArg, disposables) => {
-			const wrappedListener: IExtensionListener<NotebookDocumentWillSaveEvent> = function wrapped(e) { listener.call(
-        thisArg,
-        e,
-      ); };
-			wrappedListener.extension = extension;
-			return this._onWillSaveNotebookDocumentEvent.event(
+  getOnWillSaveNotebookDocumentEvent(
+    extension: IExtensionDescription,
+  ): Event<NotebookDocumentWillSaveEvent> {
+    return (listener, thisArg, disposables) => {
+      const wrappedListener: IExtensionListener<NotebookDocumentWillSaveEvent> =
+        function wrapped(e) {
+          listener.call(thisArg, e);
+        };
+      wrappedListener.extension = extension;
+      return this._onWillSaveNotebookDocumentEvent.event(
         wrappedListener,
         undefined,
         disposables,
       );
-		};
-	}
+    };
+  }
 
-	async $participateInSave(resource: UriComponents, reason: SaveReason, token: CancellationToken): Promise<boolean> {
-		const revivedUri = URI.revive(resource);
-		const document = this._notebooksAndEditors.getNotebookDocument(revivedUri);
+  async $participateInSave(
+    resource: UriComponents,
+    reason: SaveReason,
+    token: CancellationToken,
+  ): Promise<boolean> {
+    const revivedUri = URI.revive(resource);
+    const document = this._notebooksAndEditors.getNotebookDocument(revivedUri);
 
-		if (!document) {
-			throw new Error("Unable to resolve notebook document");
-		}
+    if (!document) {
+      throw new Error("Unable to resolve notebook document");
+    }
 
-		const edits: WorkspaceEdit[] = [];
+    const edits: WorkspaceEdit[] = [];
 
-		await this._onWillSaveNotebookDocumentEvent.fireAsync({ notebook: document.apiNotebook, reason: TextDocumentSaveReason.to(reason) }, token, async (thenable: Promise<unknown>, listener) => {
-			const now = Date.now();
-			const data = await await Promise.resolve(thenable);
-			if (Date.now() - now > this._thresholds.timeout) {
-				this._logService.warn("onWillSaveNotebookDocument-listener from extension", (<IExtensionListener<NotebookDocumentWillSaveEvent>>listener).extension.identifier);
-			}
+    await this._onWillSaveNotebookDocumentEvent.fireAsync(
+      {
+        notebook: document.apiNotebook,
+        reason: TextDocumentSaveReason.to(reason),
+      },
+      token,
+      async (thenable: Promise<unknown>, listener) => {
+        const now = Date.now();
+        const data = await await Promise.resolve(thenable);
+        if (Date.now() - now > this._thresholds.timeout) {
+          this._logService.warn(
+            "onWillSaveNotebookDocument-listener from extension",
+            (<IExtensionListener<NotebookDocumentWillSaveEvent>>listener)
+              .extension.identifier,
+          );
+        }
 
-			if (token.isCancellationRequested) {
-				return;
-			}
+        if (token.isCancellationRequested) {
+          return;
+        }
 
-			if (data) {
-				if (data instanceof WorkspaceEdit) {
-					edits.push(data);
-				} else {
-					// ignore invalid data
-					this._logService.warn("onWillSaveNotebookDocument-listener from extension", (<IExtensionListener<NotebookDocumentWillSaveEvent>>listener).extension.identifier, "ignored due to invalid data");
-				}
-			}
+        if (data) {
+          if (data instanceof WorkspaceEdit) {
+            edits.push(data);
+          } else {
+            // ignore invalid data
+            this._logService.warn(
+              "onWillSaveNotebookDocument-listener from extension",
+              (<IExtensionListener<NotebookDocumentWillSaveEvent>>listener)
+                .extension.identifier,
+              "ignored due to invalid data",
+            );
+          }
+        }
 
-			return;
-		});
+        return;
+      },
+    );
 
-		if (token.isCancellationRequested) {
-			return false;
-		}
+    if (token.isCancellationRequested) {
+      return false;
+    }
 
-		if (edits.length === 0) {
-			return true;
-		}
+    if (edits.length === 0) {
+      return true;
+    }
 
-		const dto: IWorkspaceEditDto = { edits: [] };
-		for (const edit of edits) {
-			const { edits } = WorksapceEditConverter.from(edit);
-			dto.edits = dto.edits.concat(edits);
-		}
+    const dto: IWorkspaceEditDto = { edits: [] };
+    for (const edit of edits) {
+      const { edits } = WorksapceEditConverter.from(edit);
+      dto.edits = dto.edits.concat(edits);
+    }
 
-		return this._mainThreadBulkEdits.$tryApplyWorkspaceEdit(
+    return this._mainThreadBulkEdits.$tryApplyWorkspaceEdit(
       new SerializableObjectWithBuffers(dto),
     );
-	}
+  }
 }

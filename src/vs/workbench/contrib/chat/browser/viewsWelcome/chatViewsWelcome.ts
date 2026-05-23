@@ -11,38 +11,42 @@ import { ContextKeyExpression } from "../../../../../platform/contextkey/common/
 import { Registry } from "../../../../../platform/registry/common/platform.js";
 
 export const enum ChatViewsWelcomeExtensions {
-	ChatViewsWelcomeRegistry = "workbench.registry.chat.viewsWelcome",
+  ChatViewsWelcomeRegistry = "workbench.registry.chat.viewsWelcome",
 }
 
 export interface IChatViewsWelcomeDescriptor {
-	readonly icon?: ThemeIcon;
-	readonly title: string;
-	readonly content: IMarkdownString;
-	readonly when: ContextKeyExpression;
+  readonly icon?: ThemeIcon;
+  readonly title: string;
+  readonly content: IMarkdownString;
+  readonly when: ContextKeyExpression;
 }
 
 export interface IChatViewsWelcomeContributionRegistry {
-	readonly onDidChange: Event<void>;
-	get(): ReadonlyArray<IChatViewsWelcomeDescriptor>;
-	register(descriptor: IChatViewsWelcomeDescriptor): void;
+  readonly onDidChange: Event<void>;
+  get(): ReadonlyArray<IChatViewsWelcomeDescriptor>;
+  register(descriptor: IChatViewsWelcomeDescriptor): void;
 }
 
-class ChatViewsWelcomeContributionRegistry extends Disposable implements IChatViewsWelcomeContributionRegistry {
-	private readonly descriptors: IChatViewsWelcomeDescriptor[] = [];
-	private readonly _onDidChange = this._register(new Emitter<void>());
-	public readonly onDidChange: Event<void> = this._onDidChange.event;
+class ChatViewsWelcomeContributionRegistry
+  extends Disposable
+  implements IChatViewsWelcomeContributionRegistry
+{
+  private readonly descriptors: IChatViewsWelcomeDescriptor[] = [];
+  private readonly _onDidChange = this._register(new Emitter<void>());
+  public readonly onDidChange: Event<void> = this._onDidChange.event;
 
-	public register(descriptor: IChatViewsWelcomeDescriptor): void {
-		this.descriptors.push(descriptor);
-		this._onDidChange.fire();
-	}
+  public register(descriptor: IChatViewsWelcomeDescriptor): void {
+    this.descriptors.push(descriptor);
+    this._onDidChange.fire();
+  }
 
-	public get(): ReadonlyArray<IChatViewsWelcomeDescriptor> {
-		return this.descriptors;
-	}
+  public get(): ReadonlyArray<IChatViewsWelcomeDescriptor> {
+    return this.descriptors;
+  }
 }
 
-export const chatViewsWelcomeRegistry = new ChatViewsWelcomeContributionRegistry();
+export const chatViewsWelcomeRegistry =
+  new ChatViewsWelcomeContributionRegistry();
 Registry.add(
   ChatViewsWelcomeExtensions.ChatViewsWelcomeRegistry,
   chatViewsWelcomeRegistry,

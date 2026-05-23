@@ -15,8 +15,7 @@ import {
 } from "../../node/extHostTunnelService.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
 
-const tcp =
-	`  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode
+const tcp = `  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode
 	0: 00000000:0BBA 00000000:0000 0A 00000000:00000000 00:00000000 00000000  1000        0 2335214 1 0000000010173312 100 0 0 10 0
 	1: 00000000:1AF3 00000000:0000 0A 00000000:00000000 00:00000000 00000000  1000        0 2334514 1 000000008815920b 100 0 0 10 0
 	2: 0100007F:A9EA 0100007F:1AF3 01 00000000:00000000 00:00000000 00000000  1000        0 2334521 1 00000000a37d44c6 21 4 0 10 -1
@@ -24,8 +23,7 @@ const tcp =
 	4: 0100007F:866C 0100007F:8783 01 00000000:00000000 00:00000000 00000000  1000        0 2334510 1 00000000cbf670bb 21 4 30 10 -1
 	5: 0100007F:1AF3 0100007F:A9EA 01 00000000:00000000 00:00000000 00000000  1000        0 2338989 1 0000000000bace62 21 4 1 10 -1
 `;
-const tcp6 =
-	`  sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode
+const tcp6 = `  sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode
 	0: 00000000000000000000000000000000:815B 00000000000000000000000000000000:0000 0A 00000000:00000000 00:00000000 00000000  1000        0 2321070 1 00000000c44f3f02 100 0 0 10 0
 	1: 00000000000000000000000000000000:8783 00000000000000000000000000000000:0000 0A 00000000:00000000 00:00000000 00000000  1000        0 2334509 1 000000003915e812 100 0 0 10 0
 	2: 00000000000000000000000000000000:9907 00000000000000000000000000000000:0000 0A 00000000:00000000 00:00000000 00000000  1000        0 2284465 1 00000000f13b9374 100 0 0 10 0
@@ -39,8 +37,7 @@ const tcp6 =
 	10: 0000000000000000FFFF0000DFD317AC:9907 0000000000000000FFFF000001D017AC:C214 01 00000000:00000000 00:00000000 00000000  1000        0 2331500 1 00000000d7f87ceb 25 4 28 10 -1
 `;
 
-const procSockets =
-	`ls: cannot access '/proc/8289/fd/255': No such file or directory
+const procSockets = `ls: cannot access '/proc/8289/fd/255': No such file or directory
 			ls: cannot access '/proc/8289/fd/3': No such file or directory
 			lrwx------ 1 alex alex 64 Dec  8 14:59 /proc/230/fd/3 -> socket:[21862]
 			lrwx------ 1 alex alex 64 Dec  8 15:14 /proc/2504/fd/0 -> socket:[2311043]
@@ -165,7 +162,7 @@ const processes: { pid: number; cwd: string; cmd: string }[] = [
   {
     pid: 286,
     cwd: "/mnt/c/Users/alros/AppData/Local/Programs/Microsoft VS Code Insiders",
-    cmd: "sh-c\"$VSCODE_WSL_EXT_LOCATION/ scripts / wslServer.sh\" bc13785d3dd99b4b0e9da9aed17bb79809a50804 insider .vscode-server-insiders 0  ",
+    cmd: 'sh-c\"$VSCODE_WSL_EXT_LOCATION/ scripts / wslServer.sh\" bc13785d3dd99b4b0e9da9aed17bb79809a50804 insider .vscode-server-insiders 0  ',
   },
   {
     pid: 287,
@@ -224,8 +221,7 @@ const processes: { pid: number; cwd: string; cmd: string }[] = [
   },
 ];
 
-const psStdOut =
-	`4 S root         1     0  0  80   0 -   596 -       1440   2 14:41 ?        00:00:00 /bin/sh -c echo Container started ; trap "exit 0" 15; while sleep 1 & wait $!; do :; done
+const psStdOut = `4 S root         1     0  0  80   0 -   596 -       1440   2 14:41 ?        00:00:00 /bin/sh -c echo Container started ; trap "exit 0" 15; while sleep 1 & wait $!; do :; done
 4 S root        14     0  0  80   0 -   596 -        764   4 14:41 ?        00:00:00 /bin/sh
 4 S root        40     0  0  80   0 -   596 -        700   4 14:41 ?        00:00:00 /bin/sh
 4 S root       513   380  0  80   0 -  2476 -       3404   1 14:41 pts/1    00:00:00 sudo npx http-server -p 5000
@@ -235,63 +231,83 @@ const psStdOut =
 0 S node      1058  1056  0  80   0 -   770 pipe_w   888   9 14:43 ?        00:00:00 grep root`;
 
 suite("ExtHostTunnelService", () => {
-	ensureNoDisposablesAreLeakedInTestSuite();
-	test("getSockets", function () {
-		const result = getSockets(procSockets);
-		assert.strictEqual(Object.keys(result).length, 75);
-		// 4412 is the pid of the http-server in the test data
-		assert.notStrictEqual(Object.keys(result).find(key => result[key].pid === 4412), undefined);
-	});
+  ensureNoDisposablesAreLeakedInTestSuite();
+  test("getSockets", function () {
+    const result = getSockets(procSockets);
+    assert.strictEqual(Object.keys(result).length, 75);
+    // 4412 is the pid of the http-server in the test data
+    assert.notStrictEqual(
+      Object.keys(result).find((key) => result[key].pid === 4412),
+      undefined,
+    );
+  });
 
-	test("loadConnectionTable", function () {
-		const result = loadConnectionTable(tcp);
-		assert.strictEqual(result.length, 6);
-		assert.deepStrictEqual(result[0], {
-			10: "1",
-			11: "0000000010173312",
-			12: "100",
-			13: "0",
-			14: "0",
-			15: "10",
-			16: "0",
-			inode: "2335214",
-			local_address: "00000000:0BBA",
-			rem_address: "00000000:0000",
-			retrnsmt: "00000000",
-			sl: "0:",
-			st: "0A",
-			timeout: "0",
-			tr: "00:00000000",
-			tx_queue: "00000000:00000000",
-			uid: "1000",
-		});
-	});
+  test("loadConnectionTable", function () {
+    const result = loadConnectionTable(tcp);
+    assert.strictEqual(result.length, 6);
+    assert.deepStrictEqual(result[0], {
+      10: "1",
+      11: "0000000010173312",
+      12: "100",
+      13: "0",
+      14: "0",
+      15: "10",
+      16: "0",
+      inode: "2335214",
+      local_address: "00000000:0BBA",
+      rem_address: "00000000:0000",
+      retrnsmt: "00000000",
+      sl: "0:",
+      st: "0A",
+      timeout: "0",
+      tr: "00:00000000",
+      tx_queue: "00000000:00000000",
+      uid: "1000",
+    });
+  });
 
-	test("loadListeningPorts", function () {
-		const result = loadListeningPorts(tcp, tcp6);
-		// There should be 7 based on the input data. One of them should be 3002.
-		assert.strictEqual(result.length, 7);
-		assert.notStrictEqual(result.find(value => value.port === 3002), undefined);
-	});
+  test("loadListeningPorts", function () {
+    const result = loadListeningPorts(tcp, tcp6);
+    // There should be 7 based on the input data. One of them should be 3002.
+    assert.strictEqual(result.length, 7);
+    assert.notStrictEqual(
+      result.find((value) => value.port === 3002),
+      undefined,
+    );
+  });
 
-	test("tryFindRootPorts", function () {
-		const rootProcesses = getRootProcesses(psStdOut);
-		assert.strictEqual(rootProcesses.length, 6);
-		const result = tryFindRootPorts([{ socket: 1000, ip: "127.0.0.1", port: 5000 }], psStdOut, new Map());
-		assert.strictEqual(result.size, 1);
-		assert.strictEqual(result.get(5000)?.pid, 514);
-	});
+  test("tryFindRootPorts", function () {
+    const rootProcesses = getRootProcesses(psStdOut);
+    assert.strictEqual(rootProcesses.length, 6);
+    const result = tryFindRootPorts(
+      [{ socket: 1000, ip: "127.0.0.1", port: 5000 }],
+      psStdOut,
+      new Map(),
+    );
+    assert.strictEqual(result.size, 1);
+    assert.strictEqual(result.get(5000)?.pid, 514);
+  });
 
-	test("findPorts", async function () {
-		const result = await findPorts(loadListeningPorts(tcp, tcp6), getSockets(procSockets), processes);
-		assert.strictEqual(result.length, 1);
-		assert.strictEqual(result[0].host, "0.0.0.0");
-		assert.strictEqual(result[0].port, 3002);
-		assert.strictEqual(result[0].detail, "http-server");
-	});
+  test("findPorts", async function () {
+    const result = await findPorts(
+      loadListeningPorts(tcp, tcp6),
+      getSockets(procSockets),
+      processes,
+    );
+    assert.strictEqual(result.length, 1);
+    assert.strictEqual(result[0].host, "0.0.0.0");
+    assert.strictEqual(result[0].port, 3002);
+    assert.strictEqual(result[0].detail, "http-server");
+  });
 
-	test("parseIpAddress", function () {
-		assert.strictEqual(parseIpAddress("00000000000000000000000001000000"), "0:0:0:0:0:0:0:1");
-		assert.strictEqual(parseIpAddress("0000000000000000FFFF0000040510AC"), "0:0:0:0:0:ffff:ac10:504");
-	});
+  test("parseIpAddress", function () {
+    assert.strictEqual(
+      parseIpAddress("00000000000000000000000001000000"),
+      "0:0:0:0:0:0:0:1",
+    );
+    assert.strictEqual(
+      parseIpAddress("0000000000000000FFFF0000040510AC"),
+      "0:0:0:0:0:ffff:ac10:504",
+    );
+  });
 });

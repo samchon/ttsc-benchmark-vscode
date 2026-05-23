@@ -6,7 +6,10 @@
 import { Schemas } from "../../../../base/common/network.js";
 import { URI } from "../../../../base/common/uri.js";
 import { localize } from "../../../../nls.js";
-import { EditorInputCapabilities, IUntypedEditorInput } from "../../../common/editor.js";
+import {
+  EditorInputCapabilities,
+  IUntypedEditorInput,
+} from "../../../common/editor.js";
 import { EditorInput } from "../../../common/editor/editorInput.js";
 import { join } from "../../../../base/common/path.js";
 import { ThemeIcon } from "../../../../base/common/themables.js";
@@ -21,47 +24,51 @@ const MCPServerEditorIcon = registerIcon(
 );
 
 export class McpServerEditorInput extends EditorInput {
+  static readonly ID = "workbench.mcpServer.input2";
 
-	static readonly ID = "workbench.mcpServer.input2";
+  override get typeId(): string {
+    return McpServerEditorInput.ID;
+  }
 
-	override get typeId(): string {
-		return McpServerEditorInput.ID;
-	}
+  override get capabilities(): EditorInputCapabilities {
+    return EditorInputCapabilities.Readonly | EditorInputCapabilities.Singleton;
+  }
 
-	override get capabilities(): EditorInputCapabilities {
-		return EditorInputCapabilities.Readonly | EditorInputCapabilities.Singleton;
-	}
-
-	override get resource() {
-		return URI.from({
+  override get resource() {
+    return URI.from({
       scheme: Schemas.extension,
       path: join(this.mcpServer.id, "mcpServer"),
     });
-	}
+  }
 
-	constructor(private _mcpServer: IWorkbenchMcpServer) {
-		super();
-	}
+  constructor(private _mcpServer: IWorkbenchMcpServer) {
+    super();
+  }
 
-	get mcpServer(): IWorkbenchMcpServer { return this._mcpServer; }
+  get mcpServer(): IWorkbenchMcpServer {
+    return this._mcpServer;
+  }
 
-	override getName(): string {
-		return localize(
+  override getName(): string {
+    return localize(
       "extensionsInputName",
       "MCP Server: {0}",
       this._mcpServer.label,
     );
-	}
+  }
 
-	override getIcon(): ThemeIcon | undefined {
-		return MCPServerEditorIcon;
-	}
+  override getIcon(): ThemeIcon | undefined {
+    return MCPServerEditorIcon;
+  }
 
-	override matches(other: EditorInput | IUntypedEditorInput): boolean {
-		if (super.matches(other)) {
-			return true;
-		}
+  override matches(other: EditorInput | IUntypedEditorInput): boolean {
+    if (super.matches(other)) {
+      return true;
+    }
 
-		return other instanceof McpServerEditorInput && this._mcpServer.id === other._mcpServer.id;
-	}
+    return (
+      other instanceof McpServerEditorInput &&
+      this._mcpServer.id === other._mcpServer.id
+    );
+  }
 }

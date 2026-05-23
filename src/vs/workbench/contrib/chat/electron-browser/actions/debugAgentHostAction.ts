@@ -14,35 +14,38 @@ import { INotificationService } from "../../../../../platform/notification/commo
 import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
 
 export class DebugAgentHostInDevToolsAction extends Action2 {
-	static readonly ID = "workbench.action.chat.debugAgentHostInDevTools";
+  static readonly ID = "workbench.action.chat.debugAgentHostInDevTools";
 
-	constructor() {
-		super({
+  constructor() {
+    super({
       id: DebugAgentHostInDevToolsAction.ID,
-      title: localize2("debugAgentHostInDevTools", "Debug Local Agent Host Process In Dev Tools"),
+      title: localize2(
+        "debugAgentHostInDevTools",
+        "Debug Local Agent Host Process In Dev Tools",
+      ),
       category: Categories.Developer,
       f1: true,
       icon: Codicon.debugStart,
       precondition: ChatContextKeys.enabled,
     });
-	}
+  }
 
-	override async run(accessor: ServicesAccessor): Promise<void> {
-		const agentHostService = accessor.get(IAgentHostService);
-		const nativeHostService = accessor.get(INativeHostService);
-		const notificationService = accessor.get(INotificationService);
+  override async run(accessor: ServicesAccessor): Promise<void> {
+    const agentHostService = accessor.get(IAgentHostService);
+    const nativeHostService = accessor.get(INativeHostService);
+    const notificationService = accessor.get(INotificationService);
 
-		const info = await agentHostService.getInspectInfo(true);
-		if (!info) {
-			notificationService.warn(
+    const info = await agentHostService.getInspectInfo(true);
+    if (!info) {
+      notificationService.warn(
         localize(
           "debugAgentHost.noInspectPort",
           "Could not enable the Node.js inspector for the agent host process.",
         ),
       );
-			return;
-		}
+      return;
+    }
 
-		nativeHostService.openDevToolsWindow(info.devtoolsUrl);
-	}
+    nativeHostService.openDevToolsWindow(info.devtoolsUrl);
+  }
 }

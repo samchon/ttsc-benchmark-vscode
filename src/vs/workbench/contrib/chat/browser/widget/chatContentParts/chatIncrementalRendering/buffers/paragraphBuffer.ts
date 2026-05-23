@@ -24,25 +24,27 @@ const MAX_BUFFERED_CHARS = 4000;
  * @internal Exported for testing.
  */
 export function lastBlockBoundary(text: string): number {
-	let lastValid = -1;
-	let inFence = false;
+  let lastValid = -1;
+  let inFence = false;
 
-	for (let i = 0; i < text.length; i++) {
-		// Detect fenced code blocks: ``` or ~~~ at the start of a line.
-		if ((i === 0 || text[i - 1] === "\n") &&
-			((text[i] === "`" && text[i + 1] === "`" && text[i + 2] === "`") ||
-				(text[i] === "~" && text[i + 1] === "~" && text[i + 2] === "~"))) {
-			inFence = !inFence;
-			i += 2; // skip past the triple backtick/tilde
-			continue;
-		}
-		// Detect block boundary outside code fences.
-		if (!inFence && text[i] === "\n" && text[i + 1] === "\n") {
-			lastValid = i;
-		}
-	}
+  for (let i = 0; i < text.length; i++) {
+    // Detect fenced code blocks: ``` or ~~~ at the start of a line.
+    if (
+      (i === 0 || text[i - 1] === "\n") &&
+      ((text[i] === "`" && text[i + 1] === "`" && text[i + 2] === "`") ||
+        (text[i] === "~" && text[i + 1] === "~" && text[i + 2] === "~"))
+    ) {
+      inFence = !inFence;
+      i += 2; // skip past the triple backtick/tilde
+      continue;
+    }
+    // Detect block boundary outside code fences.
+    if (!inFence && text[i] === "\n" && text[i + 1] === "\n") {
+      lastValid = i;
+    }
+  }
 
-	return lastValid;
+  return lastValid;
 }
 
 /**
@@ -51,20 +53,21 @@ export function lastBlockBoundary(text: string): number {
  * incomplete list groups, or half a code fence.
  */
 export class ParagraphBuffer implements IIncrementalRenderingBuffer {
-	readonly handlesFlush = false;
+  readonly handlesFlush = false;
 
-	getRenderable(fullMarkdown: string, _lastRendered: string): string {
-		const lastBlock = lastBlockBoundary(fullMarkdown);
-		let renderable = lastBlock === -1
-			? fullMarkdown   // no paragraph breaks — single block, render as-is
-			: fullMarkdown.slice(0, lastBlock + 2);
+  getRenderable(fullMarkdown: string, _lastRendered: string): string {
+    const lastBlock = lastBlockBoundary(fullMarkdown);
+    let renderable =
+      lastBlock === -1
+        ? fullMarkdown // no paragraph breaks — single block, render as-is
+        : fullMarkdown.slice(0, lastBlock + 2);
 
-		// Escape hatch: if too much content has accumulated beyond the
-		// last block boundary, render what we have.
-		if (fullMarkdown.length - renderable.length > MAX_BUFFERED_CHARS) {
-			renderable = fullMarkdown;
-		}
+    // Escape hatch: if too much content has accumulated beyond the
+    // last block boundary, render what we have.
+    if (fullMarkdown.length - renderable.length > MAX_BUFFERED_CHARS) {
+      renderable = fullMarkdown;
+    }
 
-		return renderable;
-	}
+    return renderable;
+  }
 }

@@ -19,7 +19,10 @@ suite("SpeechService", () => {
 
     assert.strictEqual(speechLanguageConfigToLanguage("auto", "en"), "en-US");
     assert.strictEqual(speechLanguageConfigToLanguage("auto", "tr"), "tr-TR");
-    assert.strictEqual(speechLanguageConfigToLanguage("auto", "zh-tw"), "zh-TW");
+    assert.strictEqual(
+      speechLanguageConfigToLanguage("auto", "zh-tw"),
+      "zh-TW",
+    );
   });
 
   ensureNoDisposablesAreLeakedInTestSuite();

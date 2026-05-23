@@ -19,77 +19,77 @@ import { AgentFeedbackHover } from "./agentFeedbackHover.js";
  * and a custom hover showing all feedback items with actions.
  */
 export class AgentFeedbackAttachmentWidget extends Disposable {
+  readonly element: HTMLElement;
 
-	readonly element: HTMLElement;
+  private readonly _onDidDelete = this._store.add(new event.Emitter<Event>());
+  readonly onDidDelete = this._onDidDelete.event;
 
-	private readonly _onDidDelete = this._store.add(new event.Emitter<Event>());
-	readonly onDidDelete = this._onDidDelete.event;
+  private readonly _onDidOpen = this._store.add(new event.Emitter<void>());
+  readonly onDidOpen = this._onDidOpen.event;
 
-	private readonly _onDidOpen = this._store.add(new event.Emitter<void>());
-	readonly onDidOpen = this._onDidOpen.event;
+  constructor(
+    private readonly _attachment: IAgentFeedbackVariableEntry,
+    options: { shouldFocusClearButton: boolean; supportsDeletion: boolean },
+    container: HTMLElement,
+    @IInstantiationService
+    private readonly _instantiationService: IInstantiationService,
+  ) {
+    super();
 
-	constructor(
-		private readonly _attachment: IAgentFeedbackVariableEntry,
-		options: { shouldFocusClearButton: boolean; supportsDeletion: boolean },
-		container: HTMLElement,
-		@IInstantiationService private readonly _instantiationService: IInstantiationService,
-	) {
-		super();
-
-		this.element = dom.append(
+    this.element = dom.append(
       container,
       dom.$(".chat-attached-context-attachment.agent-feedback-attachment"),
     );
-		this.element.tabIndex = 0;
-		this.element.role = "button";
+    this.element.tabIndex = 0;
+    this.element.role = "button";
 
-		// Icon
-		const iconSpan = dom.$("span");
-		iconSpan.classList.add(...ThemeIcon.asClassNameArray(Codicon.comment));
-		const pillIcon = dom.$("div.chat-attached-context-pill", {}, iconSpan);
-		this.element.appendChild(pillIcon);
+    // Icon
+    const iconSpan = dom.$("span");
+    iconSpan.classList.add(...ThemeIcon.asClassNameArray(Codicon.comment));
+    const pillIcon = dom.$("div.chat-attached-context-pill", {}, iconSpan);
+    this.element.appendChild(pillIcon);
 
-		// Label
-		const label = dom.$(
+    // Label
+    const label = dom.$(
       "span.chat-attached-context-custom-text",
       {},
       this._attachment.name,
     );
-		this.element.appendChild(label);
+    this.element.appendChild(label);
 
-		const deletionCurrentlyNotSupported = true;
+    const deletionCurrentlyNotSupported = true;
 
-		// Clear button
-		if (options.supportsDeletion && !deletionCurrentlyNotSupported) {
-			const clearBtn = dom.append(
+    // Clear button
+    if (options.supportsDeletion && !deletionCurrentlyNotSupported) {
+      const clearBtn = dom.append(
         this.element,
         dom.$(".chat-attached-context-clear-button"),
       );
-			const clearIcon = dom.$("span");
-			clearIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.close));
-			clearBtn.appendChild(clearIcon);
-			clearBtn.title = localize("removeAttachment", "Remove");
-			this._store.add(
+      const clearIcon = dom.$("span");
+      clearIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.close));
+      clearBtn.appendChild(clearIcon);
+      clearBtn.title = localize("removeAttachment", "Remove");
+      this._store.add(
         dom.addDisposableListener(clearBtn, dom.EventType.CLICK, (e) => {
           e.preventDefault();
           e.stopPropagation();
           this._onDidDelete.fire(e);
         }),
       );
-			if (options.shouldFocusClearButton) {
-				clearBtn.focus();
-			}
-		}
+      if (options.shouldFocusClearButton) {
+        clearBtn.focus();
+      }
+    }
 
-		// Aria label
-		this.element.ariaLabel = localize(
+    // Aria label
+    this.element.ariaLabel = localize(
       "chat.agentFeedback",
       "Attached agent feedback, {0}",
       this._attachment.name,
     );
 
-		// Custom interactive hover
-		this._store.add(
+    // Custom interactive hover
+    this._store.add(
       this._instantiationService.createInstance(
         AgentFeedbackHover,
         this.element,
@@ -97,5 +97,5 @@ export class AgentFeedbackAttachmentWidget extends Disposable {
         options.supportsDeletion,
       ),
     );
-	}
+  }
 }

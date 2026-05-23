@@ -16,14 +16,14 @@ import type { URI } from "../common/state.js";
  * @category Terminal Types
  */
 export interface TerminalInfo {
-	/** Terminal URI (subscribable for full terminal state) */
-	resource: URI;
-	/** Human-readable terminal title */
-	title: string;
-	/** Who currently holds this terminal */
-	claim: TerminalClaim;
-	/** Process exit code, if the terminal process has exited */
-	exitCode?: number;
+  /** Terminal URI (subscribable for full terminal state) */
+  resource: URI;
+  /** Human-readable terminal title */
+  title: string;
+  /** Who currently holds this terminal */
+  claim: TerminalClaim;
+  /** Process exit code, if the terminal process has exited */
+  exitCode?: number;
 }
 
 /**
@@ -32,8 +32,8 @@ export interface TerminalInfo {
  * @category Terminal Types
  */
 export const enum TerminalClaimKind {
-	Client = "client",
-	Session = "session",
+  Client = "client",
+  Session = "session",
 }
 
 /**
@@ -42,10 +42,10 @@ export const enum TerminalClaimKind {
  * @category Terminal Types
  */
 export interface TerminalClientClaim {
-	/** Discriminant */
-	kind: TerminalClaimKind.Client;
-	/** The `clientId` of the claiming client */
-	clientId: string;
+  /** Discriminant */
+  kind: TerminalClaimKind.Client;
+  /** The `clientId` of the claiming client */
+  clientId: string;
 }
 
 /**
@@ -54,14 +54,14 @@ export interface TerminalClientClaim {
  * @category Terminal Types
  */
 export interface TerminalSessionClaim {
-	/** Discriminant */
-	kind: TerminalClaimKind.Session;
-	/** Session URI that claimed the terminal */
-	session: URI;
-	/** Optional turn identifier within the session */
-	turnId?: string;
-	/** Optional tool call identifier within the turn */
-	toolCallId?: string;
+  /** Discriminant */
+  kind: TerminalClaimKind.Session;
+  /** Session URI that claimed the terminal */
+  session: URI;
+  /** Optional turn identifier within the session */
+  turnId?: string;
+  /** Optional tool call identifier within the turn */
+  toolCallId?: string;
 }
 
 /**
@@ -78,36 +78,36 @@ export type TerminalClaim = TerminalClientClaim | TerminalSessionClaim;
  * @category Terminal Types
  */
 export interface TerminalState {
-	/** Human-readable terminal title */
-	title: string;
-	/** Current working directory of the terminal process */
-	cwd?: URI;
-	/** Terminal width in columns */
-	cols?: number;
-	/** Terminal height in rows */
-	rows?: number;
-	/**
-	 * Typed content parts, replacing the flat `content: string`.
-	 *
-	 * Naive consumers that only need the raw VT stream can reconstruct it with:
-	 *   `content.map(p => p.type === 'command' ? p.output : p.value).join('')`
-	 *
-	 * Consumers that need command boundaries can filter by part type.
-	 */
-	content: TerminalContentPart[];
-	/** Process exit code, set when the terminal process exits */
-	exitCode?: number;
-	/** Who currently holds this terminal */
-	claim: TerminalClaim;
-	/**
-	 * Whether this terminal emits `terminal/commandExecuted` and
-	 * `terminal/commandFinished` actions and populates `command`-typed parts.
-	 *
-	 * Clients MUST check this flag before relying on command detection.
-	 * Do NOT use the presence of a `command` part as a feature flag — parts
-	 * are absent in the normal idle state.
-	 */
-	supportsCommandDetection?: boolean;
+  /** Human-readable terminal title */
+  title: string;
+  /** Current working directory of the terminal process */
+  cwd?: URI;
+  /** Terminal width in columns */
+  cols?: number;
+  /** Terminal height in rows */
+  rows?: number;
+  /**
+   * Typed content parts, replacing the flat `content: string`.
+   *
+   * Naive consumers that only need the raw VT stream can reconstruct it with:
+   *   `content.map(p => p.type === 'command' ? p.output : p.value).join('')`
+   *
+   * Consumers that need command boundaries can filter by part type.
+   */
+  content: TerminalContentPart[];
+  /** Process exit code, set when the terminal process exits */
+  exitCode?: number;
+  /** Who currently holds this terminal */
+  claim: TerminalClaim;
+  /**
+   * Whether this terminal emits `terminal/commandExecuted` and
+   * `terminal/commandFinished` actions and populates `command`-typed parts.
+   *
+   * Clients MUST check this flag before relying on command detection.
+   * Do NOT use the presence of a `command` part as a feature flag — parts
+   * are absent in the normal idle state.
+   */
+  supportsCommandDetection?: boolean;
 }
 
 // ─── Terminal Content Parts ──────────────────────────────────────────────────
@@ -118,8 +118,8 @@ export interface TerminalState {
  * @category Terminal Types
  */
 export type TerminalContentPart =
-	| TerminalUnclassifiedPart
-	| TerminalCommandPart;
+  | TerminalUnclassifiedPart
+  | TerminalCommandPart;
 
 /**
  * Unstructured terminal output — content before, between, or after commands,
@@ -128,9 +128,9 @@ export type TerminalContentPart =
  * @category Terminal Types
  */
 export interface TerminalUnclassifiedPart {
-	type: "unclassified";
-	/** Accumulated VT output. Appended to by `terminal/data` when no command is executing. */
-	value: string;
+  type: "unclassified";
+  /** Accumulated VT output. Appended to by `terminal/data` when no command is executing. */
+  value: string;
 }
 
 /**
@@ -143,25 +143,25 @@ export interface TerminalUnclassifiedPart {
  * @category Terminal Types
  */
 export interface TerminalCommandPart {
-	type: "command";
-	/**
-	 * Stable id matching the `commandId` on the corresponding
-	 * `terminal/commandExecuted` and `terminal/commandFinished` actions.
-	 */
-	commandId: string;
-	/** The command line submitted to the shell. */
-	commandLine: string;
-	/**
-	 * Accumulated VT output. Appended to by `terminal/data` while `isComplete`
-	 * is false. Shell integration escape sequences are stripped by the server.
-	 */
-	output: string;
-	/** Unix timestamp (ms) when execution started, as reported by the server. */
-	timestamp: number;
-	/** Whether the command has finished. */
-	isComplete: boolean;
-	/** Shell exit code. Set at completion. `undefined` if unknown. */
-	exitCode?: number;
-	/** Wall-clock duration in milliseconds. Set at completion. */
-	durationMs?: number;
+  type: "command";
+  /**
+   * Stable id matching the `commandId` on the corresponding
+   * `terminal/commandExecuted` and `terminal/commandFinished` actions.
+   */
+  commandId: string;
+  /** The command line submitted to the shell. */
+  commandLine: string;
+  /**
+   * Accumulated VT output. Appended to by `terminal/data` while `isComplete`
+   * is false. Shell integration escape sequences are stripped by the server.
+   */
+  output: string;
+  /** Unix timestamp (ms) when execution started, as reported by the server. */
+  timestamp: number;
+  /** Whether the command has finished. */
+  isComplete: boolean;
+  /** Shell exit code. Set at completion. `undefined` if unknown. */
+  exitCode?: number;
+  /** Wall-clock duration in milliseconds. Set at completion. */
+  durationMs?: number;
 }

@@ -6,25 +6,37 @@
 import { CancellationToken } from "../../../../base/common/cancellation.js";
 import { Color, RGBA } from "../../../../base/common/color.js";
 import { ITextModel } from "../../../common/model.js";
-import { DocumentColorProvider, IColor, IColorInformation, IColorPresentation } from "../../../common/languages.js";
+import {
+  DocumentColorProvider,
+  IColor,
+  IColorInformation,
+  IColorPresentation,
+} from "../../../common/languages.js";
 import { Disposable } from "../../../../base/common/lifecycle.js";
 import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
 import { IEditorWorkerService } from "../../../common/services/editorWorker.js";
 
 export class DefaultDocumentColorProvider implements DocumentColorProvider {
+  constructor(
+    @IEditorWorkerService
+    private readonly _editorWorkerService: IEditorWorkerService,
+  ) {}
 
-	constructor(
-		@IEditorWorkerService private readonly _editorWorkerService: IEditorWorkerService,
-	) { }
+  async provideDocumentColors(
+    model: ITextModel,
+    _token: CancellationToken,
+  ): Promise<IColorInformation[] | null> {
+    return this._editorWorkerService.computeDefaultDocumentColors(model.uri);
+  }
 
-	async provideDocumentColors(model: ITextModel, _token: CancellationToken): Promise<IColorInformation[] | null> {
-		return this._editorWorkerService.computeDefaultDocumentColors(model.uri);
-	}
-
-	provideColorPresentations(_model: ITextModel, colorInfo: IColorInformation, _token: CancellationToken): IColorPresentation[] {
-		const range = colorInfo.range;
-		const colorFromInfo: IColor = colorInfo.color;
-		const color = new Color(
+  provideColorPresentations(
+    _model: ITextModel,
+    colorInfo: IColorInformation,
+    _token: CancellationToken,
+  ): IColorPresentation[] {
+    const range = colorInfo.range;
+    const colorFromInfo: IColor = colorInfo.color;
+    const color = new Color(
       new RGBA(
         Math.round(255 * colorFromInfo.red),
         Math.round(255 * colorFromInfo.green),
@@ -33,39 +45,39 @@ export class DefaultDocumentColorProvider implements DocumentColorProvider {
       ),
     );
 
-		const rgb = Color.Format.CSS.formatRGB(color);
-		const hsl = Color.Format.CSS.formatHSL(color);
-		const hex = Color.Format.CSS.formatHexA(color, true);
+    const rgb = Color.Format.CSS.formatRGB(color);
+    const hsl = Color.Format.CSS.formatHSL(color);
+    const hex = Color.Format.CSS.formatHexA(color, true);
 
-		const colorPresentations: IColorPresentation[] = [];
-		colorPresentations.push({
+    const colorPresentations: IColorPresentation[] = [];
+    colorPresentations.push({
       label: rgb,
-      textEdit: { range: range, text: rgb },
+      textEdit: { range, text: rgb },
     });
-		colorPresentations.push({
+    colorPresentations.push({
       label: hsl,
-      textEdit: { range: range, text: hsl },
+      textEdit: { range, text: hsl },
     });
-		colorPresentations.push({
+    colorPresentations.push({
       label: hex,
-      textEdit: { range: range, text: hex },
+      textEdit: { range, text: hex },
     });
-		return colorPresentations;
-	}
+    return colorPresentations;
+  }
 }
 
 export class DefaultDocumentColorProviderFeature extends Disposable {
-	constructor(
-		@ILanguageFeaturesService _languageFeaturesService: ILanguageFeaturesService,
-		@IEditorWorkerService editorWorkerService: IEditorWorkerService,
-	) {
-		super();
-		this._register(
+  constructor(
+    @ILanguageFeaturesService
+    _languageFeaturesService: ILanguageFeaturesService,
+    @IEditorWorkerService editorWorkerService: IEditorWorkerService,
+  ) {
+    super();
+    this._register(
       _languageFeaturesService.colorProvider.register(
         "*",
         new DefaultDocumentColorProvider(editorWorkerService),
       ),
     );
-	}
+  }
 }
-

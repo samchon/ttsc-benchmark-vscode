@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { localize } from "../../../../nls.js";
-import { registerColor, editorBackground } from "../../../../platform/theme/common/colorRegistry.js";
+import {
+  registerColor,
+  editorBackground,
+} from "../../../../platform/theme/common/colorRegistry.js";
 
 export const multiDiffEditorHeaderBackground = registerColor(
   "multiDiffEditor.headerBackground",
@@ -42,4 +45,3 @@ export const multiDiffEditorBorder = registerColor(
     "The border color of the multi file diff editor",
   ),
 );
-

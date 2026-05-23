@@ -13,15 +13,28 @@ import {
   reset,
 } from "../../../../base/browser/dom.js";
 import { Separator } from "../../../../base/common/actions.js";
-import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  DisposableStore,
+} from "../../../../base/common/lifecycle.js";
 import { StandardMouseEvent } from "../../../../base/browser/mouseEvent.js";
 import { localize } from "../../../../nls.js";
 import { IHoverService } from "../../../../platform/hover/browser/hover.js";
 import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
-import { BaseActionViewItem, IBaseActionViewItemOptions } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import {
+  BaseActionViewItem,
+  IBaseActionViewItemOptions,
+} from "../../../../base/browser/ui/actionbar/actionViewItems.js";
 import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
-import { IMenuService, MenuRegistry, SubmenuItemAction } from "../../../../platform/actions/common/actions.js";
-import { ContextKeyExpr, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import {
+  IMenuService,
+  MenuRegistry,
+  SubmenuItemAction,
+} from "../../../../platform/actions/common/actions.js";
+import {
+  ContextKeyExpr,
+  IContextKeyService,
+} from "../../../../platform/contextkey/common/contextkey.js";
 import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
 import { ICommandService } from "../../../../platform/commands/common/commands.js";
 import { Menus } from "../../../browser/menus.js";
@@ -65,198 +78,207 @@ const titleBarContextKeys = new Set([IsNewChatSessionContext.key]);
  * On click, opens the sessions picker.
  */
 export class SessionsTitleBarWidget extends BaseActionViewItem {
+  private _container: HTMLElement | undefined;
+  private readonly _dynamicDisposables = this._register(new DisposableStore());
 
-	private _container: HTMLElement | undefined;
-	private readonly _dynamicDisposables = this._register(new DisposableStore());
+  /** Cached render state to avoid unnecessary DOM rebuilds */
+  private _lastRenderState: string | undefined;
 
-	/** Cached render state to avoid unnecessary DOM rebuilds */
-	private _lastRenderState: string | undefined;
+  /** Guard to prevent re-entrant rendering */
+  private _isRendering = false;
 
-	/** Guard to prevent re-entrant rendering */
-	private _isRendering = false;
+  constructor(
+    action: SubmenuItemAction,
+    options: IBaseActionViewItemOptions | undefined,
+    @IHoverService private readonly hoverService: IHoverService,
+    @ISessionsManagementService
+    private readonly sessionsManagementService: ISessionsManagementService,
+    @ISessionsListModelService
+    private readonly sessionsListModelService: ISessionsListModelService,
+    @IContextMenuService
+    private readonly contextMenuService: IContextMenuService,
+    @IMenuService private readonly menuService: IMenuService,
+    @IContextKeyService private readonly contextKeyService: IContextKeyService,
+    @ISessionsProvidersService
+    private readonly sessionsProvidersService: ISessionsProvidersService,
+    @ICommandService private readonly commandService: ICommandService,
+  ) {
+    super(undefined, action, options);
 
-	constructor(
-		action: SubmenuItemAction,
-		options: IBaseActionViewItemOptions | undefined,
-		@IHoverService private readonly hoverService: IHoverService,
-		@ISessionsManagementService private readonly sessionsManagementService: ISessionsManagementService,
-		@ISessionsListModelService private readonly sessionsListModelService: ISessionsListModelService,
-		@IContextMenuService private readonly contextMenuService: IContextMenuService,
-		@IMenuService private readonly menuService: IMenuService,
-		@IContextKeyService private readonly contextKeyService: IContextKeyService,
-		@ISessionsProvidersService private readonly sessionsProvidersService: ISessionsProvidersService,
-		@ICommandService private readonly commandService: ICommandService,
-	) {
-		super(undefined, action, options);
+    // Re-render when the active session or its data changes
+    this._register(
+      autorun((reader) => {
+        const sessionData =
+          this.sessionsManagementService.activeSession.read(reader);
+        if (sessionData) {
+          sessionData.title.read(reader);
+          sessionData.status.read(reader);
+          sessionData.workspace.read(reader);
+        }
+        this._lastRenderState = undefined;
+        this._render();
+      }),
+    );
 
-		// Re-render when the active session or its data changes
-		this._register(autorun(reader => {
-			const sessionData = this.sessionsManagementService.activeSession.read(reader);
-			if (sessionData) {
-				sessionData.title.read(reader);
-				sessionData.status.read(reader);
-				sessionData.workspace.read(reader);
-			}
-			this._lastRenderState = undefined;
-			this._render();
-		}));
-
-		// Re-render when sessions data changes (e.g., changes info updated)
-		this._register(
+    // Re-render when sessions data changes (e.g., changes info updated)
+    this._register(
       this.sessionsManagementService.onDidChangeSessions(() => {
         this._lastRenderState = undefined;
         this._render();
       }),
     );
 
-		// Re-render when providers change (affects provider picker visibility)
-		this._register(
+    // Re-render when providers change (affects provider picker visibility)
+    this._register(
       this.sessionsProvidersService.onDidChangeProviders(() => {
         this._lastRenderState = undefined;
         this._render();
       }),
     );
 
-		this._register(this.contextKeyService.onDidChangeContext(e => {
-			if (e.affectsSome(titleBarContextKeys)) {
-				this._lastRenderState = undefined;
-				this._render();
-			}
-		}));
-	}
+    this._register(
+      this.contextKeyService.onDidChangeContext((e) => {
+        if (e.affectsSome(titleBarContextKeys)) {
+          this._lastRenderState = undefined;
+          this._render();
+        }
+      }),
+    );
+  }
 
-	override render(container: HTMLElement): void {
-		super.render(container);
+  override render(container: HTMLElement): void {
+    super.render(container);
 
-		this._container = container;
-		container.classList.add("agent-sessions-titlebar-container");
+    this._container = container;
+    container.classList.add("agent-sessions-titlebar-container");
 
-		// Initial render
-		this._render();
-	}
+    // Initial render
+    this._render();
+  }
 
-	override setFocusable(_focusable: boolean): void {
-		// Don't set focusable on the container
-	}
+  override setFocusable(_focusable: boolean): void {
+    // Don't set focusable on the container
+  }
 
-	// Override onClick to prevent the base class from running the underlying
-	// submenu action when the widget handles clicks itself.
-	override onClick(): void {
-		// No-op: click handling is done by the pill handler
-	}
+  // Override onClick to prevent the base class from running the underlying
+  // submenu action when the widget handles clicks itself.
+  override onClick(): void {
+    // No-op: click handling is done by the pill handler
+  }
 
-	private _render(): void {
-		if (!this._container) {
-			return;
-		}
+  private _render(): void {
+    if (!this._container) {
+      return;
+    }
 
-		if (this._isRendering) {
-			return;
-		}
-		this._isRendering = true;
+    if (this._isRendering) {
+      return;
+    }
+    this._isRendering = true;
 
-		try {
-			const isNewChatSession = this.contextKeyService.getContextKeyValue<boolean>(
-        IsNewChatSessionContext.key,
-      );
-			this._container.classList.toggle(
+    try {
+      const isNewChatSession =
+        this.contextKeyService.getContextKeyValue<boolean>(
+          IsNewChatSessionContext.key,
+        );
+      this._container.classList.toggle(
         "agent-sessions-titlebar-hidden",
         !!isNewChatSession,
       );
-			if (isNewChatSession) {
-				this._dynamicDisposables.clear();
-				this._container.setAttribute("aria-hidden", "true");
-				this._container.removeAttribute("role");
-				this._container.removeAttribute("aria-label");
-				this._container.tabIndex = -1;
-				return;
-			}
+      if (isNewChatSession) {
+        this._dynamicDisposables.clear();
+        this._container.setAttribute("aria-hidden", "true");
+        this._container.removeAttribute("role");
+        this._container.removeAttribute("aria-label");
+        this._container.tabIndex = -1;
+        return;
+      }
 
-			const label = this._getActiveSessionLabel();
-			const icon = this._getActiveSessionIcon();
-			const repoLabel = this._getRepositoryLabel();
-			const repoBranchLabel = this._getRepositoryBranchLabel();
+      const label = this._getActiveSessionLabel();
+      const icon = this._getActiveSessionIcon();
+      const repoLabel = this._getRepositoryLabel();
+      const repoBranchLabel = this._getRepositoryBranchLabel();
 
-			// Build a render-state key from all displayed data
-			const renderState = `${icon?.id ?? ""}|${label}|${repoLabel ?? ""}|${repoBranchLabel ?? ""}`;
+      // Build a render-state key from all displayed data
+      const renderState = `${icon?.id ?? ""}|${label}|${repoLabel ?? ""}|${repoBranchLabel ?? ""}`;
 
-			// Skip re-render if state hasn't changed
-			if (this._lastRenderState === renderState) {
-				return;
-			}
-			this._lastRenderState = renderState;
+      // Skip re-render if state hasn't changed
+      if (this._lastRenderState === renderState) {
+        return;
+      }
+      this._lastRenderState = renderState;
 
-			// Clear existing content
-			reset(this._container);
-			this._dynamicDisposables.clear();
+      // Clear existing content
+      reset(this._container);
+      this._dynamicDisposables.clear();
 
-			// Set up container as the button directly
-			this._container.removeAttribute("aria-hidden");
-			this._container.setAttribute("role", "button");
-			this._container.setAttribute(
+      // Set up container as the button directly
+      this._container.removeAttribute("aria-hidden");
+      this._container.setAttribute("role", "button");
+      this._container.setAttribute(
         "aria-label",
         localize("agentSessionsShowSessions", "Show Sessions"),
       );
-			this._container.tabIndex = 0;
+      this._container.tabIndex = 0;
 
-			// Session pill: icon + label + folder together
-			const sessionPill = $("div.agent-sessions-titlebar-pill");
+      // Session pill: icon + label + folder together
+      const sessionPill = $("div.agent-sessions-titlebar-pill");
 
-			// Center group: icon + label + folder
-			const centerGroup = $("div.agent-sessions-titlebar-center");
+      // Center group: icon + label + folder
+      const centerGroup = $("div.agent-sessions-titlebar-center");
 
-			// Kind icon at the beginning
-			if (icon) {
-				const iconEl = $(
+      // Kind icon at the beginning
+      if (icon) {
+        const iconEl = $(
           "div.agent-sessions-titlebar-icon" + ThemeIcon.asCSSSelector(icon),
         );
-				centerGroup.appendChild(iconEl);
-			}
+        centerGroup.appendChild(iconEl);
+      }
 
-			// Label
-			const labelEl = $("div.agent-sessions-titlebar-label");
-			labelEl.textContent = label;
-			centerGroup.appendChild(labelEl);
+      // Label
+      const labelEl = $("div.agent-sessions-titlebar-label");
+      labelEl.textContent = label;
+      centerGroup.appendChild(labelEl);
 
-			// Folder shown next to the title
-			if (repoLabel) {
-				const detailsEl = $("div.agent-sessions-titlebar-details");
+      // Folder shown next to the title
+      if (repoLabel) {
+        const detailsEl = $("div.agent-sessions-titlebar-details");
 
-				const repoEl = $("div.agent-sessions-titlebar-repo");
-				repoEl.textContent = repoLabel;
-				detailsEl.appendChild(repoEl);
+        const repoEl = $("div.agent-sessions-titlebar-repo");
+        repoEl.textContent = repoLabel;
+        detailsEl.appendChild(repoEl);
 
-				if (repoBranchLabel) {
-					const separatorEl = $("div.agent-sessions-titlebar-separator");
-					detailsEl.appendChild(separatorEl);
+        if (repoBranchLabel) {
+          const separatorEl = $("div.agent-sessions-titlebar-separator");
+          detailsEl.appendChild(separatorEl);
 
-					const branchEl = $("div.agent-sessions-titlebar-branch");
-					branchEl.append(
+          const branchEl = $("div.agent-sessions-titlebar-branch");
+          branchEl.append(
             ...renderLabelWithIcons(`$(git-branch) ${repoBranchLabel}`),
           );
-					detailsEl.appendChild(branchEl);
-				}
+          detailsEl.appendChild(branchEl);
+        }
 
-				centerGroup.appendChild(detailsEl);
-			}
+        centerGroup.appendChild(detailsEl);
+      }
 
-			sessionPill.appendChild(centerGroup);
+      sessionPill.appendChild(centerGroup);
 
-			// Click handler on pill
-			this._dynamicDisposables.add(
+      // Click handler on pill
+      this._dynamicDisposables.add(
         addDisposableGenericMouseDownListener(sessionPill, (e) => {
           e.preventDefault();
           e.stopPropagation();
         }),
       );
-			this._dynamicDisposables.add(
+      this._dynamicDisposables.add(
         addDisposableListener(sessionPill, EventType.CLICK, (e) => {
           e.preventDefault();
           e.stopPropagation();
           this._showSessionsPicker();
         }),
       );
-			this._dynamicDisposables.add(
+      this._dynamicDisposables.add(
         addDisposableListener(sessionPill, EventType.CONTEXT_MENU, (e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -264,11 +286,11 @@ export class SessionsTitleBarWidget extends BaseActionViewItem {
         }),
       );
 
-			this._container.appendChild(sessionPill);
+      this._container.appendChild(sessionPill);
 
-			// Hover
-			const hover = `${label}${repoLabel ? `, ${repoLabel}` : ""}${repoBranchLabel ? `, ${repoBranchLabel}` : ""}`;
-			this._dynamicDisposables.add(
+      // Hover
+      const hover = `${label}${repoLabel ? `, ${repoLabel}` : ""}${repoBranchLabel ? `, ${repoBranchLabel}` : ""}`;
+      this._dynamicDisposables.add(
         this.hoverService.setupManagedHover(
           getDefaultHoverDelegate("mouse"),
           sessionPill,
@@ -276,109 +298,128 @@ export class SessionsTitleBarWidget extends BaseActionViewItem {
         ),
       );
 
-			// Keyboard handler
-			this._dynamicDisposables.add(addDisposableListener(this._container, EventType.KEY_DOWN, (e: KeyboardEvent) => {
-				if (e.key === "Enter" || e.key === " ") {
-					e.preventDefault();
-					e.stopPropagation();
-					this._showSessionsPicker();
-				}
-			}));
-		} finally {
-			this._isRendering = false;
-		}
-	}
-
-	/**
-	 * Get the label of the active chat session.
-	 */
-	private _getActiveSessionLabel(): string {
-		const sessionData = this.sessionsManagementService.activeSession.get();
-		if (sessionData) {
-			return sessionData.title.get() || localize(
-        "agentSessions.newSession",
-        "New Session",
+      // Keyboard handler
+      this._dynamicDisposables.add(
+        addDisposableListener(
+          this._container,
+          EventType.KEY_DOWN,
+          (e: KeyboardEvent) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              e.stopPropagation();
+              this._showSessionsPicker();
+            }
+          },
+        ),
       );
-		}
-		return localize("agentSessions.newSession", "New Session");
-	}
+    } finally {
+      this._isRendering = false;
+    }
+  }
 
-	/**
-	 * Get the icon for the active session's type.
-	 */
-	private _getActiveSessionIcon(): ThemeIcon | undefined {
-		const sessionData = this.sessionsManagementService.activeSession.get();
-		if (sessionData) {
-			return sessionData.icon;
-		}
-		return undefined;
-	}
+  /**
+   * Get the label of the active chat session.
+   */
+  private _getActiveSessionLabel(): string {
+    const sessionData = this.sessionsManagementService.activeSession.get();
+    if (sessionData) {
+      return (
+        sessionData.title.get() ||
+        localize("agentSessions.newSession", "New Session")
+      );
+    }
+    return localize("agentSessions.newSession", "New Session");
+  }
 
-	/**
-	 * Get the repository label for the active session.
-	 */
-	private _getRepositoryLabel(): string | undefined {
-		const sessionData = this.sessionsManagementService.activeSession.get();
-		if (sessionData) {
-			const workspace = sessionData.workspace.get();
-			if (workspace) {
-				return workspace.label;
-			}
-		}
-		return undefined;
-	}
+  /**
+   * Get the icon for the active session's type.
+   */
+  private _getActiveSessionIcon(): ThemeIcon | undefined {
+    const sessionData = this.sessionsManagementService.activeSession.get();
+    if (sessionData) {
+      return sessionData.icon;
+    }
+    return undefined;
+  }
 
-	/**
-	 * Get the branch label for the active session.
-	 */
-	private _getRepositoryBranchLabel(): string | undefined {
-		const sessionData = this.sessionsManagementService.activeSession.get();
-		return sessionData?.workspace.get()?.folders[0]?.gitRepository?.branchName?.trim() || undefined;
-	}
+  /**
+   * Get the repository label for the active session.
+   */
+  private _getRepositoryLabel(): string | undefined {
+    const sessionData = this.sessionsManagementService.activeSession.get();
+    if (sessionData) {
+      const workspace = sessionData.workspace.get();
+      if (workspace) {
+        return workspace.label;
+      }
+    }
+    return undefined;
+  }
 
-	private _showContextMenu(e: MouseEvent): void {
-		const sessionData = this.sessionsManagementService.activeSession.get();
-		if (!sessionData) {
-			return;
-		}
+  /**
+   * Get the branch label for the active session.
+   */
+  private _getRepositoryBranchLabel(): string | undefined {
+    const sessionData = this.sessionsManagementService.activeSession.get();
+    return (
+      sessionData?.workspace
+        .get()
+        ?.folders[0]?.gitRepository?.branchName?.trim() || undefined
+    );
+  }
 
-		if (this.contextKeyService.getContextKeyValue<boolean>(
-      IsNewChatSessionContext.key,
-    )) {
-			return;
-		}
+  private _showContextMenu(e: MouseEvent): void {
+    const sessionData = this.sessionsManagementService.activeSession.get();
+    if (!sessionData) {
+      return;
+    }
 
-		const isPinned = this.sessionsListModelService.isSessionPinned(sessionData);
-		const isArchived = sessionData.isArchived.get();
-		const isRead = this.sessionsListModelService.isSessionRead(sessionData);
-		const contextOverlay: [string, boolean | string][] = [
+    if (
+      this.contextKeyService.getContextKeyValue<boolean>(
+        IsNewChatSessionContext.key,
+      )
+    ) {
+      return;
+    }
+
+    const isPinned = this.sessionsListModelService.isSessionPinned(sessionData);
+    const isArchived = sessionData.isArchived.get();
+    const isRead = this.sessionsListModelService.isSessionRead(sessionData);
+    const contextOverlay: [string, boolean | string][] = [
       [IsSessionPinnedContext.key, isPinned],
       [IsSessionArchivedContext.key, isArchived],
       [IsSessionReadContext.key, isRead],
       [
         SessionItemHasBranchNameContext.key,
-        !!sessionData.workspace.get()?.folders[0]?.gitRepository?.branchName?.trim(),
+        !!sessionData.workspace
+          .get()
+          ?.folders[0]?.gitRepository?.branchName?.trim(),
       ],
       ["chatSessionType", sessionData.sessionType],
       [ChatSessionProviderIdContext.key, sessionData.providerId],
     ];
 
-		const menu = this.menuService.createMenu(
+    const menu = this.menuService.createMenu(
       SessionItemContextMenuId,
       this.contextKeyService.createOverlay(contextOverlay),
     );
 
-		this.contextMenuService.showContextMenu({
-      getActions: () => Separator.join(...menu.getActions({ arg: sessionData, shouldForwardArgs: true }).map(([, actions]) => actions)),
+    this.contextMenuService.showContextMenu({
+      getActions: () =>
+        Separator.join(
+          ...menu
+            .getActions({ arg: sessionData, shouldForwardArgs: true })
+            .map(([, actions]) => actions),
+        ),
       getAnchor: () => new StandardMouseEvent(getActiveWindow(), e),
     });
 
-		menu.dispose();
-	}
+    menu.dispose();
+  }
 
-	private _showSessionsPicker(): void {
-		this.commandService.executeCommand(SHOW_SESSIONS_PICKER_COMMAND_ID);
-	}
+  private _showSessionsPicker(): void {
+    this.commandService.executeCommand(SHOW_SESSIONS_PICKER_COMMAND_ID);
+  }
 }
 
 /**
@@ -386,40 +427,60 @@ export class SessionsTitleBarWidget extends BaseActionViewItem {
  * in the command center. Uses IActionViewItemService to render a custom widget
  * for the TitleBarControlMenu submenu.
  */
-export class SessionsTitleBarContribution extends Disposable implements IWorkbenchContribution {
+export class SessionsTitleBarContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "workbench.contrib.agentSessionsTitleBar";
 
-	static readonly ID = "workbench.contrib.agentSessionsTitleBar";
+  constructor(
+    @IActionViewItemService actionViewItemService: IActionViewItemService,
+    @IInstantiationService instantiationService: IInstantiationService,
+  ) {
+    super();
 
-	constructor(
-		@IActionViewItemService actionViewItemService: IActionViewItemService,
-		@IInstantiationService instantiationService: IInstantiationService,
-	) {
-		super();
+    // Register the submenu item in the Agent Sessions command center
+    this._register(
+      MenuRegistry.appendMenuItem(Menus.CommandCenter, {
+        submenu: Menus.TitleBarSessionTitle,
+        title: localize("agentSessionsControl", "Agent Sessions"),
+        order: 101,
+        when: ContextKeyExpr.and(
+          IsAuxiliaryWindowContext.negate(),
+          SessionsWelcomeVisibleContext.negate(),
+        ),
+      }),
+    );
 
-		// Register the submenu item in the Agent Sessions command center
-		this._register(MenuRegistry.appendMenuItem(Menus.CommandCenter, {
-			submenu: Menus.TitleBarSessionTitle,
-			title: localize("agentSessionsControl", "Agent Sessions"),
-			order: 101,
-			when: ContextKeyExpr.and(IsAuxiliaryWindowContext.negate(), SessionsWelcomeVisibleContext.negate()),
-		}));
+    // Register a placeholder action so the submenu appears
+    this._register(
+      MenuRegistry.appendMenuItem(Menus.TitleBarSessionTitle, {
+        command: {
+          id: SHOW_SESSIONS_PICKER_COMMAND_ID,
+          title: localize("showSessions", "Show Sessions"),
+        },
+        group: "a_sessions",
+        order: 1,
+        when: IsAuxiliaryWindowContext.negate(),
+      }),
+    );
 
-		// Register a placeholder action so the submenu appears
-		this._register(MenuRegistry.appendMenuItem(Menus.TitleBarSessionTitle, {
-			command: {
-				id: SHOW_SESSIONS_PICKER_COMMAND_ID,
-				title: localize("showSessions", "Show Sessions"),
-			},
-			group: "a_sessions",
-			order: 1,
-			when: IsAuxiliaryWindowContext.negate(),
-		}));
-
-		this._register(actionViewItemService.register(Menus.CommandCenter, Menus.TitleBarSessionTitle, (action, options) => {
-			if (!(action instanceof SubmenuItemAction)) {
-				return undefined;
-			}
-			return instantiationService.createInstance(SessionsTitleBarWidget, action, options);
-		}, undefined));
-	}
+    this._register(
+      actionViewItemService.register(
+        Menus.CommandCenter,
+        Menus.TitleBarSessionTitle,
+        (action, options) => {
+          if (!(action instanceof SubmenuItemAction)) {
+            return undefined;
+          }
+          return instantiationService.createInstance(
+            SessionsTitleBarWidget,
+            action,
+            options,
+          );
+        },
+        undefined,
+      ),
+    );
+  }
 }

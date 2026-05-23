@@ -5,17 +5,35 @@
 
 import { KeyCode } from "../../../../../base/common/keyCodes.js";
 import { localize, localize2 } from "../../../../../nls.js";
-import { Action2, MenuId, MenuRegistry, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import {
+  Action2,
+  MenuId,
+  MenuRegistry,
+  registerAction2,
+} from "../../../../../platform/actions/common/actions.js";
 import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
 import { ExtensionIdentifier } from "../../../../../platform/extensions/common/extensions.js";
 import { SyncDescriptor } from "../../../../../platform/instantiation/common/descriptors.js";
-import { IInstantiationService, ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import {
+  IInstantiationService,
+  ServicesAccessor,
+} from "../../../../../platform/instantiation/common/instantiation.js";
 import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
 import { IProductService } from "../../../../../platform/product/common/productService.js";
-import { IProgressService, ProgressLocation } from "../../../../../platform/progress/common/progress.js";
+import {
+  IProgressService,
+  ProgressLocation,
+} from "../../../../../platform/progress/common/progress.js";
 import { Registry } from "../../../../../platform/registry/common/platform.js";
-import { IEditorPaneRegistry, EditorPaneDescriptor } from "../../../../browser/editor.js";
-import { EditorExtensions, IEditorFactoryRegistry, IEditorSerializer } from "../../../../common/editor.js";
+import {
+  IEditorPaneRegistry,
+  EditorPaneDescriptor,
+} from "../../../../browser/editor.js";
+import {
+  EditorExtensions,
+  IEditorFactoryRegistry,
+  IEditorSerializer,
+} from "../../../../common/editor.js";
 import { EditorInput } from "../../../../common/editor/editorInput.js";
 import { IEditorService } from "../../../../services/editor/common/editorService.js";
 import { ResourceContextKey } from "../../../../common/contextkeys.js";
@@ -38,7 +56,10 @@ import {
   registerWorkbenchContribution2,
   WorkbenchPhase,
 } from "../../../../common/contributions.js";
-import { EnablementState, IWorkbenchExtensionEnablementService } from "../../../../services/extensionManagement/common/extensionManagement.js";
+import {
+  EnablementState,
+  IWorkbenchExtensionEnablementService,
+} from "../../../../services/extensionManagement/common/extensionManagement.js";
 import { IExtensionsWorkbenchService } from "../../../extensions/common/extensions.js";
 
 const languageModelsOpenSettingsIcon = registerIcon(
@@ -65,7 +86,9 @@ const LANGUAGE_MODELS_ENTITLEMENT_PRECONDITION = ContextKeyExpr.and(
   ),
 );
 
-Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane(
+Registry.as<IEditorPaneRegistry>(
+  EditorExtensions.EditorPane,
+).registerEditorPane(
   EditorPaneDescriptor.create(
     ModelsManagementEditor,
     ModelsManagementEditor.ID,
@@ -75,21 +98,24 @@ Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane
 );
 
 class ModelsManagementEditorInputSerializer implements IEditorSerializer {
+  canSerialize(editorInput: EditorInput): boolean {
+    return true;
+  }
 
-	canSerialize(editorInput: EditorInput): boolean {
-		return true;
-	}
+  serialize(input: ModelsManagementEditorInput): string {
+    return "";
+  }
 
-	serialize(input: ModelsManagementEditorInput): string {
-		return "";
-	}
-
-	deserialize(instantiationService: IInstantiationService): ModelsManagementEditorInput {
-		return instantiationService.createInstance(ModelsManagementEditorInput);
-	}
+  deserialize(
+    instantiationService: IInstantiationService,
+  ): ModelsManagementEditorInput {
+    return instantiationService.createInstance(ModelsManagementEditorInput);
+  }
 }
 
-Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory).registerEditorSerializer(
+Registry.as<IEditorFactoryRegistry>(
+  EditorExtensions.EditorFactory,
+).registerEditorSerializer(
   ModelsManagementEditorInput.ID,
   ModelsManagementEditorInputSerializer,
 );
@@ -97,146 +123,186 @@ Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory).registerEdit
 /**
  * Enable + activate the Copilot Chat extension if installed but disabled.
  */
-async function ensureChatExtensionEnabled(accessor: ServicesAccessor): Promise<void> {
-	const chatExtensionId = accessor.get(
-    IProductService,
-  ).defaultChatAgent?.chatExtensionId;
-	if (!chatExtensionId) {
-		return;
-	}
+async function ensureChatExtensionEnabled(
+  accessor: ServicesAccessor,
+): Promise<void> {
+  const chatExtensionId =
+    accessor.get(IProductService).defaultChatAgent?.chatExtensionId;
+  if (!chatExtensionId) {
+    return;
+  }
 
-	const extensionsWorkbenchService = accessor.get(IExtensionsWorkbenchService);
-	const extensionEnablementService = accessor.get(
+  const extensionsWorkbenchService = accessor.get(IExtensionsWorkbenchService);
+  const extensionEnablementService = accessor.get(
     IWorkbenchExtensionEnablementService,
   );
-	const progressService = accessor.get(IProgressService);
+  const progressService = accessor.get(IProgressService);
 
-	const localExtensions = await extensionsWorkbenchService.queryLocal();
-	const chatExtension = localExtensions.find(
-    e => ExtensionIdentifier.equals(e.identifier.id, chatExtensionId),
+  const localExtensions = await extensionsWorkbenchService.queryLocal();
+  const chatExtension = localExtensions.find((e) =>
+    ExtensionIdentifier.equals(e.identifier.id, chatExtensionId),
   );
-	if (!chatExtension?.local || extensionEnablementService.isEnabled(
-    chatExtension.local,
-  )) {
-		return;
-	}
+  if (
+    !chatExtension?.local ||
+    extensionEnablementService.isEnabled(chatExtension.local)
+  ) {
+    return;
+  }
 
-	await progressService.withProgress({
-    location: ProgressLocation.Window,
-    title: localize("enableChatForByok", "Enabling AI features…"),
-  }, async () => {
-    await extensionsWorkbenchService.setEnablement([chatExtension], EnablementState.EnabledGlobally);
-    await extensionsWorkbenchService.updateRunningExtensions(localize("enableChatForByokReason", "Enabling AI features"));
-  });
+  await progressService.withProgress(
+    {
+      location: ProgressLocation.Window,
+      title: localize("enableChatForByok", "Enabling AI features…"),
+    },
+    async () => {
+      await extensionsWorkbenchService.setEnablement(
+        [chatExtension],
+        EnablementState.EnabledGlobally,
+      );
+      await extensionsWorkbenchService.updateRunningExtensions(
+        localize("enableChatForByokReason", "Enabling AI features"),
+      );
+    },
+  );
 }
 
-class ChatManagementActionsContribution extends Disposable implements IWorkbenchContribution {
+class ChatManagementActionsContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "workbench.contrib.chatManagementActions";
 
-	static readonly ID = "workbench.contrib.chatManagementActions";
+  constructor(
+    @ILanguageModelsConfigurationService
+    private readonly languageModelsConfigurationService: ILanguageModelsConfigurationService,
+  ) {
+    super();
+    this.registerChatManagementActions();
+    this.registerLanguageModelsEditorTitleActions();
+  }
 
-	constructor(
-		@ILanguageModelsConfigurationService private readonly languageModelsConfigurationService: ILanguageModelsConfigurationService,
-	) {
-		super();
-		this.registerChatManagementActions();
-		this.registerLanguageModelsEditorTitleActions();
-	}
+  private registerChatManagementActions() {
+    this._register(
+      registerAction2(
+        class extends Action2 {
+          constructor() {
+            super({
+              id: MANAGE_CHAT_COMMAND_ID,
+              title: localize2("openAiManagement", "Manage Language Models"),
+              category: CHAT_CATEGORY,
+              precondition: LANGUAGE_MODELS_ENTITLEMENT_PRECONDITION,
+              f1: true,
+            });
+          }
+          async run(accessor: ServicesAccessor) {
+            const editorService = accessor.get(IEditorService);
+            await ensureChatExtensionEnabled(accessor);
+            return editorService.openEditor(new ModelsManagementEditorInput(), {
+              pinned: true,
+            });
+          }
+        },
+      ),
+    );
 
-	private registerChatManagementActions() {
-		this._register(registerAction2(class extends Action2 {
-			constructor() {
-				super({
-					id: MANAGE_CHAT_COMMAND_ID,
-					title: localize2("openAiManagement", "Manage Language Models"),
-					category: CHAT_CATEGORY,
-					precondition: LANGUAGE_MODELS_ENTITLEMENT_PRECONDITION,
-					f1: true,
-				});
-			}
-			async run(accessor: ServicesAccessor) {
-				const editorService = accessor.get(IEditorService);
-				await ensureChatExtensionEnabled(accessor);
-				return editorService.openEditor(new ModelsManagementEditorInput(), { pinned: true });
-			}
-		}));
+    this._register(
+      registerAction2(
+        class extends Action2 {
+          constructor() {
+            super({
+              id: "chat.models.action.clearSearchResults",
+              precondition: CONTEXT_MODELS_EDITOR,
+              keybinding: {
+                primary: KeyCode.Escape,
+                weight: KeybindingWeight.EditorContrib,
+                when: CONTEXT_MODELS_SEARCH_FOCUS,
+              },
+              title: localize2(
+                "models.clearResults",
+                "Clear Models Search Results",
+              ),
+            });
+          }
 
-		this._register(registerAction2(class extends Action2 {
-			constructor() {
-				super({
-					id: "chat.models.action.clearSearchResults",
-					precondition: CONTEXT_MODELS_EDITOR,
-					keybinding: {
-						primary: KeyCode.Escape,
-						weight: KeybindingWeight.EditorContrib,
-						when: CONTEXT_MODELS_SEARCH_FOCUS,
-					},
-					title: localize2("models.clearResults", "Clear Models Search Results"),
-				});
-			}
+          run(accessor: ServicesAccessor) {
+            const activeEditorPane =
+              accessor.get(IEditorService).activeEditorPane;
+            if (activeEditorPane instanceof ModelsManagementEditor) {
+              activeEditorPane.clearSearch();
+            }
+            return null;
+          }
+        },
+      ),
+    );
 
-			run(accessor: ServicesAccessor) {
-				const activeEditorPane = accessor.get(IEditorService).activeEditorPane;
-				if (activeEditorPane instanceof ModelsManagementEditor) {
-					activeEditorPane.clearSearch();
-				}
-				return null;
-			}
-		}));
-
-		const openLanguageModelsJsonWhen = ContextKeyExpr.and(
+    const openLanguageModelsJsonWhen = ContextKeyExpr.and(
       CONTEXT_MODELS_EDITOR,
       LANGUAGE_MODELS_ENTITLEMENT_PRECONDITION,
     );
-		this._register(registerAction2(class extends Action2 {
-			constructor() {
-				super({
-					id: "workbench.action.openLanguageModelsJson",
-					title: localize2("openLanguageModelsJson", "Open Language Models (JSON)"),
-					category: CHAT_CATEGORY,
-					precondition: LANGUAGE_MODELS_ENTITLEMENT_PRECONDITION,
-					icon: languageModelsOpenSettingsIcon,
-					f1: true,
-					menu: [{
-						id: MenuId.EditorTitle,
-						when: openLanguageModelsJsonWhen,
-						group: "navigation",
-						order: 1,
-					}, {
-						id: MenuId.ModalEditorEditorTitle,
-						when: openLanguageModelsJsonWhen,
-						group: "navigation",
-						order: 1,
-					}],
-				});
-			}
+    this._register(
+      registerAction2(
+        class extends Action2 {
+          constructor() {
+            super({
+              id: "workbench.action.openLanguageModelsJson",
+              title: localize2(
+                "openLanguageModelsJson",
+                "Open Language Models (JSON)",
+              ),
+              category: CHAT_CATEGORY,
+              precondition: LANGUAGE_MODELS_ENTITLEMENT_PRECONDITION,
+              icon: languageModelsOpenSettingsIcon,
+              f1: true,
+              menu: [
+                {
+                  id: MenuId.EditorTitle,
+                  when: openLanguageModelsJsonWhen,
+                  group: "navigation",
+                  order: 1,
+                },
+                {
+                  id: MenuId.ModalEditorEditorTitle,
+                  when: openLanguageModelsJsonWhen,
+                  group: "navigation",
+                  order: 1,
+                },
+              ],
+            });
+          }
 
-			async run(accessor: ServicesAccessor) {
-				const languageModelsConfigurationService = accessor.get(ILanguageModelsConfigurationService);
-				await languageModelsConfigurationService.configureLanguageModels();
-			}
-		}));
-	}
+          async run(accessor: ServicesAccessor) {
+            const languageModelsConfigurationService = accessor.get(
+              ILanguageModelsConfigurationService,
+            );
+            await languageModelsConfigurationService.configureLanguageModels();
+          }
+        },
+      ),
+    );
+  }
 
-	private registerLanguageModelsEditorTitleActions() {
-		const modelsConfigurationFile = this.languageModelsConfigurationService.configurationFile;
-		const openModelsManagementEditorWhen = ContextKeyExpr.and(
+  private registerLanguageModelsEditorTitleActions() {
+    const modelsConfigurationFile =
+      this.languageModelsConfigurationService.configurationFile;
+    const openModelsManagementEditorWhen = ContextKeyExpr.and(
       CONTEXT_MODELS_EDITOR.toNegated(),
       ResourceContextKey.Resource.isEqualTo(modelsConfigurationFile.toString()),
       ContextKeyExpr.not("isInDiffEditor"),
       LANGUAGE_MODELS_ENTITLEMENT_PRECONDITION,
     );
 
-		MenuRegistry.appendMenuItem(MenuId.EditorTitle, {
-			command: {
-				id: MANAGE_CHAT_COMMAND_ID,
-				title: localize2("openAiManagement", "Manage Language Models"),
-				icon: languageModelsOpenSettingsIcon,
-			},
-			when: openModelsManagementEditorWhen,
-			group: "navigation",
-			order: 1,
-		});
-	}
+    MenuRegistry.appendMenuItem(MenuId.EditorTitle, {
+      command: {
+        id: MANAGE_CHAT_COMMAND_ID,
+        title: localize2("openAiManagement", "Manage Language Models"),
+        icon: languageModelsOpenSettingsIcon,
+      },
+      when: openModelsManagementEditorWhen,
+      group: "navigation",
+      order: 1,
+    });
+  }
 }
 
 registerWorkbenchContribution2(

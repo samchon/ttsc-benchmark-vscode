@@ -73,175 +73,160 @@ import {
   type TerminalCommandFinishedAction,
 } from "./actions.js";
 
-
 // ─── Root vs Session vs Terminal vs Changeset Action Unions ─────────────────
 
 /** Union of all root-scoped actions. */
 export type RootAction =
-	| RootAgentsChangedAction
-	| RootActiveSessionsChangedAction
-	| RootTerminalsChangedAction
-	| RootConfigChangedAction
-	;
+  | RootAgentsChangedAction
+  | RootActiveSessionsChangedAction
+  | RootTerminalsChangedAction
+  | RootConfigChangedAction;
 
 /** Union of root actions that clients may dispatch. */
-export type ClientRootAction =
-	| RootConfigChangedAction
-	;
+export type ClientRootAction = RootConfigChangedAction;
 
 /** Union of root actions that only the server may produce. */
 export type ServerRootAction =
-	| RootAgentsChangedAction
-	| RootActiveSessionsChangedAction
-	| RootTerminalsChangedAction
-	;
+  | RootAgentsChangedAction
+  | RootActiveSessionsChangedAction
+  | RootTerminalsChangedAction;
 
 /** Union of all session-scoped actions. */
 export type SessionAction =
-	| SessionReadyAction
-	| SessionCreationFailedAction
-	| SessionTurnStartedAction
-	| SessionDeltaAction
-	| SessionResponsePartAction
-	| SessionToolCallStartAction
-	| SessionToolCallDeltaAction
-	| SessionToolCallReadyAction
-	| SessionToolCallConfirmedAction
-	| SessionToolCallCompleteAction
-	| SessionToolCallResultConfirmedAction
-	| SessionToolCallContentChangedAction
-	| SessionTurnCompleteAction
-	| SessionTurnCancelledAction
-	| SessionErrorAction
-	| SessionTitleChangedAction
-	| SessionUsageAction
-	| SessionReasoningAction
-	| SessionModelChangedAction
-	| SessionAgentChangedAction
-	| SessionServerToolsChangedAction
-	| SessionActiveClientChangedAction
-	| SessionActiveClientToolsChangedAction
-	| SessionPendingMessageSetAction
-	| SessionPendingMessageRemovedAction
-	| SessionQueuedMessagesReorderedAction
-	| SessionInputRequestedAction
-	| SessionInputAnswerChangedAction
-	| SessionInputCompletedAction
-	| SessionCustomizationsChangedAction
-	| SessionCustomizationToggledAction
-	| SessionCustomizationUpdatedAction
-	| SessionTruncatedAction
-	| SessionIsReadChangedAction
-	| SessionIsArchivedChangedAction
-	| SessionActivityChangedAction
-	| SessionChangesetsChangedAction
-	| SessionConfigChangedAction
-	| SessionMetaChangedAction
-	;
+  | SessionReadyAction
+  | SessionCreationFailedAction
+  | SessionTurnStartedAction
+  | SessionDeltaAction
+  | SessionResponsePartAction
+  | SessionToolCallStartAction
+  | SessionToolCallDeltaAction
+  | SessionToolCallReadyAction
+  | SessionToolCallConfirmedAction
+  | SessionToolCallCompleteAction
+  | SessionToolCallResultConfirmedAction
+  | SessionToolCallContentChangedAction
+  | SessionTurnCompleteAction
+  | SessionTurnCancelledAction
+  | SessionErrorAction
+  | SessionTitleChangedAction
+  | SessionUsageAction
+  | SessionReasoningAction
+  | SessionModelChangedAction
+  | SessionAgentChangedAction
+  | SessionServerToolsChangedAction
+  | SessionActiveClientChangedAction
+  | SessionActiveClientToolsChangedAction
+  | SessionPendingMessageSetAction
+  | SessionPendingMessageRemovedAction
+  | SessionQueuedMessagesReorderedAction
+  | SessionInputRequestedAction
+  | SessionInputAnswerChangedAction
+  | SessionInputCompletedAction
+  | SessionCustomizationsChangedAction
+  | SessionCustomizationToggledAction
+  | SessionCustomizationUpdatedAction
+  | SessionTruncatedAction
+  | SessionIsReadChangedAction
+  | SessionIsArchivedChangedAction
+  | SessionActivityChangedAction
+  | SessionChangesetsChangedAction
+  | SessionConfigChangedAction
+  | SessionMetaChangedAction;
 
 /** Union of session actions that clients may dispatch. */
 export type ClientSessionAction =
-	| SessionTurnStartedAction
-	| SessionToolCallConfirmedAction
-	| SessionToolCallCompleteAction
-	| SessionToolCallResultConfirmedAction
-	| SessionToolCallContentChangedAction
-	| SessionTurnCancelledAction
-	| SessionTitleChangedAction
-	| SessionModelChangedAction
-	| SessionAgentChangedAction
-	| SessionActiveClientChangedAction
-	| SessionActiveClientToolsChangedAction
-	| SessionPendingMessageSetAction
-	| SessionPendingMessageRemovedAction
-	| SessionQueuedMessagesReorderedAction
-	| SessionInputAnswerChangedAction
-	| SessionInputCompletedAction
-	| SessionCustomizationToggledAction
-	| SessionTruncatedAction
-	| SessionIsReadChangedAction
-	| SessionIsArchivedChangedAction
-	| SessionConfigChangedAction
-	;
+  | SessionTurnStartedAction
+  | SessionToolCallConfirmedAction
+  | SessionToolCallCompleteAction
+  | SessionToolCallResultConfirmedAction
+  | SessionToolCallContentChangedAction
+  | SessionTurnCancelledAction
+  | SessionTitleChangedAction
+  | SessionModelChangedAction
+  | SessionAgentChangedAction
+  | SessionActiveClientChangedAction
+  | SessionActiveClientToolsChangedAction
+  | SessionPendingMessageSetAction
+  | SessionPendingMessageRemovedAction
+  | SessionQueuedMessagesReorderedAction
+  | SessionInputAnswerChangedAction
+  | SessionInputCompletedAction
+  | SessionCustomizationToggledAction
+  | SessionTruncatedAction
+  | SessionIsReadChangedAction
+  | SessionIsArchivedChangedAction
+  | SessionConfigChangedAction;
 
 /** Union of session actions that only the server may produce. */
 export type ServerSessionAction =
-	| SessionReadyAction
-	| SessionCreationFailedAction
-	| SessionDeltaAction
-	| SessionResponsePartAction
-	| SessionToolCallStartAction
-	| SessionToolCallDeltaAction
-	| SessionToolCallReadyAction
-	| SessionTurnCompleteAction
-	| SessionErrorAction
-	| SessionUsageAction
-	| SessionReasoningAction
-	| SessionServerToolsChangedAction
-	| SessionInputRequestedAction
-	| SessionCustomizationsChangedAction
-	| SessionCustomizationUpdatedAction
-	| SessionActivityChangedAction
-	| SessionChangesetsChangedAction
-	| SessionMetaChangedAction
-	;
+  | SessionReadyAction
+  | SessionCreationFailedAction
+  | SessionDeltaAction
+  | SessionResponsePartAction
+  | SessionToolCallStartAction
+  | SessionToolCallDeltaAction
+  | SessionToolCallReadyAction
+  | SessionTurnCompleteAction
+  | SessionErrorAction
+  | SessionUsageAction
+  | SessionReasoningAction
+  | SessionServerToolsChangedAction
+  | SessionInputRequestedAction
+  | SessionCustomizationsChangedAction
+  | SessionCustomizationUpdatedAction
+  | SessionActivityChangedAction
+  | SessionChangesetsChangedAction
+  | SessionMetaChangedAction;
 
 /** Union of all terminal-scoped actions. */
 export type TerminalAction =
-	| TerminalDataAction
-	| TerminalInputAction
-	| TerminalResizedAction
-	| TerminalClaimedAction
-	| TerminalTitleChangedAction
-	| TerminalCwdChangedAction
-	| TerminalExitedAction
-	| TerminalClearedAction
-	| TerminalCommandDetectionAvailableAction
-	| TerminalCommandExecutedAction
-	| TerminalCommandFinishedAction
-	;
+  | TerminalDataAction
+  | TerminalInputAction
+  | TerminalResizedAction
+  | TerminalClaimedAction
+  | TerminalTitleChangedAction
+  | TerminalCwdChangedAction
+  | TerminalExitedAction
+  | TerminalClearedAction
+  | TerminalCommandDetectionAvailableAction
+  | TerminalCommandExecutedAction
+  | TerminalCommandFinishedAction;
 
 /** Union of terminal actions that clients may dispatch. */
 export type ClientTerminalAction =
-	| TerminalInputAction
-	| TerminalResizedAction
-	| TerminalClaimedAction
-	| TerminalTitleChangedAction
-	| TerminalClearedAction
-	;
+  | TerminalInputAction
+  | TerminalResizedAction
+  | TerminalClaimedAction
+  | TerminalTitleChangedAction
+  | TerminalClearedAction;
 
 /** Union of terminal actions that only the server may produce. */
 export type ServerTerminalAction =
-	| TerminalDataAction
-	| TerminalCwdChangedAction
-	| TerminalExitedAction
-	| TerminalCommandDetectionAvailableAction
-	| TerminalCommandExecutedAction
-	| TerminalCommandFinishedAction
-	;
+  | TerminalDataAction
+  | TerminalCwdChangedAction
+  | TerminalExitedAction
+  | TerminalCommandDetectionAvailableAction
+  | TerminalCommandExecutedAction
+  | TerminalCommandFinishedAction;
 
 /** Union of all changeset-scoped actions. */
 export type ChangesetAction =
-	| ChangesetStatusChangedAction
-	| ChangesetFileSetAction
-	| ChangesetFileRemovedAction
-	| ChangesetOperationsChangedAction
-	| ChangesetClearedAction
-	;
+  | ChangesetStatusChangedAction
+  | ChangesetFileSetAction
+  | ChangesetFileRemovedAction
+  | ChangesetOperationsChangedAction
+  | ChangesetClearedAction;
 
 /** Union of changeset actions that clients may dispatch. */
-export type ClientChangesetAction =
-	never
-	;
+export type ClientChangesetAction = never;
 
 /** Union of changeset actions that only the server may produce. */
 export type ServerChangesetAction =
-	| ChangesetStatusChangedAction
-	| ChangesetFileSetAction
-	| ChangesetFileRemovedAction
-	| ChangesetOperationsChangedAction
-	| ChangesetClearedAction
-	;
+  | ChangesetStatusChangedAction
+  | ChangesetFileSetAction
+  | ChangesetFileRemovedAction
+  | ChangesetOperationsChangedAction
+  | ChangesetClearedAction;
 
 // ─── Client-Dispatchable Map ─────────────────────────────────────────────────
 
@@ -249,7 +234,9 @@ export type ServerChangesetAction =
  * Exhaustive map indicating which action types may be dispatched by clients.
  * Adding a new action to StateAction without adding it here is a compile error.
  */
-export const IS_CLIENT_DISPATCHABLE: { readonly [K in StateAction["type"]]: boolean } = {
+export const IS_CLIENT_DISPATCHABLE: {
+  readonly [K in StateAction["type"]]: boolean;
+} = {
   [ActionType.RootAgentsChanged]: false,
   [ActionType.RootActiveSessionsChanged]: false,
   [ActionType.RootTerminalsChanged]: false,

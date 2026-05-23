@@ -3,7 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SaveDialogOptions, OpenDialogOptions } from "../../../../base/parts/sandbox/common/electronTypes.js";
+import {
+  SaveDialogOptions,
+  OpenDialogOptions,
+} from "../../../../base/parts/sandbox/common/electronTypes.js";
 import { IHostService } from "../../host/browser/host.js";
 import {
   IPickAndOpenOptions,
@@ -19,10 +22,16 @@ import { IWorkbenchEnvironmentService } from "../../environment/common/environme
 import { URI } from "../../../../base/common/uri.js";
 import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
 import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import { IFileService } from "../../../../platform/files/common/files.js";
 import { IOpenerService } from "../../../../platform/opener/common/opener.js";
-import { INativeHostOptions, INativeHostService } from "../../../../platform/native/common/native.js";
+import {
+  INativeHostOptions,
+  INativeHostService,
+} from "../../../../platform/native/common/native.js";
 import { AbstractFileDialogService } from "../browser/abstractFileDialogService.js";
 import { Schemas } from "../../../../base/common/network.js";
 import { ILanguageService } from "../../../../editor/common/languages/language.js";
@@ -36,30 +45,33 @@ import { ILogService } from "../../../../platform/log/common/log.js";
 import { getActiveWindow } from "../../../../base/browser/dom.js";
 import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
 
-export class FileDialogService extends AbstractFileDialogService implements IFileDialogService {
-
-	constructor(
-		@IHostService hostService: IHostService,
-		@IWorkspaceContextService contextService: IWorkspaceContextService,
-		@IHistoryService historyService: IHistoryService,
-		@IWorkbenchEnvironmentService environmentService: IWorkbenchEnvironmentService,
-		@IInstantiationService instantiationService: IInstantiationService,
-		@IConfigurationService configurationService: IConfigurationService,
-		@IFileService fileService: IFileService,
-		@IOpenerService openerService: IOpenerService,
-		@INativeHostService private readonly nativeHostService: INativeHostService,
-		@IDialogService dialogService: IDialogService,
-		@ILanguageService languageService: ILanguageService,
-		@IWorkspacesService workspacesService: IWorkspacesService,
-		@ILabelService labelService: ILabelService,
-		@IPathService pathService: IPathService,
-		@ICommandService commandService: ICommandService,
-		@IEditorService editorService: IEditorService,
-		@ICodeEditorService codeEditorService: ICodeEditorService,
-		@ILogService logService: ILogService,
-		@IRemoteAgentService remoteAgentService: IRemoteAgentService,
-	) {
-		super(
+export class FileDialogService
+  extends AbstractFileDialogService
+  implements IFileDialogService
+{
+  constructor(
+    @IHostService hostService: IHostService,
+    @IWorkspaceContextService contextService: IWorkspaceContextService,
+    @IHistoryService historyService: IHistoryService,
+    @IWorkbenchEnvironmentService
+    environmentService: IWorkbenchEnvironmentService,
+    @IInstantiationService instantiationService: IInstantiationService,
+    @IConfigurationService configurationService: IConfigurationService,
+    @IFileService fileService: IFileService,
+    @IOpenerService openerService: IOpenerService,
+    @INativeHostService private readonly nativeHostService: INativeHostService,
+    @IDialogService dialogService: IDialogService,
+    @ILanguageService languageService: ILanguageService,
+    @IWorkspacesService workspacesService: IWorkspacesService,
+    @ILabelService labelService: ILabelService,
+    @IPathService pathService: IPathService,
+    @ICommandService commandService: ICommandService,
+    @IEditorService editorService: IEditorService,
+    @ICodeEditorService codeEditorService: ICodeEditorService,
+    @ILogService logService: ILogService,
+    @IRemoteAgentService remoteAgentService: IRemoteAgentService,
+  ) {
+    super(
       hostService,
       contextService,
       historyService,
@@ -79,196 +91,217 @@ export class FileDialogService extends AbstractFileDialogService implements IFil
       logService,
       remoteAgentService,
     );
-	}
+  }
 
-	private toNativeOpenDialogOptions(options: IPickAndOpenOptions): INativeOpenDialogOptions {
-		return {
+  private toNativeOpenDialogOptions(
+    options: IPickAndOpenOptions,
+  ): INativeOpenDialogOptions {
+    return {
       forceNewWindow: options.forceNewWindow,
       telemetryExtraData: options.telemetryExtraData,
       defaultPath: options.defaultUri?.fsPath,
     };
-	}
+  }
 
-	private shouldUseSimplified(schema: string): { useSimplified: boolean; isSetting: boolean } {
-		const setting = (this.configurationService.getValue(
-      "files.simpleDialog.enable",
-    ) === true);
-		const newWindowSetting = (this.configurationService.getValue(
-      "window.openFilesInNewWindow",
-    ) === "on");
-		return {
-			// - Only real files can be shown in the native file picker
-			// - If the simple file dialog is enabled
-			// - driver automation (like smoke tests) can use the simple file dialog but not native
-			useSimplified: ((schema !== Schemas.file) && (schema !== Schemas.vscodeUserData)) || setting || !!this.environmentService.enableSmokeTestDriver,
-			isSetting: newWindowSetting,
-		};
-	}
+  private shouldUseSimplified(schema: string): {
+    useSimplified: boolean;
+    isSetting: boolean;
+  } {
+    const setting =
+      this.configurationService.getValue("files.simpleDialog.enable") === true;
+    const newWindowSetting =
+      this.configurationService.getValue("window.openFilesInNewWindow") ===
+      "on";
+    return {
+      // - Only real files can be shown in the native file picker
+      // - If the simple file dialog is enabled
+      // - driver automation (like smoke tests) can use the simple file dialog but not native
+      useSimplified:
+        (schema !== Schemas.file && schema !== Schemas.vscodeUserData) ||
+        setting ||
+        !!this.environmentService.enableSmokeTestDriver,
+      isSetting: newWindowSetting,
+    };
+  }
 
-	async pickFileFolderAndOpen(options: IPickAndOpenOptions): Promise<void> {
-		const schema = this.getFileSystemSchema(options);
+  async pickFileFolderAndOpen(options: IPickAndOpenOptions): Promise<void> {
+    const schema = this.getFileSystemSchema(options);
 
-		if (!options.defaultUri) {
-			options.defaultUri = await this.defaultFilePath(schema);
-		}
+    if (!options.defaultUri) {
+      options.defaultUri = await this.defaultFilePath(schema);
+    }
 
-		const shouldUseSimplified = this.shouldUseSimplified(schema);
-		if (shouldUseSimplified.useSimplified) {
-			return this.pickFileFolderAndOpenSimplified(
+    const shouldUseSimplified = this.shouldUseSimplified(schema);
+    if (shouldUseSimplified.useSimplified) {
+      return this.pickFileFolderAndOpenSimplified(
         schema,
         options,
         shouldUseSimplified.isSetting,
       );
-		}
-		return this.nativeHostService.pickFileFolderAndOpen(
+    }
+    return this.nativeHostService.pickFileFolderAndOpen(
       this.toNativeOpenDialogOptions(options),
     );
-	}
+  }
 
-	async pickFileAndOpen(options: IPickAndOpenOptions): Promise<void> {
-		const schema = this.getFileSystemSchema(options);
+  async pickFileAndOpen(options: IPickAndOpenOptions): Promise<void> {
+    const schema = this.getFileSystemSchema(options);
 
-		if (!options.defaultUri) {
-			options.defaultUri = await this.defaultFilePath(schema);
-		}
+    if (!options.defaultUri) {
+      options.defaultUri = await this.defaultFilePath(schema);
+    }
 
-		const shouldUseSimplified = this.shouldUseSimplified(schema);
-		if (shouldUseSimplified.useSimplified) {
-			return this.pickFileAndOpenSimplified(
+    const shouldUseSimplified = this.shouldUseSimplified(schema);
+    if (shouldUseSimplified.useSimplified) {
+      return this.pickFileAndOpenSimplified(
         schema,
         options,
         shouldUseSimplified.isSetting,
       );
-		}
-		return this.nativeHostService.pickFileAndOpen(
+    }
+    return this.nativeHostService.pickFileAndOpen(
       this.toNativeOpenDialogOptions(options),
     );
-	}
+  }
 
-	async pickFolderAndOpen(options: IPickAndOpenOptions): Promise<void> {
-		const schema = this.getFileSystemSchema(options);
+  async pickFolderAndOpen(options: IPickAndOpenOptions): Promise<void> {
+    const schema = this.getFileSystemSchema(options);
 
-		if (!options.defaultUri) {
-			options.defaultUri = await this.defaultFolderPath(schema);
-		}
+    if (!options.defaultUri) {
+      options.defaultUri = await this.defaultFolderPath(schema);
+    }
 
-		if (this.shouldUseSimplified(schema).useSimplified) {
-			return this.pickFolderAndOpenSimplified(schema, options);
-		}
-		return this.nativeHostService.pickFolderAndOpen(
+    if (this.shouldUseSimplified(schema).useSimplified) {
+      return this.pickFolderAndOpenSimplified(schema, options);
+    }
+    return this.nativeHostService.pickFolderAndOpen(
       this.toNativeOpenDialogOptions(options),
     );
-	}
+  }
 
-	async pickWorkspaceAndOpen(options: IPickAndOpenOptions): Promise<void> {
-		options.availableFileSystems = this.getWorkspaceAvailableFileSystems(
-      options,
-    );
-		const schema = this.getFileSystemSchema(options);
+  async pickWorkspaceAndOpen(options: IPickAndOpenOptions): Promise<void> {
+    options.availableFileSystems =
+      this.getWorkspaceAvailableFileSystems(options);
+    const schema = this.getFileSystemSchema(options);
 
-		if (!options.defaultUri) {
-			options.defaultUri = await this.defaultWorkspacePath(schema);
-		}
+    if (!options.defaultUri) {
+      options.defaultUri = await this.defaultWorkspacePath(schema);
+    }
 
-		if (this.shouldUseSimplified(schema).useSimplified) {
-			return this.pickWorkspaceAndOpenSimplified(schema, options);
-		}
-		return this.nativeHostService.pickWorkspaceAndOpen(
+    if (this.shouldUseSimplified(schema).useSimplified) {
+      return this.pickWorkspaceAndOpenSimplified(schema, options);
+    }
+    return this.nativeHostService.pickWorkspaceAndOpen(
       this.toNativeOpenDialogOptions(options),
     );
-	}
+  }
 
-	async pickFileToSave(defaultUri: URI, availableFileSystems?: string[]): Promise<URI | undefined> {
-		const schema = this.getFileSystemSchema({
+  async pickFileToSave(
+    defaultUri: URI,
+    availableFileSystems?: string[],
+  ): Promise<URI | undefined> {
+    const schema = this.getFileSystemSchema({
       defaultUri,
       availableFileSystems,
     });
-		const options = this.getPickFileToSaveDialogOptions(
+    const options = this.getPickFileToSaveDialogOptions(
       defaultUri,
       availableFileSystems,
     );
-		if (this.shouldUseSimplified(schema).useSimplified) {
-			return this.pickFileToSaveSimplified(schema, options);
-		} else {
-			const result = await this.nativeHostService.showSaveDialog(
+    if (this.shouldUseSimplified(schema).useSimplified) {
+      return this.pickFileToSaveSimplified(schema, options);
+    } else {
+      const result = await this.nativeHostService.showSaveDialog(
         this.toNativeSaveDialogOptions(options),
       );
-			if (result && !result.canceled && result.filePath) {
-				const uri = URI.file(result.filePath);
+      if (result && !result.canceled && result.filePath) {
+        const uri = URI.file(result.filePath);
 
-				this.addFileToRecentlyOpened(uri);
+        this.addFileToRecentlyOpened(uri);
 
-				return uri;
-			}
-		}
-		return;
-	}
+        return uri;
+      }
+    }
+    return;
+  }
 
-	private toNativeSaveDialogOptions(options: ISaveDialogOptions): SaveDialogOptions & INativeHostOptions {
-		options.defaultUri = options.defaultUri ? URI.file(
-      options.defaultUri.path,
-    ) : undefined;
-		return {
+  private toNativeSaveDialogOptions(
+    options: ISaveDialogOptions,
+  ): SaveDialogOptions & INativeHostOptions {
+    options.defaultUri = options.defaultUri
+      ? URI.file(options.defaultUri.path)
+      : undefined;
+    return {
       defaultPath: options.defaultUri?.fsPath,
-      buttonLabel: typeof options.saveLabel === "string" ? options.saveLabel : options.saveLabel?.withMnemonic,
+      buttonLabel:
+        typeof options.saveLabel === "string"
+          ? options.saveLabel
+          : options.saveLabel?.withMnemonic,
       filters: options.filters,
       title: options.title,
       targetWindowId: getActiveWindow().vscodeWindowId,
     };
-	}
+  }
 
-	async showSaveDialog(options: ISaveDialogOptions): Promise<URI | undefined> {
-		const schema = this.getFileSystemSchema(options);
-		if (this.shouldUseSimplified(schema).useSimplified) {
-			return this.showSaveDialogSimplified(schema, options);
-		}
+  async showSaveDialog(options: ISaveDialogOptions): Promise<URI | undefined> {
+    const schema = this.getFileSystemSchema(options);
+    if (this.shouldUseSimplified(schema).useSimplified) {
+      return this.showSaveDialogSimplified(schema, options);
+    }
 
-		const result = await this.nativeHostService.showSaveDialog(
+    const result = await this.nativeHostService.showSaveDialog(
       this.toNativeSaveDialogOptions(options),
     );
-		if (result && !result.canceled && result.filePath) {
-			return URI.file(result.filePath);
-		}
+    if (result && !result.canceled && result.filePath) {
+      return URI.file(result.filePath);
+    }
 
-		return;
-	}
+    return;
+  }
 
-	async showOpenDialog(options: IOpenDialogOptions): Promise<URI[] | undefined> {
-		const schema = this.getFileSystemSchema(options);
-		if (this.shouldUseSimplified(schema).useSimplified) {
-			return this.showOpenDialogSimplified(schema, options);
-		}
+  async showOpenDialog(
+    options: IOpenDialogOptions,
+  ): Promise<URI[] | undefined> {
+    const schema = this.getFileSystemSchema(options);
+    if (this.shouldUseSimplified(schema).useSimplified) {
+      return this.showOpenDialogSimplified(schema, options);
+    }
 
-		const newOptions: OpenDialogOptions & { properties: string[] } & INativeHostOptions = {
+    const newOptions: OpenDialogOptions & {
+      properties: string[];
+    } & INativeHostOptions = {
       title: options.title,
       defaultPath: options.defaultUri?.fsPath,
-      buttonLabel: typeof options.openLabel === "string" ? options.openLabel : options.openLabel?.withMnemonic,
+      buttonLabel:
+        typeof options.openLabel === "string"
+          ? options.openLabel
+          : options.openLabel?.withMnemonic,
       filters: options.filters,
       properties: [],
       targetWindowId: getActiveWindow().vscodeWindowId,
     };
 
-		newOptions.properties.push("createDirectory");
+    newOptions.properties.push("createDirectory");
 
-		if (options.canSelectFiles) {
-			newOptions.properties.push("openFile");
-		}
+    if (options.canSelectFiles) {
+      newOptions.properties.push("openFile");
+    }
 
-		if (options.canSelectFolders) {
-			newOptions.properties.push("openDirectory");
-		}
+    if (options.canSelectFolders) {
+      newOptions.properties.push("openDirectory");
+    }
 
-		if (options.canSelectMany) {
-			newOptions.properties.push("multiSelections");
-		}
+    if (options.canSelectMany) {
+      newOptions.properties.push("multiSelections");
+    }
 
-		const result = await this.nativeHostService.showOpenDialog(newOptions);
-		return result && Array.isArray(
-      result.filePaths,
-    ) && result.filePaths.length > 0 ? result.filePaths.map(
-      URI.file,
-    ) : undefined;
-	}
+    const result = await this.nativeHostService.showOpenDialog(newOptions);
+    return result &&
+      Array.isArray(result.filePaths) &&
+      result.filePaths.length > 0
+      ? result.filePaths.map(URI.file)
+      : undefined;
+  }
 }
 
 registerSingleton(

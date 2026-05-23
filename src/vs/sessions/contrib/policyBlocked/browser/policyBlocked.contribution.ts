@@ -3,7 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  MutableDisposable,
+} from "../../../../base/common/lifecycle.js";
 import {
   IWorkbenchContribution,
   registerWorkbenchContribution2,
@@ -25,90 +28,108 @@ import {
   IAccountPolicyGateService,
 } from "../../../../workbench/services/policies/common/accountPolicyService.js";
 
-export class SessionsPolicyBlockedContribution extends Disposable implements IWorkbenchContribution {
+export class SessionsPolicyBlockedContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "workbench.contrib.sessionsPolicyBlocked";
 
-	static readonly ID = "workbench.contrib.sessionsPolicyBlocked";
+  private readonly overlayRef = this._register(new MutableDisposable());
+  private currentReason: SessionsBlockedReason | undefined;
 
-	private readonly overlayRef = this._register(new MutableDisposable());
-	private currentReason: SessionsBlockedReason | undefined;
+  constructor(
+    @IConfigurationService
+    private readonly configurationService: IConfigurationService,
+    @IWorkbenchLayoutService
+    private readonly layoutService: IWorkbenchLayoutService,
+    @IInstantiationService
+    private readonly instantiationService: IInstantiationService,
+    @IAccountPolicyGateService
+    private readonly gateService: IAccountPolicyGateService,
+    @IDefaultAccountService
+    private readonly defaultAccountService: IDefaultAccountService,
+  ) {
+    super();
 
-	constructor(
-		@IConfigurationService private readonly configurationService: IConfigurationService,
-		@IWorkbenchLayoutService private readonly layoutService: IWorkbenchLayoutService,
-		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@IAccountPolicyGateService private readonly gateService: IAccountPolicyGateService,
-		@IDefaultAccountService private readonly defaultAccountService: IDefaultAccountService,
-	) {
-		super();
+    this.update();
 
-		this.update();
+    this._register(
+      this.configurationService.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration(ChatConfiguration.AgentEnabled)) {
+          this.update();
+        }
+      }),
+    );
 
-		this._register(this.configurationService.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration(ChatConfiguration.AgentEnabled)) {
-				this.update();
-			}
-		}));
+    this._register(this.gateService.onDidChangeGateInfo(() => this.update()));
+  }
 
-		this._register(this.gateService.onDidChangeGateInfo(() => this.update()));
-	}
+  private update(): void {
+    const gateInfo = this.gateService.gateInfo;
 
-	private update(): void {
-		const gateInfo = this.gateService.gateInfo;
+    // The gate forces chat.agent.enabled = false via restrictedValue when stably
+    // Restricted. Suppress AgentDisabled in that case so users see the gate-specific
+    // overlay (or the welcome screen for noAccount/wrongProvider) instead.
+    const gateForcesAgentDisabled =
+      gateInfo.state === AccountPolicyGateState.Restricted &&
+      gateInfo.reason !== AccountPolicyGateUnsatisfiedReason.PolicyNotResolved;
 
-		// The gate forces chat.agent.enabled = false via restrictedValue when stably
-		// Restricted. Suppress AgentDisabled in that case so users see the gate-specific
-		// overlay (or the welcome screen for noAccount/wrongProvider) instead.
-		const gateForcesAgentDisabled = gateInfo.state === AccountPolicyGateState.Restricted
-			&& gateInfo.reason !== AccountPolicyGateUnsatisfiedReason.PolicyNotResolved;
-
-		const agentEnabled = this.configurationService.getValue<boolean>(
+    const agentEnabled = this.configurationService.getValue<boolean>(
       ChatConfiguration.AgentEnabled,
     );
-		if (agentEnabled === false && !gateForcesAgentDisabled) {
-			this.showOverlay({ reason: SessionsBlockedReason.AgentDisabled });
-			return;
-		}
+    if (agentEnabled === false && !gateForcesAgentDisabled) {
+      this.showOverlay({ reason: SessionsBlockedReason.AgentDisabled });
+      return;
+    }
 
-		if (gateInfo.state === AccountPolicyGateState.Restricted) {
-			// Defer to the sessions welcome/walkthrough so the user signs in via the standard flow.
-			if (gateInfo.reason === AccountPolicyGateUnsatisfiedReason.NoAccount
-				|| gateInfo.reason === AccountPolicyGateUnsatisfiedReason.WrongProvider) {
-				this.overlayRef.clear();
-				this.currentReason = undefined;
-				return;
-			}
+    if (gateInfo.state === AccountPolicyGateState.Restricted) {
+      // Defer to the sessions welcome/walkthrough so the user signs in via the standard flow.
+      if (
+        gateInfo.reason === AccountPolicyGateUnsatisfiedReason.NoAccount ||
+        gateInfo.reason === AccountPolicyGateUnsatisfiedReason.WrongProvider
+      ) {
+        this.overlayRef.clear();
+        this.currentReason = undefined;
+        return;
+      }
 
-			if (gateInfo.reason === AccountPolicyGateUnsatisfiedReason.PolicyNotResolved) {
-				this.showOverlay({ reason: SessionsBlockedReason.Loading });
-			} else {
-				const accountName = this.defaultAccountService.currentDefaultAccount?.accountName;
-				this.showOverlay({
+      if (
+        gateInfo.reason === AccountPolicyGateUnsatisfiedReason.PolicyNotResolved
+      ) {
+        this.showOverlay({ reason: SessionsBlockedReason.Loading });
+      } else {
+        const accountName =
+          this.defaultAccountService.currentDefaultAccount?.accountName;
+        this.showOverlay({
           reason: SessionsBlockedReason.AccountPolicyGate,
           approvedOrganizations: gateInfo.approvedOrganizations,
           accountName,
         });
-			}
-			return;
-		}
+      }
+      return;
+    }
 
-		this.overlayRef.clear();
-		this.currentReason = undefined;
-	}
+    this.overlayRef.clear();
+    this.currentReason = undefined;
+  }
 
-	private showOverlay(options: ISessionsBlockedOverlayOptions): void {
-		// AccountPolicyGate may need re-render when the account name changes.
-		if (this.currentReason === options.reason && options.reason !== SessionsBlockedReason.AccountPolicyGate) {
-			return;
-		}
-		this.overlayRef.clear();
-		this.currentReason = options.reason;
+  private showOverlay(options: ISessionsBlockedOverlayOptions): void {
+    // AccountPolicyGate may need re-render when the account name changes.
+    if (
+      this.currentReason === options.reason &&
+      options.reason !== SessionsBlockedReason.AccountPolicyGate
+    ) {
+      return;
+    }
+    this.overlayRef.clear();
+    this.currentReason = options.reason;
 
-		this.overlayRef.value = this.instantiationService.createInstance(
+    this.overlayRef.value = this.instantiationService.createInstance(
       SessionsPolicyBlockedOverlay,
       this.layoutService.mainContainer,
       options,
     );
-	}
+  }
 }
 
 registerWorkbenchContribution2(

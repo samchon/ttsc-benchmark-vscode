@@ -6,8 +6,17 @@
 import { DisposableStore } from "../../base/common/lifecycle.js";
 import { URI } from "../../base/common/uri.js";
 import { localize } from "../../nls.js";
-import { IContextKeyService, IContextKey, RawContextKey } from "../../platform/contextkey/common/contextkey.js";
-import { basename, dirname, extname, isEqual } from "../../base/common/resources.js";
+import {
+  IContextKeyService,
+  IContextKey,
+  RawContextKey,
+} from "../../platform/contextkey/common/contextkey.js";
+import {
+  basename,
+  dirname,
+  extname,
+  isEqual,
+} from "../../base/common/resources.js";
 import { ILanguageService } from "../../editor/common/languages/language.js";
 import { IFileService } from "../../platform/files/common/files.js";
 import { IModelService } from "../../editor/common/services/model.js";
@@ -23,7 +32,10 @@ export const WorkbenchStateContext = new RawContextKey<string>(
   undefined,
   {
     type: "string",
-    description: localize("workbenchState", "The kind of workspace opened in the window, either 'empty' (no workspace), 'folder' (single folder) or 'workspace' (multi-root workspace)"),
+    description: localize(
+      "workbenchState",
+      "The kind of workspace opened in the window, either 'empty' (no workspace), 'folder' (single folder) or 'workspace' (multi-root workspace)",
+    ),
   },
 );
 export const WorkspaceFolderCountContext = new RawContextKey<number>(
@@ -149,9 +161,7 @@ export const IsAuxiliaryWindowContext = new RawContextKey<boolean>(
   localize("isAuxiliaryWindow", "Window is an auxiliary window"),
 );
 
-
 //#endregion
-
 
 //#region < --- Editor --- >
 
@@ -230,7 +240,10 @@ export const ActiveEditorContext = new RawContextKey<string | null>(
   null,
   {
     type: "string",
-    description: localize("activeEditor", "The identifier of the active editor"),
+    description: localize(
+      "activeEditor",
+      "The identifier of the active editor",
+    ),
   },
 );
 export const ActiveEditorAvailableEditorIdsContext = new RawContextKey<string>(
@@ -252,21 +265,25 @@ export const TextCompareEditorVisibleContext = new RawContextKey<boolean>(
 export const TextCompareEditorActiveContext = new RawContextKey<boolean>(
   "textCompareEditorActive",
   false,
-  localize("textCompareEditorActive", "Whether a text compare editor is active"),
+  localize(
+    "textCompareEditorActive",
+    "Whether a text compare editor is active",
+  ),
 );
 export const SideBySideEditorActiveContext = new RawContextKey<boolean>(
   "sideBySideEditorActive",
   false,
   localize("sideBySideEditorActive", "Whether a side by side editor is active"),
 );
-export const ActiveCustomEditorDiffCanToggleLayoutContext = new RawContextKey<boolean>(
-  "activeCustomEditorDiffCanToggleLayout",
-  false,
-  localize(
+export const ActiveCustomEditorDiffCanToggleLayoutContext =
+  new RawContextKey<boolean>(
     "activeCustomEditorDiffCanToggleLayout",
-    "Whether the active custom editor diff can toggle between inline and side by side layout",
-  ),
-);
+    false,
+    localize(
+      "activeCustomEditorDiffCanToggleLayout",
+      "Whether the active custom editor diff can toggle between inline and side by side layout",
+    ),
+  );
 export const ActiveCustomEditorTextDiffContext = new RawContextKey<boolean>(
   "activeCustomEditorTextDiff",
   false,
@@ -293,7 +310,10 @@ export const IsTopRightEditorGroupContext = new RawContextKey<boolean>(
 export const ActiveEditorGroupEmptyContext = new RawContextKey<boolean>(
   "activeEditorGroupEmpty",
   false,
-  localize("activeEditorGroupEmpty", "Whether the active editor group is empty"),
+  localize(
+    "activeEditorGroupEmpty",
+    "Whether the active editor group is empty",
+  ),
 );
 export const ActiveEditorGroupIndexContext = new RawContextKey<number>(
   "activeEditorGroupIndex",
@@ -324,7 +344,8 @@ export const MultipleEditorGroupsContext = new RawContextKey<boolean>(
     "Whether there are multiple editor groups opened",
   ),
 );
-export const SingleEditorGroupsContext = MultipleEditorGroupsContext.toNegated();
+export const SingleEditorGroupsContext =
+  MultipleEditorGroupsContext.toNegated();
 export const MultipleEditorsSelectedInGroupContext = new RawContextKey<boolean>(
   "multipleEditorsSelectedInGroup",
   false,
@@ -341,14 +362,15 @@ export const TwoEditorsSelectedInGroupContext = new RawContextKey<boolean>(
     "Whether exactly two editors have been selected in an editor group",
   ),
 );
-export const SelectedEditorsInGroupFileOrUntitledResourceContextKey = new RawContextKey<boolean>(
-  "SelectedEditorsInGroupFileOrUntitledResourceContextKey",
-  true,
-  localize(
+export const SelectedEditorsInGroupFileOrUntitledResourceContextKey =
+  new RawContextKey<boolean>(
     "SelectedEditorsInGroupFileOrUntitledResourceContextKey",
-    "Whether all selected editors in a group have a file or untitled resource associated",
-  ),
-);
+    true,
+    localize(
+      "SelectedEditorsInGroupFileOrUntitledResourceContextKey",
+      "Whether all selected editors in a group have a file or untitled resource associated",
+    ),
+  );
 
 // Editor Part Context Keys
 export const EditorPartMultipleEditorGroupsContext = new RawContextKey<boolean>(
@@ -359,7 +381,8 @@ export const EditorPartMultipleEditorGroupsContext = new RawContextKey<boolean>(
     "Whether there are multiple editor groups opened in an editor part",
   ),
 );
-export const EditorPartSingleEditorGroupsContext = EditorPartMultipleEditorGroupsContext.toNegated();
+export const EditorPartSingleEditorGroupsContext =
+  EditorPartMultipleEditorGroupsContext.toNegated();
 export const EditorPartMaximizedEditorGroupContext = new RawContextKey<boolean>(
   "editorPartMaximizedEditorGroup",
   false,
@@ -447,7 +470,6 @@ export const EditorTabsVisibleContext = new RawContextKey<boolean>(
 
 //#endregion
 
-
 //#region < --- Side Bar --- >
 
 export const SideBarVisibleContext = new RawContextKey<boolean>(
@@ -467,7 +489,6 @@ export const ActiveViewletContext = new RawContextKey<string>(
 );
 
 //#endregion
-
 
 //#region < --- Status Bar --- >
 
@@ -499,7 +520,6 @@ export const IsCompactTitleBarContext = new RawContextKey<boolean>(
 
 //#endregion
 
-
 //#region < --- Banner --- >
 
 export const BannerFocused = new RawContextKey<boolean>(
@@ -509,7 +529,6 @@ export const BannerFocused = new RawContextKey<boolean>(
 );
 
 //#endregion
-
 
 //#region < --- Notifications --- >
 
@@ -537,7 +556,6 @@ export const NotificationsToastsVisibleContext = new RawContextKey<boolean>(
 
 //#endregion
 
-
 //#region < --- Auxiliary Bar --- >
 
 export const ActiveAuxiliaryContext = new RawContextKey<string>(
@@ -562,7 +580,6 @@ export const AuxiliaryBarMaximizedContext = new RawContextKey<boolean>(
 );
 
 //#endregion
-
 
 //#region < --- Panel --- >
 
@@ -602,7 +619,6 @@ export const PanelMaximizedContext = new RawContextKey<boolean>(
 
 //#endregion
 
-
 //#region < --- Views --- >
 
 export const FocusedViewContext = new RawContextKey<string>(
@@ -610,20 +626,20 @@ export const FocusedViewContext = new RawContextKey<string>(
   "",
   localize("focusedView", "The identifier of the view that has keyboard focus"),
 );
-export function getVisbileViewContextKey(viewId: string): string { return `view.${viewId}.visible`; }
+export function getVisbileViewContextKey(viewId: string): string {
+  return `view.${viewId}.visible`;
+}
 
 //#endregion
-
 
 //#region < --- Resources --- >
 
 abstract class AbstractResourceContextKey {
+  // NOTE: DO NOT CHANGE THE DEFAULT VALUE TO ANYTHING BUT
+  // UNDEFINED! IT IS IMPORTANT THAT DEFAULTS ARE INHERITED
+  // FROM THE PARENT CONTEXT AND ONLY UNDEFINED DOES THIS
 
-	// NOTE: DO NOT CHANGE THE DEFAULT VALUE TO ANYTHING BUT
-	// UNDEFINED! IT IS IMPORTANT THAT DEFAULTS ARE INHERITED
-	// FROM THE PARENT CONTEXT AND ONLY UNDEFINED DOES THIS
-
-	static readonly Scheme = new RawContextKey<string>(
+  static readonly Scheme = new RawContextKey<string>(
     "resourceScheme",
     undefined,
     {
@@ -631,128 +647,151 @@ abstract class AbstractResourceContextKey {
       description: localize("resourceScheme", "The scheme of the resource"),
     },
   );
-	static readonly Filename = new RawContextKey<string>(
+  static readonly Filename = new RawContextKey<string>(
     "resourceFilename",
     undefined,
     {
       type: "string",
-      description: localize("resourceFilename", "The file name of the resource"),
+      description: localize(
+        "resourceFilename",
+        "The file name of the resource",
+      ),
     },
   );
-	static readonly Dirname = new RawContextKey<string>(
+  static readonly Dirname = new RawContextKey<string>(
     "resourceDirname",
     undefined,
     {
       type: "string",
-      description: localize("resourceDirname", "The folder name the resource is contained in"),
+      description: localize(
+        "resourceDirname",
+        "The folder name the resource is contained in",
+      ),
     },
   );
-	static readonly Path = new RawContextKey<string>("resourcePath", undefined, {
+  static readonly Path = new RawContextKey<string>("resourcePath", undefined, {
     type: "string",
     description: localize("resourcePath", "The full path of the resource"),
   });
-	static readonly LangId = new RawContextKey<string>(
+  static readonly LangId = new RawContextKey<string>(
     "resourceLangId",
     undefined,
     {
       type: "string",
-      description: localize("resourceLangId", "The language identifier of the resource"),
+      description: localize(
+        "resourceLangId",
+        "The language identifier of the resource",
+      ),
     },
   );
-	static readonly Resource = new RawContextKey<string>("resource", undefined, {
+  static readonly Resource = new RawContextKey<string>("resource", undefined, {
     type: "URI",
-    description: localize("resource", "The full value of the resource including scheme and path"),
+    description: localize(
+      "resource",
+      "The full value of the resource including scheme and path",
+    ),
   });
-	static readonly Extension = new RawContextKey<string>(
+  static readonly Extension = new RawContextKey<string>(
     "resourceExtname",
     undefined,
     {
       type: "string",
-      description: localize("resourceExtname", "The extension name of the resource"),
+      description: localize(
+        "resourceExtname",
+        "The extension name of the resource",
+      ),
     },
   );
-	static readonly HasResource = new RawContextKey<boolean>(
+  static readonly HasResource = new RawContextKey<boolean>(
     "resourceSet",
     undefined,
     {
       type: "boolean",
-      description: localize("resourceSet", "Whether a resource is present or not"),
+      description: localize(
+        "resourceSet",
+        "Whether a resource is present or not",
+      ),
     },
   );
-	static readonly IsFileSystemResource = new RawContextKey<boolean>(
+  static readonly IsFileSystemResource = new RawContextKey<boolean>(
     "isFileSystemResource",
     undefined,
     {
       type: "boolean",
-      description: localize("isFileSystemResource", "Whether the resource is backed by a file system provider"),
+      description: localize(
+        "isFileSystemResource",
+        "Whether the resource is backed by a file system provider",
+      ),
     },
   );
 
-	protected _value: URI | undefined;
-	protected readonly _resourceKey: IContextKey<string | null>;
-	protected readonly _schemeKey: IContextKey<string | null>;
-	protected readonly _filenameKey: IContextKey<string | null>;
-	protected readonly _dirnameKey: IContextKey<string | null>;
-	protected readonly _pathKey: IContextKey<string | null>;
-	protected readonly _langIdKey: IContextKey<string | null>;
-	protected readonly _extensionKey: IContextKey<string | null>;
-	protected readonly _hasResource: IContextKey<boolean>;
-	protected readonly _isFileSystemResource: IContextKey<boolean>;
+  protected _value: URI | undefined;
+  protected readonly _resourceKey: IContextKey<string | null>;
+  protected readonly _schemeKey: IContextKey<string | null>;
+  protected readonly _filenameKey: IContextKey<string | null>;
+  protected readonly _dirnameKey: IContextKey<string | null>;
+  protected readonly _pathKey: IContextKey<string | null>;
+  protected readonly _langIdKey: IContextKey<string | null>;
+  protected readonly _extensionKey: IContextKey<string | null>;
+  protected readonly _hasResource: IContextKey<boolean>;
+  protected readonly _isFileSystemResource: IContextKey<boolean>;
 
-	constructor(
-		@IContextKeyService protected readonly _contextKeyService: IContextKeyService,
-		@IFileService protected readonly _fileService: IFileService,
-		@ILanguageService protected readonly _languageService: ILanguageService,
-		@IModelService protected readonly _modelService: IModelService,
-	) {
-		this._schemeKey = AbstractResourceContextKey.Scheme.bindTo(
+  constructor(
+    @IContextKeyService
+    protected readonly _contextKeyService: IContextKeyService,
+    @IFileService protected readonly _fileService: IFileService,
+    @ILanguageService protected readonly _languageService: ILanguageService,
+    @IModelService protected readonly _modelService: IModelService,
+  ) {
+    this._schemeKey = AbstractResourceContextKey.Scheme.bindTo(
       this._contextKeyService,
     );
-		this._filenameKey = AbstractResourceContextKey.Filename.bindTo(
+    this._filenameKey = AbstractResourceContextKey.Filename.bindTo(
       this._contextKeyService,
     );
-		this._dirnameKey = AbstractResourceContextKey.Dirname.bindTo(
+    this._dirnameKey = AbstractResourceContextKey.Dirname.bindTo(
       this._contextKeyService,
     );
-		this._pathKey = AbstractResourceContextKey.Path.bindTo(
+    this._pathKey = AbstractResourceContextKey.Path.bindTo(
       this._contextKeyService,
     );
-		this._langIdKey = AbstractResourceContextKey.LangId.bindTo(
+    this._langIdKey = AbstractResourceContextKey.LangId.bindTo(
       this._contextKeyService,
     );
-		this._resourceKey = AbstractResourceContextKey.Resource.bindTo(
+    this._resourceKey = AbstractResourceContextKey.Resource.bindTo(
       this._contextKeyService,
     );
-		this._extensionKey = AbstractResourceContextKey.Extension.bindTo(
+    this._extensionKey = AbstractResourceContextKey.Extension.bindTo(
       this._contextKeyService,
     );
-		this._hasResource = AbstractResourceContextKey.HasResource.bindTo(
+    this._hasResource = AbstractResourceContextKey.HasResource.bindTo(
       this._contextKeyService,
     );
-		this._isFileSystemResource = AbstractResourceContextKey.IsFileSystemResource.bindTo(
-      this._contextKeyService,
-    );
-	}
+    this._isFileSystemResource =
+      AbstractResourceContextKey.IsFileSystemResource.bindTo(
+        this._contextKeyService,
+      );
+  }
 
-	protected _setLangId(): void {
-		const value = this.get();
-		if (!value) {
-			this._langIdKey.set(null);
-			return;
-		}
-		const langId = this._modelService.getModel(value)?.getLanguageId() ?? this._languageService.guessLanguageIdByFilepathOrFirstLine(
-      value,
-    );
-		this._langIdKey.set(langId);
-	}
+  protected _setLangId(): void {
+    const value = this.get();
+    if (!value) {
+      this._langIdKey.set(null);
+      return;
+    }
+    const langId =
+      this._modelService.getModel(value)?.getLanguageId() ??
+      this._languageService.guessLanguageIdByFilepathOrFirstLine(value);
+    this._langIdKey.set(langId);
+  }
 
-	set(value: URI | null | undefined) {
-		value = value ?? undefined;
-		if (isEqual(this._value, value)) {
-			return;
-		}
-		this._value = value;
-		this._contextKeyService.bufferChangeEvents(() => {
+  set(value: URI | null | undefined) {
+    value = value ?? undefined;
+    if (isEqual(this._value, value)) {
+      return;
+    }
+    this._value = value;
+    this._contextKeyService.bufferChangeEvents(() => {
       this._resourceKey.set(value ? value.toString() : null);
       this._schemeKey.set(value ? value.scheme : null);
       this._filenameKey.set(value ? basename(value) : null);
@@ -765,18 +804,18 @@ abstract class AbstractResourceContextKey {
         value ? this._fileService.hasProvider(value) : false,
       );
     });
-	}
+  }
 
-	protected uriToPath(uri: URI): string {
-		if (uri.scheme === Schemas.file) {
-			return uri.fsPath;
-		}
-		return uri.path;
-	}
+  protected uriToPath(uri: URI): string {
+    if (uri.scheme === Schemas.file) {
+      return uri.fsPath;
+    }
+    return uri.path;
+  }
 
-	reset(): void {
-		this._value = undefined;
-		this._contextKeyService.bufferChangeEvents(() => {
+  reset(): void {
+    this._value = undefined;
+    this._contextKeyService.bufferChangeEvents(() => {
       this._resourceKey.reset();
       this._schemeKey.reset();
       this._filenameKey.reset();
@@ -787,25 +826,24 @@ abstract class AbstractResourceContextKey {
       this._hasResource.reset();
       this._isFileSystemResource.reset();
     });
-	}
+  }
 
-	get(): URI | undefined {
-		return this._value;
-	}
+  get(): URI | undefined {
+    return this._value;
+  }
 }
 
 export class ResourceContextKey extends AbstractResourceContextKey {
+  private readonly _disposables = new DisposableStore();
 
-	private readonly _disposables = new DisposableStore();
-
-	constructor(
-		@IContextKeyService contextKeyService: IContextKeyService,
-		@IFileService fileService: IFileService,
-		@ILanguageService languageService: ILanguageService,
-		@IModelService modelService: IModelService,
-	) {
-		super(contextKeyService, fileService, languageService, modelService);
-		this._disposables.add(
+  constructor(
+    @IContextKeyService contextKeyService: IContextKeyService,
+    @IFileService fileService: IFileService,
+    @ILanguageService languageService: ILanguageService,
+    @IModelService modelService: IModelService,
+  ) {
+    super(contextKeyService, fileService, languageService, modelService);
+    this._disposables.add(
       fileService.onDidChangeFileSystemProviderRegistrations(() => {
         const resource = this.get();
         this._isFileSystemResource.set(
@@ -813,69 +851,82 @@ export class ResourceContextKey extends AbstractResourceContextKey {
         );
       }),
     );
-		this._disposables.add(modelService.onModelAdded(model => {
-			if (isEqual(model.uri, this.get())) {
-				this._setLangId();
-			}
-		}));
-		this._disposables.add(modelService.onModelLanguageChanged(e => {
-			if (isEqual(e.model.uri, this.get())) {
-				this._setLangId();
-			}
-		}));
-	}
+    this._disposables.add(
+      modelService.onModelAdded((model) => {
+        if (isEqual(model.uri, this.get())) {
+          this._setLangId();
+        }
+      }),
+    );
+    this._disposables.add(
+      modelService.onModelLanguageChanged((e) => {
+        if (isEqual(e.model.uri, this.get())) {
+          this._setLangId();
+        }
+      }),
+    );
+  }
 
-	dispose(): void {
-		this._disposables.dispose();
-	}
+  dispose(): void {
+    this._disposables.dispose();
+  }
 }
 
 /**
  * This is a version of ResourceContextKey that is not disposable and has no listeners for model change events.
  * It will configure itself for the state/presence of a model only when created and not update.
  */
-export class StaticResourceContextKey extends AbstractResourceContextKey { }
-
+export class StaticResourceContextKey extends AbstractResourceContextKey {}
 
 //#endregion
 
-export function applyAvailableEditorIds(contextKey: IContextKey<string>, editor: EditorInput | undefined | null, editorResolverService: IEditorResolverService): void {
-	if (!editor) {
-		contextKey.set("");
-		return;
-	}
+export function applyAvailableEditorIds(
+  contextKey: IContextKey<string>,
+  editor: EditorInput | undefined | null,
+  editorResolverService: IEditorResolverService,
+): void {
+  if (!editor) {
+    contextKey.set("");
+    return;
+  }
 
-	const editors = getAvailableEditorIds(editor, editorResolverService);
-	contextKey.set(editors.join(","));
+  const editors = getAvailableEditorIds(editor, editorResolverService);
+  contextKey.set(editors.join(","));
 }
 
-function getAvailableEditorIds(editor: EditorInput, editorResolverService: IEditorResolverService): string[] {
-	// Non text editor untitled files cannot be easily serialized between
-	// extensions so instead we disable this context key to prevent common
-	// commands that act on the active editor.
-	if (editor.resource?.scheme === Schemas.untitled && editor.editorId !== DEFAULT_EDITOR_ASSOCIATION.id) {
-		return [];
-	}
+function getAvailableEditorIds(
+  editor: EditorInput,
+  editorResolverService: IEditorResolverService,
+): string[] {
+  // Non text editor untitled files cannot be easily serialized between
+  // extensions so instead we disable this context key to prevent common
+  // commands that act on the active editor.
+  if (
+    editor.resource?.scheme === Schemas.untitled &&
+    editor.editorId !== DEFAULT_EDITOR_ASSOCIATION.id
+  ) {
+    return [];
+  }
 
-	// Diff editors. The original and modified resources of a diff editor
-	// *should* be the same, but calculate the set intersection just to be safe.
-	if (isDiffEditorInput(editor)) {
-		const original = getAvailableEditorIds(
+  // Diff editors. The original and modified resources of a diff editor
+  // *should* be the same, but calculate the set intersection just to be safe.
+  if (isDiffEditorInput(editor)) {
+    const original = getAvailableEditorIds(
       editor.original,
       editorResolverService,
     );
-		const modified = new Set(
+    const modified = new Set(
       getAvailableEditorIds(editor.modified, editorResolverService),
     );
-		return original.filter(editor => modified.has(editor));
-	}
+    return original.filter((editor) => modified.has(editor));
+  }
 
-	// Normal editors.
-	if (editor.resource) {
-		return editorResolverService.getEditors(editor.resource).map(
-      editor => editor.id,
-    );
-	}
+  // Normal editors.
+  if (editor.resource) {
+    return editorResolverService
+      .getEditors(editor.resource)
+      .map((editor) => editor.id);
+  }
 
-	return [];
+  return [];
 }

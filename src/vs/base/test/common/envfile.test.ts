@@ -176,12 +176,22 @@ suite("parseEnvFile", () => {
     assert.strictEqual(parsed.get("SPACED_KEY"), "parsed");
     const payload = parseEnvFile("BUFFER=true");
     assert.strictEqual(payload.get("BUFFER"), "true");
-    const expectedPayload = Object.entries({ SERVER: "localhost", PASSWORD: "password", DB: "tests" });
-    const RPayload = parseEnvFile("SERVER=localhost\rPASSWORD=password\rDB=tests\r");
+    const expectedPayload = Object.entries({
+      SERVER: "localhost",
+      PASSWORD: "password",
+      DB: "tests",
+    });
+    const RPayload = parseEnvFile(
+      "SERVER=localhost\rPASSWORD=password\rDB=tests\r",
+    );
     assert.deepStrictEqual([...RPayload], expectedPayload);
-    const NPayload = parseEnvFile("SERVER=localhost\nPASSWORD=password\nDB=tests\n");
+    const NPayload = parseEnvFile(
+      "SERVER=localhost\nPASSWORD=password\nDB=tests\n",
+    );
     assert.deepStrictEqual([...NPayload], expectedPayload);
-    const RNPayload = parseEnvFile("SERVER=localhost\r\nPASSWORD=password\r\nDB=tests\r\n");
+    const RNPayload = parseEnvFile(
+      "SERVER=localhost\r\nPASSWORD=password\r\nDB=tests\r\n",
+    );
     assert.deepStrictEqual([...RNPayload], expectedPayload);
   });
 });

@@ -5,121 +5,150 @@
 
 import { KeyCode, KeyMod } from "../../../../../base/common/keyCodes.js";
 import { Schemas } from "../../../../../base/common/network.js";
-import { isIOS, isMacintosh, isWindows } from "../../../../../base/common/platform.js";
+import {
+  isIOS,
+  isMacintosh,
+  isWindows,
+} from "../../../../../base/common/platform.js";
 import { isObject, isString } from "../../../../../base/common/types.js";
 import { localize, localize2 } from "../../../../../nls.js";
 import { CONTEXT_ACCESSIBILITY_MODE_ENABLED } from "../../../../../platform/accessibility/common/accessibility.js";
 import { IClipboardService } from "../../../../../platform/clipboard/common/clipboardService.js";
 import { ICommandService } from "../../../../../platform/commands/common/commands.js";
-import { ContextKeyExpr, type ContextKeyExpression } from "../../../../../platform/contextkey/common/contextkey.js";
+import {
+  ContextKeyExpr,
+  type ContextKeyExpression,
+} from "../../../../../platform/contextkey/common/contextkey.js";
 import type { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
-import { KeybindingsRegistry, KeybindingWeight, type IKeybindings } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import {
+  KeybindingsRegistry,
+  KeybindingWeight,
+  type IKeybindings,
+} from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
 import { IQuickInputService } from "../../../../../platform/quickinput/common/quickInput.js";
-import { GeneralShellType, TerminalSettingId, WindowsShellType } from "../../../../../platform/terminal/common/terminal.js";
+import {
+  GeneralShellType,
+  TerminalSettingId,
+  WindowsShellType,
+} from "../../../../../platform/terminal/common/terminal.js";
 import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
 import { IConfigurationResolverService } from "../../../../services/configurationResolver/common/configurationResolver.js";
 import { IHistoryService } from "../../../../services/history/common/history.js";
 import { ITerminalService } from "../../../terminal/browser/terminal.js";
 import { registerTerminalAction } from "../../../terminal/browser/terminalActions.js";
 import { TerminalCommandId } from "../../../terminal/common/terminal.js";
-import { TerminalContextKeys, TerminalContextKeyStrings } from "../../../terminal/common/terminalContextKey.js";
+import {
+  TerminalContextKeys,
+  TerminalContextKeyStrings,
+} from "../../../terminal/common/terminalContextKey.js";
 
 export const enum TerminalSendSequenceCommandId {
-	SendSequence = "workbench.action.terminal.sendSequence",
+  SendSequence = "workbench.action.terminal.sendSequence",
 }
 
 function toOptionalString(obj: unknown): string | undefined {
-	return isString(obj) ? obj : undefined;
+  return isString(obj) ? obj : undefined;
 }
 
-export const terminalSendSequenceCommand = async (accessor: ServicesAccessor, args: unknown) => {
-	const quickInputService = accessor.get(IQuickInputService);
-	const configurationResolverService = accessor.get(
+export const terminalSendSequenceCommand = async (
+  accessor: ServicesAccessor,
+  args: unknown,
+) => {
+  const quickInputService = accessor.get(IQuickInputService);
+  const configurationResolverService = accessor.get(
     IConfigurationResolverService,
   );
-	const workspaceContextService = accessor.get(IWorkspaceContextService);
-	const historyService = accessor.get(IHistoryService);
-	const terminalService = accessor.get(ITerminalService);
+  const workspaceContextService = accessor.get(IWorkspaceContextService);
+  const historyService = accessor.get(IHistoryService);
+  const terminalService = accessor.get(ITerminalService);
 
-	const instance = terminalService.activeInstance;
-	if (instance) {
-		function isTextArg(obj: unknown): obj is { text: string } {
-			return isObject(obj) && "text" in obj;
-		}
-		let text = isTextArg(args) ? toOptionalString(args.text) : undefined;
+  const instance = terminalService.activeInstance;
+  if (instance) {
+    function isTextArg(obj: unknown): obj is { text: string } {
+      return isObject(obj) && "text" in obj;
+    }
+    let text = isTextArg(args) ? toOptionalString(args.text) : undefined;
 
-		// If no text provided, prompt user for input and process special characters
-		if (!text) {
-			text = await quickInputService.input({
+    // If no text provided, prompt user for input and process special characters
+    if (!text) {
+      text = await quickInputService.input({
         value: "",
         placeHolder: "Enter sequence to send (supports \\n, \\r, \\xAB)",
-        prompt: localize("workbench.action.terminal.sendSequence.prompt", "Enter sequence to send to the terminal"),
+        prompt: localize(
+          "workbench.action.terminal.sendSequence.prompt",
+          "Enter sequence to send to the terminal",
+        ),
       });
-			if (!text) {
-				return;
-			}
-			// Process escape sequences
-			let processedText = text
-				.replace(/\\n/g, "\n")
-				.replace(/\\r/g, "\r");
+      if (!text) {
+        return;
+      }
+      // Process escape sequences
+      let processedText = text.replace(/\\n/g, "\n").replace(/\\r/g, "\r");
 
-			// Process hex escape sequences (\xNN)
-			while (true) {
-				const match = processedText.match(/\\x([0-9a-fA-F]{2})/);
-				if (match === null || match.index === undefined || match.length < 2) {
-					break;
-				}
-				processedText = processedText.slice(
-          0,
-          match.index,
-        ) + String.fromCharCode(
-          parseInt(match[1], 16),
-        ) + processedText.slice(match.index + 4);
-			}
+      // Process hex escape sequences (\xNN)
+      while (true) {
+        const match = processedText.match(/\\x([0-9a-fA-F]{2})/);
+        if (match === null || match.index === undefined || match.length < 2) {
+          break;
+        }
+        processedText =
+          processedText.slice(0, match.index) +
+          String.fromCharCode(parseInt(match[1], 16)) +
+          processedText.slice(match.index + 4);
+      }
 
-			text = processedText;
-		}
+      text = processedText;
+    }
 
-		const activeWorkspaceRootUri = historyService.getLastActiveWorkspaceRoot(
+    const activeWorkspaceRootUri = historyService.getLastActiveWorkspaceRoot(
       instance.hasRemoteAuthority ? Schemas.vscodeRemote : Schemas.file,
     );
-		const lastActiveWorkspaceRoot = activeWorkspaceRootUri ? workspaceContextService.getWorkspaceFolder(
-      activeWorkspaceRootUri,
-    ) ?? undefined : undefined;
-		const resolvedText = await configurationResolverService.resolveAsync(
+    const lastActiveWorkspaceRoot = activeWorkspaceRootUri
+      ? (workspaceContextService.getWorkspaceFolder(activeWorkspaceRootUri) ??
+        undefined)
+      : undefined;
+    const resolvedText = await configurationResolverService.resolveAsync(
       lastActiveWorkspaceRoot,
       text,
     );
-		instance.sendText(resolvedText, false);
-	}
+    instance.sendText(resolvedText, false);
+  }
 };
 
 const sendSequenceString = localize2("sendSequence", "Send Sequence");
 registerTerminalAction({
-	id: TerminalSendSequenceCommandId.SendSequence,
-	title: sendSequenceString,
-	f1: true,
-	metadata: {
-		description: sendSequenceString.value,
-		args: [{
-			name: "args",
-			schema: {
-				type: "object",
-				required: ["text"],
-				properties: {
-					text: {
-						description: localize("sendSequence.text.desc", "The sequence of text to send to the terminal"),
-						type: "string",
-					},
-				},
-			},
-		}],
-	},
-	run: (c, accessor, args) => terminalSendSequenceCommand(accessor, args),
+  id: TerminalSendSequenceCommandId.SendSequence,
+  title: sendSequenceString,
+  f1: true,
+  metadata: {
+    description: sendSequenceString.value,
+    args: [
+      {
+        name: "args",
+        schema: {
+          type: "object",
+          required: ["text"],
+          properties: {
+            text: {
+              description: localize(
+                "sendSequence.text.desc",
+                "The sequence of text to send to the terminal",
+              ),
+              type: "string",
+            },
+          },
+        },
+      },
+    ],
+  },
+  run: (c, accessor, args) => terminalSendSequenceCommand(accessor, args),
 });
 
-export function registerSendSequenceKeybinding(text: string, rule: { when?: ContextKeyExpression } & IKeybindings): void {
-	KeybindingsRegistry.registerCommandAndKeybindingRule({
+export function registerSendSequenceKeybinding(
+  text: string,
+  rule: { when?: ContextKeyExpression } & IKeybindings,
+): void {
+  KeybindingsRegistry.registerCommandAndKeybindingRule({
     id: TerminalSendSequenceCommandId.SendSequence,
     weight: KeybindingWeight.WorkbenchContrib,
     when: rule.when || TerminalContextKeys.focus,
@@ -132,11 +161,9 @@ export function registerSendSequenceKeybinding(text: string, rule: { when?: Cont
   });
 }
 
-
-
 const enum Constants {
-	/** The text representation of `^<letter>` is `'A'.charCodeAt(0) + 1`. */
-	CtrlLetterOffset = 64
+  /** The text representation of `^<letter>` is `'A'.charCodeAt(0) + 1`. */
+  CtrlLetterOffset = 64,
 }
 
 // An extra Windows-only ctrl+v keybinding is used for pwsh that sends ctrl+v directly to the
@@ -148,49 +175,124 @@ const enum Constants {
 // cannot see it (it only reads CF_UNICODETEXT from the Win32 clipboard), so we delegate to the
 // standard paste command instead.
 if (isWindows) {
-	const ctrlV = String.fromCharCode(
+  const ctrlV = String.fromCharCode(
     "V".charCodeAt(0) - Constants.CtrlLetterOffset,
   );
-	KeybindingsRegistry.registerCommandAndKeybindingRule({
-		id: TerminalCommandId.PastePwsh,
-		weight: KeybindingWeight.WorkbenchContrib,
-		when: ContextKeyExpr.and(TerminalContextKeys.focus, ContextKeyExpr.equals(TerminalContextKeyStrings.ShellType, GeneralShellType.PowerShell), CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate()),
-		primary: KeyMod.CtrlCmd | KeyCode.KeyV,
-		handler: async accessor => {
-			const clipboardService = accessor.get(IClipboardService);
-			const commandService = accessor.get(ICommandService);
-			if (!await clipboardService.readText() && await clipboardService.hasResources()) {
-				return commandService.executeCommand(TerminalCommandId.Paste);
-			}
-			return commandService.executeCommand(TerminalCommandId.SendSequence, { text: ctrlV });
-		},
-	});
+  KeybindingsRegistry.registerCommandAndKeybindingRule({
+    id: TerminalCommandId.PastePwsh,
+    weight: KeybindingWeight.WorkbenchContrib,
+    when: ContextKeyExpr.and(
+      TerminalContextKeys.focus,
+      ContextKeyExpr.equals(
+        TerminalContextKeyStrings.ShellType,
+        GeneralShellType.PowerShell,
+      ),
+      CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate(),
+    ),
+    primary: KeyMod.CtrlCmd | KeyCode.KeyV,
+    handler: async (accessor) => {
+      const clipboardService = accessor.get(IClipboardService);
+      const commandService = accessor.get(ICommandService);
+      if (
+        !(await clipboardService.readText()) &&
+        (await clipboardService.hasResources())
+      ) {
+        return commandService.executeCommand(TerminalCommandId.Paste);
+      }
+      return commandService.executeCommand(TerminalCommandId.SendSequence, {
+        text: ctrlV,
+      });
+    },
+  });
 }
 
 // Map certain keybindings in pwsh to unused keys which get handled by PSReadLine handlers in the
 // shell integration script. This allows keystrokes that cannot be sent via VT sequences to work.
 // See https://github.com/microsoft/terminal/issues/879#issuecomment-497775007
 registerSendSequenceKeybinding("\x1b[24~a", {
-  when: ContextKeyExpr.and(TerminalContextKeys.focus, ContextKeyExpr.equals(TerminalContextKeyStrings.ShellType, GeneralShellType.PowerShell), TerminalContextKeys.terminalShellIntegrationEnabled, ContextKeyExpr.equals(`config.${TerminalSettingId.EnableWin32InputMode}`, true), CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate()),
+  // F12,a -> ctrl+space (MenuComplete)
+  when: ContextKeyExpr.and(
+    TerminalContextKeys.focus,
+    ContextKeyExpr.equals(
+      TerminalContextKeyStrings.ShellType,
+      GeneralShellType.PowerShell,
+    ),
+    TerminalContextKeys.terminalShellIntegrationEnabled,
+    ContextKeyExpr.equals(
+      `config.${TerminalSettingId.EnableWin32InputMode}`,
+      true,
+    ),
+    CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate(),
+  ),
   primary: KeyMod.CtrlCmd | KeyCode.Space,
   mac: { primary: KeyMod.WinCtrl | KeyCode.Space },
 });
 registerSendSequenceKeybinding("\x1b[24~b", {
-  when: ContextKeyExpr.and(TerminalContextKeys.focus, ContextKeyExpr.equals(TerminalContextKeyStrings.ShellType, GeneralShellType.PowerShell), TerminalContextKeys.terminalShellIntegrationEnabled, ContextKeyExpr.equals(`config.${TerminalSettingId.EnableWin32InputMode}`, true), CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate()),
+  // F12,b -> alt+space (SetMark)
+  when: ContextKeyExpr.and(
+    TerminalContextKeys.focus,
+    ContextKeyExpr.equals(
+      TerminalContextKeyStrings.ShellType,
+      GeneralShellType.PowerShell,
+    ),
+    TerminalContextKeys.terminalShellIntegrationEnabled,
+    ContextKeyExpr.equals(
+      `config.${TerminalSettingId.EnableWin32InputMode}`,
+      true,
+    ),
+    CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate(),
+  ),
   primary: KeyMod.Alt | KeyCode.Space,
 });
 registerSendSequenceKeybinding("\x1b[24~c", {
-  when: ContextKeyExpr.and(TerminalContextKeys.focus, ContextKeyExpr.equals(TerminalContextKeyStrings.ShellType, GeneralShellType.PowerShell), TerminalContextKeys.terminalShellIntegrationEnabled, ContextKeyExpr.equals(`config.${TerminalSettingId.EnableWin32InputMode}`, true), CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate()),
+  // F12,c -> shift+enter (AddLine)
+  when: ContextKeyExpr.and(
+    TerminalContextKeys.focus,
+    ContextKeyExpr.equals(
+      TerminalContextKeyStrings.ShellType,
+      GeneralShellType.PowerShell,
+    ),
+    TerminalContextKeys.terminalShellIntegrationEnabled,
+    ContextKeyExpr.equals(
+      `config.${TerminalSettingId.EnableWin32InputMode}`,
+      true,
+    ),
+    CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate(),
+  ),
   primary: KeyMod.Shift | KeyCode.Enter,
 });
 registerSendSequenceKeybinding("\x1b[24~d", {
-  when: ContextKeyExpr.and(TerminalContextKeys.focus, ContextKeyExpr.equals(TerminalContextKeyStrings.ShellType, GeneralShellType.PowerShell), TerminalContextKeys.terminalShellIntegrationEnabled, ContextKeyExpr.equals(`config.${TerminalSettingId.EnableWin32InputMode}`, true), CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate()),
+  // F12,d -> shift+end (SelectLine) - HACK: \x1b[1;2F is supposed to work but it doesn't
+  when: ContextKeyExpr.and(
+    TerminalContextKeys.focus,
+    ContextKeyExpr.equals(
+      TerminalContextKeyStrings.ShellType,
+      GeneralShellType.PowerShell,
+    ),
+    TerminalContextKeys.terminalShellIntegrationEnabled,
+    ContextKeyExpr.equals(
+      `config.${TerminalSettingId.EnableWin32InputMode}`,
+      true,
+    ),
+    CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate(),
+  ),
   mac: { primary: KeyMod.Shift | KeyMod.CtrlCmd | KeyCode.RightArrow },
 });
 
 // Always on pwsh keybindings
 registerSendSequenceKeybinding("\x1b[1;2H", {
-  when: ContextKeyExpr.and(TerminalContextKeys.focus, ContextKeyExpr.equals(TerminalContextKeyStrings.ShellType, GeneralShellType.PowerShell), ContextKeyExpr.equals(`config.${TerminalSettingId.EnableWin32InputMode}`, true)),
+  // Shift+home
+  when: ContextKeyExpr.and(
+    TerminalContextKeys.focus,
+    ContextKeyExpr.equals(
+      TerminalContextKeyStrings.ShellType,
+      GeneralShellType.PowerShell,
+    ),
+    ContextKeyExpr.equals(
+      `config.${TerminalSettingId.EnableWin32InputMode}`,
+      true,
+    ),
+  ),
   mac: { primary: KeyMod.Shift | KeyMod.CtrlCmd | KeyCode.LeftArrow },
 });
 
@@ -217,7 +319,10 @@ registerSendSequenceKeybinding("\x1b" + (isMacintosh ? "b" : "[1;5D"), {
 
 // Map ctrl+alt+r -> ctrl+r when in accessibility mode due to default run recent command keybinding
 registerSendSequenceKeybinding("\x12", {
-  when: ContextKeyExpr.and(TerminalContextKeys.focus, CONTEXT_ACCESSIBILITY_MODE_ENABLED),
+  when: ContextKeyExpr.and(
+    TerminalContextKeys.focus,
+    CONTEXT_ACCESSIBILITY_MODE_ENABLED,
+  ),
   primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyR,
   mac: { primary: KeyMod.WinCtrl | KeyMod.Alt | KeyCode.KeyR },
 });
@@ -231,9 +336,10 @@ registerSendSequenceKeybinding("\x07", {
 
 // send ctrl+c to the iPad when the terminal is focused and ctrl+c is pressed to kill the process (work around for #114009)
 if (isIOS) {
-	registerSendSequenceKeybinding(
+  registerSendSequenceKeybinding(
     String.fromCharCode("C".charCodeAt(0) - Constants.CtrlLetterOffset),
     {
+      // ctrl+c
       when: ContextKeyExpr.and(TerminalContextKeys.focus),
       primary: KeyMod.WinCtrl | KeyCode.KeyC,
     },
@@ -249,12 +355,21 @@ registerSendSequenceKeybinding(
   },
 );
 if (isWindows) {
-	// Delete word left: ctrl+h
-	// Windows cmd.exe requires ^H to delete full word left
-	registerSendSequenceKeybinding(String.fromCharCode("H".charCodeAt(0) - Constants.CtrlLetterOffset), {
-		when: ContextKeyExpr.and(TerminalContextKeys.focus, ContextKeyExpr.equals(TerminalContextKeyStrings.ShellType, WindowsShellType.CommandPrompt)),
-		primary: KeyMod.CtrlCmd | KeyCode.Backspace,
-	});
+  // Delete word left: ctrl+h
+  // Windows cmd.exe requires ^H to delete full word left
+  registerSendSequenceKeybinding(
+    String.fromCharCode("H".charCodeAt(0) - Constants.CtrlLetterOffset),
+    {
+      when: ContextKeyExpr.and(
+        TerminalContextKeys.focus,
+        ContextKeyExpr.equals(
+          TerminalContextKeyStrings.ShellType,
+          WindowsShellType.CommandPrompt,
+        ),
+      ),
+      primary: KeyMod.CtrlCmd | KeyCode.Backspace,
+    },
+  );
 }
 // Delete word right: alt+d [27, 100]
 registerSendSequenceKeybinding("\u001bd", {

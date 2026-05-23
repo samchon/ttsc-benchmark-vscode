@@ -5,7 +5,10 @@
 
 import { joinPath } from "../../../../base/common/resources.js";
 import { URI } from "../../../../base/common/uri.js";
-import { agentHostAuthority, toAgentHostUri } from "../../../../platform/agentHost/common/agentHostUri.js";
+import {
+  agentHostAuthority,
+  toAgentHostUri,
+} from "../../../../platform/agentHost/common/agentHostUri.js";
 import { IRemoteAgentHostConnectionInfo } from "../../../../platform/agentHost/common/remoteAgentHostService.js";
 
 // Scheme conventions for `copilotcli` chat sessions:
@@ -26,7 +29,7 @@ const REMOTE_PROVIDER_SUFFIX = `-${COPILOT_CLI_PROVIDER}`;
  * and the same chat session URI shape (`copilotcli:/<rawId>`).
  */
 export function buildLocalEventsUri(userHome: URI, rawSessionId: string): URI {
-	return joinPath(
+  return joinPath(
     userHome,
     ".copilot",
     "session-state",
@@ -47,18 +50,21 @@ export function buildLocalEventsUri(userHome: URI, rawSessionId: string): URI {
  * `/c:/Users/me`). Returns `undefined` if the host did not report a
  * usable `defaultDirectory`.
  */
-export function buildRemoteEventsUri(connection: IRemoteAgentHostConnectionInfo, rawSessionId: string): URI | undefined {
-	const homePath = connection.defaultDirectory;
-	if (!homePath) {
-		return undefined;
-	}
-	const trimmed = homePath.endsWith("/") ? homePath.slice(0, -1) : homePath;
-	const remoteFileUri = URI.from({
+export function buildRemoteEventsUri(
+  connection: IRemoteAgentHostConnectionInfo,
+  rawSessionId: string,
+): URI | undefined {
+  const homePath = connection.defaultDirectory;
+  if (!homePath) {
+    return undefined;
+  }
+  const trimmed = homePath.endsWith("/") ? homePath.slice(0, -1) : homePath;
+  const remoteFileUri = URI.from({
     scheme: "file",
     path: `${trimmed}/.copilot/session-state/${rawSessionId}/events.jsonl`,
   });
-	const authority = agentHostAuthority(connection.address);
-	return toAgentHostUri(remoteFileUri, authority);
+  const authority = agentHostAuthority(connection.address);
+  return toAgentHostUri(remoteFileUri, authority);
 }
 
 /**
@@ -66,23 +72,28 @@ export function buildRemoteEventsUri(connection: IRemoteAgentHostConnectionInfo,
  * of the form `remote-<authority>-copilotcli`. Returns `undefined` for
  * any other scheme, including the local `copilotcli` scheme.
  */
-export function parseRemoteAuthorityFromScheme(scheme: string): string | undefined {
-	if (!scheme.startsWith(REMOTE_PROVIDER_PREFIX) || !scheme.endsWith(REMOTE_PROVIDER_SUFFIX)) {
-		return undefined;
-	}
-	const authority = scheme.slice(
+export function parseRemoteAuthorityFromScheme(
+  scheme: string,
+): string | undefined {
+  if (
+    !scheme.startsWith(REMOTE_PROVIDER_PREFIX) ||
+    !scheme.endsWith(REMOTE_PROVIDER_SUFFIX)
+  ) {
+    return undefined;
+  }
+  const authority = scheme.slice(
     REMOTE_PROVIDER_PREFIX.length,
     scheme.length - REMOTE_PROVIDER_SUFFIX.length,
   );
-	return authority || undefined;
+  return authority || undefined;
 }
 
 export type ResolveEventsUriResult =
-	| { readonly kind: "ok"; readonly resource: URI }
-	| { readonly kind: "no-session" }
-	| { readonly kind: "unsupported-scheme"; readonly scheme: string }
-	| { readonly kind: "remote-not-connected"; readonly authority: string }
-	| { readonly kind: "remote-no-home"; readonly authority: string };
+  | { readonly kind: "ok"; readonly resource: URI }
+  | { readonly kind: "no-session" }
+  | { readonly kind: "unsupported-scheme"; readonly scheme: string }
+  | { readonly kind: "remote-not-connected"; readonly authority: string }
+  | { readonly kind: "remote-no-home"; readonly authority: string };
 
 /**
  * Pure resolver for tests. Translates a chat session resource into the
@@ -90,38 +101,43 @@ export type ResolveEventsUriResult =
  * returns a structured error.
  */
 export function resolveEventsUri(
-	sessionResource: URI | undefined,
-	userHome: URI,
-	getConnectionByAuthority: (authority: string) => IRemoteAgentHostConnectionInfo | undefined,
+  sessionResource: URI | undefined,
+  userHome: URI,
+  getConnectionByAuthority: (
+    authority: string,
+  ) => IRemoteAgentHostConnectionInfo | undefined,
 ): ResolveEventsUriResult {
-	if (!sessionResource) {
-		return { kind: "no-session" };
-	}
-	const rawId = sessionResource.path.startsWith(
-    "/",
-  ) ? sessionResource.path.substring(1) : sessionResource.path;
-	if (!rawId) {
-		return { kind: "no-session" };
-	}
+  if (!sessionResource) {
+    return { kind: "no-session" };
+  }
+  const rawId = sessionResource.path.startsWith("/")
+    ? sessionResource.path.substring(1)
+    : sessionResource.path;
+  if (!rawId) {
+    return { kind: "no-session" };
+  }
 
-	if (sessionResource.scheme === COPILOT_CLI_LOCAL_AH_SCHEME || sessionResource.scheme === COPILOT_CLI_EH_SCHEME) {
-		return { kind: "ok", resource: buildLocalEventsUri(userHome, rawId) };
-	}
+  if (
+    sessionResource.scheme === COPILOT_CLI_LOCAL_AH_SCHEME ||
+    sessionResource.scheme === COPILOT_CLI_EH_SCHEME
+  ) {
+    return { kind: "ok", resource: buildLocalEventsUri(userHome, rawId) };
+  }
 
-	const remoteAuthority = parseRemoteAuthorityFromScheme(
+  const remoteAuthority = parseRemoteAuthorityFromScheme(
     sessionResource.scheme,
   );
-	if (remoteAuthority) {
-		const connection = getConnectionByAuthority(remoteAuthority);
-		if (!connection) {
-			return { kind: "remote-not-connected", authority: remoteAuthority };
-		}
-		const resource = buildRemoteEventsUri(connection, rawId);
-		if (!resource) {
-			return { kind: "remote-no-home", authority: remoteAuthority };
-		}
-		return { kind: "ok", resource };
-	}
+  if (remoteAuthority) {
+    const connection = getConnectionByAuthority(remoteAuthority);
+    if (!connection) {
+      return { kind: "remote-not-connected", authority: remoteAuthority };
+    }
+    const resource = buildRemoteEventsUri(connection, rawId);
+    if (!resource) {
+      return { kind: "remote-no-home", authority: remoteAuthority };
+    }
+    return { kind: "ok", resource };
+  }
 
-	return { kind: "unsupported-scheme", scheme: sessionResource.scheme };
+  return { kind: "unsupported-scheme", scheme: sessionResource.scheme };
 }

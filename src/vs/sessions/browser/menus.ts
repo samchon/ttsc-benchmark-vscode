@@ -28,6 +28,7 @@ export const Menus = {
   AccountMenu: new MenuId("SessionsAccountMenu"),
   GoMenu: new MenuId("SessionsGoMenu"),
   AgentFeedbackEditorContent: new MenuId("AgentFeedbackEditorContent"),
+
   NewSessionConfig: new MenuId("NewSessions.SessionConfigMenu"),
   NewSessionControl: new MenuId("NewSessions.SessionControlMenu"),
   NewSessionRepositoryConfig: new MenuId("NewSessions.RepositoryConfigMenu"),

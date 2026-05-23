@@ -18,65 +18,77 @@ import { IPluginGitService } from "../common/plugins/pluginGitService.js";
  * survive the IPC boundary to the shared process (tokens don't serialise).
  */
 export class NativePluginGitCommandService implements IPluginGitService {
-	declare readonly _serviceBrand: undefined;
+  declare readonly _serviceBrand: undefined;
 
-	constructor(
-		@ILocalGitService private readonly _localGitService: ILocalGitService,
-	) { }
+  constructor(
+    @ILocalGitService private readonly _localGitService: ILocalGitService,
+  ) {}
 
-	private _withCancel<T>(token: CancellationToken | undefined, fn: (operationId: string) => Promise<T>): Promise<T> {
-		const operationId = generateUuid();
-		const listener = token?.onCancellationRequested(() => {
-      this._localGitService.cancel(operationId).catch(() => { /* ignore */ });
+  private _withCancel<T>(
+    token: CancellationToken | undefined,
+    fn: (operationId: string) => Promise<T>,
+  ): Promise<T> {
+    const operationId = generateUuid();
+    const listener = token?.onCancellationRequested(() => {
+      this._localGitService.cancel(operationId).catch(() => {
+        /* ignore */
+      });
     });
-		return fn(operationId).finally(() => listener?.dispose());
-	}
+    return fn(operationId).finally(() => listener?.dispose());
+  }
 
-	async cloneRepository(cloneUrl: string, targetDir: URI, ref?: string, token?: CancellationToken): Promise<void> {
-		await this._withCancel(
-      token,
-      id => this._localGitService.clone(id, cloneUrl, targetDir.fsPath, ref),
+  async cloneRepository(
+    cloneUrl: string,
+    targetDir: URI,
+    ref?: string,
+    token?: CancellationToken,
+  ): Promise<void> {
+    await this._withCancel(token, (id) =>
+      this._localGitService.clone(id, cloneUrl, targetDir.fsPath, ref),
     );
-	}
+  }
 
-	async pull(repoDir: URI, token?: CancellationToken): Promise<boolean> {
-		return this._withCancel(
-      token,
-      id => this._localGitService.pull(id, repoDir.fsPath),
+  async pull(repoDir: URI, token?: CancellationToken): Promise<boolean> {
+    return this._withCancel(token, (id) =>
+      this._localGitService.pull(id, repoDir.fsPath),
     );
-	}
+  }
 
-	async checkout(repoDir: URI, treeish: string, detached?: boolean, token?: CancellationToken): Promise<void> {
-		await this._withCancel(
-      token,
-      id => this._localGitService.checkout(
-        id,
-        repoDir.fsPath,
-        treeish,
-        detached,
-      ),
+  async checkout(
+    repoDir: URI,
+    treeish: string,
+    detached?: boolean,
+    token?: CancellationToken,
+  ): Promise<void> {
+    await this._withCancel(token, (id) =>
+      this._localGitService.checkout(id, repoDir.fsPath, treeish, detached),
     );
-	}
+  }
 
-	async revParse(repoDir: URI, ref: string): Promise<string> {
-		return this._localGitService.revParse(repoDir.fsPath, ref);
-	}
+  async revParse(repoDir: URI, ref: string): Promise<string> {
+    return this._localGitService.revParse(repoDir.fsPath, ref);
+  }
 
-	async fetch(repoDir: URI, token?: CancellationToken): Promise<void> {
-		await this._withCancel(
-      token,
-      id => this._localGitService.fetch(id, repoDir.fsPath),
+  async fetch(repoDir: URI, token?: CancellationToken): Promise<void> {
+    await this._withCancel(token, (id) =>
+      this._localGitService.fetch(id, repoDir.fsPath),
     );
-	}
+  }
 
-	async fetchRepository(repoDir: URI, token?: CancellationToken): Promise<void> {
-		await this._withCancel(
-      token,
-      id => this._localGitService.fetch(id, repoDir.fsPath),
+  async fetchRepository(
+    repoDir: URI,
+    token?: CancellationToken,
+  ): Promise<void> {
+    await this._withCancel(token, (id) =>
+      this._localGitService.fetch(id, repoDir.fsPath),
     );
-	}
+  }
 
-	async revListCount(repoDir: URI, fromRef: string, toRef: string): Promise<number> {
-		return this._localGitService.revListCount(repoDir.fsPath, fromRef, toRef);
-	}
+  async revListCount(
+    repoDir: URI,
+    fromRef: string,
+    toRef: string,
+  ): Promise<number> {
+    return this._localGitService.revListCount(repoDir.fsPath, fromRef, toRef);
+  }
 }

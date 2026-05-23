@@ -9,7 +9,6 @@ import * as nls from "../../../../nls.js";
 import { Color } from "../../../../base/common/color.js";
 import { registerColor, transparent } from "../colorUtils.js";
 
-
 export const foreground = registerColor(
   "foreground",
   { dark: "#CCCCCC", light: "#616161", hcDark: "#FFFFFF", hcLight: "#292929" },
@@ -110,7 +109,6 @@ export const selectionBackground = registerColor(
   ),
 );
 
-
 // ------ text link
 
 export const textLinkForeground = registerColor(
@@ -138,7 +136,6 @@ export const textSeparatorForeground = registerColor(
   },
   nls.localize("textSeparatorForeground", "Color for text separators."),
 );
-
 
 // ------ text preformat
 
@@ -187,9 +184,11 @@ export const textBlockQuoteBorder = registerColor(
     hcDark: Color.white,
     hcLight: "#292929",
   },
-  nls.localize("textBlockQuoteBorder", "Border color for block quotes in text."),
+  nls.localize(
+    "textBlockQuoteBorder",
+    "Border color for block quotes in text.",
+  ),
 );
-
 
 // ------ text code block
 

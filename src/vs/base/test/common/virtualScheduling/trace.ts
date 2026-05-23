@@ -17,46 +17,48 @@ import { BugIndicatingError } from "../../../common/errors.js";
  * error messages.
  */
 export class Trace {
-	private static _idCounter = 0;
-	public readonly id: number = ++Trace._idCounter;
-	public readonly root: Trace;
-	public readonly depth: number;
+  private static _idCounter = 0;
+  public readonly id: number = ++Trace._idCounter;
+  public readonly root: Trace;
+  public readonly depth: number;
 
-	constructor(
-		public readonly parent: Trace | undefined,
-		public readonly label: string,
-		public readonly stack: string | undefined = undefined,
-	) {
-		this.root = parent?.root ?? this;
-		this.depth = (parent?.depth ?? -1) + 1;
-	}
+  constructor(
+    public readonly parent: Trace | undefined,
+    public readonly label: string,
+    public readonly stack: string | undefined = undefined,
+  ) {
+    this.root = parent?.root ?? this;
+    this.depth = (parent?.depth ?? -1) + 1;
+  }
 
-	child(label: string, stack?: string): Trace {
-		return new Trace(this, label, stack);
-	}
+  child(label: string, stack?: string): Trace {
+    return new Trace(this, label, stack);
+  }
 
-	/** "#id label ← #id label ← … ← #id label" */
-	describe(): string {
-		const parts: string[] = [];
-		for (let t: Trace | undefined = this; t; t = t.parent) {
-			parts.push(`#${t.id} ${t.label}`);
-		}
-		return parts.join(" ← ");
-	}
+  /** "#id label ← #id label ← … ← #id label" */
+  describe(): string {
+    const parts: string[] = [];
+    for (let t: Trace | undefined = this; t; t = t.parent) {
+      parts.push(`#${t.id} ${t.label}`);
+    }
+    return parts.join(" ← ");
+  }
 
-	toString(): string { return this.describe(); }
+  toString(): string {
+    return this.describe();
+  }
 }
 
 /** Sentinel for "no known causal predecessor". */
 export const ROOT_TRACE: Trace = new Trace(undefined, "<root>");
 
 export function createTraceRoot(label: string, stack?: string): Trace {
-	return new Trace(undefined, label, stack);
+  return new Trace(undefined, label, stack);
 }
 
 interface Frame {
-	readonly trace: Trace;
-	readonly prev: Frame | undefined;
+  readonly trace: Trace;
+  readonly prev: Frame | undefined;
 }
 
 const ROOT_FRAME: Frame = { trace: ROOT_TRACE, prev: undefined };
@@ -88,13 +90,13 @@ const ROOT_FRAME: Frame = { trace: ROOT_TRACE, prev: undefined };
  *     fully synchronous assertions.
  */
 export interface RunAsHandlerOptions {
-	/**
-	 * Sink for the deferred trace-reset.
-	 *
-	 * Must invoke `reset` after the microtask closure that follows the
-	 * `runAsHandler` call returns — i.e. on the next host macrotask.
-	 */
-	readonly afterMicrotaskClosure: (reset: () => void) => void;
+  /**
+   * Sink for the deferred trace-reset.
+   *
+   * Must invoke `reset` after the microtask closure that follows the
+   * `runAsHandler` call returns — i.e. on the next host macrotask.
+   */
+  readonly afterMicrotaskClosure: (reset: () => void) => void;
 }
 
 /**
@@ -102,71 +104,75 @@ export interface RunAsHandlerOptions {
  * for test isolation, or use {@link TraceContext.instance} for shared state.
  */
 export class TraceContext {
-	public static readonly instance = new TraceContext();
+  public static readonly instance = new TraceContext();
 
-	private _current: Frame = ROOT_FRAME;
-	private _isHandlerRunning = false;
+  private _current: Frame = ROOT_FRAME;
+  private _isHandlerRunning = false;
 
-	currentTrace(): Trace { return this._current.trace; }
+  currentTrace(): Trace {
+    return this._current.trace;
+  }
 
-	/**
-	 * Install `t` as current for the synchronous duration of `fn`, then
-	 * restore. Nestable. Microtasks enqueued by fn that run after fn returns
-	 * see the *restored* trace — use {@link runAsHandler} when continuation
-	 * inheritance is wanted.
-	 */
-	runWithTrace<T>(t: Trace, fn: () => T): T {
-		const prev = this._current;
-		const next: Frame = { trace: t, prev };
-		this._current = next;
-		try {
-			return fn();
-		} finally {
-			if (this._current !== next) {
-				// eslint-disable-next-line no-unsafe-finally
-				throw new BugIndicatingError(
+  /**
+   * Install `t` as current for the synchronous duration of `fn`, then
+   * restore. Nestable. Microtasks enqueued by fn that run after fn returns
+   * see the *restored* trace — use {@link runAsHandler} when continuation
+   * inheritance is wanted.
+   */
+  runWithTrace<T>(t: Trace, fn: () => T): T {
+    const prev = this._current;
+    const next: Frame = { trace: t, prev };
+    this._current = next;
+    try {
+      return fn();
+    } finally {
+      if (this._current !== next) {
+        // eslint-disable-next-line no-unsafe-finally
+        throw new BugIndicatingError(
           `runWithTrace: unexpected mutation of current frame.`,
         );
-			}
-			this._current = prev;
-		}
-	}
+      }
+      this._current = prev;
+    }
+  }
 
-	/**
-	 * Install `t` as current and run `fn`. The trace stays current through
-	 * the microtask closure that follows `fn`, so awaited continuations
-	 * inside fn observe `t`. The reset is dispatched via
-	 * `opts.afterMicrotaskClosure`.
-	 *
-	 * Throws on synchronous re-entry: timer callbacks never nest on the
-	 * same JS stack frame, so this only fires for misuse.
-	 */
-	runAsHandler<T>(t: Trace, fn: () => T, opts: RunAsHandlerOptions): T {
-		if (this._isHandlerRunning) {
-			throw new Error(
-				`runAsHandler: re-entrant invocation. ` +
-				`current=${this._current.trace.describe()}, incoming=${t.describe()}`,
-			);
-		}
-		const prev = this._current;
-		const next: Frame = { trace: t, prev };
-		this._current = next;
-		this._isHandlerRunning = true;
-		try {
-			return fn();
-		} finally {
-			this._isHandlerRunning = false;
-			opts.afterMicrotaskClosure(() => {
-				// Identity guard: another handler may have run between us
-				// queuing this reset and it firing. Each runAsHandler mints
-				// a fresh frame, so reference-equality detects staleness.
-				if (this._current === next) { this._current = prev; }
-			});
-		}
-	}
+  /**
+   * Install `t` as current and run `fn`. The trace stays current through
+   * the microtask closure that follows `fn`, so awaited continuations
+   * inside fn observe `t`. The reset is dispatched via
+   * `opts.afterMicrotaskClosure`.
+   *
+   * Throws on synchronous re-entry: timer callbacks never nest on the
+   * same JS stack frame, so this only fires for misuse.
+   */
+  runAsHandler<T>(t: Trace, fn: () => T, opts: RunAsHandlerOptions): T {
+    if (this._isHandlerRunning) {
+      throw new Error(
+        `runAsHandler: re-entrant invocation. ` +
+          `current=${this._current.trace.describe()}, incoming=${t.describe()}`,
+      );
+    }
+    const prev = this._current;
+    const next: Frame = { trace: t, prev };
+    this._current = next;
+    this._isHandlerRunning = true;
+    try {
+      return fn();
+    } finally {
+      this._isHandlerRunning = false;
+      opts.afterMicrotaskClosure(() => {
+        // Identity guard: another handler may have run between us
+        // queuing this reset and it firing. Each runAsHandler mints
+        // a fresh frame, so reference-equality detects staleness.
+        if (this._current === next) {
+          this._current = prev;
+        }
+      });
+    }
+  }
 
-	_resetForTesting(): void {
-		this._current = ROOT_FRAME;
-		this._isHandlerRunning = false;
-	}
+  _resetForTesting(): void {
+    this._current = ROOT_FRAME;
+    this._isHandlerRunning = false;
+  }
 }

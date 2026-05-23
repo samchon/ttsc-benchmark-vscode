@@ -16,7 +16,7 @@ export const Mimes = Object.freeze({
 });
 
 interface MapExtToMediaMimes {
-	[index: string]: string | string[];
+  [index: string]: string | string[];
 }
 
 const mapExtToTextMimes: Record<string, string> = {
@@ -85,54 +85,58 @@ const mapExtToMediaMimes: MapExtToMediaMimes = {
 };
 
 export function getMediaOrTextMime(path: string): string | undefined {
-	const ext = extname(path);
-	const textMime = mapExtToTextMimes[ext.toLowerCase()];
-	if (textMime !== undefined) {
-		return textMime;
-	} else {
-		return getMediaMime(path);
-	}
+  const ext = extname(path);
+  const textMime = mapExtToTextMimes[ext.toLowerCase()];
+  if (textMime !== undefined) {
+    return textMime;
+  } else {
+    return getMediaMime(path);
+  }
 }
 
 export function getMediaMime(path: string): string | undefined {
-	const ext = extname(path);
-	const mimeType = mapExtToMediaMimes[ext.toLowerCase()];
-	return Array.isArray(mimeType) ? mimeType[0] : mimeType;
+  const ext = extname(path);
+  const mimeType = mapExtToMediaMimes[ext.toLowerCase()];
+  return Array.isArray(mimeType) ? mimeType[0] : mimeType;
 }
 
 export function getExtensionForMimeType(mimeType: string): string | undefined {
-	for (const extension in mapExtToMediaMimes) {
-		const value = mapExtToMediaMimes[extension];
-		if (Array.isArray(value) ? value.includes(mimeType) : value === mimeType) {
-			return extension;
-		}
-	}
+  for (const extension in mapExtToMediaMimes) {
+    const value = mapExtToMediaMimes[extension];
+    if (Array.isArray(value) ? value.includes(mimeType) : value === mimeType) {
+      return extension;
+    }
+  }
 
-	return undefined;
+  return undefined;
 }
 
 const _simplePattern = /^(.+)\/(.+?)(;.+)?$/;
 
 export function normalizeMimeType(mimeType: string): string;
-export function normalizeMimeType(mimeType: string, strict: true): string | undefined;
-export function normalizeMimeType(mimeType: string, strict?: true): string | undefined {
-
-	const match = _simplePattern.exec(mimeType);
-	if (!match) {
-		return strict
-			? undefined
-			: mimeType;
-	}
-	// https://datatracker.ietf.org/doc/html/rfc2045#section-5.1
-	// media and subtype must ALWAYS be lowercase, parameter not
-	return `${match[1].toLowerCase()}/${match[2].toLowerCase()}${match[3] ?? ""}`;
+export function normalizeMimeType(
+  mimeType: string,
+  strict: true,
+): string | undefined;
+export function normalizeMimeType(
+  mimeType: string,
+  strict?: true,
+): string | undefined {
+  const match = _simplePattern.exec(mimeType);
+  if (!match) {
+    return strict ? undefined : mimeType;
+  }
+  // https://datatracker.ietf.org/doc/html/rfc2045#section-5.1
+  // media and subtype must ALWAYS be lowercase, parameter not
+  return `${match[1].toLowerCase()}/${match[2].toLowerCase()}${match[3] ?? ""}`;
 }
 
 /**
  * Whether the provided mime type is a text stream like `stdout`, `stderr`.
  */
 export function isTextStreamMime(mimeType: string) {
-	return ["application/vnd.code.notebook.stdout", "application/vnd.code.notebook.stderr"].includes(
-    mimeType,
-  );
+  return [
+    "application/vnd.code.notebook.stdout",
+    "application/vnd.code.notebook.stderr",
+  ].includes(mimeType);
 }

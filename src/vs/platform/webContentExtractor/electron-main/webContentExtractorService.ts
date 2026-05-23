@@ -18,45 +18,57 @@ import {
 import { WebContentCache } from "./webContentCache.js";
 import { WebPageLoader } from "./webPageLoader.js";
 
-export class NativeWebContentExtractorService extends Disposable implements IWebContentExtractorService {
-	_serviceBrand: undefined;
+export class NativeWebContentExtractorService
+  extends Disposable
+  implements IWebContentExtractorService
+{
+  _serviceBrand: undefined;
 
-	// Only allow 3 windows to be opened at a time
-	// to avoid overwhelming the system with too many processes.
-	private _limiter = new Limiter<WebContentExtractResult>(3);
-	private _webContentsCache = new WebContentCache();
+  // Only allow 3 windows to be opened at a time
+  // to avoid overwhelming the system with too many processes.
+  private _limiter = new Limiter<WebContentExtractResult>(3);
+  private _webContentsCache = new WebContentCache();
 
-	constructor(
-		@ILogService private readonly _logger: ILogService,
-		@IAgentNetworkFilterService private readonly _agentNetworkFilterService: IAgentNetworkFilterService,
-	) {
-		super();
-		this._register(
-      this._agentNetworkFilterService.onDidChange(
-        () => this._webContentsCache.clear(),
+  constructor(
+    @ILogService private readonly _logger: ILogService,
+    @IAgentNetworkFilterService
+    private readonly _agentNetworkFilterService: IAgentNetworkFilterService,
+  ) {
+    super();
+    this._register(
+      this._agentNetworkFilterService.onDidChange(() =>
+        this._webContentsCache.clear(),
       ),
     );
-	}
+  }
 
-	extract(uris: URI[], options?: IWebContentExtractorOptions): Promise<WebContentExtractResult[]> {
-		if (uris.length === 0) {
-			this._logger.info("No URIs provided for extraction");
-			return Promise.resolve([]);
-		}
-		this._logger.info(`Extracting content from ${uris.length} URIs`);
-		return Promise.all(
-      uris.map((uri) => this._limiter.queue(() => this.doExtract(uri, options))),
+  extract(
+    uris: URI[],
+    options?: IWebContentExtractorOptions,
+  ): Promise<WebContentExtractResult[]> {
+    if (uris.length === 0) {
+      this._logger.info("No URIs provided for extraction");
+      return Promise.resolve([]);
+    }
+    this._logger.info(`Extracting content from ${uris.length} URIs`);
+    return Promise.all(
+      uris.map((uri) =>
+        this._limiter.queue(() => this.doExtract(uri, options)),
+      ),
     );
-	}
+  }
 
-	async doExtract(uri: URI, options: IWebContentExtractorOptions | undefined): Promise<WebContentExtractResult> {
-		const cached = this._webContentsCache.tryGet(uri, options);
-		if (cached !== undefined) {
-			this._logger.info(`Found cached content for ${uri.toString()}`);
-			return cached;
-		}
+  async doExtract(
+    uri: URI,
+    options: IWebContentExtractorOptions | undefined,
+  ): Promise<WebContentExtractResult> {
+    const cached = this._webContentsCache.tryGet(uri, options);
+    if (cached !== undefined) {
+      this._logger.info(`Found cached content for ${uri.toString()}`);
+      return cached;
+    }
 
-		const loader = new WebPageLoader(
+    const loader = new WebPageLoader(
       (options) => new BrowserWindow(options),
       this._logger,
       uri,
@@ -65,12 +77,12 @@ export class NativeWebContentExtractorService extends Disposable implements IWeb
       this._agentNetworkFilterService,
     );
 
-		try {
-			const result = await loader.load();
-			this._webContentsCache.add(uri, options, result);
-			return result;
-		} finally {
-			loader.dispose();
-		}
-	}
+    try {
+      const result = await loader.load();
+      this._webContentsCache.add(uri, options, result);
+      return result;
+    } finally {
+      loader.dispose();
+    }
+  }
 }

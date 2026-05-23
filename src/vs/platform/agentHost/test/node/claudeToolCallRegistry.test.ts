@@ -9,68 +9,82 @@ import { LogLevel, type ILogService } from "../../../log/common/log.js";
 import { ClaudeToolCallRegistry } from "../../node/claude/claudeToolCallRegistry.js";
 
 class CapturingLog implements Partial<ILogService> {
-	readonly warns: string[] = [];
-	warn(message: string): void { this.warns.push(message); }
-	error(): void { /* unused */ }
-	info(): void { /* unused */ }
-	trace(): void { /* unused */ }
-	debug(): void { /* unused */ }
-	getLevel(): LogLevel { return LogLevel.Off; }
+  readonly warns: string[] = [];
+  warn(message: string): void {
+    this.warns.push(message);
+  }
+  error(): void {
+    /* unused */
+  }
+  info(): void {
+    /* unused */
+  }
+  trace(): void {
+    /* unused */
+  }
+  debug(): void {
+    /* unused */
+  }
+  getLevel(): LogLevel {
+    return LogLevel.Off;
+  }
 }
 
 suite("claudeToolCallRegistry — Phase 8.5 input/info tracking", () => {
   ensureNoDisposablesAreLeakedInTestSuite();
 
-  test(
-    "begin → appendInputDelta → finalize stashes rich info and parsed input",
-    () => {
-      const registry = new ClaudeToolCallRegistry();
-      registry.begin("tu_1", "Bash", "turn-1");
-      registry.appendInputDelta("tu_1", '{"comma');
-      registry.appendInputDelta("tu_1", 'nd":"git status"}');
-      registry.finalize("tu_1");
+  test("begin → appendInputDelta → finalize stashes rich info and parsed input", () => {
+    const registry = new ClaudeToolCallRegistry();
+    registry.begin("tu_1", "Bash", "turn-1");
+    registry.appendInputDelta("tu_1", '{"comma');
+    registry.appendInputDelta("tu_1", 'nd":"git status"}');
+    registry.finalize("tu_1");
 
-      const entry = registry.lookup("tu_1");
-      assert.deepStrictEqual({
+    const entry = registry.lookup("tu_1");
+    assert.deepStrictEqual(
+      {
         turnId: entry?.turnId,
         toolName: entry?.toolName,
         parsedInput: entry?.info?.parsedInput,
         displayName: entry?.info?.displayName,
         invocationMessage: entry?.info?.invocationMessage,
         toolInput: entry?.info?.toolInput,
-      }, {
+      },
+      {
         turnId: "turn-1",
         toolName: "Bash",
         parsedInput: { command: "git status" },
         displayName: "Run shell command",
         invocationMessage: { markdown: "Running `git status`" },
         toolInput: "git status",
-      });
-    },
-  );
+      },
+    );
+  });
 
-  test(
-    "finalize with malformed JSON falls back to undefined parsedInput, preserves raw buffer as toolInput",
-    () => {
-      const registry = new ClaudeToolCallRegistry();
-      registry.begin("tu_2", "Read", "turn-1");
-      registry.appendInputDelta("tu_2", "{not valid json");
-      registry.finalize("tu_2");
+  test("finalize with malformed JSON falls back to undefined parsedInput, preserves raw buffer as toolInput", () => {
+    const registry = new ClaudeToolCallRegistry();
+    registry.begin("tu_2", "Read", "turn-1");
+    registry.appendInputDelta("tu_2", "{not valid json");
+    registry.finalize("tu_2");
 
-      const entry = registry.lookup("tu_2");
-      assert.deepStrictEqual({
+    const entry = registry.lookup("tu_2");
+    assert.deepStrictEqual(
+      {
         parsedInput: entry?.info?.parsedInput,
         displayName: entry?.info?.displayName,
         invocationMessage: entry?.info?.invocationMessage,
+        // Raw buffer preserved so the UI still shows the SDK's payload
+        // instead of an empty input section.
         toolInput: entry?.info?.toolInput,
-      }, {
+      },
+      {
         parsedInput: undefined,
         displayName: "Read file",
         invocationMessage: "Reading file",
         toolInput: "{not valid json",
-      });
-    },
-  );
+      },
+    );
+  });
 
   test("finalize with no deltas yields info with undefined parsedInput", () => {
     const registry = new ClaudeToolCallRegistry();
@@ -95,15 +109,12 @@ suite("claudeToolCallRegistry — Phase 8.5 input/info tracking", () => {
     );
   });
 
-  test(
-    "lookup of unknown id returns undefined; appendInputDelta / finalize are no-ops on unknown id",
-    () => {
-      const registry = new ClaudeToolCallRegistry();
-      registry.appendInputDelta("nope", "x");
-      registry.finalize("nope");
-      assert.strictEqual(registry.lookup("nope"), undefined);
-    },
-  );
+  test("lookup of unknown id returns undefined; appendInputDelta / finalize are no-ops on unknown id", () => {
+    const registry = new ClaudeToolCallRegistry();
+    registry.appendInputDelta("nope", "x");
+    registry.finalize("nope");
+    assert.strictEqual(registry.lookup("nope"), undefined);
+  });
 
   test("complete removes the entry; subsequent lookup is undefined", () => {
     const registry = new ClaudeToolCallRegistry();
@@ -134,45 +145,42 @@ suite("claudeToolCallRegistry — Phase 8.5 input/info tracking", () => {
     assert.deepStrictEqual(log.warns, []);
   });
 
-  test(
-    "seedParsedInput populates info from a pre-parsed object (inner subagent path)",
-    () => {
-      const registry = new ClaudeToolCallRegistry();
-      registry.begin("tu_seed", "Bash", "turn-1");
-      registry.seedParsedInput("tu_seed", {
-        command: "git status",
-        description: "check",
-      });
+  test("seedParsedInput populates info from a pre-parsed object (inner subagent path)", () => {
+    const registry = new ClaudeToolCallRegistry();
+    registry.begin("tu_seed", "Bash", "turn-1");
+    registry.seedParsedInput("tu_seed", {
+      command: "git status",
+      description: "check",
+    });
 
-      const entry = registry.lookup("tu_seed");
-      assert.deepStrictEqual({
+    const entry = registry.lookup("tu_seed");
+    assert.deepStrictEqual(
+      {
         turnId: entry?.turnId,
         toolName: entry?.toolName,
         parsedInput: entry?.info?.parsedInput,
         invocationMessage: entry?.info?.invocationMessage,
         toolInput: entry?.info?.toolInput,
-      }, {
+      },
+      {
         turnId: "turn-1",
         toolName: "Bash",
         parsedInput: { command: "git status", description: "check" },
         invocationMessage: { markdown: "Running `git status`" },
         toolInput: "git status",
-      });
-    },
-  );
+      },
+    );
+  });
 
-  test(
-    "seedParsedInput with non-object input yields info with undefined parsedInput",
-    () => {
-      const registry = new ClaudeToolCallRegistry();
-      registry.begin("tu_seed_bad", "Bash", "turn-1");
-      registry.seedParsedInput("tu_seed_bad", "not an object");
+  test("seedParsedInput with non-object input yields info with undefined parsedInput", () => {
+    const registry = new ClaudeToolCallRegistry();
+    registry.begin("tu_seed_bad", "Bash", "turn-1");
+    registry.seedParsedInput("tu_seed_bad", "not an object");
 
-      const info = registry.lookup("tu_seed_bad")?.info;
-      assert.strictEqual(info?.parsedInput, undefined);
-      assert.strictEqual(info?.toolInput, undefined);
-    },
-  );
+    const info = registry.lookup("tu_seed_bad")?.info;
+    assert.strictEqual(info?.parsedInput, undefined);
+    assert.strictEqual(info?.toolInput, undefined);
+  });
 
   test("seedParsedInput on unknown id is a silent no-op", () => {
     const registry = new ClaudeToolCallRegistry();

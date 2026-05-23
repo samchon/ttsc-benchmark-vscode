@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as DOM from "../../../../../base/browser/dom.js";
-import { BreadcrumbsItem, BreadcrumbsWidget } from "../../../../../base/browser/ui/breadcrumbs/breadcrumbsWidget.js";
+import {
+  BreadcrumbsItem,
+  BreadcrumbsWidget,
+} from "../../../../../base/browser/ui/breadcrumbs/breadcrumbsWidget.js";
 import { IDisposable } from "../../../../../base/common/lifecycle.js";
 import { URI } from "../../../../../base/common/uri.js";
 import { RawContextKey } from "../../../../../platform/contextkey/common/contextkey.js";
@@ -17,23 +20,23 @@ const $ = DOM.$;
  * which session and view to navigate to.
  */
 export interface IChatDebugEditorOptions extends IEditorOptions {
-	readonly sessionResource?: URI;
-	readonly viewHint?: "home" | "overview" | "logs" | "flowchart" | "cache";
-	/** When set, automatically applies this text as the log filter. */
-	readonly filter?: string;
+  readonly sessionResource?: URI;
+  readonly viewHint?: "home" | "overview" | "logs" | "flowchart" | "cache";
+  /** When set, automatically applies this text as the log filter. */
+  readonly filter?: string;
 }
 
 export const enum ViewState {
-	Home = "home",
-	Overview = "overview",
-	Logs = "logs",
-	FlowChart = "flowchart",
-	CacheExplorer = "cache",
+  Home = "home",
+  Overview = "overview",
+  Logs = "logs",
+  FlowChart = "flowchart",
+  CacheExplorer = "cache",
 }
 
 export const enum LogsViewMode {
-	List = "list",
-	Tree = "tree",
+  List = "list",
+  Tree = "tree",
 }
 
 export const CHAT_DEBUG_FILTER_ACTIVE = new RawContextKey<boolean>(
@@ -58,73 +61,83 @@ export const CHAT_DEBUG_KIND_SUBAGENT = new RawContextKey<boolean>(
 );
 
 // Filter toggle command IDs
-export const CHAT_DEBUG_CMD_TOGGLE_TOOL_CALL = "chatDebug.filter.toggleToolCall";
-export const CHAT_DEBUG_CMD_TOGGLE_MODEL_TURN = "chatDebug.filter.toggleModelTurn";
-export const CHAT_DEBUG_CMD_TOGGLE_PROMPT_DISCOVERY = "chatDebug.filter.togglePromptDiscovery";
+export const CHAT_DEBUG_CMD_TOGGLE_TOOL_CALL =
+  "chatDebug.filter.toggleToolCall";
+export const CHAT_DEBUG_CMD_TOGGLE_MODEL_TURN =
+  "chatDebug.filter.toggleModelTurn";
+export const CHAT_DEBUG_CMD_TOGGLE_PROMPT_DISCOVERY =
+  "chatDebug.filter.togglePromptDiscovery";
 export const CHAT_DEBUG_CMD_TOGGLE_SUBAGENT = "chatDebug.filter.toggleSubagent";
 
 export class TextBreadcrumbItem extends BreadcrumbsItem {
-	constructor(
-		private readonly _text: string,
-		private readonly _isLink: boolean = false,
-	) {
-		super();
-	}
+  constructor(
+    private readonly _text: string,
+    private readonly _isLink: boolean = false,
+  ) {
+    super();
+  }
 
-	equals(other: BreadcrumbsItem): boolean {
-		return other instanceof TextBreadcrumbItem && other._text === this._text;
-	}
+  equals(other: BreadcrumbsItem): boolean {
+    return other instanceof TextBreadcrumbItem && other._text === this._text;
+  }
 
-	dispose(): void {
-		// Nothing to dispose
-	}
+  dispose(): void {
+    // Nothing to dispose
+  }
 
-	render(container: HTMLElement): void {
-		container.classList.add("chat-debug-breadcrumb-item");
-		if (this._isLink) {
-			container.classList.add("chat-debug-breadcrumb-item-link");
-		}
-		DOM.append(
+  render(container: HTMLElement): void {
+    container.classList.add("chat-debug-breadcrumb-item");
+    if (this._isLink) {
+      container.classList.add("chat-debug-breadcrumb-item-link");
+    }
+    DOM.append(
       container,
       $("span.chat-debug-breadcrumb-item-label", undefined, this._text),
     );
-	}
+  }
 }
 
 /**
  * Wire up Left/Right arrow, Home/End, and Enter keyboard navigation
  * on a BreadcrumbsWidget container.
  */
-export function setupBreadcrumbKeyboardNavigation(container: HTMLElement, widget: BreadcrumbsWidget): IDisposable {
-	return DOM.addDisposableListener(container, DOM.EventType.KEY_DOWN, (e: KeyboardEvent) => {
-		switch (e.key) {
-			case "ArrowLeft":
-				e.preventDefault();
-				widget.focusPrev();
-				break;
-			case "ArrowRight":
-				e.preventDefault();
-				widget.focusNext();
-				break;
-			case "Home":
-				e.preventDefault();
-				widget.setFocused(widget.getItems()[0]);
-				break;
-			case "End": {
-				e.preventDefault();
-				const items = widget.getItems();
-				widget.setFocused(items[items.length - 1]);
-				break;
-			}
-			case "Enter":
-			case " ": {
-				e.preventDefault();
-				const focused = widget.getFocused();
-				if (focused) {
-					widget.setSelection(focused);
-				}
-				break;
-			}
-		}
-	});
+export function setupBreadcrumbKeyboardNavigation(
+  container: HTMLElement,
+  widget: BreadcrumbsWidget,
+): IDisposable {
+  return DOM.addDisposableListener(
+    container,
+    DOM.EventType.KEY_DOWN,
+    (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          widget.focusPrev();
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          widget.focusNext();
+          break;
+        case "Home":
+          e.preventDefault();
+          widget.setFocused(widget.getItems()[0]);
+          break;
+        case "End": {
+          e.preventDefault();
+          const items = widget.getItems();
+          widget.setFocused(items[items.length - 1]);
+          break;
+        }
+        case "Enter":
+        case " ": {
+          e.preventDefault();
+          const focused = widget.getFocused();
+          if (focused) {
+            widget.setSelection(focused);
+          }
+          break;
+        }
+      }
+    },
+  );
 }

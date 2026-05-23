@@ -3,7 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import {
   DynamicSpeechAccessibilityConfiguration,
   registerAccessibilityConfiguration,
@@ -22,10 +25,16 @@ import { EditorAccessibilityHelpContribution } from "./editorAccessibilityHelp.j
 import { SaveAccessibilitySignalContribution } from "../../accessibilitySignals/browser/saveAccessibilitySignal.js";
 import { DiffEditorActiveAnnouncementContribution } from "../../accessibilitySignals/browser/openDiffEditorAnnouncement.js";
 import { SpeechAccessibilitySignalContribution } from "../../speech/browser/speechAccessibilitySignal.js";
-import { AccessibleViewInformationService, IAccessibleViewInformationService } from "../../../services/accessibility/common/accessibleViewInformationService.js";
+import {
+  AccessibleViewInformationService,
+  IAccessibleViewInformationService,
+} from "../../../services/accessibility/common/accessibleViewInformationService.js";
 import { IAccessibleViewService } from "../../../../platform/accessibility/browser/accessibleView.js";
 import { AccessibleViewService } from "./accessibleView.js";
-import { AccesibleViewHelpContribution, AccesibleViewContributions } from "./accessibleViewContributions.js";
+import {
+  AccesibleViewHelpContribution,
+  AccesibleViewContributions,
+} from "./accessibleViewContributions.js";
 import { ExtensionAccessibilityHelpDialogContribution } from "./extensionAccesibilityHelp.contribution.js";
 
 registerAccessibilityConfiguration();

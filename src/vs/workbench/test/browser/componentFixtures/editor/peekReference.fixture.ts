@@ -15,12 +15,24 @@ import {
   defineThemedFixtureGroup,
   registerWorkbenchServices,
 } from "../fixtureUtils.js";
-import { CodeEditorWidget, ICodeEditorWidgetOptions } from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
-import { LayoutData, ReferenceWidget } from "../../../../../editor/contrib/gotoSymbol/browser/peek/referencesWidget.js";
+import {
+  CodeEditorWidget,
+  ICodeEditorWidgetOptions,
+} from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import {
+  LayoutData,
+  ReferenceWidget,
+} from "../../../../../editor/contrib/gotoSymbol/browser/peek/referencesWidget.js";
 import { ReferencesModel } from "../../../../../editor/contrib/gotoSymbol/browser/referencesModel.js";
 import * as peekView from "../../../../../editor/contrib/peekView/browser/peekView.js";
-import { IResolvedTextEditorModel, ITextModelService } from "../../../../../editor/common/services/resolverService.js";
-import { IListService, ListService } from "../../../../../platform/list/browser/listService.js";
+import {
+  IResolvedTextEditorModel,
+  ITextModelService,
+} from "../../../../../editor/common/services/resolverService.js";
+import {
+  IListService,
+  ListService,
+} from "../../../../../platform/list/browser/listService.js";
 import { ICodeEditor } from "../../../../../editor/browser/editorBrowser.js";
 import { ITextModel } from "../../../../../editor/common/model.js";
 
@@ -51,68 +63,87 @@ async function main() {
 main();
 `;
 
-function renderPeekReference({ container, disposableStore, theme }: ComponentFixtureContext): void {
-	container.style.width = "700px";
-	container.style.height = "400px";
-	container.style.border = "1px solid var(--vscode-editorWidget-border)";
+function renderPeekReference({
+  container,
+  disposableStore,
+  theme,
+}: ComponentFixtureContext): void {
+  container.style.width = "700px";
+  container.style.height = "400px";
+  container.style.border = "1px solid var(--vscode-editorWidget-border)";
 
-	const uri = URI.parse("inmemory://peek-fixture.ts");
+  const uri = URI.parse("inmemory://peek-fixture.ts");
 
-	// Store text model reference for the mock service
-	const fixtureTextModel: { value: ITextModel | undefined } = {
+  // Store text model reference for the mock service
+  const fixtureTextModel: { value: ITextModel | undefined } = {
     value: undefined,
   };
 
-	const instantiationService = createEditorServices(disposableStore, {
-		colorTheme: theme,
-		additionalServices: (reg) => {
-			registerWorkbenchServices(reg);
-			reg.define(IListService, ListService);
-			reg.defineInstance(peekView.IPeekViewService, new class extends mock<peekView.IPeekViewService>() {
-				declare readonly _serviceBrand: undefined;
-				override addExclusiveWidget(_editor: ICodeEditor, _widget: peekView.PeekViewWidget) { }
-			});
-			reg.defineInstance(ITextModelService, new class extends mock<ITextModelService>() {
-				declare readonly _serviceBrand: undefined;
-				override async createModelReference(resource: URI): Promise<IReference<IResolvedTextEditorModel>> {
-					// Return a mock reference if we have a text model for this URI
-					const model = fixtureTextModel.value;
-					if (model && resource.toString() === uri.toString()) {
-						const onWillDispose = new Emitter<void>();
-						const textEditorModel: IResolvedTextEditorModel = {
-							textEditorModel: model,
-							onWillDispose: onWillDispose.event,
-							isReadonly: () => false,
-							isResolved: () => true,
-							isDisposed: () => false,
-							getLanguageId: () => model.getLanguageId(),
-							createSnapshot: () => model.createSnapshot(),
-							resolve: async () => { },
-							dispose: () => onWillDispose.dispose(),
-						};
-						return {
-							object: textEditorModel,
-							dispose: () => { },
-						};
-					}
-					throw new Error(`No model for ${resource.toString()}`);
-				}
-				override canHandleResource() { return false; }
-				override registerTextModelContentProvider() { return { dispose: () => { } }; }
-			});
-		},
-	});
+  const instantiationService = createEditorServices(disposableStore, {
+    colorTheme: theme,
+    additionalServices: (reg) => {
+      registerWorkbenchServices(reg);
+      reg.define(IListService, ListService);
+      reg.defineInstance(
+        peekView.IPeekViewService,
+        new (class extends mock<peekView.IPeekViewService>() {
+          declare readonly _serviceBrand: undefined;
+          override addExclusiveWidget(
+            _editor: ICodeEditor,
+            _widget: peekView.PeekViewWidget,
+          ) {}
+        })(),
+      );
+      reg.defineInstance(
+        ITextModelService,
+        new (class extends mock<ITextModelService>() {
+          declare readonly _serviceBrand: undefined;
+          override async createModelReference(
+            resource: URI,
+          ): Promise<IReference<IResolvedTextEditorModel>> {
+            // Return a mock reference if we have a text model for this URI
+            const model = fixtureTextModel.value;
+            if (model && resource.toString() === uri.toString()) {
+              const onWillDispose = new Emitter<void>();
+              const textEditorModel: IResolvedTextEditorModel = {
+                textEditorModel: model,
+                onWillDispose: onWillDispose.event,
+                isReadonly: () => false,
+                isResolved: () => true,
+                isDisposed: () => false,
+                getLanguageId: () => model.getLanguageId(),
+                createSnapshot: () => model.createSnapshot(),
+                resolve: async () => {},
+                dispose: () => onWillDispose.dispose(),
+              };
+              return {
+                object: textEditorModel,
+                dispose: () => {},
+              };
+            }
+            throw new Error(`No model for ${resource.toString()}`);
+          }
+          override canHandleResource() {
+            return false;
+          }
+          override registerTextModelContentProvider() {
+            return { dispose: () => {} };
+          }
+        })(),
+      );
+    },
+  });
 
-	const textModel = disposableStore.add(
+  const textModel = disposableStore.add(
     createTextModel(instantiationService, SAMPLE_CODE, uri, "typescript"),
   );
-	fixtureTextModel.value = textModel;
+  fixtureTextModel.value = textModel;
 
-	const editorWidgetOptions: ICodeEditorWidgetOptions = {
+  const editorWidgetOptions: ICodeEditorWidgetOptions = {
     contributions: [],
   };
 
-	const editor = instantiationService.createInstance(
+  const editor = instantiationService.createInstance(
     CodeEditorWidget,
     container,
     {
@@ -126,55 +157,70 @@ function renderPeekReference({ container, disposableStore, theme }: ComponentFix
     editorWidgetOptions,
   );
 
-	editor.setModel(textModel);
-	editor.focus();
+  editor.setModel(textModel);
+  editor.focus();
 
-	const layoutData: LayoutData = { ratio: 0.7, heightInLines: 10 };
+  const layoutData: LayoutData = { ratio: 0.7, heightInLines: 10 };
 
-	const referenceWidget = instantiationService.createInstance(
+  const referenceWidget = instantiationService.createInstance(
     ReferenceWidget,
     editor,
     true,
     layoutData,
   );
-	// Register widget BEFORE editor so widget.dispose() runs first; otherwise
-	// `ReferenceWidget.dispose()` calls `observableCodeEditor(disposed editor)`
-	// which creates a fresh untracked ObservableCodeEditor.
-	disposableStore.add(referenceWidget);
-	disposableStore.add(editor);
+  // Register widget BEFORE editor so widget.dispose() runs first; otherwise
+  // `ReferenceWidget.dispose()` calls `observableCodeEditor(disposed editor)`
+  // which creates a fresh untracked ObservableCodeEditor.
+  disposableStore.add(referenceWidget);
+  disposableStore.add(editor);
 
-	const range = {
+  const range = {
     startLineNumber: 3,
     startColumn: 10,
     endLineNumber: 3,
     endColumn: 21,
   };
-	referenceWidget.setTitle("processFile");
-	referenceWidget.setMetaTitle("3 references");
-	referenceWidget.show(range);
+  referenceWidget.setTitle("processFile");
+  referenceWidget.setMetaTitle("3 references");
+  referenceWidget.show(range);
 
-	const links = [
+  const links = [
     {
       uri,
-      range: { startLineNumber: 3, startColumn: 10, endLineNumber: 3, endColumn: 21 },
+      range: {
+        startLineNumber: 3,
+        startColumn: 10,
+        endLineNumber: 3,
+        endColumn: 21,
+      },
     },
     {
       uri,
-      range: { startLineNumber: 16, startColumn: 26, endLineNumber: 16, endColumn: 37 },
+      range: {
+        startLineNumber: 16,
+        startColumn: 26,
+        endLineNumber: 16,
+        endColumn: 37,
+      },
     },
     {
       uri,
-      range: { startLineNumber: 20, startColumn: 1, endLineNumber: 20, endColumn: 5 },
+      range: {
+        startLineNumber: 20,
+        startColumn: 1,
+        endLineNumber: 20,
+        endColumn: 5,
+      },
     },
   ];
 
-	const model = new ReferencesModel(links, "processFile");
-	disposableStore.add(model);
-	referenceWidget.setModel(model);
+  const model = new ReferencesModel(links, "processFile");
+  disposableStore.add(model);
+  referenceWidget.setModel(model);
 }
 
 export default defineThemedFixtureGroup({
-	PeekReferences: defineComponentFixture({
-		render: renderPeekReference,
-	}),
+  PeekReferences: defineComponentFixture({
+    render: renderPeekReference,
+  }),
 });

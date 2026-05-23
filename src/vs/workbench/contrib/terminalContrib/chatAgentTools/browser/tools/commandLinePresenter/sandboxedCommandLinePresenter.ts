@@ -17,18 +17,20 @@ import type {
  * unchanged.
  */
 export class SandboxedCommandLinePresenter implements ICommandLinePresenter {
-	constructor(
-		@ITerminalSandboxService private readonly _sandboxService: ITerminalSandboxService,
-	) {
-	}
+  constructor(
+    @ITerminalSandboxService
+    private readonly _sandboxService: ITerminalSandboxService,
+  ) {}
 
-	async present(options: ICommandLinePresenterOptions): Promise<ICommandLinePresenterResult | undefined> {
-		if (!(await this._sandboxService.isEnabled())) {
-			return undefined;
-		}
-		return {
+  async present(
+    options: ICommandLinePresenterOptions,
+  ): Promise<ICommandLinePresenterResult | undefined> {
+    if (!(await this._sandboxService.isEnabled())) {
+      return undefined;
+    }
+    return {
       commandLine: options.commandLine.forDisplay,
       processOtherPresenters: true,
     };
-	}
+  }
 }

@@ -42,14 +42,14 @@ import type { URI } from "../common/state.js";
  * ```
  */
 export interface OtlpExportLogsParams {
-	/** Channel URI this notification belongs to (an `ahp-otlp:` URI advertised on `TelemetryCapabilities.logs`). */
-	channel: URI;
-	/**
-	 * OTLP/JSON `ExportLogsServiceRequest` value. The top-level field is
-	 * `resourceLogs: ResourceLogs[]`; nested shapes are defined by
-	 * opentelemetry-proto and are not redeclared here.
-	 */
-	payload: Record<string, unknown>;
+  /** Channel URI this notification belongs to (an `ahp-otlp:` URI advertised on `TelemetryCapabilities.logs`). */
+  channel: URI;
+  /**
+   * OTLP/JSON `ExportLogsServiceRequest` value. The top-level field is
+   * `resourceLogs: ResourceLogs[]`; nested shapes are defined by
+   * opentelemetry-proto and are not redeclared here.
+   */
+  payload: Record<string, unknown>;
 }
 
 // ─── otlp/exportTraces ───────────────────────────────────────────────────────
@@ -80,14 +80,14 @@ export interface OtlpExportLogsParams {
  * ```
  */
 export interface OtlpExportTracesParams {
-	/** Channel URI this notification belongs to (an `ahp-otlp:` URI advertised on `TelemetryCapabilities.traces`). */
-	channel: URI;
-	/**
-	 * OTLP/JSON `ExportTraceServiceRequest` value. The top-level field is
-	 * `resourceSpans: ResourceSpans[]`; nested shapes are defined by
-	 * opentelemetry-proto and are not redeclared here.
-	 */
-	payload: Record<string, unknown>;
+  /** Channel URI this notification belongs to (an `ahp-otlp:` URI advertised on `TelemetryCapabilities.traces`). */
+  channel: URI;
+  /**
+   * OTLP/JSON `ExportTraceServiceRequest` value. The top-level field is
+   * `resourceSpans: ResourceSpans[]`; nested shapes are defined by
+   * opentelemetry-proto and are not redeclared here.
+   */
+  payload: Record<string, unknown>;
 }
 
 // ─── otlp/exportMetrics ──────────────────────────────────────────────────────
@@ -118,12 +118,12 @@ export interface OtlpExportTracesParams {
  * ```
  */
 export interface OtlpExportMetricsParams {
-	/** Channel URI this notification belongs to (an `ahp-otlp:` URI advertised on `TelemetryCapabilities.metrics`). */
-	channel: URI;
-	/**
-	 * OTLP/JSON `ExportMetricsServiceRequest` value. The top-level field is
-	 * `resourceMetrics: ResourceMetrics[]`; nested shapes are defined by
-	 * opentelemetry-proto and are not redeclared here.
-	 */
-	payload: Record<string, unknown>;
+  /** Channel URI this notification belongs to (an `ahp-otlp:` URI advertised on `TelemetryCapabilities.metrics`). */
+  channel: URI;
+  /**
+   * OTLP/JSON `ExportMetricsServiceRequest` value. The top-level field is
+   * `resourceMetrics: ResourceMetrics[]`; nested shapes are defined by
+   * opentelemetry-proto and are not redeclared here.
+   */
+  payload: Record<string, unknown>;
 }

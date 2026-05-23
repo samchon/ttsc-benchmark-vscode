@@ -14,25 +14,29 @@ import { ICodeEditorService } from "../../../../editor/browser/services/codeEdit
 import { INativeHostService } from "../../../../platform/native/common/native.js";
 import { Disposable } from "../../../../base/common/lifecycle.js";
 
-class SleepResumeRepaintMinimap extends Disposable implements IWorkbenchContribution {
+class SleepResumeRepaintMinimap
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  constructor(
+    @ICodeEditorService codeEditorService: ICodeEditorService,
+    @INativeHostService nativeHostService: INativeHostService,
+  ) {
+    super();
 
-	constructor(
-		@ICodeEditorService codeEditorService: ICodeEditorService,
-		@INativeHostService nativeHostService: INativeHostService,
-	) {
-		super();
-
-		this._register(
+    this._register(
       nativeHostService.onDidResumeOS(() => {
-        codeEditorService.listCodeEditors().forEach(
-          editor => editor.render(true),
-        );
+        codeEditorService
+          .listCodeEditors()
+          .forEach((editor) => editor.render(true));
       }),
     );
-	}
+  }
 }
 
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(
   SleepResumeRepaintMinimap,
   LifecyclePhase.Eventually,
 );

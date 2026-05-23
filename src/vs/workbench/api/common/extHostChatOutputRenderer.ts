@@ -18,63 +18,76 @@ import { IExtensionDescription } from "../../../platform/extensions/common/exten
 import { VSBuffer } from "../../../base/common/buffer.js";
 
 export class ExtHostChatOutputRenderer implements ExtHostChatOutputRendererShape {
+  private readonly _proxy: MainThreadChatOutputRendererShape;
 
-	private readonly _proxy: MainThreadChatOutputRendererShape;
+  private readonly _renderers = new Map<
+    /*viewType*/ string,
+    {
+      readonly renderer: vscode.ChatOutputRenderer;
+      readonly extension: IExtensionDescription;
+    }
+  >();
 
-	private readonly _renderers = new Map</*viewType*/ string, {
-		readonly renderer: vscode.ChatOutputRenderer;
-		readonly extension: IExtensionDescription;
-	}>();
-
-	constructor(
-		mainContext: IMainContext,
-		private readonly webviews: ExtHostWebviews,
-	) {
-		this._proxy = mainContext.getProxy(
+  constructor(
+    mainContext: IMainContext,
+    private readonly webviews: ExtHostWebviews,
+  ) {
+    this._proxy = mainContext.getProxy(
       MainContext.MainThreadChatOutputRenderer,
     );
-	}
+  }
 
-	registerChatOutputRenderer(extension: IExtensionDescription, viewType: string, renderer: vscode.ChatOutputRenderer): vscode.Disposable {
-		if (this._renderers.has(viewType)) {
-			throw new Error(
+  registerChatOutputRenderer(
+    extension: IExtensionDescription,
+    viewType: string,
+    renderer: vscode.ChatOutputRenderer,
+  ): vscode.Disposable {
+    if (this._renderers.has(viewType)) {
+      throw new Error(
         `Chat output renderer already registered for: ${viewType}`,
       );
-		}
+    }
 
-		this._renderers.set(viewType, { extension, renderer });
-		this._proxy.$registerChatOutputRenderer(
+    this._renderers.set(viewType, { extension, renderer });
+    this._proxy.$registerChatOutputRenderer(
       viewType,
       extension.identifier,
       extension.extensionLocation,
     );
 
-		return new Disposable(() => {
+    return new Disposable(() => {
       this._renderers.delete(viewType);
       this._proxy.$unregisterChatOutputRenderer(viewType);
     });
-	}
+  }
 
-	async $renderChatOutput(viewType: string, mime: string, valueData: VSBuffer, webviewHandle: string, context: IChatOutputRenderContextDto, token: CancellationToken): Promise<void> {
-		const entry = this._renderers.get(viewType);
-		if (!entry) {
-			throw new Error(`No chat output renderer registered for: ${viewType}`);
-		}
+  async $renderChatOutput(
+    viewType: string,
+    mime: string,
+    valueData: VSBuffer,
+    webviewHandle: string,
+    context: IChatOutputRenderContextDto,
+    token: CancellationToken,
+  ): Promise<void> {
+    const entry = this._renderers.get(viewType);
+    if (!entry) {
+      throw new Error(`No chat output renderer registered for: ${viewType}`);
+    }
 
-		const extHostWebview = this.webviews.createNewWebview(
+    const extHostWebview = this.webviews.createNewWebview(
       webviewHandle,
       {},
       entry.extension,
     );
-		const chatOutputWebview: vscode.ChatOutputWebview = Object.freeze({
+    const chatOutputWebview: vscode.ChatOutputWebview = Object.freeze({
       webview: extHostWebview,
       onDidDispose: extHostWebview._onDidDispose,
     });
-		return entry.renderer.renderChatOutput(
+    return entry.renderer.renderChatOutput(
       Object.freeze({ mime, value: valueData.buffer }),
       chatOutputWebview,
       Object.freeze(context),
       token,
     );
-	}
+  }
 }

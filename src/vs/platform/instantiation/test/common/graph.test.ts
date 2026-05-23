@@ -10,7 +10,7 @@ suite("Graph", () => {
   let graph: Graph<string>;
 
   setup(() => {
-    graph = new Graph<string>(s => s);
+    graph = new Graph<string>((s) => s);
   });
 
   ensureNoDisposablesAreLeakedInTestSuite();
@@ -53,6 +53,6 @@ suite("Graph", () => {
 
     const roots = graph.roots();
     assert.strictEqual(roots.length, 2);
-    assert(["2", "4"].every(n => roots.some(node => node.data === n)));
+    assert(["2", "4"].every((n) => roots.some((node) => node.data === n)));
   });
 });

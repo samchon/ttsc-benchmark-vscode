@@ -9,23 +9,26 @@ import { TestResultState } from "./testTypes.js";
 
 export type CountSummary = ReturnType<typeof collectTestStateCounts>;
 
-export const collectTestStateCounts = (isRunning: boolean, results: ReadonlyArray<ITestResult>) => {
-	let passed = 0;
-	let failed = 0;
-	let skipped = 0;
-	let running = 0;
-	let queued = 0;
+export const collectTestStateCounts = (
+  isRunning: boolean,
+  results: ReadonlyArray<ITestResult>,
+) => {
+  let passed = 0;
+  let failed = 0;
+  let skipped = 0;
+  let running = 0;
+  let queued = 0;
 
-	for (const result of results) {
-		const count = result.counts;
-		failed += count[TestResultState.Errored] + count[TestResultState.Failed];
-		passed += count[TestResultState.Passed];
-		skipped += count[TestResultState.Skipped];
-		running += count[TestResultState.Running];
-		queued += count[TestResultState.Queued];
-	}
+  for (const result of results) {
+    const count = result.counts;
+    failed += count[TestResultState.Errored] + count[TestResultState.Failed];
+    passed += count[TestResultState.Passed];
+    skipped += count[TestResultState.Skipped];
+    running += count[TestResultState.Running];
+    queued += count[TestResultState.Queued];
+  }
 
-	return {
+  return {
     isRunning,
     passed,
     failed,
@@ -35,28 +38,35 @@ export const collectTestStateCounts = (isRunning: boolean, results: ReadonlyArra
   };
 };
 
-export const getTestProgressText = ({ isRunning, passed, runSoFar, totalWillBeRun, skipped, failed }: CountSummary) => {
-	let percent = passed / runSoFar * 100;
-	if (failed > 0) {
-		// fix: prevent from rounding to 100 if there's any failed test
-		percent = Math.min(percent, 99.9);
-	} else if (runSoFar === 0) {
-		percent = 0;
-	}
+export const getTestProgressText = ({
+  isRunning,
+  passed,
+  runSoFar,
+  totalWillBeRun,
+  skipped,
+  failed,
+}: CountSummary) => {
+  let percent = (passed / runSoFar) * 100;
+  if (failed > 0) {
+    // fix: prevent from rounding to 100 if there's any failed test
+    percent = Math.min(percent, 99.9);
+  } else if (runSoFar === 0) {
+    percent = 0;
+  }
 
-	if (isRunning) {
-		if (runSoFar === 0) {
-			return localize("testProgress.runningInitial", "Running tests...");
-		} else if (skipped === 0) {
-			return localize(
+  if (isRunning) {
+    if (runSoFar === 0) {
+      return localize("testProgress.runningInitial", "Running tests...");
+    } else if (skipped === 0) {
+      return localize(
         "testProgress.running",
         "Running tests, {0}/{1} passed ({2}%)",
         passed,
         totalWillBeRun,
         percent.toPrecision(3),
       );
-		} else {
-			return localize(
+    } else {
+      return localize(
         "testProgressWithSkip.running",
         "Running tests, {0}/{1} tests passed ({2}%, {3} skipped)",
         passed,
@@ -64,18 +74,18 @@ export const getTestProgressText = ({ isRunning, passed, runSoFar, totalWillBeRu
         percent.toPrecision(3),
         skipped,
       );
-		}
-	} else {
-		if (skipped === 0) {
-			return localize(
+    }
+  } else {
+    if (skipped === 0) {
+      return localize(
         "testProgress.completed",
         "{0}/{1} tests passed ({2}%)",
         passed,
         runSoFar,
         percent.toPrecision(3),
       );
-		} else {
-			return localize(
+    } else {
+      return localize(
         "testProgressWithSkip.completed",
         "{0}/{1} tests passed ({2}%, {3} skipped)",
         passed,
@@ -83,7 +93,6 @@ export const getTestProgressText = ({ isRunning, passed, runSoFar, totalWillBeRu
         percent.toPrecision(3),
         skipped,
       );
-		}
-	}
+    }
+  }
 };
-

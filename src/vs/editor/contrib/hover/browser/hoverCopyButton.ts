@@ -15,20 +15,19 @@ import { status } from "../../../../base/browser/ui/aria/aria.js";
  * A button that appears in hover parts to copy their content to the clipboard.
  */
 export class HoverCopyButton extends Disposable {
+  private readonly _button: SimpleButton;
 
-	private readonly _button: SimpleButton;
+  constructor(
+    private readonly _container: HTMLElement,
+    private readonly _getContent: () => string,
+    @IClipboardService private readonly _clipboardService: IClipboardService,
+    @IHoverService private readonly _hoverService: IHoverService,
+  ) {
+    super();
 
-	constructor(
-		private readonly _container: HTMLElement,
-		private readonly _getContent: () => string,
-		@IClipboardService private readonly _clipboardService: IClipboardService,
-		@IHoverService private readonly _hoverService: IHoverService,
-	) {
-		super();
+    this._container.classList.add("hover-row-with-copy");
 
-		this._container.classList.add("hover-row-with-copy");
-
-		this._button = this._register(
+    this._button = this._register(
       new SimpleButton(
         {
           label: localize("hover.copy", "Copy"),
@@ -40,14 +39,14 @@ export class HoverCopyButton extends Disposable {
       ),
     );
 
-		this._container.appendChild(this._button.domNode);
-	}
+    this._container.appendChild(this._button.domNode);
+  }
 
-	private async _copyContent(): Promise<void> {
-		const content = this._getContent();
-		if (content) {
-			await this._clipboardService.writeText(content);
-			status(localize("hover.copied", "Copied to clipboard"));
-		}
-	}
+  private async _copyContent(): Promise<void> {
+    const content = this._getContent();
+    if (content) {
+      await this._clipboardService.writeText(content);
+      status(localize("hover.copied", "Copied to clipboard"));
+    }
+  }
 }

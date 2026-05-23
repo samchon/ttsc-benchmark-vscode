@@ -30,14 +30,15 @@ export const ActiveSessionTypeContext = new RawContextKey<string>(
   "",
   localize("activeSessionType", "The session type of the active session"),
 );
-export const ActiveSessionWorkspaceIsVirtualContext = new RawContextKey<boolean>(
-  "activeSessionWorkspaceIsVirtual",
-  true,
-  localize(
+export const ActiveSessionWorkspaceIsVirtualContext =
+  new RawContextKey<boolean>(
     "activeSessionWorkspaceIsVirtual",
-    "Whether the active session's workspace is virtual",
-  ),
-);
+    true,
+    localize(
+      "activeSessionWorkspaceIsVirtual",
+      "Whether the active session's workspace is virtual",
+    ),
+  );
 export const IsActiveSessionArchivedContext = new RawContextKey<boolean>(
   "isActiveSessionArchived",
   false,
@@ -54,14 +55,15 @@ export const ActiveSessionHasGitRepositoryContext = new RawContextKey<boolean>(
     "Whether the active session has an associated git repository",
   ),
 );
-export const ActiveSessionHasGitSyncActionRunningContext = new RawContextKey<boolean>(
-  "activeSessionHasGitSyncActionRunning",
-  false,
-  localize(
+export const ActiveSessionHasGitSyncActionRunningContext =
+  new RawContextKey<boolean>(
     "activeSessionHasGitSyncActionRunning",
-    "Whether the active session has a git sync action currently running",
-  ),
-);
+    false,
+    localize(
+      "activeSessionHasGitSyncActionRunning",
+      "Whether the active session has a git sync action currently running",
+    ),
+  );
 export const ChatSessionProviderIdContext = new RawContextKey<string>(
   "chatSessionProviderId",
   "",
@@ -176,7 +178,10 @@ export const IsPhoneLayoutContext = new RawContextKey<boolean>(
 export const KeyboardVisibleContext = new RawContextKey<boolean>(
   "sessionsKeyboardVisible",
   false,
-  localize("sessionsKeyboardVisible", "Whether the virtual keyboard is visible"),
+  localize(
+    "sessionsKeyboardVisible",
+    "Whether the virtual keyboard is visible",
+  ),
 );
 
 //#endregion

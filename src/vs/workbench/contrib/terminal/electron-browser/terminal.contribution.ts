@@ -3,10 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import { registerMainProcessRemoteService } from "../../../../platform/ipc/electron-browser/services.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
-import { ILocalPtyService, TerminalIpcChannels } from "../../../../platform/terminal/common/terminal.js";
+import {
+  ILocalPtyService,
+  TerminalIpcChannels,
+} from "../../../../platform/terminal/common/terminal.js";
 import {
   IWorkbenchContributionsRegistry,
   WorkbenchPhase,

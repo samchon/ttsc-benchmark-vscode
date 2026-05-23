@@ -12,80 +12,99 @@ import {
   ExtHostContext,
   ExtHostLanguagesShape,
 } from "../common/extHost.protocol.js";
-import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import {
+  extHostNamedCustomer,
+  IExtHostContext,
+} from "../../services/extensions/common/extHostCustomers.js";
 import { IPosition } from "../../../editor/common/core/position.js";
 import { IRange, Range } from "../../../editor/common/core/range.js";
 import { StandardTokenType } from "../../../editor/common/encodedTokenAttributes.js";
 import { ITextModelService } from "../../../editor/common/services/resolverService.js";
-import { ILanguageStatus, ILanguageStatusService } from "../../services/languageStatus/common/languageStatusService.js";
+import {
+  ILanguageStatus,
+  ILanguageStatusService,
+} from "../../services/languageStatus/common/languageStatusService.js";
 import { Disposable, DisposableMap } from "../../../base/common/lifecycle.js";
 
 @extHostNamedCustomer(MainContext.MainThreadLanguages)
-export class MainThreadLanguages extends Disposable implements MainThreadLanguagesShape {
+export class MainThreadLanguages
+  extends Disposable
+  implements MainThreadLanguagesShape
+{
+  private readonly _proxy: ExtHostLanguagesShape;
 
-	private readonly _proxy: ExtHostLanguagesShape;
+  private readonly _status = this._register(new DisposableMap<number>());
 
-	private readonly _status = this._register(new DisposableMap<number>());
+  constructor(
+    _extHostContext: IExtHostContext,
+    @ILanguageService private readonly _languageService: ILanguageService,
+    @IModelService private readonly _modelService: IModelService,
+    @ITextModelService private _resolverService: ITextModelService,
+    @ILanguageStatusService
+    private readonly _languageStatusService: ILanguageStatusService,
+  ) {
+    super();
+    this._proxy = _extHostContext.getProxy(ExtHostContext.ExtHostLanguages);
 
-	constructor(
-		_extHostContext: IExtHostContext,
-		@ILanguageService private readonly _languageService: ILanguageService,
-		@IModelService private readonly _modelService: IModelService,
-		@ITextModelService private _resolverService: ITextModelService,
-		@ILanguageStatusService private readonly _languageStatusService: ILanguageStatusService,
-	) {
-		super();
-		this._proxy = _extHostContext.getProxy(ExtHostContext.ExtHostLanguages);
-
-		this._proxy.$acceptLanguageIds(_languageService.getRegisteredLanguageIds());
-		this._register(
-      _languageService.onDidChange(_ => {
+    this._proxy.$acceptLanguageIds(_languageService.getRegisteredLanguageIds());
+    this._register(
+      _languageService.onDidChange((_) => {
         this._proxy.$acceptLanguageIds(
           _languageService.getRegisteredLanguageIds(),
         );
       }),
     );
-	}
+  }
 
-	async $changeLanguage(resource: UriComponents, languageId: string): Promise<void> {
+  async $changeLanguage(
+    resource: UriComponents,
+    languageId: string,
+  ): Promise<void> {
+    if (!this._languageService.isRegisteredLanguageId(languageId)) {
+      return Promise.reject(new Error(`Unknown language id: ${languageId}`));
+    }
 
-		if (!this._languageService.isRegisteredLanguageId(languageId)) {
-			return Promise.reject(new Error(`Unknown language id: ${languageId}`));
-		}
-
-		const uri = URI.revive(resource);
-		const ref = await this._resolverService.createModelReference(uri);
-		try {
-			ref.object.textEditorModel.setLanguage(
+    const uri = URI.revive(resource);
+    const ref = await this._resolverService.createModelReference(uri);
+    try {
+      ref.object.textEditorModel.setLanguage(
         this._languageService.createById(languageId),
       );
-		} finally {
-			ref.dispose();
-		}
-	}
+    } finally {
+      ref.dispose();
+    }
+  }
 
-	async $tokensAtPosition(resource: UriComponents, position: IPosition): Promise<undefined | { type: StandardTokenType; range: IRange }> {
-		const uri = URI.revive(resource);
-		const model = this._modelService.getModel(uri);
-		if (!model) {
-			return undefined;
-		}
-		model.tokenization.tokenizeIfCheap(position.lineNumber);
-		const tokens = model.tokenization.getLineTokens(position.lineNumber);
-		const idx = tokens.findTokenIndexAtOffset(position.column - 1);
-		return {
+  async $tokensAtPosition(
+    resource: UriComponents,
+    position: IPosition,
+  ): Promise<undefined | { type: StandardTokenType; range: IRange }> {
+    const uri = URI.revive(resource);
+    const model = this._modelService.getModel(uri);
+    if (!model) {
+      return undefined;
+    }
+    model.tokenization.tokenizeIfCheap(position.lineNumber);
+    const tokens = model.tokenization.getLineTokens(position.lineNumber);
+    const idx = tokens.findTokenIndexAtOffset(position.column - 1);
+    return {
       type: tokens.getStandardTokenType(idx),
-      range: new Range(position.lineNumber, 1 + tokens.getStartOffset(idx), position.lineNumber, 1 + tokens.getEndOffset(idx)),
+      range: new Range(
+        position.lineNumber,
+        1 + tokens.getStartOffset(idx),
+        position.lineNumber,
+        1 + tokens.getEndOffset(idx),
+      ),
     };
-	}
+  }
 
-	// --- language status
+  // --- language status
 
-	$setLanguageStatus(handle: number, status: ILanguageStatus): void {
-		this._status.set(handle, this._languageStatusService.addStatus(status));
-	}
+  $setLanguageStatus(handle: number, status: ILanguageStatus): void {
+    this._status.set(handle, this._languageStatusService.addStatus(status));
+  }
 
-	$removeLanguageStatus(handle: number): void {
-		this._status.deleteAndDispose(handle);
-	}
+  $removeLanguageStatus(handle: number): void {
+    this._status.deleteAndDispose(handle);
+  }
 }

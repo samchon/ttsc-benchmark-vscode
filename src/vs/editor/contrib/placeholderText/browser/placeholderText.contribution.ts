@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./placeholderText.css";
-import { EditorContributionInstantiation, registerEditorContribution } from "../../../browser/editorExtensions.js";
+import {
+  EditorContributionInstantiation,
+  registerEditorContribution,
+} from "../../../browser/editorExtensions.js";
 import { ghostTextForeground } from "../../../common/core/editorColorRegistry.js";
 import { localize } from "../../../../nls.js";
 import { registerColor } from "../../../../platform/theme/common/colorUtils.js";

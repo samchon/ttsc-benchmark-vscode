@@ -7,7 +7,10 @@ import { Codicon } from "../../../../../base/common/codicons.js";
 import { ThemeIcon } from "../../../../../base/common/themables.js";
 import * as nls from "../../../../../nls.js";
 import { registerIcon } from "../../../../../platform/theme/common/iconRegistry.js";
-import { EditorInputCapabilities, IUntypedEditorInput } from "../../../../common/editor.js";
+import {
+  EditorInputCapabilities,
+  IUntypedEditorInput,
+} from "../../../../common/editor.js";
 import { EditorInput } from "../../../../common/editor/editorInput.js";
 
 const ModelsManagementEditorIcon = registerIcon(
@@ -20,38 +23,42 @@ const ModelsManagementEditorIcon = registerIcon(
 );
 
 export class ModelsManagementEditorInput extends EditorInput {
+  static readonly ID: string = "workbench.input.modelsManagement";
 
-	static readonly ID: string = "workbench.input.modelsManagement";
+  readonly resource = undefined;
 
-	readonly resource = undefined;
+  override get capabilities(): EditorInputCapabilities {
+    return (
+      super.capabilities |
+      EditorInputCapabilities.Singleton |
+      EditorInputCapabilities.RequiresModal
+    );
+  }
 
-	override get capabilities(): EditorInputCapabilities {
-		return super.capabilities | EditorInputCapabilities.Singleton | EditorInputCapabilities.RequiresModal;
-	}
+  constructor() {
+    super();
+  }
 
-	constructor() {
-		super();
-	}
+  override matches(otherInput: EditorInput | IUntypedEditorInput): boolean {
+    return (
+      super.matches(otherInput) ||
+      otherInput instanceof ModelsManagementEditorInput
+    );
+  }
 
-	override matches(otherInput: EditorInput | IUntypedEditorInput): boolean {
-		return super.matches(
-      otherInput,
-    ) || otherInput instanceof ModelsManagementEditorInput;
-	}
+  override get typeId(): string {
+    return ModelsManagementEditorInput.ID;
+  }
 
-	override get typeId(): string {
-		return ModelsManagementEditorInput.ID;
-	}
+  override getName(): string {
+    return nls.localize("modelsManagementEditorInputName", "Language Models");
+  }
 
-	override getName(): string {
-		return nls.localize("modelsManagementEditorInputName", "Language Models");
-	}
+  override getIcon(): ThemeIcon {
+    return ModelsManagementEditorIcon;
+  }
 
-	override getIcon(): ThemeIcon {
-		return ModelsManagementEditorIcon;
-	}
-
-	override async resolve(): Promise<null> {
-		return null;
-	}
+  override async resolve(): Promise<null> {
+    return null;
+  }
 }

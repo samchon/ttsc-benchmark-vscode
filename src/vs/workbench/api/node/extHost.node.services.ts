@@ -3,7 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstantiationType, registerSingleton } from "../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../platform/instantiation/common/extensions.js";
 import { ExtHostTerminalService } from "./extHostTerminalService.js";
 import { ExtHostTask } from "./extHostTask.js";
 import { ExtHostDebugService } from "./extHostDebugService.js";
@@ -19,14 +22,20 @@ import { IExtHostTunnelService } from "../common/extHostTunnelService.js";
 import { IExtensionStoragePaths } from "../common/extHostStoragePaths.js";
 import { ExtensionStoragePaths } from "./extHostStoragePaths.js";
 import { ExtHostLoggerService } from "./extHostLoggerService.js";
-import { ILogService, ILoggerService } from "../../../platform/log/common/log.js";
+import {
+  ILogService,
+  ILoggerService,
+} from "../../../platform/log/common/log.js";
 import { NodeExtHostVariableResolverProviderService } from "./extHostVariableResolverService.js";
 import { IExtHostVariableResolverProvider } from "../common/extHostVariableResolverService.js";
 import { ExtHostLogService } from "../common/extHostLogService.js";
 import { SyncDescriptor } from "../../../platform/instantiation/common/descriptors.js";
 import { ISignService } from "../../../platform/sign/common/sign.js";
 import { SignService } from "../../../platform/sign/node/signService.js";
-import { ExtHostTelemetry, IExtHostTelemetry } from "../common/extHostTelemetry.js";
+import {
+  ExtHostTelemetry,
+  IExtHostTelemetry,
+} from "../common/extHostTelemetry.js";
 import { IExtHostMpcService } from "../common/extHostMcp.js";
 import { NodeExtHostMpcService } from "./extHostMcpNode.js";
 import { IExtHostAuthentication } from "../common/extHostAuthentication.js";

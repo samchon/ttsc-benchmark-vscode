@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as dom from "../../../../../base/browser/dom.js";
-import { IHoverAction, IManagedHoverOptions } from "../../../../../base/browser/ui/hover/hover.js";
+import {
+  IHoverAction,
+  IManagedHoverOptions,
+} from "../../../../../base/browser/ui/hover/hover.js";
 import { renderIcon } from "../../../../../base/browser/ui/iconLabel/iconLabels.js";
 import { CancellationTokenSource } from "../../../../../base/common/cancellation.js";
 import { Codicon } from "../../../../../base/common/codicons.js";
@@ -26,25 +29,28 @@ import { IExtensionsWorkbenchService } from "../../../extensions/common/extensio
 import { verifiedPublisherIcon } from "../../../../services/extensionManagement/common/extensionsIcons.js";
 
 export class ChatAgentHover extends Disposable {
-	public readonly domNode: HTMLElement;
+  public readonly domNode: HTMLElement;
 
-	private readonly icon: HTMLElement;
-	private readonly name: HTMLElement;
-	private readonly extensionName: HTMLElement;
-	private readonly publisherName: HTMLElement;
-	private readonly description: HTMLElement;
+  private readonly icon: HTMLElement;
+  private readonly name: HTMLElement;
+  private readonly extensionName: HTMLElement;
+  private readonly publisherName: HTMLElement;
+  private readonly description: HTMLElement;
 
-	private readonly _onDidChangeContents = this._register(new Emitter<void>());
-	public readonly onDidChangeContents: Event<void> = this._onDidChangeContents.event;
+  private readonly _onDidChangeContents = this._register(new Emitter<void>());
+  public readonly onDidChangeContents: Event<void> =
+    this._onDidChangeContents.event;
 
-	constructor(
-		@IChatAgentService private readonly chatAgentService: IChatAgentService,
-		@IExtensionsWorkbenchService private readonly extensionService: IExtensionsWorkbenchService,
-		@IChatAgentNameService private readonly chatAgentNameService: IChatAgentNameService,
-	) {
-		super();
+  constructor(
+    @IChatAgentService private readonly chatAgentService: IChatAgentService,
+    @IExtensionsWorkbenchService
+    private readonly extensionService: IExtensionsWorkbenchService,
+    @IChatAgentNameService
+    private readonly chatAgentNameService: IChatAgentNameService,
+  ) {
+    super();
 
-		const hoverElement = dom.h(".chat-agent-hover@root", [
+    const hoverElement = dom.h(".chat-agent-hover@root", [
       dom.h(".chat-agent-hover-header", [
         dom.h(".chat-agent-hover-icon@icon"),
         dom.h(".chat-agent-hover-details", [
@@ -59,26 +65,26 @@ export class ChatAgentHover extends Disposable {
       dom.h(".chat-agent-hover-warning@warning"),
       dom.h("span.chat-agent-hover-description@description"),
     ]);
-		this.domNode = hoverElement.root;
+    this.domNode = hoverElement.root;
 
-		this.icon = hoverElement.icon;
-		this.name = hoverElement.name;
-		this.extensionName = hoverElement.extensionName;
-		this.description = hoverElement.description;
+    this.icon = hoverElement.icon;
+    this.name = hoverElement.name;
+    this.extensionName = hoverElement.extensionName;
+    this.description = hoverElement.description;
 
-		hoverElement.separator.textContent = "|";
+    hoverElement.separator.textContent = "|";
 
-		const verifiedBadge = dom.$(
+    const verifiedBadge = dom.$(
       "span.extension-verified-publisher",
       undefined,
       renderIcon(verifiedPublisherIcon),
     );
 
-		this.publisherName = dom.$("span.chat-agent-hover-publisher-name");
-		dom.append(hoverElement.publisher, verifiedBadge, this.publisherName);
+    this.publisherName = dom.$("span.chat-agent-hover-publisher-name");
+    dom.append(hoverElement.publisher, verifiedBadge, this.publisherName);
 
-		hoverElement.warning.appendChild(renderIcon(Codicon.warning));
-		hoverElement.warning.appendChild(
+    hoverElement.warning.appendChild(renderIcon(Codicon.warning));
+    hoverElement.warning.appendChild(
       dom.$(
         "span",
         undefined,
@@ -88,80 +94,88 @@ export class ChatAgentHover extends Disposable {
         ),
       ),
     );
-	}
+  }
 
-	setAgent(id: string): void {
-		const agent = this.chatAgentService.getAgent(id)!;
-		if (agent.metadata.icon instanceof URI) {
-			const avatarIcon = dom.$<HTMLImageElement>("img.icon");
-			avatarIcon.src = FileAccess.uriToBrowserUri(agent.metadata.icon).toString(
+  setAgent(id: string): void {
+    const agent = this.chatAgentService.getAgent(id)!;
+    if (agent.metadata.icon instanceof URI) {
+      const avatarIcon = dom.$<HTMLImageElement>("img.icon");
+      avatarIcon.src = FileAccess.uriToBrowserUri(agent.metadata.icon).toString(
         true,
       );
-			this.icon.replaceChildren(dom.$(".avatar", undefined, avatarIcon));
-		} else if (agent.metadata.themeIcon) {
-			const avatarIcon = dom.$(
+      this.icon.replaceChildren(dom.$(".avatar", undefined, avatarIcon));
+    } else if (agent.metadata.themeIcon) {
+      const avatarIcon = dom.$(
         ThemeIcon.asCSSSelector(agent.metadata.themeIcon),
       );
-			this.icon.replaceChildren(
+      this.icon.replaceChildren(
         dom.$(".avatar.codicon-avatar", undefined, avatarIcon),
       );
-		}
+    }
 
-		this.domNode.classList.toggle("noExtensionName", !!agent.isDynamic);
+    this.domNode.classList.toggle("noExtensionName", !!agent.isDynamic);
 
-		const isAllowed = this.chatAgentNameService.getAgentNameRestriction(agent);
-		this.name.textContent = isAllowed ? `@${agent.name}` : getFullyQualifiedId(
-      agent,
-    );
-		this.extensionName.textContent = agent.extensionDisplayName;
-		this.publisherName.textContent = agent.publisherDisplayName ?? agent.extensionPublisherId;
+    const isAllowed = this.chatAgentNameService.getAgentNameRestriction(agent);
+    this.name.textContent = isAllowed
+      ? `@${agent.name}`
+      : getFullyQualifiedId(agent);
+    this.extensionName.textContent = agent.extensionDisplayName;
+    this.publisherName.textContent =
+      agent.publisherDisplayName ?? agent.extensionPublisherId;
 
-		let description = agent.description ?? "";
-		if (description) {
-			if (!description.match(/[\.\?\!] *$/)) {
-				description += ".";
-			}
-		}
+    let description = agent.description ?? "";
+    if (description) {
+      if (!description.match(/[\.\?\!] *$/)) {
+        description += ".";
+      }
+    }
 
-		this.description.textContent = description;
-		this.domNode.classList.toggle("allowedName", isAllowed);
+    this.description.textContent = description;
+    this.domNode.classList.toggle("allowedName", isAllowed);
 
-		this.domNode.classList.toggle("verifiedPublisher", false);
-		if (!agent.isDynamic) {
-			const cancel = this._register(new CancellationTokenSource());
-			this.extensionService.getExtensions([{ id: agent.extensionId.value }], cancel.token).then(extensions => {
-				cancel.dispose();
-				const extension = extensions[0];
-				if (extension?.publisherDomain?.verified) {
-					this.domNode.classList.toggle("verifiedPublisher", true);
-					this._onDidChangeContents.fire();
-				}
-			});
-		}
-	}
+    this.domNode.classList.toggle("verifiedPublisher", false);
+    if (!agent.isDynamic) {
+      const cancel = this._register(new CancellationTokenSource());
+      this.extensionService
+        .getExtensions([{ id: agent.extensionId.value }], cancel.token)
+        .then((extensions) => {
+          cancel.dispose();
+          const extension = extensions[0];
+          if (extension?.publisherDomain?.verified) {
+            this.domNode.classList.toggle("verifiedPublisher", true);
+            this._onDidChangeContents.fire();
+          }
+        });
+    }
+  }
 }
 
-export function getChatAgentHoverOptions(getAgent: () => IChatAgentData | undefined, commandService: ICommandService): IManagedHoverOptions {
-	const viewExtensionAction: IHoverAction = {
-		commandId: showExtensionsWithIdsCommandId,
-		label: localize("viewExtensionLabel", "View Extension"),
-		run: () => {
-			const agent = getAgent();
-			if (agent) {
-				commandService.executeCommand(showExtensionsWithIdsCommandId, [agent.extensionId.value]);
-			}
-		},
-	};
+export function getChatAgentHoverOptions(
+  getAgent: () => IChatAgentData | undefined,
+  commandService: ICommandService,
+): IManagedHoverOptions {
+  const viewExtensionAction: IHoverAction = {
+    commandId: showExtensionsWithIdsCommandId,
+    label: localize("viewExtensionLabel", "View Extension"),
+    run: () => {
+      const agent = getAgent();
+      if (agent) {
+        commandService.executeCommand(showExtensionsWithIdsCommandId, [
+          agent.extensionId.value,
+        ]);
+      }
+    },
+  };
 
-	// `actions` is a getter so the agent is only resolved at hover-show time.
-	// Some callers (e.g. chatListRenderer) construct these options before the
-	// surrounding template is initialized, so calling `getAgent()` eagerly here
-	// would hit a TDZ on the captured `template` variable.
-	// Core agents (e.g. agent host) have a placeholder extension id and no real
-	// extension to view, so we omit the action for them.
-	return {
-		get actions() {
-			return getAgent()?.isCore ? [] : [viewExtensionAction];
-		},
-	};
+  // `actions` is a getter so the agent is only resolved at hover-show time.
+  // Some callers (e.g. chatListRenderer) construct these options before the
+  // surrounding template is initialized, so calling `getAgent()` eagerly here
+  // would hit a TDZ on the captured `template` variable.
+  // Core agents (e.g. agent host) have a placeholder extension id and no real
+  // extension to view, so we omit the action for them.
+  return {
+    get actions() {
+      return getAgent()?.isCore ? [] : [viewExtensionAction];
+    },
+  };
 }

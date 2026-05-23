@@ -13,35 +13,37 @@ import { ensureNoDisposablesAreLeakedInTestSuite } from "../common/utils.js";
 import { flakySuite, getRandomTestPath } from "./testUtils.js";
 
 flakySuite("Crypto", () => {
+  let testDir: string;
 
-	let testDir: string;
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-	ensureNoDisposablesAreLeakedInTestSuite();
+  setup(function () {
+    testDir = getRandomTestPath(tmpdir(), "vsctests", "crypto");
 
-	setup(function () {
-		testDir = getRandomTestPath(tmpdir(), "vsctests", "crypto");
+    return fs.promises.mkdir(testDir, { recursive: true });
+  });
 
-		return fs.promises.mkdir(testDir, { recursive: true });
-	});
+  teardown(function () {
+    return Promises.rm(testDir);
+  });
 
-	teardown(function () {
-		return Promises.rm(testDir);
-	});
+  test("checksum", async () => {
+    const testFile = join(testDir, "checksum.txt");
+    await Promises.writeFile(testFile, "Hello World");
 
-	test("checksum", async () => {
-		const testFile = join(testDir, "checksum.txt");
-		await Promises.writeFile(testFile, "Hello World");
+    await checksum(
+      testFile,
+      "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e",
+    );
+  });
 
-		await checksum(testFile, "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e");
-	});
+  test("checksum mismatch rejects", async () => {
+    const testFile = join(testDir, "checksum-mismatch.txt");
+    await Promises.writeFile(testFile, "Hello World");
 
-	test("checksum mismatch rejects", async () => {
-		const testFile = join(testDir, "checksum-mismatch.txt");
-		await Promises.writeFile(testFile, "Hello World");
-
-		await assert.rejects(
-			() => checksum(testFile, "wrong-hash"),
-			/Hash mismatch/,
-		);
-	});
+    await assert.rejects(
+      () => checksum(testFile, "wrong-hash"),
+      /Hash mismatch/,
+    );
+  });
 });

@@ -18,7 +18,10 @@ import { localize, localize2 } from "../../../../nls.js";
 import { Codicon } from "../../../../base/common/codicons.js";
 import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
 import { ViewPaneContainer } from "../../../../workbench/browser/parts/views/viewPaneContainer.js";
-import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../../workbench/common/contributions.js";
+import {
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../workbench/common/contributions.js";
 import { SessionsTitleBarContribution } from "./sessionsTitleBarWidget.js";
 import { SessionsView, SessionsViewId } from "./views/sessionsView.js";
 import "./views/sessionsViewActions.js";
@@ -36,22 +39,35 @@ const AGENT_SESSIONS_VIEW_TITLE = localize2(
 );
 const SessionsContainerId = "agentic.workbench.view.sessionsContainer";
 
-const agentSessionsViewContainer: ViewContainer = Registry.as<IViewContainersRegistry>(ViewContainerExtensions.ViewContainersRegistry).registerViewContainer({
-	id: SessionsContainerId,
-	title: AGENT_SESSIONS_VIEW_TITLE,
-	icon: agentSessionsViewIcon,
-	ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [SessionsContainerId, { mergeViewWithContainerWhenSingleView: true, }]),
-	storageId: SessionsContainerId,
-	hideIfEmpty: true,
-	order: 6,
-	openCommandActionDescriptor: {
-		id: SessionsContainerId,
-		mnemonicTitle: localize({ key: "miSessions", comment: ["&& denotes a mnemonic"] }, "&&Sessions"),
-		keybindings: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyX },
-		order: 0,
-	},
-	windowEnablement: WindowEnablement.Sessions,
-}, ViewContainerLocation.Sidebar, { isDefault: true });
+const agentSessionsViewContainer: ViewContainer =
+  Registry.as<IViewContainersRegistry>(
+    ViewContainerExtensions.ViewContainersRegistry,
+  ).registerViewContainer(
+    {
+      id: SessionsContainerId,
+      title: AGENT_SESSIONS_VIEW_TITLE,
+      icon: agentSessionsViewIcon,
+      ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [
+        SessionsContainerId,
+        { mergeViewWithContainerWhenSingleView: true },
+      ]),
+      storageId: SessionsContainerId,
+      hideIfEmpty: true,
+      order: 6,
+      openCommandActionDescriptor: {
+        id: SessionsContainerId,
+        mnemonicTitle: localize(
+          { key: "miSessions", comment: ["&& denotes a mnemonic"] },
+          "&&Sessions",
+        ),
+        keybindings: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyX },
+        order: 0,
+      },
+      windowEnablement: WindowEnablement.Sessions,
+    },
+    ViewContainerLocation.Sidebar,
+    { isDefault: true },
+  );
 
 const sessionsViewPaneDescriptor: IViewDescriptor = {
   id: SessionsViewId,
@@ -65,10 +81,9 @@ const sessionsViewPaneDescriptor: IViewDescriptor = {
   windowEnablement: WindowEnablement.Sessions,
 };
 
-Registry.as<IViewsRegistry>(ViewContainerExtensions.ViewsRegistry).registerViews(
-  [sessionsViewPaneDescriptor],
-  agentSessionsViewContainer,
-);
+Registry.as<IViewsRegistry>(
+  ViewContainerExtensions.ViewsRegistry,
+).registerViews([sessionsViewPaneDescriptor], agentSessionsViewContainer);
 
 registerWorkbenchContribution2(
   SessionsTitleBarContribution.ID,

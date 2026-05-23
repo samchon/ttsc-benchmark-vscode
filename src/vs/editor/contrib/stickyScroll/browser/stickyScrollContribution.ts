@@ -3,7 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { EditorContributionInstantiation, registerEditorContribution } from "../../../browser/editorExtensions.js";
+import {
+  EditorContributionInstantiation,
+  registerEditorContribution,
+} from "../../../browser/editorExtensions.js";
 import {
   ToggleStickyScroll,
   FocusStickyScroll,

@@ -166,7 +166,12 @@ export const editorWhitespaces = registerColor(
 );
 export const editorLineNumbers = registerColor(
   "editorLineNumber.foreground",
-  { dark: "#858585", light: "#237893", hcDark: Color.white, hcLight: "#292929" },
+  {
+    dark: "#858585",
+    light: "#237893",
+    hcDark: Color.white,
+    hcLight: "#292929",
+  },
   nls.localize("editorLineNumbers", "Color of editor line numbers."),
 );
 
@@ -574,19 +579,20 @@ export const editorBracketHighlightingForeground6 = registerColor(
   ),
 );
 
-export const editorBracketHighlightingUnexpectedBracketForeground = registerColor(
-  "editorBracketHighlight.unexpectedBracket.foreground",
-  {
-    dark: new Color(new RGBA(255, 18, 18, 0.8)),
-    light: new Color(new RGBA(255, 18, 18, 0.8)),
-    hcDark: new Color(new RGBA(255, 50, 50, 1)),
-    hcLight: "#B5200D",
-  },
-  nls.localize(
-    "editorBracketHighlightUnexpectedBracketForeground",
-    "Foreground color of unexpected brackets.",
-  ),
-);
+export const editorBracketHighlightingUnexpectedBracketForeground =
+  registerColor(
+    "editorBracketHighlight.unexpectedBracket.foreground",
+    {
+      dark: new Color(new RGBA(255, 18, 18, 0.8)),
+      light: new Color(new RGBA(255, 18, 18, 0.8)),
+      hcDark: new Color(new RGBA(255, 50, 50, 1)),
+      hcLight: "#B5200D",
+    },
+    nls.localize(
+      "editorBracketHighlightUnexpectedBracketForeground",
+      "Foreground color of unexpected brackets.",
+    ),
+  );
 
 export const editorBracketPairGuideBackground1 = registerColor(
   "editorBracketPairGuide.background1",
@@ -703,13 +709,17 @@ export const editorUnicodeHighlightBackground = registerColor(
   ),
 );
 
-
 // contains all color rules that used to defined in editor/browser/widget/editor.css
 registerThemingParticipant((theme, collector) => {
-	const background = theme.getColor(editorBackground);
-	const lineHighlight = theme.getColor(editorLineHighlight);
-	const imeBackground = (lineHighlight && !lineHighlight.isTransparent() ? lineHighlight : background);
-	if (imeBackground) {
-		collector.addRule(`.monaco-editor .inputarea.ime-input { background-color: ${imeBackground}; }`);
-	}
+  const background = theme.getColor(editorBackground);
+  const lineHighlight = theme.getColor(editorLineHighlight);
+  const imeBackground =
+    lineHighlight && !lineHighlight.isTransparent()
+      ? lineHighlight
+      : background;
+  if (imeBackground) {
+    collector.addRule(
+      `.monaco-editor .inputarea.ime-input { background-color: ${imeBackground}; }`,
+    );
+  }
 });

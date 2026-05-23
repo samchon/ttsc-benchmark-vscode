@@ -12,21 +12,29 @@ import {
   MainContext,
   MainThreadDocumentDiffShape,
 } from "../common/extHost.protocol.js";
-import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import {
+  extHostNamedCustomer,
+  IExtHostContext,
+} from "../../services/extensions/common/extHostCustomers.js";
 
 @extHostNamedCustomer(MainContext.MainThreadDocumentDiff)
 export class MainThreadDocumentDiff implements MainThreadDocumentDiffShape {
+  constructor(
+    _extHostContext: IExtHostContext,
+    @IEditorWorkerService
+    private readonly _editorWorkerService: IEditorWorkerService,
+  ) {}
 
-	constructor(
-		_extHostContext: IExtHostContext,
-		@IEditorWorkerService private readonly _editorWorkerService: IEditorWorkerService,
-	) {
-	}
-
-	async $computeDocumentDiff(originalUri: UriComponents, modifiedUri: UriComponents, ignoreTrimWhitespace: boolean, maxComputationTimeMs: number, computeMoves: boolean): Promise<IDocumentDiffResultDto | null> {
-		const original = URI.revive(originalUri);
-		const modified = URI.revive(modifiedUri);
-		const result = await this._editorWorkerService.computeDiff(
+  async $computeDocumentDiff(
+    originalUri: UriComponents,
+    modifiedUri: UriComponents,
+    ignoreTrimWhitespace: boolean,
+    maxComputationTimeMs: number,
+    computeMoves: boolean,
+  ): Promise<IDocumentDiffResultDto | null> {
+    const original = URI.revive(originalUri);
+    const modified = URI.revive(modifiedUri);
+    const result = await this._editorWorkerService.computeDiff(
       original,
       modified,
       {
@@ -36,38 +44,43 @@ export class MainThreadDocumentDiff implements MainThreadDocumentDiffShape {
       },
       "advanced",
     );
-		if (!result) {
-			return null;
-		}
-		const toLineRange = (r: { startLineNumber: number; endLineNumberExclusive: number }): IRange => ({
+    if (!result) {
+      return null;
+    }
+    const toLineRange = (r: {
+      startLineNumber: number;
+      endLineNumberExclusive: number;
+    }): IRange => ({
       startLineNumber: r.startLineNumber,
       startColumn: 1,
       endLineNumber: r.endLineNumberExclusive,
       endColumn: 1,
     });
 
-		const mapChange = (c: typeof result.changes[0]): IDocumentDiffLineChangeDto => ({
-			originalRange: toLineRange(c.original),
-			modifiedRange: toLineRange(c.modified),
-			innerChanges: c.innerChanges?.map(ic => ({
-				originalRange: ic.originalRange,
-				modifiedRange: ic.modifiedRange,
-			})),
-		});
+    const mapChange = (
+      c: (typeof result.changes)[0],
+    ): IDocumentDiffLineChangeDto => ({
+      originalRange: toLineRange(c.original),
+      modifiedRange: toLineRange(c.modified),
+      innerChanges: c.innerChanges?.map((ic) => ({
+        originalRange: ic.originalRange,
+        modifiedRange: ic.modifiedRange,
+      })),
+    });
 
-		return {
-			identical: result.identical,
-			quitEarly: result.quitEarly,
-			changes: result.changes.map(mapChange),
-			moves: result.moves.map(m => ({
-				originalRange: toLineRange(m.lineRangeMapping.original),
-				modifiedRange: toLineRange(m.lineRangeMapping.modified),
-				changes: m.changes.map(mapChange),
-			})),
-		};
-	}
+    return {
+      identical: result.identical,
+      quitEarly: result.quitEarly,
+      changes: result.changes.map(mapChange),
+      moves: result.moves.map((m) => ({
+        originalRange: toLineRange(m.lineRangeMapping.original),
+        modifiedRange: toLineRange(m.lineRangeMapping.modified),
+        changes: m.changes.map(mapChange),
+      })),
+    };
+  }
 
-	dispose(): void {
-		// nothing to dispose
-	}
+  dispose(): void {
+    // nothing to dispose
+  }
 }

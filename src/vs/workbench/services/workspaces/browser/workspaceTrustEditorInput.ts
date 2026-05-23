@@ -9,7 +9,10 @@ import { ThemeIcon } from "../../../../base/common/themables.js";
 import { URI } from "../../../../base/common/uri.js";
 import { localize } from "../../../../nls.js";
 import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
-import { EditorInputCapabilities, IUntypedEditorInput } from "../../../common/editor.js";
+import {
+  EditorInputCapabilities,
+  IUntypedEditorInput,
+} from "../../../common/editor.js";
 import { EditorInput } from "../../../common/editor/editorInput.js";
 
 const WorkspaceTrustEditorIcon = registerIcon(
@@ -22,32 +25,37 @@ const WorkspaceTrustEditorIcon = registerIcon(
 );
 
 export class WorkspaceTrustEditorInput extends EditorInput {
-	static readonly ID: string = "workbench.input.workspaceTrust";
+  static readonly ID: string = "workbench.input.workspaceTrust";
 
-	override get capabilities(): EditorInputCapabilities {
-		return super.capabilities | EditorInputCapabilities.Singleton | EditorInputCapabilities.RequiresModal;
-	}
+  override get capabilities(): EditorInputCapabilities {
+    return (
+      super.capabilities |
+      EditorInputCapabilities.Singleton |
+      EditorInputCapabilities.RequiresModal
+    );
+  }
 
-	override get typeId(): string {
-		return WorkspaceTrustEditorInput.ID;
-	}
+  override get typeId(): string {
+    return WorkspaceTrustEditorInput.ID;
+  }
 
-	readonly resource: URI = URI.from({
+  readonly resource: URI = URI.from({
     scheme: Schemas.vscodeWorkspaceTrust,
     path: `workspaceTrustEditor`,
   });
 
-	override matches(otherInput: EditorInput | IUntypedEditorInput): boolean {
-		return super.matches(
-      otherInput,
-    ) || otherInput instanceof WorkspaceTrustEditorInput;
-	}
+  override matches(otherInput: EditorInput | IUntypedEditorInput): boolean {
+    return (
+      super.matches(otherInput) ||
+      otherInput instanceof WorkspaceTrustEditorInput
+    );
+  }
 
-	override getName(): string {
-		return localize("workspaceTrustEditorInputName", "Workspace Trust");
-	}
+  override getName(): string {
+    return localize("workspaceTrustEditorInputName", "Workspace Trust");
+  }
 
-	override getIcon(): ThemeIcon {
-		return WorkspaceTrustEditorIcon;
-	}
+  override getIcon(): ThemeIcon {
+    return WorkspaceTrustEditorIcon;
+  }
 }

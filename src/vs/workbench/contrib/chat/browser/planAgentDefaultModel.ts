@@ -4,36 +4,42 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ILogService } from "../../../../platform/log/common/log.js";
-import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../common/contributions.js";
+import {
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../common/contributions.js";
 import { ChatConfiguration } from "../common/constants.js";
 import { ILanguageModelsService } from "../common/languageModels.js";
-import { createDefaultModelArrays, DefaultModelContribution } from "./defaultModelContribution.js";
+import {
+  createDefaultModelArrays,
+  DefaultModelContribution,
+} from "./defaultModelContribution.js";
 
 const arrays = createDefaultModelArrays();
 
 export class PlanAgentDefaultModel extends DefaultModelContribution {
-	static readonly ID = "workbench.contrib.planAgentDefaultModel";
+  static readonly ID = "workbench.contrib.planAgentDefaultModel";
 
-	static readonly modelIds = arrays.modelIds;
-	static readonly modelLabels = arrays.modelLabels;
-	static readonly modelDescriptions = arrays.modelDescriptions;
+  static readonly modelIds = arrays.modelIds;
+  static readonly modelLabels = arrays.modelLabels;
+  static readonly modelDescriptions = arrays.modelDescriptions;
 
-	constructor(
-		@ILanguageModelsService languageModelsService: ILanguageModelsService,
-		@ILogService logService: ILogService,
-	) {
-		super(
+  constructor(
+    @ILanguageModelsService languageModelsService: ILanguageModelsService,
+    @ILogService logService: ILogService,
+  ) {
+    super(
       arrays,
       {
         configKey: ChatConfiguration.PlanAgentDefaultModel,
         configSectionId: "chatSidebar",
         logPrefix: "[PlanAgentDefaultModel]",
-        filter: metadata => !!metadata.capabilities?.toolCalling,
+        filter: (metadata) => !!metadata.capabilities?.toolCalling,
       },
       languageModelsService,
       logService,
     );
-	}
+  }
 }
 
 registerWorkbenchContribution2(

@@ -17,86 +17,95 @@ import { TerminalChatAgentToolsSettingId } from "../../common/terminalChatAgentT
 import { ITerminalSandboxService } from "../../common/terminalSandboxService.js";
 
 suite("CommandLineSandboxAnalyzer", () => {
-	const store = ensureNoDisposablesAreLeakedInTestSuite();
+  const store = ensureNoDisposablesAreLeakedInTestSuite();
 
-	let instantiationService: TestInstantiationService;
-	let configurationService: TestConfigurationService;
-	let sandboxEnabled: boolean;
-	let analyzer: CommandLineSandboxAnalyzer;
+  let instantiationService: TestInstantiationService;
+  let configurationService: TestConfigurationService;
+  let sandboxEnabled: boolean;
+  let analyzer: CommandLineSandboxAnalyzer;
 
-	setup(() => {
-		configurationService = new TestConfigurationService();
-		sandboxEnabled = true;
+  setup(() => {
+    configurationService = new TestConfigurationService();
+    sandboxEnabled = true;
 
-		instantiationService = workbenchInstantiationService({
-			configurationService: () => configurationService,
-		}, store);
-		instantiationService.stub(ITerminalSandboxService, {
-			_serviceBrand: undefined,
-			isEnabled: async () => sandboxEnabled,
-			isSandboxAllowNetworkEnabled: async () => false,
-		} as unknown as ITerminalSandboxService);
+    instantiationService = workbenchInstantiationService(
+      {
+        configurationService: () => configurationService,
+      },
+      store,
+    );
+    instantiationService.stub(ITerminalSandboxService, {
+      _serviceBrand: undefined,
+      isEnabled: async () => sandboxEnabled,
+      isSandboxAllowNetworkEnabled: async () => false,
+    } as unknown as ITerminalSandboxService);
 
-		analyzer = store.add(instantiationService.createInstance(CommandLineSandboxAnalyzer));
-	});
+    analyzer = store.add(
+      instantiationService.createInstance(CommandLineSandboxAnalyzer),
+    );
+  });
 
-	function setConfig(key: string, value: unknown) {
-		configurationService.setUserConfiguration(key, value);
-		configurationService.onDidChangeConfigurationEmitter.fire({
-			affectsConfiguration: () => true,
-			affectedKeys: new Set([key]),
-			source: ConfigurationTarget.USER,
-			change: null!,
-		});
-	}
+  function setConfig(key: string, value: unknown) {
+    configurationService.setUserConfiguration(key, value);
+    configurationService.onDidChangeConfigurationEmitter.fire({
+      affectsConfiguration: () => true,
+      affectedKeys: new Set([key]),
+      source: ConfigurationTarget.USER,
+      change: null!,
+    });
+  }
 
-	function createOptions(options?: Partial<ICommandLineAnalyzerOptions>): ICommandLineAnalyzerOptions {
-		return {
-			commandLine: "echo hello",
-			cwd: undefined,
-			shell: "bash",
-			os: OperatingSystem.Linux,
-			treeSitterLanguage: TreeSitterCommandParserLanguage.Bash,
-			terminalToolSessionId: "test",
-			chatSessionResource: undefined,
-			...options,
-		};
-	}
+  function createOptions(
+    options?: Partial<ICommandLineAnalyzerOptions>,
+  ): ICommandLineAnalyzerOptions {
+    return {
+      commandLine: "echo hello",
+      cwd: undefined,
+      shell: "bash",
+      os: OperatingSystem.Linux,
+      treeSitterLanguage: TreeSitterCommandParserLanguage.Bash,
+      terminalToolSessionId: "test",
+      chatSessionResource: undefined,
+      ...options,
+    };
+  }
 
-	test("should force auto approval for sandboxed commands when auto approve is enabled", async () => {
-		setConfig(TerminalChatAgentToolsSettingId.EnableAutoApprove, true);
+  test("should force auto approval for sandboxed commands when auto approve is enabled", async () => {
+    setConfig(TerminalChatAgentToolsSettingId.EnableAutoApprove, true);
 
-		const result = await analyzer.analyze(createOptions());
+    const result = await analyzer.analyze(createOptions());
 
-		strictEqual(result.isAutoApproveAllowed, true);
-		strictEqual(result.forceAutoApproval, true);
-	});
+    strictEqual(result.isAutoApproveAllowed, true);
+    strictEqual(result.forceAutoApproval, true);
+  });
 
-	test("should not force auto approval for sandboxed commands when auto approve is disabled", async () => {
-		setConfig(TerminalChatAgentToolsSettingId.EnableAutoApprove, false);
+  test("should not force auto approval for sandboxed commands when auto approve is disabled", async () => {
+    setConfig(TerminalChatAgentToolsSettingId.EnableAutoApprove, false);
 
-		const result = await analyzer.analyze(createOptions());
+    const result = await analyzer.analyze(createOptions());
 
-		strictEqual(result.isAutoApproveAllowed, false);
-		strictEqual(result.forceAutoApproval, false);
-	});
+    strictEqual(result.isAutoApproveAllowed, false);
+    strictEqual(result.forceAutoApproval, false);
+  });
 
-	test("should not force auto approval when unsandbox confirmation is required", async () => {
-		setConfig(TerminalChatAgentToolsSettingId.EnableAutoApprove, true);
+  test("should not force auto approval when unsandbox confirmation is required", async () => {
+    setConfig(TerminalChatAgentToolsSettingId.EnableAutoApprove, true);
 
-		const result = await analyzer.analyze(createOptions({ requiresUnsandboxConfirmation: true }));
+    const result = await analyzer.analyze(
+      createOptions({ requiresUnsandboxConfirmation: true }),
+    );
 
-		strictEqual(result.isAutoApproveAllowed, true);
-		strictEqual(result.forceAutoApproval, false);
-	});
+    strictEqual(result.isAutoApproveAllowed, true);
+    strictEqual(result.forceAutoApproval, false);
+  });
 
-	test("should set auto approval allowed from setting when sandbox is disabled", async () => {
-		sandboxEnabled = false;
-		setConfig(TerminalChatAgentToolsSettingId.EnableAutoApprove, false);
+  test("should set auto approval allowed from setting when sandbox is disabled", async () => {
+    sandboxEnabled = false;
+    setConfig(TerminalChatAgentToolsSettingId.EnableAutoApprove, false);
 
-		const result = await analyzer.analyze(createOptions());
+    const result = await analyzer.analyze(createOptions());
 
-		strictEqual(result.isAutoApproveAllowed, false);
-		strictEqual(result.forceAutoApproval, undefined);
-	});
+    strictEqual(result.isAutoApproveAllowed, false);
+    strictEqual(result.forceAutoApproval, undefined);
+  });
 });

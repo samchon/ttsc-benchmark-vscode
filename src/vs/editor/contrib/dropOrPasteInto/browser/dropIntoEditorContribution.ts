@@ -28,39 +28,50 @@ registerEditorContribution(
 );
 registerEditorFeature(DefaultDropProvidersFeature);
 
-registerEditorCommand(new class extends EditorCommand {
-	constructor() {
-		super({
-			id: changeDropTypeCommandId,
-			precondition: dropWidgetVisibleCtx,
-			kbOpts: {
-				weight: KeybindingWeight.EditorContrib,
-				primary: KeyMod.CtrlCmd | KeyCode.Period,
-			},
-		});
-	}
+registerEditorCommand(
+  new (class extends EditorCommand {
+    constructor() {
+      super({
+        id: changeDropTypeCommandId,
+        precondition: dropWidgetVisibleCtx,
+        kbOpts: {
+          weight: KeybindingWeight.EditorContrib,
+          primary: KeyMod.CtrlCmd | KeyCode.Period,
+        },
+      });
+    }
 
-	public override runEditorCommand(_accessor: ServicesAccessor, editor: ICodeEditor, _args: unknown) {
-		DropIntoEditorController.get(editor)?.changeDropType();
-	}
-});
+    public override runEditorCommand(
+      _accessor: ServicesAccessor,
+      editor: ICodeEditor,
+      _args: unknown,
+    ) {
+      DropIntoEditorController.get(editor)?.changeDropType();
+    }
+  })(),
+);
 
-registerEditorCommand(new class extends EditorCommand {
-	constructor() {
-		super({
-			id: "editor.hideDropWidget",
-			precondition: dropWidgetVisibleCtx,
-			kbOpts: {
-				weight: KeybindingWeight.EditorContrib,
-				primary: KeyCode.Escape,
-			},
-		});
-	}
+registerEditorCommand(
+  new (class extends EditorCommand {
+    constructor() {
+      super({
+        id: "editor.hideDropWidget",
+        precondition: dropWidgetVisibleCtx,
+        kbOpts: {
+          weight: KeybindingWeight.EditorContrib,
+          primary: KeyCode.Escape,
+        },
+      });
+    }
 
-	public override runEditorCommand(_accessor: ServicesAccessor, editor: ICodeEditor, _args: unknown) {
-		DropIntoEditorController.get(editor)?.clearWidgets();
-	}
-});
+    public override runEditorCommand(
+      _accessor: ServicesAccessor,
+      editor: ICodeEditor,
+      _args: unknown,
+    ) {
+      DropIntoEditorController.get(editor)?.clearWidgets();
+    }
+  })(),
+);
 
 export type PreferredDropConfiguration = string;
-

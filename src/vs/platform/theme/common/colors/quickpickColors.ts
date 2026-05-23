@@ -10,14 +10,16 @@ import { Color, RGBA } from "../../../../base/common/color.js";
 import { registerColor, oneOf } from "../colorUtils.js";
 
 // Import the colors we need
-import { editorWidgetBackground, editorWidgetForeground } from "./editorColors.js";
+import {
+  editorWidgetBackground,
+  editorWidgetForeground,
+} from "./editorColors.js";
 import {
   listActiveSelectionBackground,
   listActiveSelectionForeground,
   listActiveSelectionIconForeground,
   listFocusHighlightForeground,
 } from "./listColors.js";
-
 
 export const quickInputBackground = registerColor(
   "quickInput.background",
@@ -53,7 +55,12 @@ export const quickInputTitleBackground = registerColor(
 
 export const pickerGroupForeground = registerColor(
   "pickerGroup.foreground",
-  { dark: "#3794FF", light: "#0066BF", hcDark: Color.white, hcLight: "#0F4A85" },
+  {
+    dark: "#3794FF",
+    light: "#0066BF",
+    hcDark: Color.white,
+    hcLight: "#0F4A85",
+  },
   nls.localize(
     "pickerGroupForeground",
     "Quick picker color for grouping labels.",
@@ -62,7 +69,12 @@ export const pickerGroupForeground = registerColor(
 
 export const pickerGroupBorder = registerColor(
   "pickerGroup.border",
-  { dark: "#3F3F46", light: "#CCCEDB", hcDark: Color.white, hcLight: "#0F4A85" },
+  {
+    dark: "#3F3F46",
+    light: "#CCCEDB",
+    hcDark: Color.white,
+    hcLight: "#0F4A85",
+  },
   nls.localize("pickerGroupBorder", "Quick picker color for grouping borders."),
 );
 
@@ -98,8 +110,14 @@ export const quickInputListFocusIconForeground = registerColor(
 export const quickInputListFocusBackground = registerColor(
   "quickInputList.focusBackground",
   {
-    dark: oneOf(_deprecatedQuickInputListFocusBackground, listActiveSelectionBackground),
-    light: oneOf(_deprecatedQuickInputListFocusBackground, listActiveSelectionBackground),
+    dark: oneOf(
+      _deprecatedQuickInputListFocusBackground,
+      listActiveSelectionBackground,
+    ),
+    light: oneOf(
+      _deprecatedQuickInputListFocusBackground,
+      listActiveSelectionBackground,
+    ),
     hcDark: null,
     hcLight: null,
   },

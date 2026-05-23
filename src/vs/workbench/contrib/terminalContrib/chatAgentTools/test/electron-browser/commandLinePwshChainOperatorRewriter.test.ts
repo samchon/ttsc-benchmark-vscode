@@ -19,53 +19,97 @@ import type { ICommandLineRewriterOptions } from "../../browser/tools/commandLin
 import { TreeSitterCommandParser } from "../../browser/treeSitterCommandParser.js";
 
 suite("CommandLinePwshChainOperatorRewriter", () => {
-	const store = ensureNoDisposablesAreLeakedInTestSuite();
+  const store = ensureNoDisposablesAreLeakedInTestSuite();
 
-	let instantiationService: TestInstantiationService;
-	let parser: TreeSitterCommandParser;
-	let rewriter: CommandLinePwshChainOperatorRewriter;
+  let instantiationService: TestInstantiationService;
+  let parser: TreeSitterCommandParser;
+  let rewriter: CommandLinePwshChainOperatorRewriter;
 
-	function createRewriteOptions(command: string, shell: string, os: OperatingSystem): ICommandLineRewriterOptions {
-		return {
-			commandLine: command,
-			cwd: undefined,
-			shell,
-			os,
-		};
-	}
+  function createRewriteOptions(
+    command: string,
+    shell: string,
+    os: OperatingSystem,
+  ): ICommandLineRewriterOptions {
+    return {
+      commandLine: command,
+      cwd: undefined,
+      shell,
+      os,
+    };
+  }
 
-	setup(() => {
-		const fileService = store.add(new FileService(new NullLogService()));
-		const fileSystemProvider = new TestIPCFileSystemProvider();
-		store.add(fileService.registerProvider(Schemas.file, fileSystemProvider));
+  setup(() => {
+    const fileService = store.add(new FileService(new NullLogService()));
+    const fileSystemProvider = new TestIPCFileSystemProvider();
+    store.add(fileService.registerProvider(Schemas.file, fileSystemProvider));
 
-		instantiationService = workbenchInstantiationService({
-			fileService: () => fileService,
-		}, store);
+    instantiationService = workbenchInstantiationService(
+      {
+        fileService: () => fileService,
+      },
+      store,
+    );
 
-		const treeSitterLibraryService = store.add(instantiationService.createInstance(TreeSitterLibraryService));
-		treeSitterLibraryService.isTest = true;
-		instantiationService.stub(ITreeSitterLibraryService, treeSitterLibraryService);
+    const treeSitterLibraryService = store.add(
+      instantiationService.createInstance(TreeSitterLibraryService),
+    );
+    treeSitterLibraryService.isTest = true;
+    instantiationService.stub(
+      ITreeSitterLibraryService,
+      treeSitterLibraryService,
+    );
 
-		parser = store.add(instantiationService.createInstance(TreeSitterCommandParser));
-		rewriter = store.add(instantiationService.createInstance(CommandLinePwshChainOperatorRewriter, parser));
-	});
+    parser = store.add(
+      instantiationService.createInstance(TreeSitterCommandParser),
+    );
+    rewriter = store.add(
+      instantiationService.createInstance(
+        CommandLinePwshChainOperatorRewriter,
+        parser,
+      ),
+    );
+  });
 
-	suite("PowerShell: && -> ;", () => {
-		async function t(originalCommandLine: string, expectedResult: string | undefined) {
-			const options = createRewriteOptions(originalCommandLine, "pwsh", OperatingSystem.Windows);
-			const result = await rewriter.rewrite(options);
-			strictEqual(result?.rewritten, expectedResult);
-			if (expectedResult !== undefined) {
-				strictEqual(result?.reasoning, "&& re-written to ;");
-			}
-		}
+  suite("PowerShell: && -> ;", () => {
+    async function t(
+      originalCommandLine: string,
+      expectedResult: string | undefined,
+    ) {
+      const options = createRewriteOptions(
+        originalCommandLine,
+        "pwsh",
+        OperatingSystem.Windows,
+      );
+      const result = await rewriter.rewrite(options);
+      strictEqual(result?.rewritten, expectedResult);
+      if (expectedResult !== undefined) {
+        strictEqual(result?.reasoning, "&& re-written to ;");
+      }
+    }
 
-		test("should rewrite && to ; in PowerShell commands", () => t("echo hello && echo world", "echo hello ; echo world"));
-		test("should rewrite multiple && to ; in PowerShell commands", () => t("echo first && echo second && echo third", "echo first ; echo second ; echo third"));
-		test("should handle complex commands with && operators", () => t('npm install && npm test && echo "build complete"', 'npm install ; npm test ; echo "build complete"'));
-		test("should work with Windows PowerShell shell identifier", () => t("Get-Process && Stop-Process", "Get-Process ; Stop-Process"));
-		test("should preserve existing semicolons", () => t("echo hello; echo world && echo final", "echo hello; echo world ; echo final"));
-		test("should not rewrite strings", () => t('echo "&&" && Write-Host "&& &&" && "&&"', 'echo "&&" ; Write-Host "&& &&" ; "&&"'));
-	});
+    test("should rewrite && to ; in PowerShell commands", () =>
+      t("echo hello && echo world", "echo hello ; echo world"));
+    test("should rewrite multiple && to ; in PowerShell commands", () =>
+      t(
+        "echo first && echo second && echo third",
+        "echo first ; echo second ; echo third",
+      ));
+    test("should handle complex commands with && operators", () =>
+      t(
+        'npm install && npm test && echo "build complete"',
+        'npm install ; npm test ; echo "build complete"',
+      ));
+    test("should work with Windows PowerShell shell identifier", () =>
+      t("Get-Process && Stop-Process", "Get-Process ; Stop-Process"));
+    test("should preserve existing semicolons", () =>
+      t(
+        "echo hello; echo world && echo final",
+        "echo hello; echo world ; echo final",
+      ));
+    test("should not rewrite strings", () =>
+      t(
+        'echo "&&" && Write-Host "&& &&" && "&&"',
+        'echo "&&" ; Write-Host "&& &&" ; "&&"',
+      ));
+  });
 });

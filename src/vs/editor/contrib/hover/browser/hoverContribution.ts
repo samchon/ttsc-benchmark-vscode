@@ -35,7 +35,11 @@ import { ContentHoverController } from "./contentHoverController.js";
 import { GlyphHoverController } from "./glyphHoverController.js";
 import "./hover.css";
 import { AccessibleViewRegistry } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
-import { ExtHoverAccessibleView, HoverAccessibilityHelp, HoverAccessibleView } from "./hoverAccessibleViews.js";
+import {
+  ExtHoverAccessibleView,
+  HoverAccessibilityHelp,
+  HoverAccessibleView,
+} from "./hoverAccessibleViews.js";
 
 registerEditorContribution(
   ContentHoverController.ID,
@@ -65,21 +69,26 @@ HoverParticipantRegistry.register(MarkerHoverParticipant);
 CommandsRegistry.registerCommand(
   HIDE_LONG_LINE_WARNING_HOVER_ACTION_ID,
   (accessor) => {
-    accessor.get(IConfigurationService).updateValue(
-      "editor.hover.showLongLineWarning",
-      false,
-    );
+    accessor
+      .get(IConfigurationService)
+      .updateValue("editor.hover.showLongLineWarning", false);
   },
 );
 
 // theming
 registerThemingParticipant((theme, collector) => {
-	const hoverBorder = theme.getColor(editorHoverBorder);
-	if (hoverBorder) {
-		collector.addRule(`.monaco-editor .monaco-hover .hover-row:not(:first-child):not(:empty) { border-top: 1px solid ${hoverBorder.transparent(0.5)}; }`);
-		collector.addRule(`.monaco-editor .monaco-hover hr { border-top: 1px solid ${hoverBorder.transparent(0.5)}; }`);
-		collector.addRule(`.monaco-editor .monaco-hover hr { border-bottom: 0px solid ${hoverBorder.transparent(0.5)}; }`);
-	}
+  const hoverBorder = theme.getColor(editorHoverBorder);
+  if (hoverBorder) {
+    collector.addRule(
+      `.monaco-editor .monaco-hover .hover-row:not(:first-child):not(:empty) { border-top: 1px solid ${hoverBorder.transparent(0.5)}; }`,
+    );
+    collector.addRule(
+      `.monaco-editor .monaco-hover hr { border-top: 1px solid ${hoverBorder.transparent(0.5)}; }`,
+    );
+    collector.addRule(
+      `.monaco-editor .monaco-hover hr { border-bottom: 0px solid ${hoverBorder.transparent(0.5)}; }`,
+    );
+  }
 });
 AccessibleViewRegistry.register(new HoverAccessibleView());
 AccessibleViewRegistry.register(new HoverAccessibilityHelp());

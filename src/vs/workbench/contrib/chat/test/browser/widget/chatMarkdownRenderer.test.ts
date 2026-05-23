@@ -11,89 +11,108 @@ import { ChatContentMarkdownRenderer } from "../../../browser/widget/chatContent
 import { workbenchInstantiationService } from "../../../../../test/browser/workbenchTestServices.js";
 
 suite("ChatMarkdownRenderer", () => {
-	const store = ensureNoDisposablesAreLeakedInTestSuite();
+  const store = ensureNoDisposablesAreLeakedInTestSuite();
 
-	let testRenderer: ChatContentMarkdownRenderer;
-	setup(() => {
-		const instantiationService = store.add(workbenchInstantiationService(undefined, store));
-		testRenderer = instantiationService.createInstance(ChatContentMarkdownRenderer);
-	});
+  let testRenderer: ChatContentMarkdownRenderer;
+  setup(() => {
+    const instantiationService = store.add(
+      workbenchInstantiationService(undefined, store),
+    );
+    testRenderer = instantiationService.createInstance(
+      ChatContentMarkdownRenderer,
+    );
+  });
 
-	test("simple", async () => {
-		const md = new MarkdownString("a");
-		const result = store.add(testRenderer.render(md));
-		await assertSnapshot(result.element.textContent);
-	});
+  test("simple", async () => {
+    const md = new MarkdownString("a");
+    const result = store.add(testRenderer.render(md));
+    await assertSnapshot(result.element.textContent);
+  });
 
-	test("plain text fast path preserves rendered markdown shape", () => {
-		const md = new MarkdownString("Hello, world. This is plain.", { isTrusted: true, supportHtml: true, supportThemeIcons: true });
-		const result = store.add(testRenderer.render(md));
+  test("plain text fast path preserves rendered markdown shape", () => {
+    const md = new MarkdownString("Hello, world. This is plain.", {
+      isTrusted: true,
+      supportHtml: true,
+      supportThemeIcons: true,
+    });
+    const result = store.add(testRenderer.render(md));
 
-		assert.deepStrictEqual({
-			outerHTML: result.element.outerHTML,
-			textContent: result.element.textContent,
-		}, {
-			outerHTML: '<div class="rendered-markdown"><p>Hello, world. This is plain.</p></div>',
-			textContent: "Hello, world. This is plain.",
-		});
-	});
+    assert.deepStrictEqual(
+      {
+        outerHTML: result.element.outerHTML,
+        textContent: result.element.textContent,
+      },
+      {
+        outerHTML:
+          '<div class="rendered-markdown"><p>Hello, world. This is plain.</p></div>',
+        textContent: "Hello, world. This is plain.",
+      },
+    );
+  });
 
-	test("plain text fast path reuses target element", () => {
-		const md = new MarkdownString("Hello, world.");
-		const target = document.createElement("div");
-		target.appendChild(document.createElement("span"));
-		const result = store.add(testRenderer.render(md, undefined, target));
+  test("plain text fast path reuses target element", () => {
+    const md = new MarkdownString("Hello, world.");
+    const target = document.createElement("div");
+    target.appendChild(document.createElement("span"));
+    const result = store.add(testRenderer.render(md, undefined, target));
 
-		assert.deepStrictEqual({
-			sameElement: result.element === target,
-			outerHTML: target.outerHTML,
-		}, {
-			sameElement: true,
-			outerHTML: '<div class="rendered-markdown"><p>Hello, world.</p></div>',
-		});
-	});
+    assert.deepStrictEqual(
+      {
+        sameElement: result.element === target,
+        outerHTML: target.outerHTML,
+      },
+      {
+        sameElement: true,
+        outerHTML: '<div class="rendered-markdown"><p>Hello, world.</p></div>',
+      },
+    );
+  });
 
-	test("supportHtml with one-line markdown", async () => {
-		const md = new MarkdownString("**hello**");
-		md.supportHtml = true;
-		const result = store.add(testRenderer.render(md));
-		await assertSnapshot(result.element.outerHTML);
+  test("supportHtml with one-line markdown", async () => {
+    const md = new MarkdownString("**hello**");
+    md.supportHtml = true;
+    const result = store.add(testRenderer.render(md));
+    await assertSnapshot(result.element.outerHTML);
 
-		const md2 = new MarkdownString("1. [_hello_](https://example.com) test **text**");
-		md2.supportHtml = true;
-		const result2 = store.add(testRenderer.render(md2));
-		await assertSnapshot(result2.element.outerHTML);
-	});
+    const md2 = new MarkdownString(
+      "1. [_hello_](https://example.com) test **text**",
+    );
+    md2.supportHtml = true;
+    const result2 = store.add(testRenderer.render(md2));
+    await assertSnapshot(result2.element.outerHTML);
+  });
 
-	test("invalid HTML", async () => {
-		const md = new MarkdownString("1<canvas>2<details>3</details></canvas>4");
-		md.supportHtml = true;
-		const result = store.add(testRenderer.render(md));
-		await assertSnapshot(result.element.outerHTML);
-	});
+  test("invalid HTML", async () => {
+    const md = new MarkdownString("1<canvas>2<details>3</details></canvas>4");
+    md.supportHtml = true;
+    const result = store.add(testRenderer.render(md));
+    await assertSnapshot(result.element.outerHTML);
+  });
 
-	test("invalid HTML with attributes", async () => {
-		const md = new MarkdownString('1<details id="id1" style="display: none">2<details id="my id 2">3</details></details>4');
-		md.supportHtml = true;
-		const result = store.add(testRenderer.render(md));
-		await assertSnapshot(result.element.outerHTML);
-	});
+  test("invalid HTML with attributes", async () => {
+    const md = new MarkdownString(
+      '1<details id="id1" style="display: none">2<details id="my id 2">3</details></details>4',
+    );
+    md.supportHtml = true;
+    const result = store.add(testRenderer.render(md));
+    await assertSnapshot(result.element.outerHTML);
+  });
 
-	test("valid HTML", async () => {
-		const md = new MarkdownString(`
+  test("valid HTML", async () => {
+    const md = new MarkdownString(`
 <h1>heading</h1>
 <ul>
 	<li>1</li>
 	<li><b>hi</b></li>
 </ul>
 <pre><code>code here</code></pre>`);
-		md.supportHtml = true;
-		const result = store.add(testRenderer.render(md));
-		await assertSnapshot(result.element.outerHTML);
-	});
+    md.supportHtml = true;
+    const result = store.add(testRenderer.render(md));
+    await assertSnapshot(result.element.outerHTML);
+  });
 
-	test("mixed valid and invalid HTML", async () => {
-		const md = new MarkdownString(`
+  test("mixed valid and invalid HTML", async () => {
+    const md = new MarkdownString(`
 <h1>heading</h1>
 <details>
 <ul>
@@ -102,52 +121,61 @@ suite("ChatMarkdownRenderer", () => {
 </ul>
 </details>
 <pre><canvas>canvas here</canvas></pre><details></details>`);
-		md.supportHtml = true;
-		const result = store.add(testRenderer.render(md));
-		await assertSnapshot(result.element.outerHTML);
-	});
+    md.supportHtml = true;
+    const result = store.add(testRenderer.render(md));
+    await assertSnapshot(result.element.outerHTML);
+  });
 
-	test("self-closing elements", async () => {
-		{
-			const md = new MarkdownString('<area><hr><br><input type="text" value="test">');
-			md.supportHtml = true;
-			const result = store.add(testRenderer.render(md));
-			await assertSnapshot(result.element.outerHTML);
-		}
-		{
-			const md = new MarkdownString('<area><hr><br><input type="checkbox">');
-			md.supportHtml = true;
-			const result = store.add(testRenderer.render(md));
-			await assertSnapshot(result.element.outerHTML);
-		}
-	});
+  test("self-closing elements", async () => {
+    {
+      const md = new MarkdownString(
+        '<area><hr><br><input type="text" value="test">',
+      );
+      md.supportHtml = true;
+      const result = store.add(testRenderer.render(md));
+      await assertSnapshot(result.element.outerHTML);
+    }
+    {
+      const md = new MarkdownString('<area><hr><br><input type="checkbox">');
+      md.supportHtml = true;
+      const result = store.add(testRenderer.render(md));
+      await assertSnapshot(result.element.outerHTML);
+    }
+  });
 
-	test("html comments", async () => {
-		const md = new MarkdownString("<!-- comment1 <div></div> --><div>content</div><!-- comment2 -->");
-		md.supportHtml = true;
-		const result = store.add(testRenderer.render(md));
-		await assertSnapshot(result.element.outerHTML);
-	});
+  test("html comments", async () => {
+    const md = new MarkdownString(
+      "<!-- comment1 <div></div> --><div>content</div><!-- comment2 -->",
+    );
+    md.supportHtml = true;
+    const result = store.add(testRenderer.render(md));
+    await assertSnapshot(result.element.outerHTML);
+  });
 
-	test("CDATA", async () => {
-		const md = new MarkdownString("<![CDATA[<div>content</div>]]>");
-		md.supportHtml = true;
-		const result = store.add(testRenderer.render(md));
-		await assertSnapshot(result.element.outerHTML);
-	});
+  test("CDATA", async () => {
+    const md = new MarkdownString("<![CDATA[<div>content</div>]]>");
+    md.supportHtml = true;
+    const result = store.add(testRenderer.render(md));
+    await assertSnapshot(result.element.outerHTML);
+  });
 
-	test("remote images are disallowed", async () => {
-		const md = new MarkdownString('<img src="http://disallowed.com/image.jpg">');
-		md.supportHtml = true;
-		const result = store.add(testRenderer.render(md));
-		await assertSnapshot(result.element.outerHTML);
-	});
+  test("remote images are disallowed", async () => {
+    const md = new MarkdownString(
+      '<img src="http://disallowed.com/image.jpg">',
+    );
+    md.supportHtml = true;
+    const result = store.add(testRenderer.render(md));
+    await assertSnapshot(result.element.outerHTML);
+  });
 
-	test("code block ending at end of content does not leak body tag", async () => {
-		const md = new MarkdownString("text\n```ts\nconst x = 1;\n```");
-		md.supportHtml = true;
-		const result = store.add(testRenderer.render(md));
-		const textContent = result.element.textContent;
-		assert.ok(!textContent?.includes("</body>"), `Rendered text should not contain </body>, got: ${textContent}`);
-	});
+  test("code block ending at end of content does not leak body tag", async () => {
+    const md = new MarkdownString("text\n```ts\nconst x = 1;\n```");
+    md.supportHtml = true;
+    const result = store.add(testRenderer.render(md));
+    const textContent = result.element.textContent;
+    assert.ok(
+      !textContent?.includes("</body>"),
+      `Rendered text should not contain </body>, got: ${textContent}`,
+    );
+  });
 });

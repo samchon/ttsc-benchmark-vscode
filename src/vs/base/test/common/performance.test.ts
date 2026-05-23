@@ -9,7 +9,7 @@ import { ensureNoDisposablesAreLeakedInTestSuite } from "./utils.js";
 // Each test uses a unique prefix via a counter to avoid singleton state leaking between tests.
 let testCounter = 0;
 function uniquePrefix(): string {
-	return `test/perf/${testCounter++}/`;
+  return `test/perf/${testCounter++}/`;
 }
 
 suite("clearMarks", () => {
@@ -33,8 +33,11 @@ suite("clearMarks", () => {
 
     clearMarks(nameA);
 
-    const remaining = getMarks().filter(m => m.name.startsWith(prefix));
-    assert.deepStrictEqual(remaining.map(m => m.name), [nameB]);
+    const remaining = getMarks().filter((m) => m.name.startsWith(prefix));
+    assert.deepStrictEqual(
+      remaining.map((m) => m.name),
+      [nameB],
+    );
   });
 
   test("does not clear marks with a different name", () => {
@@ -45,7 +48,7 @@ suite("clearMarks", () => {
 
     clearMarks(name1);
 
-    assert.strictEqual(getMarks().filter(m => m.name === name1).length, 0);
-    assert.strictEqual(getMarks().filter(m => m.name === name2).length, 1);
+    assert.strictEqual(getMarks().filter((m) => m.name === name1).length, 0);
+    assert.strictEqual(getMarks().filter((m) => m.name === name2).length, 1);
   });
 });

@@ -14,12 +14,19 @@ export type SystemIdleState = "active" | "idle" | "locked" | "unknown";
 /**
  * Represents the system's thermal state.
  */
-export type ThermalState = "unknown" | "nominal" | "fair" | "serious" | "critical";
+export type ThermalState =
+  | "unknown"
+  | "nominal"
+  | "fair"
+  | "serious"
+  | "critical";
 
 /**
  * The type of power save blocker.
  */
-export type PowerSaveBlockerType = "prevent-app-suspension" | "prevent-display-sleep";
+export type PowerSaveBlockerType =
+  | "prevent-app-suspension"
+  | "prevent-display-sleep";
 
 export const IPowerService = createDecorator<IPowerService>("powerService");
 
@@ -28,25 +35,24 @@ export const IPowerService = createDecorator<IPowerService>("powerService");
  * Only fully functional in desktop environments. Web/remote returns stub values.
  */
 export interface IPowerService {
+  readonly _serviceBrand: undefined;
 
-	readonly _serviceBrand: undefined;
+  // Events
+  readonly onDidSuspend: Event<void>;
+  readonly onDidResume: Event<void>;
+  readonly onDidChangeOnBatteryPower: Event<boolean>;
+  readonly onDidChangeThermalState: Event<ThermalState>;
+  readonly onDidChangeSpeedLimit: Event<number>;
+  readonly onWillShutdown: Event<void>;
+  readonly onDidLockScreen: Event<void>;
+  readonly onDidUnlockScreen: Event<void>;
 
-	// Events
-	readonly onDidSuspend: Event<void>;
-	readonly onDidResume: Event<void>;
-	readonly onDidChangeOnBatteryPower: Event<boolean>;
-	readonly onDidChangeThermalState: Event<ThermalState>;
-	readonly onDidChangeSpeedLimit: Event<number>;
-	readonly onWillShutdown: Event<void>;
-	readonly onDidLockScreen: Event<void>;
-	readonly onDidUnlockScreen: Event<void>;
-
-	// Methods
-	getSystemIdleState(idleThreshold: number): Promise<SystemIdleState>;
-	getSystemIdleTime(): Promise<number>;
-	getCurrentThermalState(): Promise<ThermalState>;
-	isOnBatteryPower(): Promise<boolean>;
-	startPowerSaveBlocker(type: PowerSaveBlockerType): Promise<number>;
-	stopPowerSaveBlocker(id: number): Promise<boolean>;
-	isPowerSaveBlockerStarted(id: number): Promise<boolean>;
+  // Methods
+  getSystemIdleState(idleThreshold: number): Promise<SystemIdleState>;
+  getSystemIdleTime(): Promise<number>;
+  getCurrentThermalState(): Promise<ThermalState>;
+  isOnBatteryPower(): Promise<boolean>;
+  startPowerSaveBlocker(type: PowerSaveBlockerType): Promise<number>;
+  stopPowerSaveBlocker(id: number): Promise<boolean>;
+  isPowerSaveBlockerStarted(id: number): Promise<boolean>;
 }

@@ -16,22 +16,24 @@ import type {
  * Extracts the Python code and sets up Python syntax highlighting.
  */
 export class PythonCommandLinePresenter implements ICommandLinePresenter {
-	present(options: ICommandLinePresenterOptions): ICommandLinePresenterResult | undefined {
-		const commandLine = options.commandLine.forDisplay;
-		const extractedPython = extractPythonCommand(
+  present(
+    options: ICommandLinePresenterOptions,
+  ): ICommandLinePresenterResult | undefined {
+    const commandLine = options.commandLine.forDisplay;
+    const extractedPython = extractPythonCommand(
       commandLine,
       options.shell,
       options.os,
     );
-		if (extractedPython) {
-			return {
+    if (extractedPython) {
+      return {
         commandLine: extractedPython,
         language: "python",
         languageDisplayName: "Python",
       };
-		}
-		return undefined;
-	}
+    }
+    return undefined;
+  }
 }
 
 /**
@@ -43,35 +45,39 @@ export class PythonCommandLinePresenter implements ICommandLinePresenter {
  * @param os The operating system
  * @returns The extracted Python code, or undefined if not a python -c command
  */
-export function extractPythonCommand(commandLine: string, shell: string, os: OperatingSystem): string | undefined {
-	// Match python/python3 -c "..." pattern (double quotes)
-	const doubleQuoteMatch = commandLine.match(
+export function extractPythonCommand(
+  commandLine: string,
+  shell: string,
+  os: OperatingSystem,
+): string | undefined {
+  // Match python/python3 -c "..." pattern (double quotes)
+  const doubleQuoteMatch = commandLine.match(
     /^python(?:3)?\s+-c\s+"(?<python>.+)"$/s,
   );
-	if (doubleQuoteMatch?.groups?.python) {
-		let pythonCode = doubleQuoteMatch.groups.python.trim();
+  if (doubleQuoteMatch?.groups?.python) {
+    let pythonCode = doubleQuoteMatch.groups.python.trim();
 
-		// Unescape quotes based on shell type
-		if (isPowerShell(shell, os)) {
-			// PowerShell uses backtick-quote (`") to escape quotes inside double-quoted strings
-			pythonCode = pythonCode.replace(/`"/g, '"');
-		} else {
-			// Bash/sh/zsh use backslash-quote (\")
-			pythonCode = pythonCode.replace(/\\"/g, '"');
-		}
+    // Unescape quotes based on shell type
+    if (isPowerShell(shell, os)) {
+      // PowerShell uses backtick-quote (`") to escape quotes inside double-quoted strings
+      pythonCode = pythonCode.replace(/`"/g, '"');
+    } else {
+      // Bash/sh/zsh use backslash-quote (\")
+      pythonCode = pythonCode.replace(/\\"/g, '"');
+    }
 
-		return pythonCode;
-	}
+    return pythonCode;
+  }
 
-	// Match python/python3 -c '...' pattern (single quotes)
-	// Single quotes in bash/sh/zsh are literal - no escaping inside
-	// Single quotes in PowerShell are also literal
-	const singleQuoteMatch = commandLine.match(
+  // Match python/python3 -c '...' pattern (single quotes)
+  // Single quotes in bash/sh/zsh are literal - no escaping inside
+  // Single quotes in PowerShell are also literal
+  const singleQuoteMatch = commandLine.match(
     /^python(?:3)?\s+-c\s+'(?<python>.+)'$/s,
   );
-	if (singleQuoteMatch?.groups?.python) {
-		return singleQuoteMatch.groups.python.trim();
-	}
+  if (singleQuoteMatch?.groups?.python) {
+    return singleQuoteMatch.groups.python.trim();
+  }
 
-	return undefined;
+  return undefined;
 }

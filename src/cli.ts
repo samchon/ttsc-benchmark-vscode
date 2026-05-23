@@ -17,9 +17,7 @@ const nlsConfiguration = await resolveNLSConfiguration({
   userDataPath: "",
   nlsMetadataPath: import.meta.dirname,
 });
-process.env["VSCODE_NLS_CONFIG"] = JSON.stringify(
-  nlsConfiguration,
-); // required for `bootstrap-esm` to pick up NLS messages
+process.env["VSCODE_NLS_CONFIG"] = JSON.stringify(nlsConfiguration); // required for `bootstrap-esm` to pick up NLS messages
 
 // Enable portable support
 configurePortable(product);

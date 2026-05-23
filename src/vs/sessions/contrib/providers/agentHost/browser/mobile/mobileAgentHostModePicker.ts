@@ -20,40 +20,43 @@ import { AgentHostModePicker } from "../agentHostModePicker.js";
  * transitions.
  */
 export class MobileAgentHostModePicker extends AgentHostModePicker {
-
-	constructor(
-		@IActionWidgetService actionWidgetService: IActionWidgetService,
-		@ISessionsManagementService sessionsManagementService: ISessionsManagementService,
-		@ISessionsProvidersService sessionsProvidersService: ISessionsProvidersService,
-		@ITelemetryService telemetryService: ITelemetryService,
-		@IChatPhoneInputPresenter private readonly _phonePresenter: IChatPhoneInputPresenter,
-	) {
-		super(
+  constructor(
+    @IActionWidgetService actionWidgetService: IActionWidgetService,
+    @ISessionsManagementService
+    sessionsManagementService: ISessionsManagementService,
+    @ISessionsProvidersService
+    sessionsProvidersService: ISessionsProvidersService,
+    @ITelemetryService telemetryService: ITelemetryService,
+    @IChatPhoneInputPresenter
+    private readonly _phonePresenter: IChatPhoneInputPresenter,
+  ) {
+    super(
       actionWidgetService,
       sessionsManagementService,
       sessionsProvidersService,
       telemetryService,
     );
-	}
+  }
 
-	protected override _showPicker(): void {
-		if (!this._triggerElement) {
-			return;
-		}
-		// Guard applies to both the phone sheet and the desktop popover —
-		// either path can dispatch through `setSessionConfigValue`.
-		if (this._isCurrentlyResolvingConfig()) {
-			return;
-		}
-		if (this._phonePresenter.enabled.get()) {
-			// The presenter's agent-host branch reads mode + model
-			// directly from the active session's provider, so we don't
-			// need to pass chat-input delegates here.
-			const trigger = this._triggerElement;
-			this._phonePresenter.showCombinedModeAndModelSheet(trigger, undefined, undefined)
-				.finally(() => trigger.focus());
-			return;
-		}
-		super._showPicker();
-	}
+  protected override _showPicker(): void {
+    if (!this._triggerElement) {
+      return;
+    }
+    // Guard applies to both the phone sheet and the desktop popover —
+    // either path can dispatch through `setSessionConfigValue`.
+    if (this._isCurrentlyResolvingConfig()) {
+      return;
+    }
+    if (this._phonePresenter.enabled.get()) {
+      // The presenter's agent-host branch reads mode + model
+      // directly from the active session's provider, so we don't
+      // need to pass chat-input delegates here.
+      const trigger = this._triggerElement;
+      this._phonePresenter
+        .showCombinedModeAndModelSheet(trigger, undefined, undefined)
+        .finally(() => trigger.focus());
+      return;
+    }
+    super._showPicker();
+  }
 }

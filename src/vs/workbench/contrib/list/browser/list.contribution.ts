@@ -13,17 +13,14 @@ import { registerAction2 } from "../../../../platform/actions/common/actions.js"
 import { ListResizeColumnAction } from "./listResizeColumnAction.js";
 
 export class ListContext implements IWorkbenchContribution {
+  static readonly ID = "workbench.contrib.listContext";
 
-	static readonly ID = "workbench.contrib.listContext";
+  constructor(@IContextKeyService contextKeyService: IContextKeyService) {
+    contextKeyService.createKey<boolean>("listSupportsTypeNavigation", true);
 
-	constructor(
-		@IContextKeyService contextKeyService: IContextKeyService,
-	) {
-		contextKeyService.createKey<boolean>("listSupportsTypeNavigation", true);
-
-		// @deprecated in favor of listSupportsTypeNavigation
-		contextKeyService.createKey("listSupportsKeyboardNavigation", true);
-	}
+    // @deprecated in favor of listSupportsTypeNavigation
+    contextKeyService.createKey("listSupportsKeyboardNavigation", true);
+  }
 }
 
 registerWorkbenchContribution2(
@@ -32,4 +29,3 @@ registerWorkbenchContribution2(
   WorkbenchPhase.BlockStartup,
 );
 registerAction2(ListResizeColumnAction);
-

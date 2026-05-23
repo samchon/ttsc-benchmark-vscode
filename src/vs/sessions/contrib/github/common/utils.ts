@@ -8,23 +8,30 @@ import { URI } from "../../../../base/common/uri.js";
 import { IGitHubChangedFile } from "./types.js";
 
 export interface IPullRequestContentUriParams {
-	readonly owner: string;
-	readonly repo: string;
-	readonly prNumber: number;
-	readonly commitSha: string;
-	readonly isBase: boolean;
-	readonly previousFileName?: string;
-	readonly status?: IGitHubChangedFile["status"];
+  readonly owner: string;
+  readonly repo: string;
+  readonly prNumber: number;
+  readonly commitSha: string;
+  readonly isBase: boolean;
+  readonly previousFileName?: string;
+  readonly status?: IGitHubChangedFile["status"];
 }
 
-export function toPRContentUri(fileName: string, params: IPullRequestContentUriParams): URI {
-	return URI.from({
+export function toPRContentUri(
+  fileName: string,
+  params: IPullRequestContentUriParams,
+): URI {
+  return URI.from({
     scheme: Schemas.copilotPr,
     path: `/${fileName}`,
     query: JSON.stringify({ ...params, fileName }),
   });
 }
 
-export function getPullRequestKey(owner: string, repo: string, prNumber: number): string {
-	return `${owner}/${repo}/${prNumber}`;
+export function getPullRequestKey(
+  owner: string,
+  repo: string,
+  prNumber: number,
+): string {
+  return `${owner}/${repo}/${prNumber}`;
 }

@@ -40,10 +40,10 @@ import type { SessionSummary } from "../channels-session/state.js";
  * ```
  */
 export interface SessionAddedParams {
-	/** Channel URI this notification belongs to (the root channel) */
-	channel: URI;
-	/** Summary of the new session */
-	summary: SessionSummary;
+  /** Channel URI this notification belongs to (the root channel) */
+  channel: URI;
+  /** Summary of the new session */
+  summary: SessionSummary;
 }
 
 // ─── root/sessionRemoved ─────────────────────────────────────────────────────
@@ -70,10 +70,10 @@ export interface SessionAddedParams {
  * ```
  */
 export interface SessionRemovedParams {
-	/** Channel URI this notification belongs to (the root channel) */
-	channel: URI;
-	/** URI of the removed session */
-	session: URI;
+  /** Channel URI this notification belongs to (the root channel) */
+  channel: URI;
+  /** URI of the removed session */
+  session: URI;
 }
 
 // ─── root/sessionSummaryChanged ──────────────────────────────────────────────
@@ -132,15 +132,15 @@ export interface SessionRemovedParams {
  * ```
  */
 export interface SessionSummaryChangedParams {
-	/** Channel URI this notification belongs to (the root channel) */
-	channel: URI;
-	/** URI of the session whose summary changed */
-	session: URI;
-	/**
-	 * Mutable summary fields that changed; omitted fields are unchanged.
-	 *
-	 * Identity fields (`resource`, `provider`, `createdAt`) never change and
-	 * MUST be omitted by senders; receivers SHOULD ignore them if present.
-	 */
-	changes: Partial<SessionSummary>;
+  /** Channel URI this notification belongs to (the root channel) */
+  channel: URI;
+  /** URI of the session whose summary changed */
+  session: URI;
+  /**
+   * Mutable summary fields that changed; omitted fields are unchanged.
+   *
+   * Identity fields (`resource`, `provider`, `createdAt`) never change and
+   * MUST be omitted by senders; receivers SHOULD ignore them if present.
+   */
+  changes: Partial<SessionSummary>;
 }

@@ -11,7 +11,10 @@ import { mock } from "../../../../base/test/common/mock.js";
 import { IEditorGroup } from "../../../services/editor/common/editorGroupsService.js";
 import { ImageCarouselEditor } from "../../../contrib/imageCarousel/browser/imageCarouselEditor.js";
 import { ImageCarouselEditorInput } from "../../../contrib/imageCarousel/browser/imageCarouselEditorInput.js";
-import { ICarouselImage, IImageCarouselCollection } from "../../../contrib/imageCarousel/browser/imageCarouselTypes.js";
+import {
+  ICarouselImage,
+  IImageCarouselCollection,
+} from "../../../contrib/imageCarousel/browser/imageCarouselTypes.js";
 import {
   ComponentFixtureContext,
   createEditorServices,
@@ -26,21 +29,27 @@ import { NullLogService } from "../../../../platform/log/common/log.js";
 import { Schemas } from "../../../../base/common/network.js";
 import { IWebviewService } from "../../../contrib/webview/browser/webview.js";
 
-function createSolidPng(r: number, g: number, b: number, width: number = 64, height: number = 64): VSBuffer {
-	const canvas = mainWindow.document.createElement("canvas");
-	canvas.width = width;
-	canvas.height = height;
-	const ctx = canvas.getContext("2d")!;
-	ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-	ctx.fillRect(0, 0, width, height);
+function createSolidPng(
+  r: number,
+  g: number,
+  b: number,
+  width: number = 64,
+  height: number = 64,
+): VSBuffer {
+  const canvas = mainWindow.document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+  ctx.fillRect(0, 0, width, height);
 
-	const dataUrl = canvas.toDataURL("image/png");
-	const base64 = dataUrl.split(",")[1];
-	return VSBuffer.wrap(Uint8Array.from(atob(base64), c => c.charCodeAt(0)));
+  const dataUrl = canvas.toDataURL("image/png");
+  const base64 = dataUrl.split(",")[1];
+  return VSBuffer.wrap(Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)));
 }
 
 function createTestImages(): ICarouselImage[] {
-	return [
+  return [
     {
       id: "img-1",
       name: "Red",
@@ -78,45 +87,57 @@ function createTestImages(): ICarouselImage[] {
 }
 
 function createMockEditorGroup(): IEditorGroup {
-	return new class extends mock<IEditorGroup>() {
-		override windowId = mainWindow.vscodeWindowId;
-	}();
+  return new (class extends mock<IEditorGroup>() {
+    override windowId = mainWindow.vscodeWindowId;
+  })();
 }
 
-async function renderCarousel(context: ComponentFixtureContext, collection: IImageCarouselCollection, startIndex: number = 0): Promise<void> {
-	const { container, disposableStore, theme } = context;
+async function renderCarousel(
+  context: ComponentFixtureContext,
+  collection: IImageCarouselCollection,
+  startIndex: number = 0,
+): Promise<void> {
+  const { container, disposableStore, theme } = context;
 
-	container.style.width = "600px";
-	container.style.height = "500px";
+  container.style.width = "600px";
+  container.style.height = "500px";
 
-	const instantiationService = createEditorServices(disposableStore, {
-		colorTheme: theme,
-		additionalServices: ({ defineInstance }) => {
-			const fileService = new FileService(new NullLogService());
-			disposableStore.add(fileService.registerProvider(Schemas.file, new NullFileSystemProvider()));
-			disposableStore.add(fileService);
-			defineInstance(IFileService, fileService);
-			defineInstance(IWebviewService, new class extends mock<IWebviewService>() { }());
-		},
-	});
+  const instantiationService = createEditorServices(disposableStore, {
+    colorTheme: theme,
+    additionalServices: ({ defineInstance }) => {
+      const fileService = new FileService(new NullLogService());
+      disposableStore.add(
+        fileService.registerProvider(
+          Schemas.file,
+          new NullFileSystemProvider(),
+        ),
+      );
+      disposableStore.add(fileService);
+      defineInstance(IFileService, fileService);
+      defineInstance(
+        IWebviewService,
+        new (class extends mock<IWebviewService>() {})(),
+      );
+    },
+  });
 
-	const editor = disposableStore.add(
+  const editor = disposableStore.add(
     instantiationService.createInstance(
       ImageCarouselEditor,
       createMockEditorGroup(),
     ),
   );
-	editor.create(container);
-	editor.layout(new Dimension(600, 500));
+  editor.create(container);
+  editor.layout(new Dimension(600, 500));
 
-	const input = disposableStore.add(
+  const input = disposableStore.add(
     new ImageCarouselEditorInput(collection, startIndex),
   );
-	await editor.setInput(input, undefined, {}, CancellationToken.None);
+  await editor.setInput(input, undefined, {}, CancellationToken.None);
 }
 
 function singleSectionCollection(): IImageCarouselCollection {
-	return {
+  return {
     id: "fixture-single",
     title: "Test Carousel",
     sections: [{ title: "All Images", images: createTestImages() }],
@@ -124,38 +145,41 @@ function singleSectionCollection(): IImageCarouselCollection {
 }
 
 function multiSectionCollection(): IImageCarouselCollection {
-	const images = createTestImages();
-	return {
-		id: "fixture-multi",
-		title: "Multi-Section Carousel",
-		sections: [
-			{ title: "Warm Colors", images: [images[0], images[3]] },
-			{ title: "Cool Colors", images: [images[2], images[4]] },
-			{ title: "Nature", images: [images[1]] },
-		],
-	};
+  const images = createTestImages();
+  return {
+    id: "fixture-multi",
+    title: "Multi-Section Carousel",
+    sections: [
+      { title: "Warm Colors", images: [images[0], images[3]] },
+      { title: "Cool Colors", images: [images[2], images[4]] },
+      { title: "Nature", images: [images[1]] },
+    ],
+  };
 }
 
 function singleImageCollection(): IImageCarouselCollection {
-	const images = createTestImages();
-	return {
+  const images = createTestImages();
+  return {
     id: "fixture-single-image",
     title: "Single Image",
     sections: [{ title: "", images: [images[0]] }],
   };
 }
 
-export default defineThemedFixtureGroup({ path: "imageCarousel/" }, {
-	SingleSection: defineComponentFixture({
-		render: ctx => renderCarousel(ctx, singleSectionCollection()),
-	}),
-	SingleSectionMiddleImage: defineComponentFixture({
-		render: ctx => renderCarousel(ctx, singleSectionCollection(), 2),
-	}),
-	MultipleSections: defineComponentFixture({
-		render: ctx => renderCarousel(ctx, multiSectionCollection()),
-	}),
-	SingleImage: defineComponentFixture({
-		render: ctx => renderCarousel(ctx, singleImageCollection()),
-	}),
-});
+export default defineThemedFixtureGroup(
+  { path: "imageCarousel/" },
+  {
+    SingleSection: defineComponentFixture({
+      render: (ctx) => renderCarousel(ctx, singleSectionCollection()),
+    }),
+    SingleSectionMiddleImage: defineComponentFixture({
+      render: (ctx) => renderCarousel(ctx, singleSectionCollection(), 2),
+    }),
+    MultipleSections: defineComponentFixture({
+      render: (ctx) => renderCarousel(ctx, multiSectionCollection()),
+    }),
+    SingleImage: defineComponentFixture({
+      render: (ctx) => renderCarousel(ctx, singleImageCollection()),
+    }),
+  },
+);

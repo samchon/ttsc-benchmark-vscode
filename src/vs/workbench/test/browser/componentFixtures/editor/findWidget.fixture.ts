@@ -12,9 +12,15 @@ import {
   defineComponentFixture,
   defineThemedFixtureGroup,
 } from "../fixtureUtils.js";
-import { CodeEditorWidget, ICodeEditorWidgetOptions } from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import {
+  CodeEditorWidget,
+  ICodeEditorWidgetOptions,
+} from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
 import { FindReplaceState } from "../../../../../editor/contrib/find/browser/findState.js";
-import { FindWidget, IFindController } from "../../../../../editor/contrib/find/browser/findWidget.js";
+import {
+  FindWidget,
+  IFindController,
+} from "../../../../../editor/contrib/find/browser/findWidget.js";
 import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
 import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
 import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
@@ -42,24 +48,24 @@ export default Counter;
 `;
 
 interface FindFixtureOptions extends ComponentFixtureContext {
-	searchString?: string;
-	replaceString?: string;
-	showReplace?: boolean;
-	matchesCount?: number;
-	matchesPosition?: number;
+  searchString?: string;
+  replaceString?: string;
+  showReplace?: boolean;
+  matchesCount?: number;
+  matchesPosition?: number;
 }
 
 async function renderFindWidget(options: FindFixtureOptions): Promise<void> {
-	const { container, disposableStore, theme } = options;
-	container.style.width = "600px";
-	container.style.height = "350px";
-	container.style.border = "1px solid var(--vscode-editorWidget-border)";
+  const { container, disposableStore, theme } = options;
+  container.style.width = "600px";
+  container.style.height = "350px";
+  container.style.border = "1px solid var(--vscode-editorWidget-border)";
 
-	const instantiationService = createEditorServices(disposableStore, {
+  const instantiationService = createEditorServices(disposableStore, {
     colorTheme: theme,
   });
 
-	const textModel = disposableStore.add(
+  const textModel = disposableStore.add(
     createTextModel(
       instantiationService,
       SAMPLE_CODE,
@@ -68,11 +74,11 @@ async function renderFindWidget(options: FindFixtureOptions): Promise<void> {
     ),
   );
 
-	const editorWidgetOptions: ICodeEditorWidgetOptions = {
+  const editorWidgetOptions: ICodeEditorWidgetOptions = {
     contributions: [],
   };
 
-	const editor = disposableStore.add(
+  const editor = disposableStore.add(
     instantiationService.createInstance(
       CodeEditorWidget,
       container,
@@ -89,24 +95,24 @@ async function renderFindWidget(options: FindFixtureOptions): Promise<void> {
     ),
   );
 
-	editor.setModel(textModel);
-	editor.focus();
+  editor.setModel(textModel);
+  editor.focus();
 
-	const state = disposableStore.add(new FindReplaceState());
+  const state = disposableStore.add(new FindReplaceState());
 
-	const mockController: IFindController = {
-    replace: () => { },
-    replaceAll: () => { },
+  const mockController: IFindController = {
+    replace: () => {},
+    replaceAll: () => {},
     getGlobalBufferTerm: async () => "",
   };
 
-	const mockContextViewProvider: IContextViewProvider = {
-    showContextView: () => { },
-    hideContextView: () => { },
-    layout: () => { },
+  const mockContextViewProvider: IContextViewProvider = {
+    showContextView: () => {},
+    hideContextView: () => {},
+    layout: () => {},
   };
 
-	disposableStore.add(
+  disposableStore.add(
     new FindWidget(
       editor,
       mockController,
@@ -122,7 +128,7 @@ async function renderFindWidget(options: FindFixtureOptions): Promise<void> {
     ),
   );
 
-	state.change(
+  state.change(
     {
       searchString: options.searchString ?? "count",
       isRevealed: true,
@@ -132,17 +138,27 @@ async function renderFindWidget(options: FindFixtureOptions): Promise<void> {
     false,
   );
 
-	// Wait for the CSS transition (top: -64px → 0, 200ms linear)
-	await new Promise(resolve => setTimeout(resolve, 300));
+  // Wait for the CSS transition (top: -64px → 0, 200ms linear)
+  await new Promise((resolve) => setTimeout(resolve, 300));
 }
 
-export default defineThemedFixtureGroup({ path: "editor/" }, {
-	Find: defineComponentFixture({
-		labels: { kind: "animated" },
-		render: (context) => renderFindWidget({ ...context, searchString: "count" }),
-	}),
-	FindAndReplace: defineComponentFixture({
-		labels: { kind: "animated" },
-		render: (context) => renderFindWidget({ ...context, searchString: "count", replaceString: "value", showReplace: true }),
-	}),
-});
+export default defineThemedFixtureGroup(
+  { path: "editor/" },
+  {
+    Find: defineComponentFixture({
+      labels: { kind: "animated" },
+      render: (context) =>
+        renderFindWidget({ ...context, searchString: "count" }),
+    }),
+    FindAndReplace: defineComponentFixture({
+      labels: { kind: "animated" },
+      render: (context) =>
+        renderFindWidget({
+          ...context,
+          searchString: "count",
+          replaceString: "value",
+          showReplace: true,
+        }),
+    }),
+  },
+);

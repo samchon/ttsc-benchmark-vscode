@@ -14,42 +14,52 @@ export const METERED_CONNECTION_CHANNEL = "meteredConnection";
  * Commands supported by the metered connection IPC channel.
  */
 export enum MeteredConnectionCommand {
-	OnDidChangeIsConnectionMetered = "OnDidChangeIsConnectionMetered",
-	IsConnectionMetered = "IsConnectionMetered",
-	SetIsBrowserConnectionMetered = "SetIsBrowserConnectionMetered",
+  OnDidChangeIsConnectionMetered = "OnDidChangeIsConnectionMetered",
+  IsConnectionMetered = "IsConnectionMetered",
+  SetIsBrowserConnectionMetered = "SetIsBrowserConnectionMetered",
 }
 
 /**
  * IPC channel client for the metered connection service.
  */
-export class MeteredConnectionChannelClient extends Disposable implements IMeteredConnectionService {
-	declare readonly _serviceBrand: undefined;
+export class MeteredConnectionChannelClient
+  extends Disposable
+  implements IMeteredConnectionService
+{
+  declare readonly _serviceBrand: undefined;
 
-	private readonly _onDidChangeIsConnectionMetered = this._register(
+  private readonly _onDidChangeIsConnectionMetered = this._register(
     new Emitter<boolean>(),
   );
-	public readonly onDidChangeIsConnectionMetered = this._onDidChangeIsConnectionMetered.event;
+  public readonly onDidChangeIsConnectionMetered =
+    this._onDidChangeIsConnectionMetered.event;
 
-	private _isConnectionMetered = false;
-	public get isConnectionMetered(): boolean {
-		return this._isConnectionMetered;
-	}
+  private _isConnectionMetered = false;
+  public get isConnectionMetered(): boolean {
+    return this._isConnectionMetered;
+  }
 
-	constructor(channel: IChannel) {
-		super();
+  constructor(channel: IChannel) {
+    super();
 
-		channel.call<boolean>(MeteredConnectionCommand.IsConnectionMetered).then(value => {
-			this._isConnectionMetered = value;
-			if (value) {
-				this._onDidChangeIsConnectionMetered.fire(value);
-			}
-		});
+    channel
+      .call<boolean>(MeteredConnectionCommand.IsConnectionMetered)
+      .then((value) => {
+        this._isConnectionMetered = value;
+        if (value) {
+          this._onDidChangeIsConnectionMetered.fire(value);
+        }
+      });
 
-		this._register(channel.listen<boolean>(MeteredConnectionCommand.OnDidChangeIsConnectionMetered)(value => {
-			if (this._isConnectionMetered !== value) {
-				this._isConnectionMetered = value;
-				this._onDidChangeIsConnectionMetered.fire(value);
-			}
-		}));
-	}
+    this._register(
+      channel.listen<boolean>(
+        MeteredConnectionCommand.OnDidChangeIsConnectionMetered,
+      )((value) => {
+        if (this._isConnectionMetered !== value) {
+          this._isConnectionMetered = value;
+          this._onDidChangeIsConnectionMetered.fire(value);
+        }
+      }),
+    );
+  }
 }

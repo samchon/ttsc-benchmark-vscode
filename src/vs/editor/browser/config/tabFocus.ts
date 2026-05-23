@@ -7,20 +7,21 @@ import { Emitter, Event } from "../../../base/common/event.js";
 import { Disposable } from "../../../base/common/lifecycle.js";
 
 class TabFocusImpl extends Disposable {
-	private _tabFocus: boolean = false;
-	private readonly _onDidChangeTabFocus = this._register(
+  private _tabFocus: boolean = false;
+  private readonly _onDidChangeTabFocus = this._register(
     new Emitter<boolean>(),
   );
-	public readonly onDidChangeTabFocus: Event<boolean> = this._onDidChangeTabFocus.event;
+  public readonly onDidChangeTabFocus: Event<boolean> =
+    this._onDidChangeTabFocus.event;
 
-	public getTabFocusMode(): boolean {
-		return this._tabFocus;
-	}
+  public getTabFocusMode(): boolean {
+    return this._tabFocus;
+  }
 
-	public setTabFocusMode(tabFocusMode: boolean): void {
-		this._tabFocus = tabFocusMode;
-		this._onDidChangeTabFocus.fire(this._tabFocus);
-	}
+  public setTabFocusMode(tabFocusMode: boolean): void {
+    this._tabFocus = tabFocusMode;
+    this._onDidChangeTabFocus.fire(this._tabFocus);
+  }
 }
 
 /**

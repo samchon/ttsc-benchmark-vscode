@@ -13,20 +13,21 @@ import {
 } from "./extHost.protocol.js";
 
 export class ExtHostLabelService implements ExtHostLabelServiceShape {
+  private readonly _proxy: MainThreadLabelServiceShape;
+  private _handlePool: number = 0;
 
-	private readonly _proxy: MainThreadLabelServiceShape;
-	private _handlePool: number = 0;
+  constructor(mainContext: IMainContext) {
+    this._proxy = mainContext.getProxy(MainContext.MainThreadLabelService);
+  }
 
-	constructor(mainContext: IMainContext) {
-		this._proxy = mainContext.getProxy(MainContext.MainThreadLabelService);
-	}
+  $registerResourceLabelFormatter(
+    formatter: ResourceLabelFormatter,
+  ): IDisposable {
+    const handle = this._handlePool++;
+    this._proxy.$registerResourceLabelFormatter(handle, formatter);
 
-	$registerResourceLabelFormatter(formatter: ResourceLabelFormatter): IDisposable {
-		const handle = this._handlePool++;
-		this._proxy.$registerResourceLabelFormatter(handle, formatter);
-
-		return toDisposable(() => {
+    return toDisposable(() => {
       this._proxy.$unregisterResourceLabelFormatter(handle);
     });
-	}
+  }
 }

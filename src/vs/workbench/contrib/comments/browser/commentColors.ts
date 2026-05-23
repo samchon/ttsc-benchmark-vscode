@@ -73,7 +73,7 @@ const unresolvedCommentBorder = registerColor(
 );
 export const commentThreadRangeBackground = registerColor(
   "editorCommentsWidget.rangeBackground",
-  transparent(unresolvedCommentBorder, .1),
+  transparent(unresolvedCommentBorder, 0.1),
   nls.localize(
     "commentThreadRangeBackground",
     "Color of background for comment ranges.",
@@ -81,7 +81,7 @@ export const commentThreadRangeBackground = registerColor(
 );
 export const commentThreadRangeActiveBackground = registerColor(
   "editorCommentsWidget.rangeActiveBackground",
-  transparent(unresolvedCommentBorder, .1),
+  transparent(unresolvedCommentBorder, 0.1),
   nls.localize(
     "commentThreadActiveRangeBackground",
     "Color of background for currently selected or hovered comment range.",
@@ -99,22 +99,34 @@ const commentThreadStateIconColors = new Map([
 ]);
 
 export const commentThreadStateColorVar = "--comment-thread-state-color";
-export const commentViewThreadStateColorVar = "--comment-view-thread-state-color";
-export const commentThreadStateBackgroundColorVar = "--comment-thread-state-background-color";
+export const commentViewThreadStateColorVar =
+  "--comment-view-thread-state-color";
+export const commentThreadStateBackgroundColorVar =
+  "--comment-thread-state-background-color";
 
-function getCommentThreadStateColor(state: languages.CommentThreadState | undefined, theme: IColorTheme, map: Map<languages.CommentThreadState, string>): Color | undefined {
-	const colorId = (state !== undefined) ? map.get(state) : undefined;
-	return (colorId !== undefined) ? theme.getColor(colorId) : undefined;
+function getCommentThreadStateColor(
+  state: languages.CommentThreadState | undefined,
+  theme: IColorTheme,
+  map: Map<languages.CommentThreadState, string>,
+): Color | undefined {
+  const colorId = state !== undefined ? map.get(state) : undefined;
+  return colorId !== undefined ? theme.getColor(colorId) : undefined;
 }
 
-export function getCommentThreadStateBorderColor(state: languages.CommentThreadState | undefined, theme: IColorTheme): Color | undefined {
-	return getCommentThreadStateColor(
+export function getCommentThreadStateBorderColor(
+  state: languages.CommentThreadState | undefined,
+  theme: IColorTheme,
+): Color | undefined {
+  return getCommentThreadStateColor(
     state,
     theme,
     commentThreadStateBorderColors,
   );
 }
 
-export function getCommentThreadStateIconColor(state: languages.CommentThreadState | undefined, theme: IColorTheme): Color | undefined {
-	return getCommentThreadStateColor(state, theme, commentThreadStateIconColors);
+export function getCommentThreadStateIconColor(
+  state: languages.CommentThreadState | undefined,
+  theme: IColorTheme,
+): Color | undefined {
+  return getCommentThreadStateColor(state, theme, commentThreadStateIconColors);
 }

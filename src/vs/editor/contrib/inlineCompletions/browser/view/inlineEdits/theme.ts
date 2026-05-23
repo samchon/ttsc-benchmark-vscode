@@ -6,7 +6,10 @@
 import { assertNever } from "../../../../../../base/common/assert.js";
 import { Color } from "../../../../../../base/common/color.js";
 import { BugIndicatingError } from "../../../../../../base/common/errors.js";
-import { IObservable, observableFromEventOpts } from "../../../../../../base/common/observable.js";
+import {
+  IObservable,
+  observableFromEventOpts,
+} from "../../../../../../base/common/observable.js";
 import { localize } from "../../../../../../nls.js";
 import {
   buttonBackground,
@@ -19,7 +22,13 @@ import {
   editorHoverBorder,
   editorHoverForeground,
 } from "../../../../../../platform/theme/common/colorRegistry.js";
-import { asCssVariable, ColorIdentifier, darken, registerColor, transparent } from "../../../../../../platform/theme/common/colorUtils.js";
+import {
+  asCssVariable,
+  ColorIdentifier,
+  darken,
+  registerColor,
+  transparent,
+} from "../../../../../../platform/theme/common/colorUtils.js";
 import { IThemeService } from "../../../../../../platform/theme/common/themeService.js";
 import { InlineCompletionEditorType } from "../../model/provideInlineCompletions.js";
 import { InlineEditTabAction } from "./inlineEditsViewInterface.js";
@@ -242,71 +251,85 @@ const tabWillAcceptOriginalBorder = registerColor(
   ),
 );
 
-export function getModifiedBorderColor(tabAction: IObservable<InlineEditTabAction>): IObservable<string> {
-	return tabAction.map(
-    a => a === InlineEditTabAction.Accept ? tabWillAcceptModifiedBorder : modifiedBorder,
+export function getModifiedBorderColor(
+  tabAction: IObservable<InlineEditTabAction>,
+): IObservable<string> {
+  return tabAction.map((a) =>
+    a === InlineEditTabAction.Accept
+      ? tabWillAcceptModifiedBorder
+      : modifiedBorder,
   );
 }
 
-export function getOriginalBorderColor(tabAction: IObservable<InlineEditTabAction>): IObservable<string> {
-	return tabAction.map(
-    a => a === InlineEditTabAction.Accept ? tabWillAcceptOriginalBorder : originalBorder,
+export function getOriginalBorderColor(
+  tabAction: IObservable<InlineEditTabAction>,
+): IObservable<string> {
+  return tabAction.map((a) =>
+    a === InlineEditTabAction.Accept
+      ? tabWillAcceptOriginalBorder
+      : originalBorder,
   );
 }
 
-export function getEditorBlendedColor(colorIdentifier: ColorIdentifier | IObservable<ColorIdentifier>, themeService: IThemeService): IObservable<Color> {
-	let color: IObservable<Color>;
-	if (typeof colorIdentifier === "string") {
-		color = observeColor(colorIdentifier, themeService);
-	} else {
-		color = colorIdentifier.map(
-      (identifier, reader) => observeColor(identifier, themeService).read(
-        reader,
-      ),
+export function getEditorBlendedColor(
+  colorIdentifier: ColorIdentifier | IObservable<ColorIdentifier>,
+  themeService: IThemeService,
+): IObservable<Color> {
+  let color: IObservable<Color>;
+  if (typeof colorIdentifier === "string") {
+    color = observeColor(colorIdentifier, themeService);
+  } else {
+    color = colorIdentifier.map((identifier, reader) =>
+      observeColor(identifier, themeService).read(reader),
     );
-	}
+  }
 
-	const backgroundColor = observeColor(editorBackground, themeService);
+  const backgroundColor = observeColor(editorBackground, themeService);
 
-	return color.map(
-    (c, reader) => /** @description makeOpaque */ c.makeOpaque(
-      backgroundColor.read(reader),
-    ),
+  return color.map((c, reader) =>
+    /** @description makeOpaque */ c.makeOpaque(backgroundColor.read(reader)),
   );
 }
 
-export function getEditorBackgroundColor(editorType: InlineCompletionEditorType): string {
-	let color;
-	switch (editorType) {
-		case InlineCompletionEditorType.TextEditor:
-			color = editorBackground; break;
-		case InlineCompletionEditorType.DiffEditor:
-			color = editorBackground; break;
-		case InlineCompletionEditorType.Notebook:
-			color = "notebook.cellEditorBackground"; break;
-		default:
-			assertNever(editorType, "Not supported editor type yet");
-	}
-	return asCssVariable(color);
+export function getEditorBackgroundColor(
+  editorType: InlineCompletionEditorType,
+): string {
+  let color;
+  switch (editorType) {
+    case InlineCompletionEditorType.TextEditor:
+      color = editorBackground;
+      break;
+    case InlineCompletionEditorType.DiffEditor:
+      color = editorBackground;
+      break;
+    case InlineCompletionEditorType.Notebook:
+      color = "notebook.cellEditorBackground";
+      break;
+    default:
+      assertNever(editorType, "Not supported editor type yet");
+  }
+  return asCssVariable(color);
 }
 
-
-export function observeColor(colorIdentifier: ColorIdentifier, themeService: IThemeService): IObservable<Color> {
-	return observableFromEventOpts(
-		{
-			owner: { observeColor: colorIdentifier },
-			equalsFn: (a: Color, b: Color) => a.equals(b),
-			debugName: () => `observeColor(${colorIdentifier})`,
-		},
-		themeService.onDidColorThemeChange,
-		() => {
-			const color = themeService.getColorTheme().getColor(colorIdentifier);
-			if (!color) {
-				throw new BugIndicatingError(`Missing color: ${colorIdentifier}`);
-			}
-			return color;
-		},
-	);
+export function observeColor(
+  colorIdentifier: ColorIdentifier,
+  themeService: IThemeService,
+): IObservable<Color> {
+  return observableFromEventOpts(
+    {
+      owner: { observeColor: colorIdentifier },
+      equalsFn: (a: Color, b: Color) => a.equals(b),
+      debugName: () => `observeColor(${colorIdentifier})`,
+    },
+    themeService.onDidColorThemeChange,
+    () => {
+      const color = themeService.getColorTheme().getColor(colorIdentifier);
+      if (!color) {
+        throw new BugIndicatingError(`Missing color: ${colorIdentifier}`);
+      }
+      return color;
+    },
+  );
 }
 
 // Styles

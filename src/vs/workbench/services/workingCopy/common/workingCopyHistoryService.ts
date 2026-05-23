@@ -7,8 +7,15 @@ import { localize } from "../../../../nls.js";
 import { Event, Emitter } from "../../../../base/common/event.js";
 import { assertReturnsDefined } from "../../../../base/common/types.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
-import { IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions } from "../../../common/contributions.js";
-import { ILifecycleService, LifecyclePhase, WillShutdownEvent } from "../../lifecycle/common/lifecycle.js";
+import {
+  IWorkbenchContributionsRegistry,
+  Extensions as WorkbenchExtensions,
+} from "../../../common/contributions.js";
+import {
+  ILifecycleService,
+  LifecyclePhase,
+  WillShutdownEvent,
+} from "../../lifecycle/common/lifecycle.js";
 import { WorkingCopyHistoryTracker } from "./workingCopyHistoryTracker.js";
 import { Disposable } from "../../../../base/common/lifecycle.js";
 import {
@@ -26,12 +33,24 @@ import {
 } from "../../../../platform/files/common/files.js";
 import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
 import { URI } from "../../../../base/common/uri.js";
-import { DeferredPromise, Limiter, RunOnceScheduler } from "../../../../base/common/async.js";
-import { dirname, extname, isEqual, joinPath } from "../../../../base/common/resources.js";
+import {
+  DeferredPromise,
+  Limiter,
+  RunOnceScheduler,
+} from "../../../../base/common/async.js";
+import {
+  dirname,
+  extname,
+  isEqual,
+  joinPath,
+} from "../../../../base/common/resources.js";
 import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
 import { hash } from "../../../../base/common/hash.js";
 import { indexOfPath, randomPath } from "../../../../base/common/extpath.js";
-import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import {
+  CancellationToken,
+  CancellationTokenSource,
+} from "../../../../base/common/cancellation.js";
 import { ResourceMap } from "../../../../base/common/map.js";
 import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
 import { ILabelService } from "../../../../platform/label/common/label.js";
@@ -43,172 +62,185 @@ import { distinct } from "../../../../base/common/arrays.js";
 import { escapeRegExpCharacters } from "../../../../base/common/strings.js";
 
 interface ISerializedWorkingCopyHistoryModel {
-	readonly version: number;
-	readonly resource: string;
-	readonly entries: ISerializedWorkingCopyHistoryModelEntry[];
+  readonly version: number;
+  readonly resource: string;
+  readonly entries: ISerializedWorkingCopyHistoryModelEntry[];
 }
 
 interface ISerializedWorkingCopyHistoryModelEntry {
-	readonly id: string;
-	readonly timestamp: number;
-	readonly source?: SaveSource;
-	readonly sourceDescription?: string;
+  readonly id: string;
+  readonly timestamp: number;
+  readonly source?: SaveSource;
+  readonly sourceDescription?: string;
 }
 
 export interface IWorkingCopyHistoryModelOptions {
-
-	/**
-	 * Whether to flush when the model changes. If not
-	 * configured, `model.store()` has to be called
-	 * explicitly.
-	 */
-	flushOnChange: boolean;
+  /**
+   * Whether to flush when the model changes. If not
+   * configured, `model.store()` has to be called
+   * explicitly.
+   */
+  flushOnChange: boolean;
 }
 
 export class WorkingCopyHistoryModel {
+  static readonly ENTRIES_FILE = "entries.json";
 
-	static readonly ENTRIES_FILE = "entries.json";
-
-	private static readonly FILE_SAVED_SOURCE = SaveSourceRegistry.registerSource(
+  private static readonly FILE_SAVED_SOURCE = SaveSourceRegistry.registerSource(
     "default.source",
     localize("default.source", "File Saved"),
   );
 
-	private static readonly SETTINGS = {
+  private static readonly SETTINGS = {
     MAX_ENTRIES: "workbench.localHistory.maxFileEntries",
     MERGE_PERIOD: "workbench.localHistory.mergeWindow",
   };
 
-	private entries: IWorkingCopyHistoryEntry[] = [];
+  private entries: IWorkingCopyHistoryEntry[] = [];
 
-	private whenResolved: Promise<void> | undefined = undefined;
+  private whenResolved: Promise<void> | undefined = undefined;
 
-	private workingCopyResource: URI | undefined = undefined;
-	private workingCopyName: string | undefined = undefined;
+  private workingCopyResource: URI | undefined = undefined;
+  private workingCopyName: string | undefined = undefined;
 
-	private historyEntriesFolder: URI | undefined = undefined;
-	private historyEntriesListingFile: URI | undefined = undefined;
+  private historyEntriesFolder: URI | undefined = undefined;
+  private historyEntriesListingFile: URI | undefined = undefined;
 
-	private historyEntriesNameMatcher: RegExp | undefined = undefined;
+  private historyEntriesNameMatcher: RegExp | undefined = undefined;
 
-	private versionId = 0;
-	private storedVersionId = this.versionId;
+  private versionId = 0;
+  private storedVersionId = this.versionId;
 
-	private readonly storeLimiter = new Limiter(1);
+  private readonly storeLimiter = new Limiter(1);
 
-	constructor(
-		workingCopyResource: URI,
-		private readonly historyHome: URI,
-		private readonly entryAddedEmitter: Emitter<IWorkingCopyHistoryEvent>,
-		private readonly entryChangedEmitter: Emitter<IWorkingCopyHistoryEvent>,
-		private readonly entryReplacedEmitter: Emitter<IWorkingCopyHistoryEvent>,
-		private readonly entryRemovedEmitter: Emitter<IWorkingCopyHistoryEvent>,
-		private readonly options: IWorkingCopyHistoryModelOptions,
-		private readonly fileService: IFileService,
-		private readonly labelService: ILabelService,
-		private readonly logService: ILogService,
-		private readonly configurationService: IConfigurationService,
-	) {
-		this.setWorkingCopy(workingCopyResource);
-	}
+  constructor(
+    workingCopyResource: URI,
+    private readonly historyHome: URI,
+    private readonly entryAddedEmitter: Emitter<IWorkingCopyHistoryEvent>,
+    private readonly entryChangedEmitter: Emitter<IWorkingCopyHistoryEvent>,
+    private readonly entryReplacedEmitter: Emitter<IWorkingCopyHistoryEvent>,
+    private readonly entryRemovedEmitter: Emitter<IWorkingCopyHistoryEvent>,
+    private readonly options: IWorkingCopyHistoryModelOptions,
+    private readonly fileService: IFileService,
+    private readonly labelService: ILabelService,
+    private readonly logService: ILogService,
+    private readonly configurationService: IConfigurationService,
+  ) {
+    this.setWorkingCopy(workingCopyResource);
+  }
 
-	private setWorkingCopy(workingCopyResource: URI): void {
+  private setWorkingCopy(workingCopyResource: URI): void {
+    // Update working copy
+    this.workingCopyResource = workingCopyResource;
+    this.workingCopyName =
+      this.labelService.getUriBasenameLabel(workingCopyResource);
 
-		// Update working copy
-		this.workingCopyResource = workingCopyResource;
-		this.workingCopyName = this.labelService.getUriBasenameLabel(
-      workingCopyResource,
-    );
-
-		this.historyEntriesNameMatcher = new RegExp(
+    this.historyEntriesNameMatcher = new RegExp(
       `[A-Za-z0-9]{4}${escapeRegExpCharacters(extname(workingCopyResource))}`,
     );
 
-		// Update locations
-		this.historyEntriesFolder = this.toHistoryEntriesFolder(
+    // Update locations
+    this.historyEntriesFolder = this.toHistoryEntriesFolder(
       this.historyHome,
       workingCopyResource,
     );
-		this.historyEntriesListingFile = joinPath(
+    this.historyEntriesListingFile = joinPath(
       this.historyEntriesFolder,
       WorkingCopyHistoryModel.ENTRIES_FILE,
     );
 
-		// Reset entries and resolved cache
-		this.entries = [];
-		this.whenResolved = undefined;
-	}
+    // Reset entries and resolved cache
+    this.entries = [];
+    this.whenResolved = undefined;
+  }
 
-	private toHistoryEntriesFolder(historyHome: URI, workingCopyResource: URI): URI {
-		return joinPath(
+  private toHistoryEntriesFolder(
+    historyHome: URI,
+    workingCopyResource: URI,
+  ): URI {
+    return joinPath(
       historyHome,
       hash(workingCopyResource.toString()).toString(16),
     );
-	}
+  }
 
-	async addEntry(source = WorkingCopyHistoryModel.FILE_SAVED_SOURCE, sourceDescription: string | undefined = undefined, timestamp = Date.now(), token: CancellationToken): Promise<IWorkingCopyHistoryEntry> {
-		let entryToReplace: IWorkingCopyHistoryEntry | undefined = undefined;
+  async addEntry(
+    source = WorkingCopyHistoryModel.FILE_SAVED_SOURCE,
+    sourceDescription: string | undefined = undefined,
+    timestamp = Date.now(),
+    token: CancellationToken,
+  ): Promise<IWorkingCopyHistoryEntry> {
+    let entryToReplace: IWorkingCopyHistoryEntry | undefined = undefined;
 
-		// Figure out if the last entry should be replaced based
-		// on settings that can define a interval for when an
-		// entry is not added as new entry but should replace.
-		// However, when save source is different, never replace.
-		const lastEntry = this.entries.at(-1);
-		if (lastEntry && lastEntry.source === source) {
-			const configuredReplaceInterval = this.configurationService.getValue<number>(
-        WorkingCopyHistoryModel.SETTINGS.MERGE_PERIOD,
-        { resource: this.workingCopyResource },
-      );
-			if (timestamp - lastEntry.timestamp <= (configuredReplaceInterval * 1000 /* convert to millies */)) {
-				entryToReplace = lastEntry;
-			}
-		}
+    // Figure out if the last entry should be replaced based
+    // on settings that can define a interval for when an
+    // entry is not added as new entry but should replace.
+    // However, when save source is different, never replace.
+    const lastEntry = this.entries.at(-1);
+    if (lastEntry && lastEntry.source === source) {
+      const configuredReplaceInterval =
+        this.configurationService.getValue<number>(
+          WorkingCopyHistoryModel.SETTINGS.MERGE_PERIOD,
+          { resource: this.workingCopyResource },
+        );
+      if (
+        timestamp - lastEntry.timestamp <=
+        configuredReplaceInterval * 1000 /* convert to millies */
+      ) {
+        entryToReplace = lastEntry;
+      }
+    }
 
-		let entry: IWorkingCopyHistoryEntry;
+    let entry: IWorkingCopyHistoryEntry;
 
-		// Replace lastest entry in history
-		if (entryToReplace) {
-			entry = await this.doReplaceEntry(
+    // Replace lastest entry in history
+    if (entryToReplace) {
+      entry = await this.doReplaceEntry(
         entryToReplace,
         source,
         sourceDescription,
         timestamp,
         token,
       );
-		}
+    }
 
-		// Add entry to history
-		else {
-			entry = await this.doAddEntry(
+    // Add entry to history
+    else {
+      entry = await this.doAddEntry(
         source,
         sourceDescription,
         timestamp,
         token,
       );
-		}
+    }
 
-		// Flush now if configured
-		if (this.options.flushOnChange && !token.isCancellationRequested) {
-			await this.store(token);
-		}
+    // Flush now if configured
+    if (this.options.flushOnChange && !token.isCancellationRequested) {
+      await this.store(token);
+    }
 
-		return entry;
-	}
+    return entry;
+  }
 
-	private async doAddEntry(source: SaveSource, sourceDescription: string | undefined = undefined, timestamp: number, token: CancellationToken): Promise<IWorkingCopyHistoryEntry> {
-		const workingCopyResource = assertReturnsDefined(this.workingCopyResource);
-		const workingCopyName = assertReturnsDefined(this.workingCopyName);
-		const historyEntriesFolder = assertReturnsDefined(
+  private async doAddEntry(
+    source: SaveSource,
+    sourceDescription: string | undefined = undefined,
+    timestamp: number,
+    token: CancellationToken,
+  ): Promise<IWorkingCopyHistoryEntry> {
+    const workingCopyResource = assertReturnsDefined(this.workingCopyResource);
+    const workingCopyName = assertReturnsDefined(this.workingCopyName);
+    const historyEntriesFolder = assertReturnsDefined(
       this.historyEntriesFolder,
     );
 
-		// Perform a fast clone operation with minimal overhead to a new random location
-		const id = `${randomPath(undefined, undefined, 4)}${extname(workingCopyResource)}`;
-		const location = joinPath(historyEntriesFolder, id);
-		await this.fileService.cloneFile(workingCopyResource, location);
+    // Perform a fast clone operation with minimal overhead to a new random location
+    const id = `${randomPath(undefined, undefined, 4)}${extname(workingCopyResource)}`;
+    const location = joinPath(historyEntriesFolder, id);
+    await this.fileService.cloneFile(workingCopyResource, location);
 
-		// Add to list of entries
-		const entry: IWorkingCopyHistoryEntry = {
+    // Add to list of entries
+    const entry: IWorkingCopyHistoryEntry = {
       id,
       workingCopy: { resource: workingCopyResource, name: workingCopyName },
       location,
@@ -216,168 +248,181 @@ export class WorkingCopyHistoryModel {
       source,
       sourceDescription,
     };
-		this.entries.push(entry);
+    this.entries.push(entry);
 
-		// Update version ID of model to use for storing later
-		this.versionId++;
+    // Update version ID of model to use for storing later
+    this.versionId++;
 
-		// Events
-		this.entryAddedEmitter.fire({ entry });
+    // Events
+    this.entryAddedEmitter.fire({ entry });
 
-		return entry;
-	}
+    return entry;
+  }
 
-	private async doReplaceEntry(entry: IWorkingCopyHistoryEntry, source: SaveSource, sourceDescription: string | undefined = undefined, timestamp: number, token: CancellationToken): Promise<IWorkingCopyHistoryEntry> {
-		const workingCopyResource = assertReturnsDefined(this.workingCopyResource);
+  private async doReplaceEntry(
+    entry: IWorkingCopyHistoryEntry,
+    source: SaveSource,
+    sourceDescription: string | undefined = undefined,
+    timestamp: number,
+    token: CancellationToken,
+  ): Promise<IWorkingCopyHistoryEntry> {
+    const workingCopyResource = assertReturnsDefined(this.workingCopyResource);
 
-		// Perform a fast clone operation with minimal overhead to the existing location
-		await this.fileService.cloneFile(workingCopyResource, entry.location);
+    // Perform a fast clone operation with minimal overhead to the existing location
+    await this.fileService.cloneFile(workingCopyResource, entry.location);
 
-		// Update entry
-		entry.source = source;
-		entry.sourceDescription = sourceDescription;
-		entry.timestamp = timestamp;
+    // Update entry
+    entry.source = source;
+    entry.sourceDescription = sourceDescription;
+    entry.timestamp = timestamp;
 
-		// Update version ID of model to use for storing later
-		this.versionId++;
+    // Update version ID of model to use for storing later
+    this.versionId++;
 
-		// Events
-		this.entryReplacedEmitter.fire({ entry });
+    // Events
+    this.entryReplacedEmitter.fire({ entry });
 
-		return entry;
-	}
+    return entry;
+  }
 
-	async removeEntry(entry: IWorkingCopyHistoryEntry, token: CancellationToken): Promise<boolean> {
+  async removeEntry(
+    entry: IWorkingCopyHistoryEntry,
+    token: CancellationToken,
+  ): Promise<boolean> {
+    // Make sure to await resolving when removing entries
+    await this.resolveEntriesOnce();
 
-		// Make sure to await resolving when removing entries
-		await this.resolveEntriesOnce();
+    if (token.isCancellationRequested) {
+      return false;
+    }
 
-		if (token.isCancellationRequested) {
-			return false;
-		}
+    const index = this.entries.indexOf(entry);
+    if (index === -1) {
+      return false;
+    }
 
-		const index = this.entries.indexOf(entry);
-		if (index === -1) {
-			return false;
-		}
+    // Delete from disk
+    await this.deleteEntry(entry);
 
-		// Delete from disk
-		await this.deleteEntry(entry);
+    // Remove from model
+    this.entries.splice(index, 1);
 
-		// Remove from model
-		this.entries.splice(index, 1);
+    // Update version ID of model to use for storing later
+    this.versionId++;
 
-		// Update version ID of model to use for storing later
-		this.versionId++;
+    // Events
+    this.entryRemovedEmitter.fire({ entry });
 
-		// Events
-		this.entryRemovedEmitter.fire({ entry });
+    // Flush now if configured
+    if (this.options.flushOnChange && !token.isCancellationRequested) {
+      await this.store(token);
+    }
 
-		// Flush now if configured
-		if (this.options.flushOnChange && !token.isCancellationRequested) {
-			await this.store(token);
-		}
+    return true;
+  }
 
-		return true;
-	}
+  async updateEntry(
+    entry: IWorkingCopyHistoryEntry,
+    properties: { source: SaveSource },
+    token: CancellationToken,
+  ): Promise<void> {
+    // Make sure to await resolving when updating entries
+    await this.resolveEntriesOnce();
 
-	async updateEntry(entry: IWorkingCopyHistoryEntry, properties: { source: SaveSource }, token: CancellationToken): Promise<void> {
+    if (token.isCancellationRequested) {
+      return;
+    }
 
-		// Make sure to await resolving when updating entries
-		await this.resolveEntriesOnce();
+    const index = this.entries.indexOf(entry);
+    if (index === -1) {
+      return;
+    }
 
-		if (token.isCancellationRequested) {
-			return;
-		}
+    // Update entry
+    entry.source = properties.source;
 
-		const index = this.entries.indexOf(entry);
-		if (index === -1) {
-			return;
-		}
+    // Update version ID of model to use for storing later
+    this.versionId++;
 
-		// Update entry
-		entry.source = properties.source;
+    // Events
+    this.entryChangedEmitter.fire({ entry });
 
-		// Update version ID of model to use for storing later
-		this.versionId++;
+    // Flush now if configured
+    if (this.options.flushOnChange && !token.isCancellationRequested) {
+      await this.store(token);
+    }
+  }
 
-		// Events
-		this.entryChangedEmitter.fire({ entry });
+  async getEntries(): Promise<readonly IWorkingCopyHistoryEntry[]> {
+    // Make sure to await resolving when all entries are asked for
+    await this.resolveEntriesOnce();
 
-		// Flush now if configured
-		if (this.options.flushOnChange && !token.isCancellationRequested) {
-			await this.store(token);
-		}
-	}
-
-	async getEntries(): Promise<readonly IWorkingCopyHistoryEntry[]> {
-
-		// Make sure to await resolving when all entries are asked for
-		await this.resolveEntriesOnce();
-
-		// Return as many entries as configured by user settings
-		const configuredMaxEntries = this.configurationService.getValue<number>(
+    // Return as many entries as configured by user settings
+    const configuredMaxEntries = this.configurationService.getValue<number>(
       WorkingCopyHistoryModel.SETTINGS.MAX_ENTRIES,
       { resource: this.workingCopyResource },
     );
-		if (this.entries.length > configuredMaxEntries) {
-			return this.entries.slice(this.entries.length - configuredMaxEntries);
-		}
+    if (this.entries.length > configuredMaxEntries) {
+      return this.entries.slice(this.entries.length - configuredMaxEntries);
+    }
 
-		return this.entries;
-	}
+    return this.entries;
+  }
 
-	async hasEntries(skipResolve: boolean): Promise<boolean> {
+  async hasEntries(skipResolve: boolean): Promise<boolean> {
+    // Make sure to await resolving unless explicitly skipped
+    if (!skipResolve) {
+      await this.resolveEntriesOnce();
+    }
 
-		// Make sure to await resolving unless explicitly skipped
-		if (!skipResolve) {
-			await this.resolveEntriesOnce();
-		}
+    return this.entries.length > 0;
+  }
 
-		return this.entries.length > 0;
-	}
+  private resolveEntriesOnce(): Promise<void> {
+    if (!this.whenResolved) {
+      this.whenResolved = this.doResolveEntries();
+    }
 
-	private resolveEntriesOnce(): Promise<void> {
-		if (!this.whenResolved) {
-			this.whenResolved = this.doResolveEntries();
-		}
+    return this.whenResolved;
+  }
 
-		return this.whenResolved;
-	}
+  private async doResolveEntries(): Promise<void> {
+    // Resolve from disk
+    const entries = await this.resolveEntriesFromDisk();
 
-	private async doResolveEntries(): Promise<void> {
+    // We now need to merge our in-memory entries with the
+    // entries we have found on disk because it is possible
+    // that new entries have been added before the entries
+    // listing file was updated
+    for (const entry of this.entries) {
+      entries.set(entry.id, entry);
+    }
 
-		// Resolve from disk
-		const entries = await this.resolveEntriesFromDisk();
-
-		// We now need to merge our in-memory entries with the
-		// entries we have found on disk because it is possible
-		// that new entries have been added before the entries
-		// listing file was updated
-		for (const entry of this.entries) {
-			entries.set(entry.id, entry);
-		}
-
-		// Set as entries, sorted by timestamp
-		this.entries = Array.from(entries.values()).sort(
+    // Set as entries, sorted by timestamp
+    this.entries = Array.from(entries.values()).sort(
       (entryA, entryB) => entryA.timestamp - entryB.timestamp,
     );
-	}
+  }
 
-	private async resolveEntriesFromDisk(): Promise<Map<string /* ID */, IWorkingCopyHistoryEntry>> {
-		const workingCopyResource = assertReturnsDefined(this.workingCopyResource);
-		const workingCopyName = assertReturnsDefined(this.workingCopyName);
+  private async resolveEntriesFromDisk(): Promise<
+    Map<string /* ID */, IWorkingCopyHistoryEntry>
+  > {
+    const workingCopyResource = assertReturnsDefined(this.workingCopyResource);
+    const workingCopyName = assertReturnsDefined(this.workingCopyName);
 
-		const [entryListing, entryStats] = await Promise.all([
+    const [entryListing, entryStats] = await Promise.all([
+      // Resolve entries listing file
       this.readEntriesFile(),
+
+      // Resolve children of history folder
       this.readEntriesFolder(),
     ]);
 
-		// Add from raw folder children
-		const entries = new Map<string, IWorkingCopyHistoryEntry>();
-		if (entryStats) {
-			for (const entryStat of entryStats) {
-				entries.set(entryStat.name, {
+    // Add from raw folder children
+    const entries = new Map<string, IWorkingCopyHistoryEntry>();
+    if (entryStats) {
+      for (const entryStat of entryStats) {
+        entries.set(entryStat.name, {
           id: entryStat.name,
           workingCopy: { resource: workingCopyResource, name: workingCopyName },
           location: entryStat.resource,
@@ -385,550 +430,610 @@ export class WorkingCopyHistoryModel {
           source: WorkingCopyHistoryModel.FILE_SAVED_SOURCE,
           sourceDescription: undefined,
         });
-			}
-		}
+      }
+    }
 
-		// Update from listing (to have more specific metadata)
-		if (entryListing) {
-			for (const entry of entryListing.entries) {
-				const existingEntry = entries.get(entry.id);
-				if (existingEntry) {
-					entries.set(entry.id, {
+    // Update from listing (to have more specific metadata)
+    if (entryListing) {
+      for (const entry of entryListing.entries) {
+        const existingEntry = entries.get(entry.id);
+        if (existingEntry) {
+          entries.set(entry.id, {
             ...existingEntry,
             timestamp: entry.timestamp,
             source: entry.source ?? existingEntry.source,
-            sourceDescription: entry.sourceDescription ?? existingEntry.sourceDescription,
+            sourceDescription:
+              entry.sourceDescription ?? existingEntry.sourceDescription,
           });
-				}
-			}
-		}
+        }
+      }
+    }
 
-		return entries;
-	}
+    return entries;
+  }
 
-	async moveEntries(target: WorkingCopyHistoryModel, source: SaveSource, token: CancellationToken): Promise<void> {
-		const timestamp = Date.now();
-		const sourceDescription = this.labelService.getUriLabel(
+  async moveEntries(
+    target: WorkingCopyHistoryModel,
+    source: SaveSource,
+    token: CancellationToken,
+  ): Promise<void> {
+    const timestamp = Date.now();
+    const sourceDescription = this.labelService.getUriLabel(
       assertReturnsDefined(this.workingCopyResource),
     );
 
-		// Move all entries into the target folder so that we preserve
-		// any existing history entries that might already be present
+    // Move all entries into the target folder so that we preserve
+    // any existing history entries that might already be present
 
-		const sourceHistoryEntriesFolder = assertReturnsDefined(
+    const sourceHistoryEntriesFolder = assertReturnsDefined(
       this.historyEntriesFolder,
     );
-		const targetHistoryEntriesFolder = assertReturnsDefined(
+    const targetHistoryEntriesFolder = assertReturnsDefined(
       target.historyEntriesFolder,
     );
-		try {
-			for (const entry of this.entries) {
-				await this.fileService.move(
+    try {
+      for (const entry of this.entries) {
+        await this.fileService.move(
           entry.location,
           joinPath(targetHistoryEntriesFolder, entry.id),
           true,
         );
-			}
-			await this.fileService.del(sourceHistoryEntriesFolder, {
+      }
+      await this.fileService.del(sourceHistoryEntriesFolder, {
         recursive: true,
       });
-		} catch (error) {
-			if (!this.isFileNotFound(error)) {
-				try {
-					// In case of an error (unless not found), fallback to moving the entire folder
-					await this.fileService.move(
+    } catch (error) {
+      if (!this.isFileNotFound(error)) {
+        try {
+          // In case of an error (unless not found), fallback to moving the entire folder
+          await this.fileService.move(
             sourceHistoryEntriesFolder,
             targetHistoryEntriesFolder,
             true,
           );
-				} catch (error) {
-					if (!this.isFileNotFound(error)) {
-						this.traceError(error);
-					}
-				}
-			}
-		}
+        } catch (error) {
+          if (!this.isFileNotFound(error)) {
+            this.traceError(error);
+          }
+        }
+      }
+    }
 
-		// Merge our entries with target entries before updating associated working copy
-		const allEntries = distinct([...this.entries, ...target.entries], entry => entry.id).sort(
-      (entryA, entryB) => entryA.timestamp - entryB.timestamp,
-    );
+    // Merge our entries with target entries before updating associated working copy
+    const allEntries = distinct(
+      [...this.entries, ...target.entries],
+      (entry) => entry.id,
+    ).sort((entryA, entryB) => entryA.timestamp - entryB.timestamp);
 
-		// Update our associated working copy
-		const targetWorkingCopyResource = assertReturnsDefined(
+    // Update our associated working copy
+    const targetWorkingCopyResource = assertReturnsDefined(
       target.workingCopyResource,
     );
-		this.setWorkingCopy(targetWorkingCopyResource);
+    this.setWorkingCopy(targetWorkingCopyResource);
 
-		// Restore our entries and ensure correct metadata
-		const targetWorkingCopyName = assertReturnsDefined(target.workingCopyName);
-		for (const entry of allEntries) {
-			this.entries.push({
-				id: entry.id,
-				location: joinPath(targetHistoryEntriesFolder, entry.id),
-				source: entry.source,
-				sourceDescription: entry.sourceDescription,
-				timestamp: entry.timestamp,
-				workingCopy: {
-					resource: targetWorkingCopyResource,
-					name: targetWorkingCopyName,
-				},
-			});
-		}
+    // Restore our entries and ensure correct metadata
+    const targetWorkingCopyName = assertReturnsDefined(target.workingCopyName);
+    for (const entry of allEntries) {
+      this.entries.push({
+        id: entry.id,
+        location: joinPath(targetHistoryEntriesFolder, entry.id),
+        source: entry.source,
+        sourceDescription: entry.sourceDescription,
+        timestamp: entry.timestamp,
+        workingCopy: {
+          resource: targetWorkingCopyResource,
+          name: targetWorkingCopyName,
+        },
+      });
+    }
 
-		// Add entry for the move
-		await this.addEntry(source, sourceDescription, timestamp, token);
+    // Add entry for the move
+    await this.addEntry(source, sourceDescription, timestamp, token);
 
-		// Store model again to updated location
-		await this.store(token);
-	}
+    // Store model again to updated location
+    await this.store(token);
+  }
 
-	async store(token: CancellationToken): Promise<void> {
-		if (!this.shouldStore()) {
-			return;
-		}
+  async store(token: CancellationToken): Promise<void> {
+    if (!this.shouldStore()) {
+      return;
+    }
 
-		// Use a `Limiter` to prevent multiple `store` operations
-		// potentially running at the same time
+    // Use a `Limiter` to prevent multiple `store` operations
+    // potentially running at the same time
 
-		await this.storeLimiter.queue(async () => {
-			if (token.isCancellationRequested || !this.shouldStore()) {
-				return;
-			}
+    await this.storeLimiter.queue(async () => {
+      if (token.isCancellationRequested || !this.shouldStore()) {
+        return;
+      }
 
-			return this.doStore(token);
-		});
-	}
+      return this.doStore(token);
+    });
+  }
 
-	private shouldStore(): boolean {
-		return this.storedVersionId !== this.versionId;
-	}
+  private shouldStore(): boolean {
+    return this.storedVersionId !== this.versionId;
+  }
 
-	private async doStore(token: CancellationToken): Promise<void> {
-		const historyEntriesFolder = assertReturnsDefined(
+  private async doStore(token: CancellationToken): Promise<void> {
+    const historyEntriesFolder = assertReturnsDefined(
       this.historyEntriesFolder,
     );
 
-		// Make sure to await resolving when persisting
-		await this.resolveEntriesOnce();
+    // Make sure to await resolving when persisting
+    await this.resolveEntriesOnce();
 
-		if (token.isCancellationRequested) {
-			return undefined;
-		}
+    if (token.isCancellationRequested) {
+      return undefined;
+    }
 
-		// Cleanup based on max-entries setting
-		await this.cleanUpEntries();
+    // Cleanup based on max-entries setting
+    await this.cleanUpEntries();
 
-		// Without entries, remove the history folder
-		const storedVersion = this.versionId;
-		if (this.entries.length === 0) {
-			try {
-				await this.fileService.del(historyEntriesFolder, { recursive: true });
-			} catch (error) {
-				this.traceError(error);
-			}
-		}
+    // Without entries, remove the history folder
+    const storedVersion = this.versionId;
+    if (this.entries.length === 0) {
+      try {
+        await this.fileService.del(historyEntriesFolder, { recursive: true });
+      } catch (error) {
+        this.traceError(error);
+      }
+    }
 
-		// If we still have entries, update the entries meta file
-		else {
-			await this.writeEntriesFile();
-		}
+    // If we still have entries, update the entries meta file
+    else {
+      await this.writeEntriesFile();
+    }
 
-		// Mark as stored version
-		this.storedVersionId = storedVersion;
-	}
+    // Mark as stored version
+    this.storedVersionId = storedVersion;
+  }
 
-	private async cleanUpEntries(): Promise<void> {
-		const configuredMaxEntries = this.configurationService.getValue<number>(
+  private async cleanUpEntries(): Promise<void> {
+    const configuredMaxEntries = this.configurationService.getValue<number>(
       WorkingCopyHistoryModel.SETTINGS.MAX_ENTRIES,
       { resource: this.workingCopyResource },
     );
-		if (this.entries.length <= configuredMaxEntries) {
-			return; // nothing to cleanup
-		}
+    if (this.entries.length <= configuredMaxEntries) {
+      return; // nothing to cleanup
+    }
 
-		const entriesToDelete = this.entries.slice(
+    const entriesToDelete = this.entries.slice(
       0,
       this.entries.length - configuredMaxEntries,
     );
-		const entriesToKeep = this.entries.slice(
+    const entriesToKeep = this.entries.slice(
       this.entries.length - configuredMaxEntries,
     );
 
-		// Delete entries from disk as instructed
-		for (const entryToDelete of entriesToDelete) {
-			await this.deleteEntry(entryToDelete);
-		}
+    // Delete entries from disk as instructed
+    for (const entryToDelete of entriesToDelete) {
+      await this.deleteEntry(entryToDelete);
+    }
 
-		// Make sure to update our in-memory model as well
-		// because it will be persisted right after
-		this.entries = entriesToKeep;
+    // Make sure to update our in-memory model as well
+    // because it will be persisted right after
+    this.entries = entriesToKeep;
 
-		// Events
-		for (const entry of entriesToDelete) {
-			this.entryRemovedEmitter.fire({ entry });
-		}
-	}
+    // Events
+    for (const entry of entriesToDelete) {
+      this.entryRemovedEmitter.fire({ entry });
+    }
+  }
 
-	private async deleteEntry(entry: IWorkingCopyHistoryEntry): Promise<void> {
-		try {
-			await this.fileService.del(entry.location);
-		} catch (error) {
-			this.traceError(error);
-		}
-	}
+  private async deleteEntry(entry: IWorkingCopyHistoryEntry): Promise<void> {
+    try {
+      await this.fileService.del(entry.location);
+    } catch (error) {
+      this.traceError(error);
+    }
+  }
 
-	private async writeEntriesFile(): Promise<void> {
-		const workingCopyResource = assertReturnsDefined(this.workingCopyResource);
-		const historyEntriesListingFile = assertReturnsDefined(
+  private async writeEntriesFile(): Promise<void> {
+    const workingCopyResource = assertReturnsDefined(this.workingCopyResource);
+    const historyEntriesListingFile = assertReturnsDefined(
       this.historyEntriesListingFile,
     );
 
-		const serializedModel: ISerializedWorkingCopyHistoryModel = {
-			version: 1,
-			resource: workingCopyResource.toString(),
-			entries: this.entries.map(entry => {
-				return {
-					id: entry.id,
-					source: entry.source !== WorkingCopyHistoryModel.FILE_SAVED_SOURCE ? entry.source : undefined,
-					sourceDescription: entry.sourceDescription,
-					timestamp: entry.timestamp,
-				};
-			}),
-		};
+    const serializedModel: ISerializedWorkingCopyHistoryModel = {
+      version: 1,
+      resource: workingCopyResource.toString(),
+      entries: this.entries.map((entry) => {
+        return {
+          id: entry.id,
+          source:
+            entry.source !== WorkingCopyHistoryModel.FILE_SAVED_SOURCE
+              ? entry.source
+              : undefined,
+          sourceDescription: entry.sourceDescription,
+          timestamp: entry.timestamp,
+        };
+      }),
+    };
 
-		await this.fileService.writeFile(
+    await this.fileService.writeFile(
       historyEntriesListingFile,
       VSBuffer.fromString(JSON.stringify(serializedModel)),
     );
-	}
+  }
 
-	private async readEntriesFile(): Promise<ISerializedWorkingCopyHistoryModel | undefined> {
-		const historyEntriesListingFile = assertReturnsDefined(
+  private async readEntriesFile(): Promise<
+    ISerializedWorkingCopyHistoryModel | undefined
+  > {
+    const historyEntriesListingFile = assertReturnsDefined(
       this.historyEntriesListingFile,
     );
 
-		let serializedModel: ISerializedWorkingCopyHistoryModel | undefined = undefined;
-		try {
-			serializedModel = JSON.parse(
-        (await this.fileService.readFile(historyEntriesListingFile)).value.toString(),
+    let serializedModel: ISerializedWorkingCopyHistoryModel | undefined =
+      undefined;
+    try {
+      serializedModel = JSON.parse(
+        (
+          await this.fileService.readFile(historyEntriesListingFile)
+        ).value.toString(),
       );
-		} catch (error) {
-			if (!this.isFileNotFound(error)) {
-				this.traceError(error);
-			}
-		}
+    } catch (error) {
+      if (!this.isFileNotFound(error)) {
+        this.traceError(error);
+      }
+    }
 
-		return serializedModel;
-	}
+    return serializedModel;
+  }
 
-	private async readEntriesFolder(): Promise<IFileStatWithMetadata[] | undefined> {
-		const historyEntriesFolder = assertReturnsDefined(
+  private async readEntriesFolder(): Promise<
+    IFileStatWithMetadata[] | undefined
+  > {
+    const historyEntriesFolder = assertReturnsDefined(
       this.historyEntriesFolder,
     );
-		const historyEntriesNameMatcher = assertReturnsDefined(
+    const historyEntriesNameMatcher = assertReturnsDefined(
       this.historyEntriesNameMatcher,
     );
 
-		let rawEntries: IFileStatWithMetadata[] | undefined = undefined;
+    let rawEntries: IFileStatWithMetadata[] | undefined = undefined;
 
-		// Resolve children of folder on disk
-		try {
-			rawEntries = (await this.fileService.resolve(historyEntriesFolder, {
-        resolveMetadata: true,
-      })).children;
-		} catch (error) {
-			if (!this.isFileNotFound(error)) {
-				this.traceError(error);
-			}
-		}
+    // Resolve children of folder on disk
+    try {
+      rawEntries = (
+        await this.fileService.resolve(historyEntriesFolder, {
+          resolveMetadata: true,
+        })
+      ).children;
+    } catch (error) {
+      if (!this.isFileNotFound(error)) {
+        this.traceError(error);
+      }
+    }
 
-		if (!rawEntries) {
-			return undefined;
-		}
+    if (!rawEntries) {
+      return undefined;
+    }
 
-		// Skip entries that do not seem to have valid file name
-		return rawEntries.filter(entry =>
-			!isEqual(entry.resource, this.historyEntriesListingFile) && // not the listings file
-			historyEntriesNameMatcher.test(entry.name),					// matching our expected file pattern for entries
-		);
-	}
+    // Skip entries that do not seem to have valid file name
+    return rawEntries.filter(
+      (entry) =>
+        !isEqual(entry.resource, this.historyEntriesListingFile) && // not the listings file
+        historyEntriesNameMatcher.test(entry.name), // matching our expected file pattern for entries
+    );
+  }
 
-	private isFileNotFound(error: unknown): boolean {
-		return error instanceof FileOperationError && error.fileOperationResult === FileOperationResult.FILE_NOT_FOUND;
-	}
+  private isFileNotFound(error: unknown): boolean {
+    return (
+      error instanceof FileOperationError &&
+      error.fileOperationResult === FileOperationResult.FILE_NOT_FOUND
+    );
+  }
 
-	private traceError(error: Error): void {
-		this.logService.trace("[Working Copy History Service]", error);
-	}
+  private traceError(error: Error): void {
+    this.logService.trace("[Working Copy History Service]", error);
+  }
 }
 
-export abstract class WorkingCopyHistoryService extends Disposable implements IWorkingCopyHistoryService {
-
-	private static readonly FILE_MOVED_SOURCE = SaveSourceRegistry.registerSource(
+export abstract class WorkingCopyHistoryService
+  extends Disposable
+  implements IWorkingCopyHistoryService
+{
+  private static readonly FILE_MOVED_SOURCE = SaveSourceRegistry.registerSource(
     "moved.source",
     localize("moved.source", "File Moved"),
   );
-	private static readonly FILE_RENAMED_SOURCE = SaveSourceRegistry.registerSource(
-    "renamed.source",
-    localize("renamed.source", "File Renamed"),
-  );
+  private static readonly FILE_RENAMED_SOURCE =
+    SaveSourceRegistry.registerSource(
+      "renamed.source",
+      localize("renamed.source", "File Renamed"),
+    );
 
-	declare readonly _serviceBrand: undefined;
+  declare readonly _serviceBrand: undefined;
 
-	protected readonly _onDidAddEntry = this._register(
+  protected readonly _onDidAddEntry = this._register(
     new Emitter<IWorkingCopyHistoryEvent>(),
   );
-	readonly onDidAddEntry = this._onDidAddEntry.event;
+  readonly onDidAddEntry = this._onDidAddEntry.event;
 
-	protected readonly _onDidChangeEntry = this._register(
+  protected readonly _onDidChangeEntry = this._register(
     new Emitter<IWorkingCopyHistoryEvent>(),
   );
-	readonly onDidChangeEntry = this._onDidChangeEntry.event;
+  readonly onDidChangeEntry = this._onDidChangeEntry.event;
 
-	protected readonly _onDidReplaceEntry = this._register(
+  protected readonly _onDidReplaceEntry = this._register(
     new Emitter<IWorkingCopyHistoryEvent>(),
   );
-	readonly onDidReplaceEntry = this._onDidReplaceEntry.event;
+  readonly onDidReplaceEntry = this._onDidReplaceEntry.event;
 
-	private readonly _onDidMoveEntries = this._register(new Emitter<void>());
-	readonly onDidMoveEntries = this._onDidMoveEntries.event;
+  private readonly _onDidMoveEntries = this._register(new Emitter<void>());
+  readonly onDidMoveEntries = this._onDidMoveEntries.event;
 
-	protected readonly _onDidRemoveEntry = this._register(
+  protected readonly _onDidRemoveEntry = this._register(
     new Emitter<IWorkingCopyHistoryEvent>(),
   );
-	readonly onDidRemoveEntry = this._onDidRemoveEntry.event;
+  readonly onDidRemoveEntry = this._onDidRemoveEntry.event;
 
-	private readonly _onDidRemoveEntries = this._register(new Emitter<void>());
-	readonly onDidRemoveEntries = this._onDidRemoveEntries.event;
+  private readonly _onDidRemoveEntries = this._register(new Emitter<void>());
+  readonly onDidRemoveEntries = this._onDidRemoveEntries.event;
 
-	private readonly localHistoryHome = new DeferredPromise<URI>();
+  private readonly localHistoryHome = new DeferredPromise<URI>();
 
-	protected readonly models = new ResourceMap<WorkingCopyHistoryModel>(
-    resource => this.uriIdentityService.extUri.getComparisonKey(resource),
+  protected readonly models = new ResourceMap<WorkingCopyHistoryModel>(
+    (resource) => this.uriIdentityService.extUri.getComparisonKey(resource),
   );
 
-	constructor(
-		@IFileService protected readonly fileService: IFileService,
-		@IRemoteAgentService protected readonly remoteAgentService: IRemoteAgentService,
-		@IWorkbenchEnvironmentService protected readonly environmentService: IWorkbenchEnvironmentService,
-		@IUriIdentityService protected readonly uriIdentityService: IUriIdentityService,
-		@ILabelService protected readonly labelService: ILabelService,
-		@ILogService protected readonly logService: ILogService,
-		@IConfigurationService protected readonly configurationService: IConfigurationService,
-	) {
-		super();
+  constructor(
+    @IFileService protected readonly fileService: IFileService,
+    @IRemoteAgentService
+    protected readonly remoteAgentService: IRemoteAgentService,
+    @IWorkbenchEnvironmentService
+    protected readonly environmentService: IWorkbenchEnvironmentService,
+    @IUriIdentityService
+    protected readonly uriIdentityService: IUriIdentityService,
+    @ILabelService protected readonly labelService: ILabelService,
+    @ILogService protected readonly logService: ILogService,
+    @IConfigurationService
+    protected readonly configurationService: IConfigurationService,
+  ) {
+    super();
 
-		this.resolveLocalHistoryHome();
-	}
+    this.resolveLocalHistoryHome();
+  }
 
-	private async resolveLocalHistoryHome(): Promise<void> {
-		let historyHome: URI | undefined = undefined;
+  private async resolveLocalHistoryHome(): Promise<void> {
+    let historyHome: URI | undefined = undefined;
 
-		// Prefer history to be stored in the remote if we are connected to a remote
-		try {
-			const remoteEnv = await this.remoteAgentService.getEnvironment();
-			if (remoteEnv) {
-				historyHome = remoteEnv.localHistoryHome;
-			}
-		} catch (error) {
-			this.logService.trace(error); // ignore and fallback to local
-		}
+    // Prefer history to be stored in the remote if we are connected to a remote
+    try {
+      const remoteEnv = await this.remoteAgentService.getEnvironment();
+      if (remoteEnv) {
+        historyHome = remoteEnv.localHistoryHome;
+      }
+    } catch (error) {
+      this.logService.trace(error); // ignore and fallback to local
+    }
 
-		// But fallback to local if there is no remote
-		if (!historyHome) {
-			historyHome = this.environmentService.localHistoryHome;
-		}
+    // But fallback to local if there is no remote
+    if (!historyHome) {
+      historyHome = this.environmentService.localHistoryHome;
+    }
 
-		this.localHistoryHome.complete(historyHome);
-	}
+    this.localHistoryHome.complete(historyHome);
+  }
 
-	async moveEntries(source: URI, target: URI): Promise<URI[]> {
-		const limiter = new Limiter<URI>(MAX_PARALLEL_HISTORY_IO_OPS);
-		const promises: Promise<URI>[] = [];
+  async moveEntries(source: URI, target: URI): Promise<URI[]> {
+    const limiter = new Limiter<URI>(MAX_PARALLEL_HISTORY_IO_OPS);
+    const promises: Promise<URI>[] = [];
 
-		for (const [resource, model] of this.models) {
-			if (!this.uriIdentityService.extUri.isEqualOrParent(resource, source)) {
-				continue; // model does not match moved resource
-			}
+    for (const [resource, model] of this.models) {
+      if (!this.uriIdentityService.extUri.isEqualOrParent(resource, source)) {
+        continue; // model does not match moved resource
+      }
 
-			// Determine new resulting target resource
-			let targetResource: URI;
-			if (this.uriIdentityService.extUri.isEqual(source, resource)) {
-				targetResource = target; // file got moved
-			} else {
-				const index = indexOfPath(resource.path, source.path);
-				targetResource = joinPath(
+      // Determine new resulting target resource
+      let targetResource: URI;
+      if (this.uriIdentityService.extUri.isEqual(source, resource)) {
+        targetResource = target; // file got moved
+      } else {
+        const index = indexOfPath(resource.path, source.path);
+        targetResource = joinPath(
           target,
           resource.path.substr(index + source.path.length + 1),
         ); // parent folder got moved
-			}
+      }
 
-			// Figure out save source
-			let saveSource: SaveSource;
-			if (this.uriIdentityService.extUri.isEqual(
-        dirname(resource),
-        dirname(targetResource),
-      )) {
-				saveSource = WorkingCopyHistoryService.FILE_RENAMED_SOURCE;
-			} else {
-				saveSource = WorkingCopyHistoryService.FILE_MOVED_SOURCE;
-			}
+      // Figure out save source
+      let saveSource: SaveSource;
+      if (
+        this.uriIdentityService.extUri.isEqual(
+          dirname(resource),
+          dirname(targetResource),
+        )
+      ) {
+        saveSource = WorkingCopyHistoryService.FILE_RENAMED_SOURCE;
+      } else {
+        saveSource = WorkingCopyHistoryService.FILE_MOVED_SOURCE;
+      }
 
-			// Move entries to target queued
-			promises.push(
-        limiter.queue(
-          () => this.doMoveEntries(model, saveSource, resource, targetResource),
+      // Move entries to target queued
+      promises.push(
+        limiter.queue(() =>
+          this.doMoveEntries(model, saveSource, resource, targetResource),
         ),
       );
-		}
+    }
 
-		if (!promises.length) {
-			return [];
-		}
+    if (!promises.length) {
+      return [];
+    }
 
-		// Await move operations
-		const resources = await Promise.all(promises);
+    // Await move operations
+    const resources = await Promise.all(promises);
 
-		// Events
-		this._onDidMoveEntries.fire();
+    // Events
+    this._onDidMoveEntries.fire();
 
-		return resources;
-	}
+    return resources;
+  }
 
-	private async doMoveEntries(source: WorkingCopyHistoryModel, saveSource: SaveSource, sourceWorkingCopyResource: URI, targetWorkingCopyResource: URI): Promise<URI> {
+  private async doMoveEntries(
+    source: WorkingCopyHistoryModel,
+    saveSource: SaveSource,
+    sourceWorkingCopyResource: URI,
+    targetWorkingCopyResource: URI,
+  ): Promise<URI> {
+    // Move to target via model
+    const target = await this.getModel(targetWorkingCopyResource);
+    await source.moveEntries(target, saveSource, CancellationToken.None);
 
-		// Move to target via model
-		const target = await this.getModel(targetWorkingCopyResource);
-		await source.moveEntries(target, saveSource, CancellationToken.None);
+    // Update model in our map
+    this.models.delete(sourceWorkingCopyResource);
+    this.models.set(targetWorkingCopyResource, source);
 
-		// Update model in our map
-		this.models.delete(sourceWorkingCopyResource);
-		this.models.set(targetWorkingCopyResource, source);
+    return targetWorkingCopyResource;
+  }
 
-		return targetWorkingCopyResource;
-	}
+  async addEntry(
+    { resource, source, timestamp }: IWorkingCopyHistoryEntryDescriptor,
+    token: CancellationToken,
+  ): Promise<IWorkingCopyHistoryEntry | undefined> {
+    if (!this.fileService.hasProvider(resource)) {
+      return undefined; // we require the working copy resource to be file service accessible
+    }
 
-	async addEntry({ resource, source, timestamp }: IWorkingCopyHistoryEntryDescriptor, token: CancellationToken): Promise<IWorkingCopyHistoryEntry | undefined> {
-		if (!this.fileService.hasProvider(resource)) {
-			return undefined; // we require the working copy resource to be file service accessible
-		}
+    // Resolve history model for working copy
+    const model = await this.getModel(resource);
+    if (token.isCancellationRequested) {
+      return undefined;
+    }
 
-		// Resolve history model for working copy
-		const model = await this.getModel(resource);
-		if (token.isCancellationRequested) {
-			return undefined;
-		}
+    // Add to model
+    return model.addEntry(source, undefined, timestamp, token);
+  }
 
-		// Add to model
-		return model.addEntry(source, undefined, timestamp, token);
-	}
+  async updateEntry(
+    entry: IWorkingCopyHistoryEntry,
+    properties: { source: SaveSource },
+    token: CancellationToken,
+  ): Promise<void> {
+    // Resolve history model for working copy
+    const model = await this.getModel(entry.workingCopy.resource);
+    if (token.isCancellationRequested) {
+      return;
+    }
 
-	async updateEntry(entry: IWorkingCopyHistoryEntry, properties: { source: SaveSource }, token: CancellationToken): Promise<void> {
+    // Rename in model
+    return model.updateEntry(entry, properties, token);
+  }
 
-		// Resolve history model for working copy
-		const model = await this.getModel(entry.workingCopy.resource);
-		if (token.isCancellationRequested) {
-			return;
-		}
+  async removeEntry(
+    entry: IWorkingCopyHistoryEntry,
+    token: CancellationToken,
+  ): Promise<boolean> {
+    // Resolve history model for working copy
+    const model = await this.getModel(entry.workingCopy.resource);
+    if (token.isCancellationRequested) {
+      return false;
+    }
 
-		// Rename in model
-		return model.updateEntry(entry, properties, token);
-	}
+    // Remove from model
+    return model.removeEntry(entry, token);
+  }
 
-	async removeEntry(entry: IWorkingCopyHistoryEntry, token: CancellationToken): Promise<boolean> {
+  async removeAll(token: CancellationToken): Promise<void> {
+    const historyHome = await this.localHistoryHome.p;
+    if (token.isCancellationRequested) {
+      return;
+    }
 
-		// Resolve history model for working copy
-		const model = await this.getModel(entry.workingCopy.resource);
-		if (token.isCancellationRequested) {
-			return false;
-		}
+    // Clear models
+    this.models.clear();
 
-		// Remove from model
-		return model.removeEntry(entry, token);
-	}
+    // Remove from disk
+    await this.fileService.del(historyHome, { recursive: true });
 
-	async removeAll(token: CancellationToken): Promise<void> {
-		const historyHome = await this.localHistoryHome.p;
-		if (token.isCancellationRequested) {
-			return;
-		}
+    // Events
+    this._onDidRemoveEntries.fire();
+  }
 
-		// Clear models
-		this.models.clear();
+  async getEntries(
+    resource: URI,
+    token: CancellationToken,
+  ): Promise<readonly IWorkingCopyHistoryEntry[]> {
+    const model = await this.getModel(resource);
+    if (token.isCancellationRequested) {
+      return [];
+    }
 
-		// Remove from disk
-		await this.fileService.del(historyHome, { recursive: true });
+    const entries = await model.getEntries();
+    return entries ?? [];
+  }
 
-		// Events
-		this._onDidRemoveEntries.fire();
-	}
+  async getAll(token: CancellationToken): Promise<readonly URI[]> {
+    const historyHome = await this.localHistoryHome.p;
+    if (token.isCancellationRequested) {
+      return [];
+    }
 
-	async getEntries(resource: URI, token: CancellationToken): Promise<readonly IWorkingCopyHistoryEntry[]> {
-		const model = await this.getModel(resource);
-		if (token.isCancellationRequested) {
-			return [];
-		}
+    const all = new ResourceMap<true>();
 
-		const entries = await model.getEntries();
-		return entries ?? [];
-	}
+    // Fill in all known model resources (they might not have yet persisted to disk)
+    for (const [resource, model] of this.models) {
+      const hasInMemoryEntries = await model.hasEntries(
+        true /* skip resolving because we resolve below from disk */,
+      );
+      if (hasInMemoryEntries) {
+        all.set(resource, true);
+      }
+    }
 
-	async getAll(token: CancellationToken): Promise<readonly URI[]> {
-		const historyHome = await this.localHistoryHome.p;
-		if (token.isCancellationRequested) {
-			return [];
-		}
+    // Resolve all other resources by iterating the history home folder
+    try {
+      const resolvedHistoryHome = await this.fileService.resolve(historyHome);
+      if (resolvedHistoryHome.children) {
+        const limiter = new Limiter(MAX_PARALLEL_HISTORY_IO_OPS);
+        const promises = [];
 
-		const all = new ResourceMap<true>();
+        for (const child of resolvedHistoryHome.children) {
+          promises.push(
+            limiter.queue(async () => {
+              if (token.isCancellationRequested) {
+                return;
+              }
 
-		// Fill in all known model resources (they might not have yet persisted to disk)
-		for (const [resource, model] of this.models) {
-			const hasInMemoryEntries = await model.hasEntries(true /* skip resolving because we resolve below from disk */);
-			if (hasInMemoryEntries) {
-				all.set(resource, true);
-			}
-		}
+              try {
+                const serializedModel: ISerializedWorkingCopyHistoryModel =
+                  JSON.parse(
+                    (
+                      await this.fileService.readFile(
+                        joinPath(
+                          child.resource,
+                          WorkingCopyHistoryModel.ENTRIES_FILE,
+                        ),
+                      )
+                    ).value.toString(),
+                  );
+                if (serializedModel.entries.length > 0) {
+                  all.set(URI.parse(serializedModel.resource), true);
+                }
+              } catch (error) {
+                // ignore - model might be missing or corrupt, but we need it
+              }
+            }),
+          );
+        }
 
-		// Resolve all other resources by iterating the history home folder
-		try {
-			const resolvedHistoryHome = await this.fileService.resolve(historyHome);
-			if (resolvedHistoryHome.children) {
-				const limiter = new Limiter(MAX_PARALLEL_HISTORY_IO_OPS);
-				const promises = [];
+        await Promise.all(promises);
+      }
+    } catch (error) {
+      // ignore - history might be entirely empty
+    }
 
-				for (const child of resolvedHistoryHome.children) {
-					promises.push(limiter.queue(async () => {
-						if (token.isCancellationRequested) {
-							return;
-						}
+    return Array.from(all.keys());
+  }
 
-						try {
-							const serializedModel: ISerializedWorkingCopyHistoryModel = JSON.parse((await this.fileService.readFile(joinPath(child.resource, WorkingCopyHistoryModel.ENTRIES_FILE))).value.toString());
-							if (serializedModel.entries.length > 0) {
-								all.set(URI.parse(serializedModel.resource), true);
-							}
-						} catch (error) {
-							// ignore - model might be missing or corrupt, but we need it
-						}
-					}));
-				}
+  private async getModel(resource: URI): Promise<WorkingCopyHistoryModel> {
+    const historyHome = await this.localHistoryHome.p;
 
-				await Promise.all(promises);
-			}
-		} catch (error) {
-			// ignore - history might be entirely empty
-		}
-
-		return Array.from(all.keys());
-	}
-
-	private async getModel(resource: URI): Promise<WorkingCopyHistoryModel> {
-		const historyHome = await this.localHistoryHome.p;
-
-		let model = this.models.get(resource);
-		if (!model) {
-			model = new WorkingCopyHistoryModel(
+    let model = this.models.get(resource);
+    if (!model) {
+      model = new WorkingCopyHistoryModel(
         resource,
         historyHome,
         this._onDidAddEntry,
@@ -941,41 +1046,41 @@ export abstract class WorkingCopyHistoryService extends Disposable implements IW
         this.logService,
         this.configurationService,
       );
-			this.models.set(resource, model);
-		}
+      this.models.set(resource, model);
+    }
 
-		return model;
-	}
+    return model;
+  }
 
-	protected abstract getModelOptions(): IWorkingCopyHistoryModelOptions;
-
+  protected abstract getModelOptions(): IWorkingCopyHistoryModelOptions;
 }
 
 export class NativeWorkingCopyHistoryService extends WorkingCopyHistoryService {
+  private static readonly STORE_ALL_INTERVAL = 5 * 60 * 1000; // 5min
 
-	private static readonly STORE_ALL_INTERVAL = 5 * 60 * 1000; // 5min
+  private readonly isRemotelyStored =
+    typeof this.environmentService.remoteAuthority === "string";
 
-	private readonly isRemotelyStored = typeof this.environmentService.remoteAuthority === "string";
-
-	private readonly storeAllCts = this._register(new CancellationTokenSource());
-	private readonly storeAllScheduler = this._register(
+  private readonly storeAllCts = this._register(new CancellationTokenSource());
+  private readonly storeAllScheduler = this._register(
     new RunOnceScheduler(
       () => this.storeAll(this.storeAllCts.token),
       NativeWorkingCopyHistoryService.STORE_ALL_INTERVAL,
     ),
   );
 
-	constructor(
-		@IFileService fileService: IFileService,
-		@IRemoteAgentService remoteAgentService: IRemoteAgentService,
-		@IWorkbenchEnvironmentService environmentService: IWorkbenchEnvironmentService,
-		@IUriIdentityService uriIdentityService: IUriIdentityService,
-		@ILabelService labelService: ILabelService,
-		@ILifecycleService private readonly lifecycleService: ILifecycleService,
-		@ILogService logService: ILogService,
-		@IConfigurationService configurationService: IConfigurationService,
-	) {
-		super(
+  constructor(
+    @IFileService fileService: IFileService,
+    @IRemoteAgentService remoteAgentService: IRemoteAgentService,
+    @IWorkbenchEnvironmentService
+    environmentService: IWorkbenchEnvironmentService,
+    @IUriIdentityService uriIdentityService: IUriIdentityService,
+    @ILabelService labelService: ILabelService,
+    @ILifecycleService private readonly lifecycleService: ILifecycleService,
+    @ILogService logService: ILogService,
+    @IConfigurationService configurationService: IConfigurationService,
+  ) {
+    super(
       fileService,
       remoteAgentService,
       environmentService,
@@ -985,74 +1090,82 @@ export class NativeWorkingCopyHistoryService extends WorkingCopyHistoryService {
       configurationService,
     );
 
-		this.registerListeners();
-	}
+    this.registerListeners();
+  }
 
-	private registerListeners(): void {
-		if (!this.isRemotelyStored) {
-
-			// Local: persist all on shutdown
-			this._register(
-        this.lifecycleService.onWillShutdown(e => this.onWillShutdown(e)),
+  private registerListeners(): void {
+    if (!this.isRemotelyStored) {
+      // Local: persist all on shutdown
+      this._register(
+        this.lifecycleService.onWillShutdown((e) => this.onWillShutdown(e)),
       );
 
-			// Local: schedule persist on change
-			this._register(
-        Event.any(this.onDidAddEntry, this.onDidChangeEntry, this.onDidReplaceEntry, this.onDidRemoveEntry)(
-          () => this.onDidChangeModels(),
-        ),
+      // Local: schedule persist on change
+      this._register(
+        Event.any(
+          this.onDidAddEntry,
+          this.onDidChangeEntry,
+          this.onDidReplaceEntry,
+          this.onDidRemoveEntry,
+        )(() => this.onDidChangeModels()),
       );
-		}
-	}
+    }
+  }
 
-	protected getModelOptions(): IWorkingCopyHistoryModelOptions {
-		return { flushOnChange: this.isRemotelyStored /* because the connection might drop anytime */ };
-	}
+  protected getModelOptions(): IWorkingCopyHistoryModelOptions {
+    return {
+      flushOnChange:
+        this.isRemotelyStored /* because the connection might drop anytime */,
+    };
+  }
 
-	private onWillShutdown(e: WillShutdownEvent): void {
+  private onWillShutdown(e: WillShutdownEvent): void {
+    // Dispose the scheduler...
+    this.storeAllScheduler.dispose();
+    this.storeAllCts.dispose(true);
 
-		// Dispose the scheduler...
-		this.storeAllScheduler.dispose();
-		this.storeAllCts.dispose(true);
-
-		// ...because we now explicitly store all models
-		e.join(this.storeAll(e.token), {
+    // ...because we now explicitly store all models
+    e.join(this.storeAll(e.token), {
       id: "join.workingCopyHistory",
       label: localize("join.workingCopyHistory", "Saving local history"),
     });
-	}
+  }
 
-	private onDidChangeModels(): void {
-		if (!this.storeAllScheduler.isScheduled()) {
-			this.storeAllScheduler.schedule();
-		}
-	}
+  private onDidChangeModels(): void {
+    if (!this.storeAllScheduler.isScheduled()) {
+      this.storeAllScheduler.schedule();
+    }
+  }
 
-	private async storeAll(token: CancellationToken): Promise<void> {
-		const limiter = new Limiter(MAX_PARALLEL_HISTORY_IO_OPS);
-		const promises = [];
+  private async storeAll(token: CancellationToken): Promise<void> {
+    const limiter = new Limiter(MAX_PARALLEL_HISTORY_IO_OPS);
+    const promises = [];
 
-		const models = Array.from(this.models.values());
-		for (const model of models) {
-			promises.push(limiter.queue(async () => {
-				if (token.isCancellationRequested) {
-					return;
-				}
+    const models = Array.from(this.models.values());
+    for (const model of models) {
+      promises.push(
+        limiter.queue(async () => {
+          if (token.isCancellationRequested) {
+            return;
+          }
 
-				try {
-					await model.store(token);
-				} catch (error) {
-					this.logService.trace(error);
-				}
-			}));
-		}
+          try {
+            await model.store(token);
+          } catch (error) {
+            this.logService.trace(error);
+          }
+        }),
+      );
+    }
 
-		await Promise.all(promises);
-	}
+    await Promise.all(promises);
+  }
 }
 
 // Register History Tracker
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchExtensions.Workbench,
+).registerWorkbenchContribution(
   WorkingCopyHistoryTracker,
   LifecyclePhase.Restored,
 );

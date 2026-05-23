@@ -9,18 +9,23 @@ import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/tes
 import { DefaultEndOfLine } from "../../../../common/model.js";
 import { createTextBufferFactory } from "../../../../common/model/textModel.js";
 
-function testTextBufferFactory(text: string, eol: string, mightContainNonBasicASCII: boolean, mightContainRTL: boolean): void {
-	const { disposable, textBuffer } = createTextBufferFactory(text).create(
+function testTextBufferFactory(
+  text: string,
+  eol: string,
+  mightContainNonBasicASCII: boolean,
+  mightContainRTL: boolean,
+): void {
+  const { disposable, textBuffer } = createTextBufferFactory(text).create(
     DefaultEndOfLine.LF,
   );
 
-	assert.strictEqual(
+  assert.strictEqual(
     textBuffer.mightContainNonBasicASCII(),
     mightContainNonBasicASCII,
   );
-	assert.strictEqual(textBuffer.mightContainRTL(), mightContainRTL);
-	assert.strictEqual(textBuffer.getEOL(), eol);
-	disposable.dispose();
+  assert.strictEqual(textBuffer.mightContainRTL(), mightContainRTL);
+  assert.strictEqual(textBuffer.getEOL(), eol);
+  disposable.dispose();
 }
 
 suite("ModelBuilder", () => {

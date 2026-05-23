@@ -5,7 +5,10 @@
 
 import assert from "assert";
 import { URI } from "../../../../../base/common/uri.js";
-import { workbenchInstantiationService, TestServiceAccessor } from "../../../../test/browser/workbenchTestServices.js";
+import {
+  workbenchInstantiationService,
+  TestServiceAccessor,
+} from "../../../../test/browser/workbenchTestServices.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import { TextFileContentProvider } from "../../common/files.js";
 import { snapshotToString } from "../../../../services/textfile/common/textfiles.js";
@@ -18,7 +21,10 @@ suite("Files - FileOnDiskContentProvider", () => {
   let accessor: TestServiceAccessor;
 
   setup(() => {
-    instantiationService = workbenchInstantiationService(undefined, disposables);
+    instantiationService = workbenchInstantiationService(
+      undefined,
+      disposables,
+    );
     accessor = instantiationService.createInstance(TestServiceAccessor);
   });
 
@@ -27,18 +33,31 @@ suite("Files - FileOnDiskContentProvider", () => {
   });
 
   test("provideTextContent", async () => {
-    const provider = disposables.add(instantiationService.createInstance(TextFileContentProvider));
+    const provider = disposables.add(
+      instantiationService.createInstance(TextFileContentProvider),
+    );
     const uri = URI.parse("testFileOnDiskContentProvider://foo");
 
-    const content = await provider.provideTextContent(uri.with({ scheme: "conflictResolution", query: JSON.stringify({ scheme: uri.scheme }) }));
+    const content = await provider.provideTextContent(
+      uri.with({
+        scheme: "conflictResolution",
+        query: JSON.stringify({ scheme: uri.scheme }),
+      }),
+    );
 
     assert.ok(content);
-    assert.strictEqual(snapshotToString(content.createSnapshot()), "Hello Html");
+    assert.strictEqual(
+      snapshotToString(content.createSnapshot()),
+      "Hello Html",
+    );
     assert.strictEqual(
       accessor.fileService.getLastReadFileUri().scheme,
       uri.scheme,
     );
-    assert.strictEqual(accessor.fileService.getLastReadFileUri().path, uri.path);
+    assert.strictEqual(
+      accessor.fileService.getLastReadFileUri().path,
+      uri.path,
+    );
 
     content.dispose();
   });

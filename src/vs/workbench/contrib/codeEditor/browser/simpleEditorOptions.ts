@@ -22,87 +22,106 @@ import {
   editorSelectionBackground,
 } from "../../../../platform/theme/common/colorRegistry.js";
 
-export function getSimpleEditorOptions(configurationService: IConfigurationService): IEditorOptions {
-	return {
-		wordWrap: "on",
-		overviewRulerLanes: 0,
-		glyphMargin: false,
-		lineNumbers: "off",
-		folding: false,
-		selectOnLineNumbers: false,
-		hideCursorInOverviewRuler: true,
-		selectionHighlight: false,
-		scrollbar: {
-			horizontal: "hidden",
-			alwaysConsumeMouseWheel: false,
-		},
-		lineDecorationsWidth: 0,
-		overviewRulerBorder: false,
-		scrollBeyondLastLine: false,
-		renderLineHighlight: "none",
-		fixedOverflowWidgets: true,
-		acceptSuggestionOnEnter: "smart",
-		dragAndDrop: false,
-		revealHorizontalRightPadding: 5,
-		minimap: {
-			enabled: false,
-		},
-		guides: {
-			indentation: false,
-		},
-		wordSegmenterLocales: configurationService.getValue<string | string[]>("editor.wordSegmenterLocales"),
-		accessibilitySupport: configurationService.getValue<"auto" | "off" | "on">("editor.accessibilitySupport"),
-		cursorBlinking: configurationService.getValue<"blink" | "smooth" | "phase" | "expand" | "solid">("editor.cursorBlinking"),
-		editContext: configurationService.getValue<boolean>("editor.editContext"),
-		defaultColorDecorators: "never",
-		allowVariableLineHeights: false,
-		allowVariableFonts: false,
-		allowVariableFontsInAccessibilityMode: false,
-	};
+export function getSimpleEditorOptions(
+  configurationService: IConfigurationService,
+): IEditorOptions {
+  return {
+    wordWrap: "on",
+    overviewRulerLanes: 0,
+    glyphMargin: false,
+    lineNumbers: "off",
+    folding: false,
+    selectOnLineNumbers: false,
+    hideCursorInOverviewRuler: true,
+    selectionHighlight: false,
+    scrollbar: {
+      horizontal: "hidden",
+      alwaysConsumeMouseWheel: false,
+    },
+    lineDecorationsWidth: 0,
+    overviewRulerBorder: false,
+    scrollBeyondLastLine: false,
+    renderLineHighlight: "none",
+    fixedOverflowWidgets: true,
+    acceptSuggestionOnEnter: "smart",
+    dragAndDrop: false,
+    revealHorizontalRightPadding: 5,
+    minimap: {
+      enabled: false,
+    },
+    guides: {
+      indentation: false,
+    },
+    wordSegmenterLocales: configurationService.getValue<string | string[]>(
+      "editor.wordSegmenterLocales",
+    ),
+    accessibilitySupport: configurationService.getValue<"auto" | "off" | "on">(
+      "editor.accessibilitySupport",
+    ),
+    cursorBlinking: configurationService.getValue<
+      "blink" | "smooth" | "phase" | "expand" | "solid"
+    >("editor.cursorBlinking"),
+    editContext: configurationService.getValue<boolean>("editor.editContext"),
+    defaultColorDecorators: "never",
+    allowVariableLineHeights: false,
+    allowVariableFonts: false,
+    allowVariableFontsInAccessibilityMode: false,
+  };
 }
 
 export function getSimpleCodeEditorWidgetOptions(): ICodeEditorWidgetOptions {
-	return {
-		isSimpleWidget: true,
-		contributions: EditorExtensionsRegistry.getSomeEditorContributions([
-			MenuPreventer.ID,
-			SelectionClipboardContributionID,
-			ContextMenuController.ID,
-			SuggestController.ID,
-			SnippetController2.ID,
-			TabCompletionController.ID,
-		]),
-	};
+  return {
+    isSimpleWidget: true,
+    contributions: EditorExtensionsRegistry.getSomeEditorContributions([
+      MenuPreventer.ID,
+      SelectionClipboardContributionID,
+      ContextMenuController.ID,
+      SuggestController.ID,
+      SnippetController2.ID,
+      TabCompletionController.ID,
+    ]),
+  };
 }
 
 /**
  * Should be called to set the styling on editors that are appearing as just input boxes
  * @param editorContainerSelector An element selector that will match the container of the editor
  */
-export function setupSimpleEditorSelectionStyling(editorContainerSelector: string): IDisposable {
-	// Override styles in selections.ts
-	return registerThemingParticipant((theme, collector) => {
-		const selectionBackgroundColor = theme.getColor(selectionBackground);
+export function setupSimpleEditorSelectionStyling(
+  editorContainerSelector: string,
+): IDisposable {
+  // Override styles in selections.ts
+  return registerThemingParticipant((theme, collector) => {
+    const selectionBackgroundColor = theme.getColor(selectionBackground);
 
-		if (selectionBackgroundColor) {
-			// Override inactive selection bg
-			const inputBackgroundColor = theme.getColor(inputBackground);
-			if (inputBackgroundColor) {
-				collector.addRule(`${editorContainerSelector} .monaco-editor-background { background-color: ${inputBackgroundColor}; } `);
-				collector.addRule(`${editorContainerSelector} .monaco-editor .selected-text { background-color: ${inputBackgroundColor.transparent(0.4)}; }`);
-			}
+    if (selectionBackgroundColor) {
+      // Override inactive selection bg
+      const inputBackgroundColor = theme.getColor(inputBackground);
+      if (inputBackgroundColor) {
+        collector.addRule(
+          `${editorContainerSelector} .monaco-editor-background { background-color: ${inputBackgroundColor}; } `,
+        );
+        collector.addRule(
+          `${editorContainerSelector} .monaco-editor .selected-text { background-color: ${inputBackgroundColor.transparent(0.4)}; }`,
+        );
+      }
 
-			// Override selected fg
-			const inputForegroundColor = theme.getColor(inputForeground);
-			if (inputForegroundColor) {
-				collector.addRule(`${editorContainerSelector} .monaco-editor .view-line span.inline-selected-text { color: ${inputForegroundColor}; }`);
-			}
+      // Override selected fg
+      const inputForegroundColor = theme.getColor(inputForeground);
+      if (inputForegroundColor) {
+        collector.addRule(
+          `${editorContainerSelector} .monaco-editor .view-line span.inline-selected-text { color: ${inputForegroundColor}; }`,
+        );
+      }
 
-			collector.addRule(`${editorContainerSelector} .monaco-editor .focused .selected-text { background-color: ${selectionBackgroundColor}; }`);
-		} else {
-			// Use editor selection color if theme has not set a selection background color
-			collector.addRule(`${editorContainerSelector} .monaco-editor .focused .selected-text { background-color: ${theme.getColor(editorSelectionBackground)}; }`);
-		}
-	});
-
+      collector.addRule(
+        `${editorContainerSelector} .monaco-editor .focused .selected-text { background-color: ${selectionBackgroundColor}; }`,
+      );
+    } else {
+      // Use editor selection color if theme has not set a selection background color
+      collector.addRule(
+        `${editorContainerSelector} .monaco-editor .focused .selected-text { background-color: ${theme.getColor(editorSelectionBackground)}; }`,
+      );
+    }
+  });
 }

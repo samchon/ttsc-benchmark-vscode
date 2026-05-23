@@ -14,56 +14,67 @@ import {
 } from "./extensionGalleryManifest.js";
 import { ExtensionGalleryManifestService } from "./extensionGalleryManifestService.js";
 
-export class ExtensionGalleryManifestIPCService extends ExtensionGalleryManifestService implements IExtensionGalleryManifestService {
+export class ExtensionGalleryManifestIPCService
+  extends ExtensionGalleryManifestService
+  implements IExtensionGalleryManifestService
+{
+  declare readonly _serviceBrand: undefined;
 
-	declare readonly _serviceBrand: undefined;
-
-	private _onDidChangeExtensionGalleryManifest = this._register(
+  private _onDidChangeExtensionGalleryManifest = this._register(
     new Emitter<IExtensionGalleryManifest | null>(),
   );
-	override readonly onDidChangeExtensionGalleryManifest = this._onDidChangeExtensionGalleryManifest.event;
+  override readonly onDidChangeExtensionGalleryManifest =
+    this._onDidChangeExtensionGalleryManifest.event;
 
-	private _onDidChangeExtensionGalleryManifestStatus = this._register(
+  private _onDidChangeExtensionGalleryManifestStatus = this._register(
     new Emitter<ExtensionGalleryManifestStatus>(),
   );
-	override readonly onDidChangeExtensionGalleryManifestStatus = this._onDidChangeExtensionGalleryManifestStatus.event;
+  override readonly onDidChangeExtensionGalleryManifestStatus =
+    this._onDidChangeExtensionGalleryManifestStatus.event;
 
-	private _extensionGalleryManifest: IExtensionGalleryManifest | null | undefined;
-	private readonly barrier = new Barrier();
+  private _extensionGalleryManifest:
+    | IExtensionGalleryManifest
+    | null
+    | undefined;
+  private readonly barrier = new Barrier();
 
-	override get extensionGalleryManifestStatus(): ExtensionGalleryManifestStatus {
-		return this._extensionGalleryManifest ? ExtensionGalleryManifestStatus.Available : ExtensionGalleryManifestStatus.Unavailable;
-	}
+  override get extensionGalleryManifestStatus(): ExtensionGalleryManifestStatus {
+    return this._extensionGalleryManifest
+      ? ExtensionGalleryManifestStatus.Available
+      : ExtensionGalleryManifestStatus.Unavailable;
+  }
 
-	constructor(
-		server: IChannelServer<unknown>,
-		@IProductService productService: IProductService,
-	) {
-		super(productService);
-		server.registerChannel("extensionGalleryManifest", {
-			listen: () => Event.None,
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			call: async (context: any, command: string, args?: any): Promise<any> => {
-				switch (command) {
-					case "setExtensionGalleryManifest": return Promise.resolve(this.setExtensionGalleryManifest(args[0]));
-				}
-				throw new Error("Invalid call");
-			},
-		});
-	}
+  constructor(
+    server: IChannelServer<unknown>,
+    @IProductService productService: IProductService,
+  ) {
+    super(productService);
+    server.registerChannel("extensionGalleryManifest", {
+      listen: () => Event.None,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      call: async (context: any, command: string, args?: any): Promise<any> => {
+        switch (command) {
+          case "setExtensionGalleryManifest":
+            return Promise.resolve(this.setExtensionGalleryManifest(args[0]));
+        }
+        throw new Error("Invalid call");
+      },
+    });
+  }
 
-	override async getExtensionGalleryManifest(): Promise<IExtensionGalleryManifest | null> {
-		await this.barrier.wait();
-		return this._extensionGalleryManifest ?? null;
-	}
+  override async getExtensionGalleryManifest(): Promise<IExtensionGalleryManifest | null> {
+    await this.barrier.wait();
+    return this._extensionGalleryManifest ?? null;
+  }
 
-	private setExtensionGalleryManifest(manifest: IExtensionGalleryManifest | null): void {
-		this._extensionGalleryManifest = manifest;
-		this._onDidChangeExtensionGalleryManifest.fire(manifest);
-		this._onDidChangeExtensionGalleryManifestStatus.fire(
+  private setExtensionGalleryManifest(
+    manifest: IExtensionGalleryManifest | null,
+  ): void {
+    this._extensionGalleryManifest = manifest;
+    this._onDidChangeExtensionGalleryManifest.fire(manifest);
+    this._onDidChangeExtensionGalleryManifestStatus.fire(
       this.extensionGalleryManifestStatus,
     );
-		this.barrier.open();
-	}
-
+    this.barrier.open();
+  }
 }

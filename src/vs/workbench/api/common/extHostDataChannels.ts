@@ -12,8 +12,11 @@ import { IExtensionDescription } from "../../../platform/extensions/common/exten
 import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
 
 export interface IExtHostDataChannels extends ExtHostDataChannelsShape {
-	readonly _serviceBrand: undefined;
-	createDataChannel<T>(extension: IExtensionDescription, channelId: string): vscode.DataChannel<T>;
+  readonly _serviceBrand: undefined;
+  createDataChannel<T>(
+    extension: IExtensionDescription,
+    channelId: string,
+  ): vscode.DataChannel<T>;
 }
 
 export const IExtHostDataChannels = createDecorator<IExtHostDataChannels>(
@@ -21,46 +24,51 @@ export const IExtHostDataChannels = createDecorator<IExtHostDataChannels>(
 );
 
 export class ExtHostDataChannels implements IExtHostDataChannels {
-	declare readonly _serviceBrand: undefined;
+  declare readonly _serviceBrand: undefined;
 
-	private readonly _channels = new Map<string, DataChannelImpl<any>>();
+  private readonly _channels = new Map<string, DataChannelImpl<any>>();
 
-	constructor() {
-	}
+  constructor() {}
 
-	createDataChannel<T>(extension: IExtensionDescription, channelId: string): vscode.DataChannel<T> {
-		checkProposedApiEnabled(extension, "dataChannels");
+  createDataChannel<T>(
+    extension: IExtensionDescription,
+    channelId: string,
+  ): vscode.DataChannel<T> {
+    checkProposedApiEnabled(extension, "dataChannels");
 
-		let channel = this._channels.get(channelId);
-		if (!channel) {
-			channel = new DataChannelImpl<T>(channelId);
-			this._channels.set(channelId, channel);
-		}
-		return channel;
-	}
+    let channel = this._channels.get(channelId);
+    if (!channel) {
+      channel = new DataChannelImpl<T>(channelId);
+      this._channels.set(channelId, channel);
+    }
+    return channel;
+  }
 
-	$onDidReceiveData(channelId: string, data: any): void {
-		const channel = this._channels.get(channelId);
-		if (channel) {
-			channel._fireDidReceiveData(data);
-		}
-	}
+  $onDidReceiveData(channelId: string, data: any): void {
+    const channel = this._channels.get(channelId);
+    if (channel) {
+      channel._fireDidReceiveData(data);
+    }
+  }
 }
 
 class DataChannelImpl<T> extends Disposable implements vscode.DataChannel<T> {
-	private readonly _onDidReceiveData = new Emitter<vscode.DataChannelEvent<T>>();
-	public readonly onDidReceiveData: Event<vscode.DataChannelEvent<T>> = this._onDidReceiveData.event;
+  private readonly _onDidReceiveData = new Emitter<
+    vscode.DataChannelEvent<T>
+  >();
+  public readonly onDidReceiveData: Event<vscode.DataChannelEvent<T>> =
+    this._onDidReceiveData.event;
 
-	constructor(private readonly channelId: string) {
-		super();
-		this._register(this._onDidReceiveData);
-	}
+  constructor(private readonly channelId: string) {
+    super();
+    this._register(this._onDidReceiveData);
+  }
 
-	_fireDidReceiveData(data: T): void {
-		this._onDidReceiveData.fire({ data });
-	}
+  _fireDidReceiveData(data: T): void {
+    this._onDidReceiveData.fire({ data });
+  }
 
-	override toString(): string {
-		return `DataChannel(${this.channelId})`;
-	}
+  override toString(): string {
+    return `DataChannel(${this.channelId})`;
+  }
 }

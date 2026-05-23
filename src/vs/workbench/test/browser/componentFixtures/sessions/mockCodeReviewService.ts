@@ -15,27 +15,33 @@ import {
 } from "../../../../../sessions/contrib/codeReview/browser/codeReviewService.js";
 
 export function createMockCodeReviewService(): ICodeReviewService {
-	return new class extends mock<ICodeReviewService>() {
-		private readonly _reviewState = observableValue<ICodeReviewState>("fixture.reviewState", { kind: CodeReviewStateKind.Idle });
-		private readonly _prReviewState = observableValue<IPRReviewState>("fixture.prReviewState", { kind: PRReviewStateKind.None });
+  return new (class extends mock<ICodeReviewService>() {
+    private readonly _reviewState = observableValue<ICodeReviewState>(
+      "fixture.reviewState",
+      { kind: CodeReviewStateKind.Idle },
+    );
+    private readonly _prReviewState = observableValue<IPRReviewState>(
+      "fixture.prReviewState",
+      { kind: PRReviewStateKind.None },
+    );
 
-		override getReviewState() {
-			return this._reviewState;
-		}
+    override getReviewState() {
+      return this._reviewState;
+    }
 
-		override getPRReviewState() {
-			return this._prReviewState;
-		}
+    override getPRReviewState() {
+      return this._prReviewState;
+    }
 
-		override hasReview(): boolean {
-			return false;
-		}
+    override hasReview(): boolean {
+      return false;
+    }
 
-		override requestReview(): void { }
-		override removeComment(): void { }
-		override updateComment(): void { }
-		override dismissReview(): void { }
-		override async resolvePRReviewThread(): Promise<void> { }
-		override markPRReviewCommentConverted(): void { }
-	}();
+    override requestReview(): void {}
+    override removeComment(): void {}
+    override updateComment(): void {}
+    override dismissReview(): void {}
+    override async resolvePRReviewThread(): Promise<void> {}
+    override markPRReviewCommentConverted(): void {}
+  })();
 }

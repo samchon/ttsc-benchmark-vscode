@@ -31,7 +31,10 @@ suite("Parsing Enabled Api Proposals", () => {
     );
     assert.deepStrictEqual(
       ["activeComment", "commentsDraftState"],
-      parseEnabledApiProposalNames(["activeComment", "commentsDraftState@1234"]),
+      parseEnabledApiProposalNames([
+        "activeComment",
+        "commentsDraftState@1234",
+      ]),
     );
     assert.deepStrictEqual(
       ["activeComment", "commentsDraftState"],

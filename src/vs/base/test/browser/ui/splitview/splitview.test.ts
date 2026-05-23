@@ -5,72 +5,96 @@
 
 import assert from "assert";
 import { Sash, SashState } from "../../../../browser/ui/sash/sash.js";
-import { IView, LayoutPriority, Sizing, SplitView } from "../../../../browser/ui/splitview/splitview.js";
+import {
+  IView,
+  LayoutPriority,
+  Sizing,
+  SplitView,
+} from "../../../../browser/ui/splitview/splitview.js";
 import { Emitter } from "../../../../common/event.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../common/utils.js";
 
 class TestView implements IView<number> {
+  private readonly _onDidChange = new Emitter<number | undefined>();
+  readonly onDidChange = this._onDidChange.event;
 
-	private readonly _onDidChange = new Emitter<number | undefined>();
-	readonly onDidChange = this._onDidChange.event;
+  get minimumSize(): number {
+    return this._minimumSize;
+  }
+  set minimumSize(size: number) {
+    this._minimumSize = size;
+    this._onDidChange.fire(undefined);
+  }
 
-	get minimumSize(): number { return this._minimumSize; }
-	set minimumSize(size: number) { this._minimumSize = size; this._onDidChange.fire(
-    undefined,
-  ); }
+  get maximumSize(): number {
+    return this._maximumSize;
+  }
+  set maximumSize(size: number) {
+    this._maximumSize = size;
+    this._onDidChange.fire(undefined);
+  }
 
-	get maximumSize(): number { return this._maximumSize; }
-	set maximumSize(size: number) { this._maximumSize = size; this._onDidChange.fire(
-    undefined,
-  ); }
+  private _element: HTMLElement = document.createElement("div");
+  get element(): HTMLElement {
+    this._onDidGetElement.fire();
+    return this._element;
+  }
 
-	private _element: HTMLElement = document.createElement("div");
-	get element(): HTMLElement { this._onDidGetElement.fire(); return this._element; }
+  private readonly _onDidGetElement = new Emitter<void>();
+  readonly onDidGetElement = this._onDidGetElement.event;
 
-	private readonly _onDidGetElement = new Emitter<void>();
-	readonly onDidGetElement = this._onDidGetElement.event;
+  private _size = 0;
+  get size(): number {
+    return this._size;
+  }
+  private _orthogonalSize: number | undefined = 0;
+  get orthogonalSize(): number | undefined {
+    return this._orthogonalSize;
+  }
+  private readonly _onDidLayout = new Emitter<{
+    size: number;
+    orthogonalSize: number | undefined;
+  }>();
+  readonly onDidLayout = this._onDidLayout.event;
 
-	private _size = 0;
-	get size(): number { return this._size; }
-	private _orthogonalSize: number | undefined = 0;
-	get orthogonalSize(): number | undefined { return this._orthogonalSize; }
-	private readonly _onDidLayout = new Emitter<{ size: number; orthogonalSize: number | undefined }>();
-	readonly onDidLayout = this._onDidLayout.event;
+  private readonly _onDidFocus = new Emitter<void>();
+  readonly onDidFocus = this._onDidFocus.event;
 
-	private readonly _onDidFocus = new Emitter<void>();
-	readonly onDidFocus = this._onDidFocus.event;
-
-	constructor(
-		private _minimumSize: number,
-		private _maximumSize: number,
-		readonly priority: LayoutPriority = LayoutPriority.Normal,
-	) {
-		assert(
+  constructor(
+    private _minimumSize: number,
+    private _maximumSize: number,
+    readonly priority: LayoutPriority = LayoutPriority.Normal,
+  ) {
+    assert(
       _minimumSize <= _maximumSize,
       "splitview view minimum size must be <= maximum size",
     );
-	}
+  }
 
-	layout(size: number, _offset: number, orthogonalSize: number | undefined): void {
-		this._size = size;
-		this._orthogonalSize = orthogonalSize;
-		this._onDidLayout.fire({ size, orthogonalSize });
-	}
+  layout(
+    size: number,
+    _offset: number,
+    orthogonalSize: number | undefined,
+  ): void {
+    this._size = size;
+    this._orthogonalSize = orthogonalSize;
+    this._onDidLayout.fire({ size, orthogonalSize });
+  }
 
-	focus(): void {
-		this._onDidFocus.fire();
-	}
+  focus(): void {
+    this._onDidFocus.fire();
+  }
 
-	dispose(): void {
-		this._onDidChange.dispose();
-		this._onDidGetElement.dispose();
-		this._onDidLayout.dispose();
-		this._onDidFocus.dispose();
-	}
+  dispose(): void {
+    this._onDidChange.dispose();
+    this._onDidGetElement.dispose();
+    this._onDidLayout.dispose();
+    this._onDidFocus.dispose();
+  }
 }
 
 function getSashes(splitview: SplitView): Sash[] {
-	return splitview.sashItems.map((i: any) => i.sash) as Sash[];
+  return splitview.sashItems.map((i: any) => i.sash) as Sash[];
 }
 
 suite("Splitview", () => {
@@ -104,34 +128,50 @@ suite("Splitview", () => {
     splitview.addView(view2, 20);
     splitview.addView(view3, 20);
 
-    let viewQuery = container.querySelectorAll(".monaco-split-view2 > .monaco-scrollable-element > .split-view-container > .split-view-view");
+    let viewQuery = container.querySelectorAll(
+      ".monaco-split-view2 > .monaco-scrollable-element > .split-view-container > .split-view-view",
+    );
     assert.strictEqual(viewQuery.length, 3, "split view should have 3 views");
 
-    let sashQuery = container.querySelectorAll(".monaco-split-view2 > .sash-container > .monaco-sash");
+    let sashQuery = container.querySelectorAll(
+      ".monaco-split-view2 > .sash-container > .monaco-sash",
+    );
     assert.strictEqual(sashQuery.length, 2, "split view should have 2 sashes");
 
     splitview.removeView(2);
 
-    viewQuery = container.querySelectorAll(".monaco-split-view2 > .monaco-scrollable-element > .split-view-container > .split-view-view");
+    viewQuery = container.querySelectorAll(
+      ".monaco-split-view2 > .monaco-scrollable-element > .split-view-container > .split-view-view",
+    );
     assert.strictEqual(viewQuery.length, 2, "split view should have 2 views");
 
-    sashQuery = container.querySelectorAll(".monaco-split-view2 > .sash-container > .monaco-sash");
+    sashQuery = container.querySelectorAll(
+      ".monaco-split-view2 > .sash-container > .monaco-sash",
+    );
     assert.strictEqual(sashQuery.length, 1, "split view should have 1 sash");
 
     splitview.removeView(0);
 
-    viewQuery = container.querySelectorAll(".monaco-split-view2 > .monaco-scrollable-element > .split-view-container > .split-view-view");
+    viewQuery = container.querySelectorAll(
+      ".monaco-split-view2 > .monaco-scrollable-element > .split-view-container > .split-view-view",
+    );
     assert.strictEqual(viewQuery.length, 1, "split view should have 1 view");
 
-    sashQuery = container.querySelectorAll(".monaco-split-view2 > .sash-container > .monaco-sash");
+    sashQuery = container.querySelectorAll(
+      ".monaco-split-view2 > .sash-container > .monaco-sash",
+    );
     assert.strictEqual(sashQuery.length, 0, "split view should have no sashes");
 
     splitview.removeView(0);
 
-    viewQuery = container.querySelectorAll(".monaco-split-view2 > .monaco-scrollable-element > .split-view-container > .split-view-view");
+    viewQuery = container.querySelectorAll(
+      ".monaco-split-view2 > .monaco-scrollable-element > .split-view-container > .split-view-view",
+    );
     assert.strictEqual(viewQuery.length, 0, "split view should have no views");
 
-    sashQuery = container.querySelectorAll(".monaco-split-view2 > .sash-container > .monaco-sash");
+    sashQuery = container.querySelectorAll(
+      ".monaco-split-view2 > .sash-container > .monaco-sash",
+    );
     assert.strictEqual(sashQuery.length, 0, "split view should have no sashes");
   });
 
@@ -140,7 +180,7 @@ suite("Splitview", () => {
     const splitview = store.add(new SplitView(container));
 
     let didLayout = false;
-    store.add(view.onDidLayout(() => didLayout = true));
+    store.add(view.onDidLayout(() => (didLayout = true)));
     store.add(view.onDidGetElement(() => undefined));
 
     splitview.addView(view, 20);
@@ -494,7 +534,9 @@ suite("Splitview", () => {
   test("disable proportional layout", () => {
     const view1 = store.add(new TestView(20, Number.POSITIVE_INFINITY));
     const view2 = store.add(new TestView(20, Number.POSITIVE_INFINITY));
-    const splitview = store.add(new SplitView(container, { proportionalLayout: false }));
+    const splitview = store.add(
+      new SplitView(container, { proportionalLayout: false }),
+    );
     splitview.layout(200);
 
     splitview.addView(view1, Sizing.Distribute);
@@ -507,9 +549,13 @@ suite("Splitview", () => {
 
   test("high layout priority", () => {
     const view1 = store.add(new TestView(20, Number.POSITIVE_INFINITY));
-    const view2 = store.add(new TestView(20, Number.POSITIVE_INFINITY, LayoutPriority.High));
+    const view2 = store.add(
+      new TestView(20, Number.POSITIVE_INFINITY, LayoutPriority.High),
+    );
     const view3 = store.add(new TestView(20, Number.POSITIVE_INFINITY));
-    const splitview = store.add(new SplitView(container, { proportionalLayout: false }));
+    const splitview = store.add(
+      new SplitView(container, { proportionalLayout: false }),
+    );
     splitview.layout(200);
 
     splitview.addView(view1, Sizing.Distribute);
@@ -533,8 +579,12 @@ suite("Splitview", () => {
   test("low layout priority", () => {
     const view1 = store.add(new TestView(20, Number.POSITIVE_INFINITY));
     const view2 = store.add(new TestView(20, Number.POSITIVE_INFINITY));
-    const view3 = store.add(new TestView(20, Number.POSITIVE_INFINITY, LayoutPriority.Low));
-    const splitview = store.add(new SplitView(container, { proportionalLayout: false }));
+    const view3 = store.add(
+      new TestView(20, Number.POSITIVE_INFINITY, LayoutPriority.Low),
+    );
+    const splitview = store.add(
+      new SplitView(container, { proportionalLayout: false }),
+    );
     splitview.layout(200);
 
     splitview.addView(view1, Sizing.Distribute);
@@ -558,8 +608,12 @@ suite("Splitview", () => {
   test("context propagates to views", () => {
     const view1 = store.add(new TestView(20, Number.POSITIVE_INFINITY));
     const view2 = store.add(new TestView(20, Number.POSITIVE_INFINITY));
-    const view3 = store.add(new TestView(20, Number.POSITIVE_INFINITY, LayoutPriority.Low));
-    const splitview = store.add(new SplitView<number>(container, { proportionalLayout: false }));
+    const view3 = store.add(
+      new TestView(20, Number.POSITIVE_INFINITY, LayoutPriority.Low),
+    );
+    const splitview = store.add(
+      new SplitView<number>(container, { proportionalLayout: false }),
+    );
     splitview.layout(200);
 
     splitview.addView(view1, Sizing.Distribute);

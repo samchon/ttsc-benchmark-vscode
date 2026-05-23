@@ -15,21 +15,22 @@ import { ContextKeyEqualsExpr } from "../../../../platform/contextkey/common/con
 import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
 import { AccessibilityVerbositySettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
 
-
 export class MergeEditorAccessibilityHelpProvider implements IAccessibleViewImplementation {
-	readonly name = "mergeEditor";
-	readonly type = AccessibleViewType.Help;
-	readonly priority = 125;
-	readonly when = ContextKeyEqualsExpr.create("isMergeEditor", true);
-	getProvider(accessor: ServicesAccessor) {
-		const codeEditorService = accessor.get(ICodeEditorService);
+  readonly name = "mergeEditor";
+  readonly type = AccessibleViewType.Help;
+  readonly priority = 125;
+  readonly when = ContextKeyEqualsExpr.create("isMergeEditor", true);
+  getProvider(accessor: ServicesAccessor) {
+    const codeEditorService = accessor.get(ICodeEditorService);
 
-		const codeEditor = codeEditorService.getActiveCodeEditor() || codeEditorService.getFocusedCodeEditor();
-		if (!codeEditor) {
-			return;
-		}
+    const codeEditor =
+      codeEditorService.getActiveCodeEditor() ||
+      codeEditorService.getFocusedCodeEditor();
+    if (!codeEditor) {
+      return;
+    }
 
-		const content = [
+    const content = [
       localize("msg1", "You are in a merge editor."),
       localize(
         "msg2",
@@ -55,12 +56,12 @@ export class MergeEditorAccessibilityHelpProvider implements IAccessibleViewImpl
       ),
     ];
 
-		return new AccessibleContentProvider(
+    return new AccessibleContentProvider(
       AccessibleViewProviderId.MergeEditor,
       { type: AccessibleViewType.Help },
       () => content.join("\n"),
       () => codeEditor.focus(),
       AccessibilityVerbositySettingId.MergeEditor,
     );
-	}
+  }
 }

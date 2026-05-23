@@ -7,7 +7,6 @@ import assert from "assert";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
 import { prepareCommand } from "../../node/terminals.js";
 
-
 suite("Debug - prepareCommand", () => {
   ensureNoDisposablesAreLeakedInTestSuite();
 
@@ -38,7 +37,11 @@ suite("Debug - prepareCommand", () => {
 
   test("bash - do not escape > and <", () => {
     assert.strictEqual(
-      prepareCommand("bash", ["arg1", ">", "> hello.txt", "<", "<input.in"], false).trim(),
+      prepareCommand(
+        "bash",
+        ["arg1", ">", "> hello.txt", "<", "<input.in"],
+        false,
+      ).trim(),
       "arg1 > \\>\\ hello.txt < \\<input.in",
     );
   });
@@ -49,7 +52,11 @@ suite("Debug - prepareCommand", () => {
       '"^^^!^< "',
     );
     assert.strictEqual(
-      prepareCommand("cmd.exe", ["hello", "world", "--flag=true"], false).trim(),
+      prepareCommand(
+        "cmd.exe",
+        ["hello", "world", "--flag=true"],
+        false,
+      ).trim(),
       "hello world --flag=true",
     );
     assert.strictEqual(
@@ -80,7 +87,11 @@ suite("Debug - prepareCommand", () => {
 
   test("cmd - do not escape > and <", () => {
     assert.strictEqual(
-      prepareCommand("cmd.exe", ["arg1", ">", "> hello.txt", "<", "<input.in"], false).trim(),
+      prepareCommand(
+        "cmd.exe",
+        ["arg1", ">", "> hello.txt", "<", "<input.in"],
+        false,
+      ).trim(),
       'arg1 > "^> hello.txt" < ^<input.in',
     );
   });
@@ -91,7 +102,11 @@ suite("Debug - prepareCommand", () => {
       `& '!< '`,
     );
     assert.strictEqual(
-      prepareCommand("powershell", ["hello", "world", "--flag=true"], false).trim(),
+      prepareCommand(
+        "powershell",
+        ["hello", "world", "--flag=true"],
+        false,
+      ).trim(),
       `& 'hello' 'world' '--flag=true'`,
     );
     assert.strictEqual(
@@ -102,11 +117,21 @@ suite("Debug - prepareCommand", () => {
       prepareCommand("powershell", ['"A>0"'], false).trim(),
       `& '"A>0"'`,
     );
-    assert.strictEqual(prepareCommand("powershell", [""], false).trim(), `& ''`);
-
-    assert.strictEqual(prepareCommand("powershell", ["!< "], true).trim(), "!<");
     assert.strictEqual(
-      prepareCommand("powershell", ["hello", "world", "--flag=true"], true).trim(),
+      prepareCommand("powershell", [""], false).trim(),
+      `& ''`,
+    );
+
+    assert.strictEqual(
+      prepareCommand("powershell", ["!< "], true).trim(),
+      "!<",
+    );
+    assert.strictEqual(
+      prepareCommand(
+        "powershell",
+        ["hello", "world", "--flag=true"],
+        true,
+      ).trim(),
       "hello world --flag=true",
     );
     assert.strictEqual(
@@ -122,7 +147,11 @@ suite("Debug - prepareCommand", () => {
 
   test("powershell - do not escape > and <", () => {
     assert.strictEqual(
-      prepareCommand("powershell", ["arg1", ">", "> hello.txt", "<", "<input.in"], false).trim(),
+      prepareCommand(
+        "powershell",
+        ["arg1", ">", "> hello.txt", "<", "<input.in"],
+        false,
+      ).trim(),
       `& 'arg1' > '> hello.txt' < '<input.in'`,
     );
   });

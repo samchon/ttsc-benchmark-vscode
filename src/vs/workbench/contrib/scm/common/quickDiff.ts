@@ -26,9 +26,8 @@ import {
   lighten,
 } from "../../../../platform/theme/common/colorRegistry.js";
 
-export const IQuickDiffService = createDecorator<IQuickDiffService>(
-  "quickDiff",
-);
+export const IQuickDiffService =
+  createDecorator<IQuickDiffService>("quickDiff");
 
 const editorGutterModifiedBackground = registerColor(
   "editorGutter.modifiedBackground",
@@ -177,7 +176,10 @@ export const editorGutterItemBackground = registerColor(
   "editorGutter.itemBackground",
   {
     dark: opaque(listInactiveSelectionBackground, editorBackground),
-    light: darken(opaque(listInactiveSelectionBackground, editorBackground), .05),
+    light: darken(
+      opaque(listInactiveSelectionBackground, editorBackground),
+      0.05,
+    ),
     hcDark: Color.white,
     hcLight: Color.black,
   },
@@ -190,125 +192,146 @@ export const editorGutterItemBackground = registerColor(
 type QuickDiffProviderKind = "primary" | "secondary" | "contributed";
 
 export interface QuickDiffProvider {
-	readonly id: string;
-	readonly label: string;
-	readonly rootUri: URI | undefined;
-	readonly selector?: LanguageSelector;
-	readonly kind: QuickDiffProviderKind;
-	getOriginalResource(uri: URI): Promise<URI | null>;
+  readonly id: string;
+  readonly label: string;
+  readonly rootUri: URI | undefined;
+  readonly selector?: LanguageSelector;
+  readonly kind: QuickDiffProviderKind;
+  getOriginalResource(uri: URI): Promise<URI | null>;
 }
 
 export interface QuickDiff {
-	readonly id: string;
-	readonly label: string;
-	readonly originalResource: URI;
-	readonly kind: QuickDiffProviderKind;
+  readonly id: string;
+  readonly label: string;
+  readonly originalResource: URI;
+  readonly kind: QuickDiffProviderKind;
 }
 
 export interface QuickDiffChange {
-	readonly providerId: string;
-	readonly original: URI;
-	readonly modified: URI;
-	readonly change: IChange;
-	readonly change2: LineRangeMapping;
+  readonly providerId: string;
+  readonly original: URI;
+  readonly modified: URI;
+  readonly change: IChange;
+  readonly change2: LineRangeMapping;
 }
 
 export interface QuickDiffResult {
-	readonly providerId: string;
-	readonly providerKind: QuickDiffProviderKind;
-	readonly original: URI;
-	readonly modified: URI;
-	readonly changes: IChange[];
-	readonly changes2: LineRangeMapping[];
+  readonly providerId: string;
+  readonly providerKind: QuickDiffProviderKind;
+  readonly original: URI;
+  readonly modified: URI;
+  readonly changes: IChange[];
+  readonly changes2: LineRangeMapping[];
 }
 
 export interface IQuickDiffService {
-	readonly _serviceBrand: undefined;
+  readonly _serviceBrand: undefined;
 
-	readonly onDidChangeQuickDiffProviders: Event<void>;
-	readonly providers: readonly QuickDiffProvider[];
-	addQuickDiffProvider(quickDiff: QuickDiffProvider): IDisposable;
-	getQuickDiffs(uri: URI, language?: string, isSynchronized?: boolean): Promise<QuickDiff[]>;
-	toggleQuickDiffProviderVisibility(id: string): void;
-	isQuickDiffProviderVisible(id: string): boolean;
+  readonly onDidChangeQuickDiffProviders: Event<void>;
+  readonly providers: readonly QuickDiffProvider[];
+  addQuickDiffProvider(quickDiff: QuickDiffProvider): IDisposable;
+  getQuickDiffs(
+    uri: URI,
+    language?: string,
+    isSynchronized?: boolean,
+  ): Promise<QuickDiff[]>;
+  toggleQuickDiffProviderVisibility(id: string): void;
+  isQuickDiffProviderVisible(id: string): boolean;
 }
 
 export enum ChangeType {
-	Modify,
-	Add,
-	Delete
+  Modify,
+  Add,
+  Delete,
 }
 
 export function getChangeType(change: IChange): ChangeType {
-	if (change.originalEndLineNumber === 0) {
-		return ChangeType.Add;
-	} else if (change.modifiedEndLineNumber === 0) {
-		return ChangeType.Delete;
-	} else {
-		return ChangeType.Modify;
-	}
+  if (change.originalEndLineNumber === 0) {
+    return ChangeType.Add;
+  } else if (change.modifiedEndLineNumber === 0) {
+    return ChangeType.Delete;
+  } else {
+    return ChangeType.Modify;
+  }
 }
 
-export function getChangeTypeColor(theme: IColorTheme, changeType: ChangeType): Color | undefined {
-	switch (changeType) {
-		case ChangeType.Modify: return theme.getColor(
-      editorGutterModifiedBackground,
-    );
-		case ChangeType.Add: return theme.getColor(editorGutterAddedBackground);
-		case ChangeType.Delete: return theme.getColor(
-      editorGutterDeletedBackground,
-    );
-	}
+export function getChangeTypeColor(
+  theme: IColorTheme,
+  changeType: ChangeType,
+): Color | undefined {
+  switch (changeType) {
+    case ChangeType.Modify:
+      return theme.getColor(editorGutterModifiedBackground);
+    case ChangeType.Add:
+      return theme.getColor(editorGutterAddedBackground);
+    case ChangeType.Delete:
+      return theme.getColor(editorGutterDeletedBackground);
+  }
 }
 
 export function compareChanges(a: IChange, b: IChange): number {
-	let result = a.modifiedStartLineNumber - b.modifiedStartLineNumber;
+  let result = a.modifiedStartLineNumber - b.modifiedStartLineNumber;
 
-	if (result !== 0) {
-		return result;
-	}
+  if (result !== 0) {
+    return result;
+  }
 
-	result = a.modifiedEndLineNumber - b.modifiedEndLineNumber;
+  result = a.modifiedEndLineNumber - b.modifiedEndLineNumber;
 
-	if (result !== 0) {
-		return result;
-	}
+  if (result !== 0) {
+    return result;
+  }
 
-	result = a.originalStartLineNumber - b.originalStartLineNumber;
+  result = a.originalStartLineNumber - b.originalStartLineNumber;
 
-	if (result !== 0) {
-		return result;
-	}
+  if (result !== 0) {
+    return result;
+  }
 
-	return a.originalEndLineNumber - b.originalEndLineNumber;
+  return a.originalEndLineNumber - b.originalEndLineNumber;
 }
 
 export function getChangeHeight(change: IChange): number {
-	const modified = change.modifiedEndLineNumber - change.modifiedStartLineNumber + 1;
-	const original = change.originalEndLineNumber - change.originalStartLineNumber + 1;
+  const modified =
+    change.modifiedEndLineNumber - change.modifiedStartLineNumber + 1;
+  const original =
+    change.originalEndLineNumber - change.originalStartLineNumber + 1;
 
-	if (change.originalEndLineNumber === 0) {
-		return modified;
-	} else if (change.modifiedEndLineNumber === 0) {
-		return original;
-	} else {
-		return modified + original;
-	}
+  if (change.originalEndLineNumber === 0) {
+    return modified;
+  } else if (change.modifiedEndLineNumber === 0) {
+    return original;
+  } else {
+    return modified + original;
+  }
 }
 
 export function getModifiedEndLineNumber(change: IChange): number {
-	if (change.modifiedEndLineNumber === 0) {
-		return change.modifiedStartLineNumber === 0 ? 1 : change.modifiedStartLineNumber;
-	} else {
-		return change.modifiedEndLineNumber;
-	}
+  if (change.modifiedEndLineNumber === 0) {
+    return change.modifiedStartLineNumber === 0
+      ? 1
+      : change.modifiedStartLineNumber;
+  } else {
+    return change.modifiedEndLineNumber;
+  }
 }
 
-export function lineIntersectsChange(lineNumber: number, change: IChange): boolean {
-	// deletion at the beginning of the file
-	if (lineNumber === 1 && change.modifiedStartLineNumber === 0 && change.modifiedEndLineNumber === 0) {
-		return true;
-	}
+export function lineIntersectsChange(
+  lineNumber: number,
+  change: IChange,
+): boolean {
+  // deletion at the beginning of the file
+  if (
+    lineNumber === 1 &&
+    change.modifiedStartLineNumber === 0 &&
+    change.modifiedEndLineNumber === 0
+  ) {
+    return true;
+  }
 
-	return lineNumber >= change.modifiedStartLineNumber && lineNumber <= (change.modifiedEndLineNumber || change.modifiedStartLineNumber);
+  return (
+    lineNumber >= change.modifiedStartLineNumber &&
+    lineNumber <=
+      (change.modifiedEndLineNumber || change.modifiedStartLineNumber)
+  );
 }

@@ -12,7 +12,10 @@ import { join } from "../../../../base/common/path.js";
 import { URI } from "../../../../base/common/uri.js";
 import { Promises, writeFileSync } from "../../../../base/node/pfs.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
-import { flakySuite, getRandomTestPath } from "../../../../base/test/node/testUtils.js";
+import {
+  flakySuite,
+  getRandomTestPath,
+} from "../../../../base/test/node/testUtils.js";
 import { IFileService } from "../../../files/common/files.js";
 import { FileService } from "../../../files/common/fileService.js";
 import { DiskFileSystemProvider } from "../../../files/node/diskFileSystemProvider.js";
@@ -33,7 +36,9 @@ flakySuite("StateService", () => {
     logService = new NullLogService();
 
     fileService = disposables.add(new FileService(logService));
-    diskFileSystemProvider = disposables.add(new DiskFileSystemProvider(logService));
+    diskFileSystemProvider = disposables.add(
+      new DiskFileSystemProvider(logService),
+    );
     disposables.add(
       fileService.registerProvider(Schemas.file, diskFileSystemProvider),
     );
@@ -51,7 +56,14 @@ flakySuite("StateService", () => {
     const storageFile = join(testDir, "storage.json");
     writeFileSync(storageFile, "");
 
-    let service = disposables.add(new FileStorage(URI.file(storageFile), SaveStrategy.DELAYED, logService, fileService));
+    let service = disposables.add(
+      new FileStorage(
+        URI.file(storageFile),
+        SaveStrategy.DELAYED,
+        logService,
+        fileService,
+      ),
+    );
     await service.init();
 
     service.setItem("some.key", "some.value");
@@ -69,7 +81,14 @@ flakySuite("StateService", () => {
 
     await service.close();
 
-    service = disposables.add(new FileStorage(URI.file(storageFile), SaveStrategy.DELAYED, logService, fileService));
+    service = disposables.add(
+      new FileStorage(
+        URI.file(storageFile),
+        SaveStrategy.DELAYED,
+        logService,
+        fileService,
+      ),
+    );
     await service.init();
 
     assert.strictEqual(service.getItem("some.other.key"), "some.other.value");
@@ -124,7 +143,14 @@ flakySuite("StateService", () => {
     const storageFile = join(testDir, "storage.json");
     writeFileSync(storageFile, "");
 
-    let service = disposables.add(new FileStorage(URI.file(storageFile), SaveStrategy.IMMEDIATE, logService, fileService));
+    let service = disposables.add(
+      new FileStorage(
+        URI.file(storageFile),
+        SaveStrategy.IMMEDIATE,
+        logService,
+        fileService,
+      ),
+    );
     await service.init();
 
     service.setItem("some.key", "some.value");
@@ -142,7 +168,14 @@ flakySuite("StateService", () => {
 
     await service.close();
 
-    service = disposables.add(new FileStorage(URI.file(storageFile), SaveStrategy.IMMEDIATE, logService, fileService));
+    service = disposables.add(
+      new FileStorage(
+        URI.file(storageFile),
+        SaveStrategy.IMMEDIATE,
+        logService,
+        fileService,
+      ),
+    );
     await service.init();
 
     assert.strictEqual(service.getItem("some.other.key"), "some.other.value");
@@ -197,7 +230,14 @@ flakySuite("StateService", () => {
     const storageFile = join(testDir, "storage.json");
     writeFileSync(storageFile, "");
 
-    let service = disposables.add(new FileStorage(URI.file(storageFile), SaveStrategy.DELAYED, logService, fileService));
+    let service = disposables.add(
+      new FileStorage(
+        URI.file(storageFile),
+        SaveStrategy.DELAYED,
+        logService,
+        fileService,
+      ),
+    );
     await service.init();
 
     service.setItem("some.key1", "some.value1");
@@ -213,7 +253,14 @@ flakySuite("StateService", () => {
 
     await service.close();
 
-    service = disposables.add(new FileStorage(URI.file(storageFile), SaveStrategy.DELAYED, logService, fileService));
+    service = disposables.add(
+      new FileStorage(
+        URI.file(storageFile),
+        SaveStrategy.DELAYED,
+        logService,
+        fileService,
+      ),
+    );
     await service.init();
 
     assert.strictEqual(service.getItem("some.key1"), "some.value1");
@@ -228,7 +275,14 @@ flakySuite("StateService", () => {
     const storageFile = join(testDir, "storage.json");
     writeFileSync(storageFile, "");
 
-    let service = disposables.add(new FileStorage(URI.file(storageFile), SaveStrategy.IMMEDIATE, logService, fileService));
+    let service = disposables.add(
+      new FileStorage(
+        URI.file(storageFile),
+        SaveStrategy.IMMEDIATE,
+        logService,
+        fileService,
+      ),
+    );
     await service.init();
 
     service.setItem("some.key1", "some.value1");
@@ -244,7 +298,14 @@ flakySuite("StateService", () => {
 
     await service.close();
 
-    service = disposables.add(new FileStorage(URI.file(storageFile), SaveStrategy.IMMEDIATE, logService, fileService));
+    service = disposables.add(
+      new FileStorage(
+        URI.file(storageFile),
+        SaveStrategy.IMMEDIATE,
+        logService,
+        fileService,
+      ),
+    );
     await service.init();
 
     assert.strictEqual(service.getItem("some.key1"), "some.value1");
@@ -259,7 +320,14 @@ flakySuite("StateService", () => {
     const storageFile = join(testDir, "storage.json");
     writeFileSync(storageFile, "");
 
-    const service = disposables.add(new FileStorage(URI.file(storageFile), SaveStrategy.DELAYED, logService, fileService));
+    const service = disposables.add(
+      new FileStorage(
+        URI.file(storageFile),
+        SaveStrategy.DELAYED,
+        logService,
+        fileService,
+      ),
+    );
 
     service.setItem("some.key1", "some.value1");
     service.setItem("some.key2", "some.value2");
@@ -286,7 +354,14 @@ flakySuite("StateService", () => {
     const storageFile = join(testDir, "storage.json");
     writeFileSync(storageFile, "");
 
-    const service = disposables.add(new FileStorage(URI.file(storageFile), SaveStrategy.DELAYED, logService, fileService));
+    const service = disposables.add(
+      new FileStorage(
+        URI.file(storageFile),
+        SaveStrategy.DELAYED,
+        logService,
+        fileService,
+      ),
+    );
 
     await service.init();
 
@@ -310,7 +385,14 @@ flakySuite("StateService", () => {
     const storageFile = join(testDir, "storage.json");
     writeFileSync(storageFile, "");
 
-    const service = disposables.add(new FileStorage(URI.file(storageFile), SaveStrategy.DELAYED, logService, fileService));
+    const service = disposables.add(
+      new FileStorage(
+        URI.file(storageFile),
+        SaveStrategy.DELAYED,
+        logService,
+        fileService,
+      ),
+    );
 
     service.setItem("some.key1", "some.value1");
     service.setItem("some.key2", "some.value2");

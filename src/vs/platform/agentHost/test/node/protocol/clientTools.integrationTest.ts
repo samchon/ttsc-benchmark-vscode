@@ -29,162 +29,180 @@ import {
 } from "./testHelpers.js";
 
 suite("Protocol WebSocket — Client Tools", function () {
+  let server: IServerHandle;
+  let client: TestProtocolClient;
 
-	let server: IServerHandle;
-	let client: TestProtocolClient;
+  suiteSetup(async function () {
+    this.timeout(15_000);
+    server = await startServer();
+  });
 
-	suiteSetup(async function () {
-		this.timeout(15_000);
-		server = await startServer();
-	});
+  suiteTeardown(function () {
+    server.process.kill();
+  });
 
-	suiteTeardown(function () {
-		server.process.kill();
-	});
+  setup(async function () {
+    this.timeout(10_000);
+    client = new TestProtocolClient(server.port);
+    await client.connect();
+  });
 
-	setup(async function () {
-		this.timeout(10_000);
-		client = new TestProtocolClient(server.port);
-		await client.connect();
-	});
+  teardown(function () {
+    client.close();
+  });
 
-	teardown(function () {
-		client.close();
-	});
+  // ---- Client tool: tool_start with toolClientId --------------------------
 
-	// ---- Client tool: tool_start with toolClientId --------------------------
+  test("client tool_start emits toolCallStart then toolCallReady (auto-confirmed)", async function () {
+    this.timeout(10_000);
 
-	test("client tool_start emits toolCallStart then toolCallReady (auto-confirmed)", async function () {
-		this.timeout(10_000);
+    const sessionUri = await createAndSubscribeSession(
+      client,
+      "test-client-tool",
+    );
+    dispatchTurnStarted(client, sessionUri, "turn-ct", "client-tool", 1);
 
-		const sessionUri = await createAndSubscribeSession(client, "test-client-tool");
-		dispatchTurnStarted(client, sessionUri, "turn-ct", "client-tool", 1);
+    // Wait for toolCallStart
+    const [toolStartNotif, toolReadyNotif] = await Promise.all([
+      client.waitForNotification((n) =>
+        isActionNotification(n, "session/toolCallStart"),
+      ),
+      client.waitForNotification((n) =>
+        isActionNotification(n, "session/toolCallReady"),
+      ),
+    ]);
+    const toolStartAction = getActionEnvelope(toolStartNotif).action as {
+      toolCallId: string;
+      toolClientId?: string;
+    };
+    assert.strictEqual(toolStartAction.toolCallId, "tc-client-1");
+    assert.strictEqual(toolStartAction.toolClientId, "test-client-tool");
 
-		// Wait for toolCallStart
-		const [toolStartNotif, toolReadyNotif] = await Promise.all([
-			client.waitForNotification(n => isActionNotification(n, "session/toolCallStart")),
-			client.waitForNotification(n => isActionNotification(n, "session/toolCallReady")),
-		]);
-		const toolStartAction = getActionEnvelope(toolStartNotif).action as {
-			toolCallId: string;
-			toolClientId?: string;
-		};
-		assert.strictEqual(toolStartAction.toolCallId, "tc-client-1");
-		assert.strictEqual(toolStartAction.toolClientId, "test-client-tool");
+    const toolReadyAction = getActionEnvelope(toolReadyNotif).action as {
+      toolCallId: string;
+      confirmed?: string;
+    };
+    assert.strictEqual(toolReadyAction.toolCallId, "tc-client-1");
+    assert.strictEqual(toolReadyAction.confirmed, "not-needed");
 
-		const toolReadyAction = getActionEnvelope(toolReadyNotif).action as {
-			toolCallId: string;
-			confirmed?: string;
-		};
-		assert.strictEqual(toolReadyAction.toolCallId, "tc-client-1");
-		assert.strictEqual(toolReadyAction.confirmed, "not-needed");
+    // Complete the client tool call
+    client.notify("dispatchAction", {
+      clientSeq: 2,
+      channel: sessionUri,
+      action: {
+        type: "session/toolCallComplete",
+        turnId: "turn-ct",
+        toolCallId: "tc-client-1",
+        result: {
+          success: true,
+          pastTenseMessage: "Ran tests",
+          content: [{ type: ToolResultContentType.Text, text: "all passed" }],
+        },
+      },
+    });
 
-		// Complete the client tool call
-		client.notify("dispatchAction", {
-			clientSeq: 2,
-			channel: sessionUri,
-			action: {
-				type: "session/toolCallComplete",
-				turnId: "turn-ct",
-				toolCallId: "tc-client-1",
-				result: {
-					success: true,
-					pastTenseMessage: "Ran tests",
-					content: [{ type: ToolResultContentType.Text, text: "all passed" }],
-				},
-			},
-		});
+    // Wait for turn completion
+    await client.waitForNotification((n) =>
+      isActionNotification(n, "session/turnComplete"),
+    );
+  });
 
-		// Wait for turn completion
-		await client.waitForNotification(
-			n => isActionNotification(n, "session/turnComplete"),
-		);
-	});
+  // ---- Client tool with permission request --------------------------------
 
-	// ---- Client tool with permission request --------------------------------
+  test("client tool with permission fires toolCallReady with confirmationTitle", async function () {
+    this.timeout(10_000);
 
-	test("client tool with permission fires toolCallReady with confirmationTitle", async function () {
-		this.timeout(10_000);
+    const sessionUri = await createAndSubscribeSession(
+      client,
+      "test-client-perm",
+    );
+    dispatchTurnStarted(
+      client,
+      sessionUri,
+      "turn-cp",
+      "client-tool-with-permission",
+      1,
+    );
 
-		const sessionUri = await createAndSubscribeSession(client, "test-client-perm");
-		dispatchTurnStarted(client, sessionUri, "turn-cp", "client-tool-with-permission", 1);
+    // Wait for toolCallStart (should have toolClientId)
+    const toolStartNotif = await client.waitForNotification((n) =>
+      isActionNotification(n, "session/toolCallStart"),
+    );
+    const toolStartAction = getActionEnvelope(toolStartNotif).action as {
+      toolCallId: string;
+      toolClientId?: string;
+    };
+    assert.strictEqual(toolStartAction.toolCallId, "tc-client-perm-1");
+    assert.strictEqual(toolStartAction.toolClientId, "test-client-tool");
 
-		// Wait for toolCallStart (should have toolClientId)
-		const toolStartNotif = await client.waitForNotification(
-			n => isActionNotification(n, "session/toolCallStart"),
-		);
-		const toolStartAction = getActionEnvelope(toolStartNotif).action as {
-			toolCallId: string;
-			toolClientId?: string;
-		};
-		assert.strictEqual(toolStartAction.toolCallId, "tc-client-perm-1");
-		assert.strictEqual(toolStartAction.toolClientId, "test-client-tool");
+    // Wait for toolCallReady with confirmationTitle (permission flow)
+    const toolReadyNotif = await client.waitForNotification((n) =>
+      isActionNotification(n, "session/toolCallReady"),
+    );
+    const toolReadyAction = getActionEnvelope(toolReadyNotif).action as {
+      toolCallId: string;
+      confirmationTitle?: string;
+      confirmed?: string;
+    };
+    assert.strictEqual(toolReadyAction.toolCallId, "tc-client-perm-1");
+    assert.strictEqual(toolReadyAction.confirmationTitle, "Allow Run Tests?");
+    // Permission flow should NOT have auto-confirmed
+    assert.strictEqual(toolReadyAction.confirmed, undefined);
 
-		// Wait for toolCallReady with confirmationTitle (permission flow)
-		const toolReadyNotif = await client.waitForNotification(
-			n => isActionNotification(n, "session/toolCallReady"),
-		);
-		const toolReadyAction = getActionEnvelope(toolReadyNotif).action as {
-			toolCallId: string;
-			confirmationTitle?: string;
-			confirmed?: string;
-		};
-		assert.strictEqual(toolReadyAction.toolCallId, "tc-client-perm-1");
-		assert.strictEqual(toolReadyAction.confirmationTitle, "Allow Run Tests?");
-		// Permission flow should NOT have auto-confirmed
-		assert.strictEqual(toolReadyAction.confirmed, undefined);
+    // Approve the permission
+    client.notify("dispatchAction", {
+      clientSeq: 2,
+      channel: sessionUri,
+      action: {
+        type: "session/toolCallConfirmed",
+        turnId: "turn-cp",
+        toolCallId: "tc-client-perm-1",
+        approved: true,
+      },
+    });
 
-		// Approve the permission
-		client.notify("dispatchAction", {
-			clientSeq: 2,
-			channel: sessionUri,
-			action: {
-				type: "session/toolCallConfirmed",
-				turnId: "turn-cp",
-				toolCallId: "tc-client-perm-1",
-				approved: true,
-			},
-		});
+    // Wait for turn completion
+    await client.waitForNotification((n) =>
+      isActionNotification(n, "session/turnComplete"),
+    );
+  });
 
-		// Wait for turn completion
-		await client.waitForNotification(
-			n => isActionNotification(n, "session/turnComplete"),
-		);
-	});
+  // ---- tool_ready auto-confirm (non-permission client tools) ---------------
 
-	// ---- tool_ready auto-confirm (non-permission client tools) ---------------
+  test("tool_ready without confirmationTitle auto-confirms with NotNeeded", async function () {
+    this.timeout(10_000);
 
-	test("tool_ready without confirmationTitle auto-confirms with NotNeeded", async function () {
-		this.timeout(10_000);
+    const sessionUri = await createAndSubscribeSession(
+      client,
+      "test-ready-auto",
+    );
+    dispatchTurnStarted(client, sessionUri, "turn-ra", "client-tool", 1);
 
-		const sessionUri = await createAndSubscribeSession(client, "test-ready-auto");
-		dispatchTurnStarted(client, sessionUri, "turn-ra", "client-tool", 1);
+    // Wait for toolCallStart
+    await client.waitForNotification((n) =>
+      isActionNotification(n, "session/toolCallStart"),
+    );
 
-		// Wait for toolCallStart
-		await client.waitForNotification(
-			n => isActionNotification(n, "session/toolCallStart"),
-		);
+    // Dispatch a synthetic tool_ready without confirmationTitle via
+    // completing the tool — the server-side reducer will process the
+    // tool_ready that was generated by the event mapper.
+    client.notify("dispatchAction", {
+      clientSeq: 2,
+      channel: sessionUri,
+      action: {
+        type: "session/toolCallComplete",
+        turnId: "turn-ra",
+        toolCallId: "tc-client-1",
+        result: {
+          success: true,
+          pastTenseMessage: "Done",
+          content: [{ type: ToolResultContentType.Text, text: "ok" }],
+        },
+      },
+    });
 
-		// Dispatch a synthetic tool_ready without confirmationTitle via
-		// completing the tool — the server-side reducer will process the
-		// tool_ready that was generated by the event mapper.
-		client.notify("dispatchAction", {
-			clientSeq: 2,
-			channel: sessionUri,
-			action: {
-				type: "session/toolCallComplete",
-				turnId: "turn-ra",
-				toolCallId: "tc-client-1",
-				result: {
-					success: true,
-					pastTenseMessage: "Done",
-					content: [{ type: ToolResultContentType.Text, text: "ok" }],
-				},
-			},
-		});
-
-		await client.waitForNotification(
-			n => isActionNotification(n, "session/turnComplete"),
-		);
-	});
+    await client.waitForNotification((n) =>
+      isActionNotification(n, "session/turnComplete"),
+    );
+  });
 });

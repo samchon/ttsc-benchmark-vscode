@@ -25,7 +25,9 @@ suite("LinkedText", () => {
       ],
     );
     assert.deepStrictEqual(
-      parseLinkedText('Some message with [link text](http://link.href "and a title").').nodes,
+      parseLinkedText(
+        'Some message with [link text](http://link.href "and a title").',
+      ).nodes,
       [
         "Some message with ",
         { label: "link text", href: "http://link.href", title: "and a title" },
@@ -33,7 +35,9 @@ suite("LinkedText", () => {
       ],
     );
     assert.deepStrictEqual(
-      parseLinkedText("Some message with [link text](http://link.href 'and a title').").nodes,
+      parseLinkedText(
+        "Some message with [link text](http://link.href 'and a title').",
+      ).nodes,
       [
         "Some message with ",
         { label: "link text", href: "http://link.href", title: "and a title" },
@@ -41,7 +45,9 @@ suite("LinkedText", () => {
       ],
     );
     assert.deepStrictEqual(
-      parseLinkedText("Some message with [link text](http://link.href \"and a 'title'\").").nodes,
+      parseLinkedText(
+        "Some message with [link text](http://link.href \"and a 'title'\").",
+      ).nodes,
       [
         "Some message with ",
         {
@@ -53,10 +59,16 @@ suite("LinkedText", () => {
       ],
     );
     assert.deepStrictEqual(
-      parseLinkedText("Some message with [link text](http://link.href 'and a \"title\"').").nodes,
+      parseLinkedText(
+        "Some message with [link text](http://link.href 'and a \"title\"').",
+      ).nodes,
       [
         "Some message with ",
-        { label: "link text", href: "http://link.href", title: 'and a "title"' },
+        {
+          label: "link text",
+          href: "http://link.href",
+          title: 'and a "title"',
+        },
         ".",
       ],
     );
@@ -65,7 +77,8 @@ suite("LinkedText", () => {
       ["Some message with [link text](random stuff)."],
     );
     assert.deepStrictEqual(
-      parseLinkedText("Some message with [https link](https://link.href).").nodes,
+      parseLinkedText("Some message with [https link](https://link.href).")
+        .nodes,
       [
         "Some message with ",
         { label: "https link", href: "https://link.href" },
@@ -89,7 +102,9 @@ suite("LinkedText", () => {
       ["Some message with [a command](command:)."],
     );
     assert.deepStrictEqual(
-      parseLinkedText('link [one](command:foo "nice") and link [two](http://foo)...').nodes,
+      parseLinkedText(
+        'link [one](command:foo "nice") and link [two](http://foo)...',
+      ).nodes,
       [
         "link ",
         { label: "one", href: "command:foo", title: "nice" },
@@ -99,7 +114,9 @@ suite("LinkedText", () => {
       ],
     );
     assert.deepStrictEqual(
-      parseLinkedText('link\n[one](command:foo "nice")\nand link [two](http://foo)...').nodes,
+      parseLinkedText(
+        'link\n[one](command:foo "nice")\nand link [two](http://foo)...',
+      ).nodes,
       [
         "link\n",
         { label: "one", href: "command:foo", title: "nice" },
@@ -112,7 +129,9 @@ suite("LinkedText", () => {
 
   test("Should match non-greedily", () => {
     assert.deepStrictEqual(
-      parseLinkedText('a [link text 1](http://link.href "title1") b [link text 2](http://link.href "title2") c').nodes,
+      parseLinkedText(
+        'a [link text 1](http://link.href "title1") b [link text 2](http://link.href "title2") c',
+      ).nodes,
       [
         "a ",
         { label: "link text 1", href: "http://link.href", title: "title1" },

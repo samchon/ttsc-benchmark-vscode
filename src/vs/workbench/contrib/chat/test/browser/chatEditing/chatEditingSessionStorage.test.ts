@@ -19,81 +19,137 @@ import {
   StoredSessionState,
 } from "../../../browser/chatEditing/chatEditingSessionStorage.js";
 import { ChatEditingSnapshotTextModelContentProvider } from "../../../browser/chatEditing/chatEditingTextModelContentProviders.js";
-import { ISnapshotEntry, ModifiedFileEntryState } from "../../../common/editing/chatEditingService.js";
+import {
+  ISnapshotEntry,
+  ModifiedFileEntryState,
+} from "../../../common/editing/chatEditingService.js";
 import { hasKey } from "../../../../../../base/common/types.js";
 
 suite("ChatEditingSessionStorage", () => {
-	const ds = ensureNoDisposablesAreLeakedInTestSuite();
-	const sessionResource = URI.parse("chat://test-session");
-	let fs: FileService;
-	let storage: TestChatEditingSessionStorage;
+  const ds = ensureNoDisposablesAreLeakedInTestSuite();
+  const sessionResource = URI.parse("chat://test-session");
+  let fs: FileService;
+  let storage: TestChatEditingSessionStorage;
 
-	class TestChatEditingSessionStorage extends ChatEditingSessionStorage {
-		public get storageLocation() {
-			return super._getStorageLocation();
-		}
-	}
+  class TestChatEditingSessionStorage extends ChatEditingSessionStorage {
+    public get storageLocation() {
+      return super._getStorageLocation();
+    }
+  }
 
-	setup(() => {
-		fs = ds.add(new FileService(new NullLogService()));
-		ds.add(fs.registerProvider(TestEnvironmentService.workspaceStorageHome.scheme, ds.add(new InMemoryFileSystemProvider())));
+  setup(() => {
+    fs = ds.add(new FileService(new NullLogService()));
+    ds.add(
+      fs.registerProvider(
+        TestEnvironmentService.workspaceStorageHome.scheme,
+        ds.add(new InMemoryFileSystemProvider()),
+      ),
+    );
 
-		storage = new TestChatEditingSessionStorage(
-			sessionResource,
-			fs,
-			TestEnvironmentService,
-			new NullLogService(),
-			// eslint-disable-next-line local/code-no-any-casts
-			{ getWorkspace: () => ({ id: "workspaceId" }) } as any,
-		);
-	});
+    storage = new TestChatEditingSessionStorage(
+      sessionResource,
+      fs,
+      TestEnvironmentService,
+      new NullLogService(),
+      // eslint-disable-next-line local/code-no-any-casts
+      { getWorkspace: () => ({ id: "workspaceId" }) } as any,
+    );
+  });
 
-	function makeStop(requestId: string | undefined, before: string, after: string): IChatEditingSessionStop {
-		const stopId = generateUuid();
-		const resource = URI.file("/foo.js");
-		return {
-			stopId,
-			entries: new ResourceMap([
-				[resource, { resource, languageId: "javascript", snapshotUri: ChatEditingSnapshotTextModelContentProvider.getSnapshotFileURI(sessionResource, requestId, stopId, resource.path), original: `contents${before}}`, current: `contents${after}`, state: ModifiedFileEntryState.Modified, telemetryInfo: { agentId: "agentId", command: "cmd", requestId: generateUuid(), result: undefined, sessionResource: sessionResource, modelId: undefined, modeId: undefined, applyCodeBlockSuggestionId: undefined, feature: undefined } } satisfies ISnapshotEntry],
-			]),
-		};
-	}
+  function makeStop(
+    requestId: string | undefined,
+    before: string,
+    after: string,
+  ): IChatEditingSessionStop {
+    const stopId = generateUuid();
+    const resource = URI.file("/foo.js");
+    return {
+      stopId,
+      entries: new ResourceMap([
+        [
+          resource,
+          {
+            resource,
+            languageId: "javascript",
+            snapshotUri:
+              ChatEditingSnapshotTextModelContentProvider.getSnapshotFileURI(
+                sessionResource,
+                requestId,
+                stopId,
+                resource.path,
+              ),
+            original: `contents${before}}`,
+            current: `contents${after}`,
+            state: ModifiedFileEntryState.Modified,
+            telemetryInfo: {
+              agentId: "agentId",
+              command: "cmd",
+              requestId: generateUuid(),
+              result: undefined,
+              sessionResource,
+              modelId: undefined,
+              modeId: undefined,
+              applyCodeBlockSuggestionId: undefined,
+              feature: undefined,
+            },
+          } satisfies ISnapshotEntry,
+        ],
+      ]),
+    };
+  }
 
-	function generateState(): StoredSessionState {
-		const initialFileContents = new ResourceMap<string>();
-		for (let i = 0; i < 10; i++) { initialFileContents.set(URI.file(`/foo${i}.js`), `fileContents${Math.floor(i / 2)}`); }
+  function generateState(): StoredSessionState {
+    const initialFileContents = new ResourceMap<string>();
+    for (let i = 0; i < 10; i++) {
+      initialFileContents.set(
+        URI.file(`/foo${i}.js`),
+        `fileContents${Math.floor(i / 2)}`,
+      );
+    }
 
-		return {
-			initialFileContents,
-			recentSnapshot: makeStop(undefined, "d", "e"),
-			timeline: undefined,
-		};
-	}
+    return {
+      initialFileContents,
+      recentSnapshot: makeStop(undefined, "d", "e"),
+      timeline: undefined,
+    };
+  }
 
-	test("state is empty initially", async () => {
-		const s = await storage.restoreState();
-		assert.strictEqual(s, undefined);
-	});
+  test("state is empty initially", async () => {
+    const s = await storage.restoreState();
+    assert.strictEqual(s, undefined);
+  });
 
-	test("round trips state", async () => {
-		const original = generateState();
-		await storage.storeState(original);
+  test("round trips state", async () => {
+    const original = generateState();
+    await storage.storeState(original);
 
-		const changer = (x: any) => {
-			if (typeof x === "object" && x && hasKey(x, { isDeleted: true }) && x.isDeleted === undefined) {
-				delete x.isDeleted;
-			}
-			return URI.isUri(x) ? x.toString() : x instanceof Map ? cloneAndChange([...x.values()], changer) : undefined;
-		};
+    const changer = (x: any) => {
+      if (
+        typeof x === "object" &&
+        x &&
+        hasKey(x, { isDeleted: true }) &&
+        x.isDeleted === undefined
+      ) {
+        delete x.isDeleted;
+      }
+      return URI.isUri(x)
+        ? x.toString()
+        : x instanceof Map
+          ? cloneAndChange([...x.values()], changer)
+          : undefined;
+    };
 
-		const restored = await storage.restoreState();
-		assert.deepStrictEqual(cloneAndChange(restored, changer), cloneAndChange(original, changer));
-	});
+    const restored = await storage.restoreState();
+    assert.deepStrictEqual(
+      cloneAndChange(restored, changer),
+      cloneAndChange(original, changer),
+    );
+  });
 
-	test("clears state", async () => {
-		await storage.storeState(generateState());
-		await storage.clearState();
-		const s = await storage.restoreState();
-		assert.strictEqual(s, undefined);
-	});
+  test("clears state", async () => {
+    await storage.storeState(generateState());
+    await storage.clearState();
+    const s = await storage.restoreState();
+    assert.strictEqual(s, undefined);
+  });
 });

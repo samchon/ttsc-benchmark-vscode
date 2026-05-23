@@ -10,7 +10,12 @@ import { DisposableStore } from "../../../../../base/common/lifecycle.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
 import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
 import { WatchExpressionsRenderer } from "../../browser/watchExpressionsView.js";
-import { Scope, StackFrame, Thread, Variable } from "../../common/debugModel.js";
+import {
+  Scope,
+  StackFrame,
+  Thread,
+  Variable,
+} from "../../common/debugModel.js";
 import { MockDebugService, MockSession } from "../common/mockDebug.js";
 import { workbenchInstantiationService } from "../../../../test/browser/workbenchTestServices.js";
 import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
@@ -21,16 +26,20 @@ import { TestConfigurationService } from "../../../../../platform/configuration/
 import { DebugExpressionRenderer } from "../../browser/debugExpressionRenderer.js";
 const $ = dom.$;
 
-function assertWatchVariable(disposables: Pick<DisposableStore, "add">, watchExpressionsRenderer: WatchExpressionsRenderer, displayType: boolean) {
-	const session = new MockSession();
-	const thread = new Thread(session, "mockthread", 1);
-	const range = {
+function assertWatchVariable(
+  disposables: Pick<DisposableStore, "add">,
+  watchExpressionsRenderer: WatchExpressionsRenderer,
+  displayType: boolean,
+) {
+  const session = new MockSession();
+  const thread = new Thread(session, "mockthread", 1);
+  const range = {
     startLineNumber: 1,
     startColumn: 1,
     endLineNumber: undefined!,
     endColumn: undefined!,
   };
-	const stackFrame = new StackFrame(
+  const stackFrame = new StackFrame(
     thread,
     1,
     null!,
@@ -40,9 +49,22 @@ function assertWatchVariable(disposables: Pick<DisposableStore, "add">, watchExp
     0,
     true,
   );
-	const scope = new Scope(stackFrame, 1, "local", 1, false, 10, 10);
-	const node = {
-    element: new Variable(session, 1, scope, 2, "foo", "bar.foo", undefined, 0, 0, undefined, {}, "string"),
+  const scope = new Scope(stackFrame, 1, "local", 1, false, 10, 10);
+  const node = {
+    element: new Variable(
+      session,
+      1,
+      scope,
+      2,
+      "foo",
+      "bar.foo",
+      undefined,
+      0,
+      0,
+      undefined,
+      {},
+      "string",
+    ),
     depth: 0,
     visibleChildrenCount: 1,
     visibleChildIndex: -1,
@@ -52,17 +74,17 @@ function assertWatchVariable(disposables: Pick<DisposableStore, "add">, watchExp
     filterData: undefined,
     children: [],
   };
-	const expression = $(".");
-	const name = $(".");
-	const type = $(".");
-	const value = $(".");
-	const label = disposables.add(new HighlightedLabel(name));
-	const lazyButton = $(".");
-	const inputBoxContainer = $(".");
-	const elementDisposable = disposables.add(new DisposableStore());
-	const templateDisposable = disposables.add(new DisposableStore());
-	const currentElement = undefined;
-	const data = {
+  const expression = $(".");
+  const name = $(".");
+  const type = $(".");
+  const value = $(".");
+  const label = disposables.add(new HighlightedLabel(name));
+  const lazyButton = $(".");
+  const inputBoxContainer = $(".");
+  const elementDisposable = disposables.add(new DisposableStore());
+  const templateDisposable = disposables.add(new DisposableStore());
+  const currentElement = undefined;
+  const data = {
     expression,
     name,
     type,
@@ -74,18 +96,18 @@ function assertWatchVariable(disposables: Pick<DisposableStore, "add">, watchExp
     templateDisposable,
     currentElement,
   };
-	watchExpressionsRenderer.renderElement(node, 0, data);
-	assert.strictEqual(value.textContent, "");
-	assert.strictEqual(
+  watchExpressionsRenderer.renderElement(node, 0, data);
+  assert.strictEqual(value.textContent, "");
+  assert.strictEqual(
     label.element.textContent,
     displayType ? "foo: " : "foo =",
   );
 
-	node.element.value = "xpto";
-	watchExpressionsRenderer.renderElement(node, 0, data);
-	assert.strictEqual(value.textContent, "xpto");
-	assert.strictEqual(type.textContent, displayType ? "string =" : "");
-	assert.strictEqual(
+  node.element.value = "xpto";
+  watchExpressionsRenderer.renderElement(node, 0, data);
+  assert.strictEqual(value.textContent, "xpto");
+  assert.strictEqual(type.textContent, displayType ? "string =" : "");
+  assert.strictEqual(
     label.element.textContent,
     displayType ? "foo: " : "foo =",
   );
@@ -99,13 +121,24 @@ suite("Debug - Watch Debug View", () => {
   let expressionRenderer: DebugExpressionRenderer;
 
   setup(() => {
-    instantiationService = workbenchInstantiationService(undefined, disposables);
-    configurationService = instantiationService.createInstance(TestConfigurationService);
+    instantiationService = workbenchInstantiationService(
+      undefined,
+      disposables,
+    );
+    configurationService = instantiationService.createInstance(
+      TestConfigurationService,
+    );
     instantiationService.stub(IConfigurationService, configurationService);
-    expressionRenderer = instantiationService.createInstance(DebugExpressionRenderer);
+    expressionRenderer = instantiationService.createInstance(
+      DebugExpressionRenderer,
+    );
     const debugService = new MockDebugService();
     instantiationService.stub(IHoverService, NullHoverService);
-    debugService.getViewModel = () => <IViewModel>{ focusedStackFrame: undefined, getSelectedExpression: () => undefined };
+    debugService.getViewModel = () =>
+      <IViewModel>{
+        focusedStackFrame: undefined,
+        getSelectedExpression: () => undefined,
+      };
     debugService.getViewModel().getSelectedExpression = () => undefined;
     instantiationService.stub(IDebugService, debugService);
   });
@@ -115,7 +148,10 @@ suite("Debug - Watch Debug View", () => {
       showVariableTypes: true,
     });
     instantiationService.stub(IConfigurationService, configurationService);
-    watchExpressionsRenderer = instantiationService.createInstance(WatchExpressionsRenderer, expressionRenderer);
+    watchExpressionsRenderer = instantiationService.createInstance(
+      WatchExpressionsRenderer,
+      expressionRenderer,
+    );
     assertWatchVariable(disposables, watchExpressionsRenderer, true);
   });
 
@@ -124,7 +160,10 @@ suite("Debug - Watch Debug View", () => {
       showVariableTypes: false,
     });
     instantiationService.stub(IConfigurationService, configurationService);
-    watchExpressionsRenderer = instantiationService.createInstance(WatchExpressionsRenderer, expressionRenderer);
+    watchExpressionsRenderer = instantiationService.createInstance(
+      WatchExpressionsRenderer,
+      expressionRenderer,
+    );
     assertWatchVariable(disposables, watchExpressionsRenderer, false);
   });
 });

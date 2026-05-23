@@ -17,12 +17,22 @@ import {
   FileChangeType,
   IFileService,
 } from "../../../../platform/files/common/files.js";
-import { ContextKeyExpr, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import {
+  ContextKeyExpr,
+  RawContextKey,
+} from "../../../../platform/contextkey/common/contextkey.js";
 import { ITextModelContentProvider } from "../../../../editor/common/services/resolverService.js";
-import { Disposable, DisposableStore, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  DisposableStore,
+  MutableDisposable,
+} from "../../../../base/common/lifecycle.js";
 import { ITextModel } from "../../../../editor/common/model.js";
 import { IModelService } from "../../../../editor/common/services/model.js";
-import { ILanguageService, ILanguageSelection } from "../../../../editor/common/languages/language.js";
+import {
+  ILanguageService,
+  ILanguageSelection,
+} from "../../../../editor/common/languages/language.js";
 import { ITextFileService } from "../../../services/textfile/common/textfiles.js";
 import { InputFocusedContextKey } from "../../../../platform/contextkey/common/contextkeys.js";
 import { IEditorGroup } from "../../../services/editor/common/editorGroupsService.js";
@@ -50,7 +60,10 @@ export const ExplorerViewletVisibleContext = new RawContextKey<boolean>(
   true,
   {
     type: "boolean",
-    description: localize("explorerViewletVisible", "True when the EXPLORER viewlet is visible."),
+    description: localize(
+      "explorerViewletVisible",
+      "True when the EXPLORER viewlet is visible.",
+    ),
   },
 );
 export const FoldersViewVisibleContext = new RawContextKey<boolean>(
@@ -58,7 +71,10 @@ export const FoldersViewVisibleContext = new RawContextKey<boolean>(
   true,
   {
     type: "boolean",
-    description: localize("foldersViewVisible", "True when the FOLDERS view (the file tree within the explorer view container) is visible."),
+    description: localize(
+      "foldersViewVisible",
+      "True when the FOLDERS view (the file tree within the explorer view container) is visible.",
+    ),
   },
 );
 export const ExplorerFolderContext = new RawContextKey<boolean>(
@@ -66,7 +82,10 @@ export const ExplorerFolderContext = new RawContextKey<boolean>(
   false,
   {
     type: "boolean",
-    description: localize("explorerResourceIsFolder", "True when the focused item in the EXPLORER is a folder."),
+    description: localize(
+      "explorerResourceIsFolder",
+      "True when the focused item in the EXPLORER is a folder.",
+    ),
   },
 );
 export const ExplorerResourceReadonlyContext = new RawContextKey<boolean>(
@@ -74,32 +93,40 @@ export const ExplorerResourceReadonlyContext = new RawContextKey<boolean>(
   false,
   {
     type: "boolean",
-    description: localize("explorerResourceReadonly", "True when the focused item in the EXPLORER is read-only."),
+    description: localize(
+      "explorerResourceReadonly",
+      "True when the focused item in the EXPLORER is read-only.",
+    ),
   },
 );
-export const ExplorerResourceWritableContext = ExplorerResourceReadonlyContext.toNegated();
+export const ExplorerResourceWritableContext =
+  ExplorerResourceReadonlyContext.toNegated();
 export const ExplorerResourceParentReadOnlyContext = new RawContextKey<boolean>(
   "explorerResourceParentReadonly",
   false,
   {
     type: "boolean",
-    description: localize("explorerResourceParentReadonly", "True when the focused item in the EXPLORER's parent is read-only."),
+    description: localize(
+      "explorerResourceParentReadonly",
+      "True when the focused item in the EXPLORER's parent is read-only.",
+    ),
   },
 );
 
 /**
  * Comma separated list of editor ids that can be used for the selected explorer resource.
  */
-export const ExplorerResourceAvailableEditorIdsContext = new RawContextKey<string>(
-  "explorerResourceAvailableEditorIds",
-  "",
-);
+export const ExplorerResourceAvailableEditorIdsContext =
+  new RawContextKey<string>("explorerResourceAvailableEditorIds", "");
 export const ExplorerRootContext = new RawContextKey<boolean>(
   "explorerResourceIsRoot",
   false,
   {
     type: "boolean",
-    description: localize("explorerResourceIsRoot", "True when the focused item in the EXPLORER is a root folder."),
+    description: localize(
+      "explorerResourceIsRoot",
+      "True when the focused item in the EXPLORER is a root folder.",
+    ),
   },
 );
 export const ExplorerResourceCut = new RawContextKey<boolean>(
@@ -107,7 +134,10 @@ export const ExplorerResourceCut = new RawContextKey<boolean>(
   false,
   {
     type: "boolean",
-    description: localize("explorerResourceCut", "True when an item in the EXPLORER has been cut for cut and paste."),
+    description: localize(
+      "explorerResourceCut",
+      "True when an item in the EXPLORER has been cut for cut and paste.",
+    ),
   },
 );
 export const ExplorerResourceMoveableToTrash = new RawContextKey<boolean>(
@@ -115,7 +145,10 @@ export const ExplorerResourceMoveableToTrash = new RawContextKey<boolean>(
   false,
   {
     type: "boolean",
-    description: localize("explorerResourceMoveableToTrash", "True when the focused item in the EXPLORER can be moved to trash."),
+    description: localize(
+      "explorerResourceMoveableToTrash",
+      "True when the focused item in the EXPLORER can be moved to trash.",
+    ),
   },
 );
 export const FilesExplorerFocusedContext = new RawContextKey<boolean>(
@@ -123,7 +156,10 @@ export const FilesExplorerFocusedContext = new RawContextKey<boolean>(
   true,
   {
     type: "boolean",
-    description: localize("filesExplorerFocus", "True when the focus is inside the EXPLORER view."),
+    description: localize(
+      "filesExplorerFocus",
+      "True when the focus is inside the EXPLORER view.",
+    ),
   },
 );
 export const OpenEditorsFocusedContext = new RawContextKey<boolean>(
@@ -131,7 +167,10 @@ export const OpenEditorsFocusedContext = new RawContextKey<boolean>(
   true,
   {
     type: "boolean",
-    description: localize("openEditorsFocus", "True when the focus is inside the OPEN EDITORS view."),
+    description: localize(
+      "openEditorsFocus",
+      "True when the focus is inside the OPEN EDITORS view.",
+    ),
   },
 );
 export const ExplorerFocusedContext = new RawContextKey<boolean>(
@@ -139,7 +178,10 @@ export const ExplorerFocusedContext = new RawContextKey<boolean>(
   true,
   {
     type: "boolean",
-    description: localize("explorerViewletFocus", "True when the focus is inside the EXPLORER viewlet."),
+    description: localize(
+      "explorerViewletFocus",
+      "True when the focus is inside the EXPLORER viewlet.",
+    ),
   },
 );
 export const ExplorerFindProviderActive = new RawContextKey<boolean>(
@@ -147,7 +189,10 @@ export const ExplorerFindProviderActive = new RawContextKey<boolean>(
   false,
   {
     type: "boolean",
-    description: localize("explorerFindProviderActive", "True when the explorer tree is using the explorer find provider."),
+    description: localize(
+      "explorerFindProviderActive",
+      "True when the explorer tree is using the explorer find provider.",
+    ),
   },
 );
 
@@ -157,7 +202,10 @@ export const ExplorerCompressedFocusContext = new RawContextKey<boolean>(
   true,
   {
     type: "boolean",
-    description: localize("explorerViewletCompressedFocus", "True when the focused item in the EXPLORER view is a compact item."),
+    description: localize(
+      "explorerViewletCompressedFocus",
+      "True when the focused item in the EXPLORER view is a compact item.",
+    ),
   },
 );
 export const ExplorerCompressedFirstFocusContext = new RawContextKey<boolean>(
@@ -165,7 +213,10 @@ export const ExplorerCompressedFirstFocusContext = new RawContextKey<boolean>(
   true,
   {
     type: "boolean",
-    description: localize("explorerViewletCompressedFirstFocus", "True when the focus is inside a compact item's first part in the EXPLORER view."),
+    description: localize(
+      "explorerViewletCompressedFirstFocus",
+      "True when the focus is inside a compact item's first part in the EXPLORER view.",
+    ),
   },
 );
 export const ExplorerCompressedLastFocusContext = new RawContextKey<boolean>(
@@ -173,7 +224,10 @@ export const ExplorerCompressedLastFocusContext = new RawContextKey<boolean>(
   true,
   {
     type: "boolean",
-    description: localize("explorerViewletCompressedLastFocus", "True when the focus is inside a compact item's last part in the EXPLORER view."),
+    description: localize(
+      "explorerViewletCompressedLastFocus",
+      "True when the focus is inside a compact item's last part in the EXPLORER view.",
+    ),
   },
 );
 
@@ -182,7 +236,10 @@ export const ViewHasSomeCollapsibleRootItemContext = new RawContextKey<boolean>(
   false,
   {
     type: "boolean",
-    description: localize("viewHasSomeCollapsibleItem", "True when a workspace in the EXPLORER view has some collapsible root child."),
+    description: localize(
+      "viewHasSomeCollapsibleItem",
+      "True when a workspace in the EXPLORER view has some collapsible root child.",
+    ),
   },
 );
 
@@ -217,216 +274,241 @@ export const BINARY_FILE_EDITOR_ID = "workbench.editors.files.binaryFileEditor";
  */
 export const BINARY_TEXT_FILE_MODE = "code-text-binary";
 
-export interface IFilesConfiguration extends PlatformIFilesConfiguration, IWorkbenchEditorConfiguration {
-	explorer: {
-		openEditors: {
-			visible: number;
-			sortOrder: "editorOrder" | "alphabetical" | "fullPath";
-		};
-		autoReveal: boolean | "focusNoScroll";
-		autoRevealExclude: IExpression;
-		enableDragAndDrop: boolean;
-		confirmDelete: boolean;
-		enableUndo: boolean;
-		confirmUndo: UndoConfirmLevel;
-		expandSingleFolderWorkspaces: boolean;
-		sortOrder: SortOrder;
-		sortOrderLexicographicOptions: LexicographicOptions;
-		sortOrderReverse: boolean;
-		decorations: {
-			colors: boolean;
-			badges: boolean;
-		};
-		incrementalNaming: "simple" | "smart" | "disabled";
-		excludeGitIgnore: boolean;
-		fileNesting: {
-			enabled: boolean;
-			expand: boolean;
-			patterns: { [parent: string]: string };
-		};
-		autoOpenDroppedFile: boolean;
-	};
-	editor: IEditorOptions;
+export interface IFilesConfiguration
+  extends PlatformIFilesConfiguration, IWorkbenchEditorConfiguration {
+  explorer: {
+    openEditors: {
+      visible: number;
+      sortOrder: "editorOrder" | "alphabetical" | "fullPath";
+    };
+    autoReveal: boolean | "focusNoScroll";
+    autoRevealExclude: IExpression;
+    enableDragAndDrop: boolean;
+    confirmDelete: boolean;
+    enableUndo: boolean;
+    confirmUndo: UndoConfirmLevel;
+    expandSingleFolderWorkspaces: boolean;
+    sortOrder: SortOrder;
+    sortOrderLexicographicOptions: LexicographicOptions;
+    sortOrderReverse: boolean;
+    decorations: {
+      colors: boolean;
+      badges: boolean;
+    };
+    incrementalNaming: "simple" | "smart" | "disabled";
+    excludeGitIgnore: boolean;
+    fileNesting: {
+      enabled: boolean;
+      expand: boolean;
+      patterns: { [parent: string]: string };
+    };
+    autoOpenDroppedFile: boolean;
+  };
+  editor: IEditorOptions;
 }
 
 export interface IFileResource {
-	resource: URI;
-	isDirectory?: boolean;
+  resource: URI;
+  isDirectory?: boolean;
 }
 
 export const enum SortOrder {
-	Default = "default",
-	Mixed = "mixed",
-	FilesFirst = "filesFirst",
-	Type = "type",
-	Modified = "modified",
-	FoldersNestsFiles = "foldersNestsFiles",
+  Default = "default",
+  Mixed = "mixed",
+  FilesFirst = "filesFirst",
+  Type = "type",
+  Modified = "modified",
+  FoldersNestsFiles = "foldersNestsFiles",
 }
 
 export const enum UndoConfirmLevel {
-	Verbose = "verbose",
-	Default = "default",
-	Light = "light",
+  Verbose = "verbose",
+  Default = "default",
+  Light = "light",
 }
 
 export const enum LexicographicOptions {
-	Default = "default",
-	Upper = "upper",
-	Lower = "lower",
-	Unicode = "unicode",
+  Default = "default",
+  Upper = "upper",
+  Lower = "lower",
+  Unicode = "unicode",
 }
 
 export interface ISortOrderConfiguration {
-	sortOrder: SortOrder;
-	lexicographicOptions: LexicographicOptions;
-	reverse: boolean;
+  sortOrder: SortOrder;
+  lexicographicOptions: LexicographicOptions;
+  reverse: boolean;
 }
 
-export class TextFileContentProvider extends Disposable implements ITextModelContentProvider {
-	private readonly fileWatcherDisposable = this._register(
+export class TextFileContentProvider
+  extends Disposable
+  implements ITextModelContentProvider
+{
+  private readonly fileWatcherDisposable = this._register(
     new MutableDisposable(),
   );
 
-	constructor(
-		@ITextFileService private readonly textFileService: ITextFileService,
-		@IFileService private readonly fileService: IFileService,
-		@ILanguageService private readonly languageService: ILanguageService,
-		@IModelService private readonly modelService: IModelService,
-	) {
-		super();
-	}
+  constructor(
+    @ITextFileService private readonly textFileService: ITextFileService,
+    @IFileService private readonly fileService: IFileService,
+    @ILanguageService private readonly languageService: ILanguageService,
+    @IModelService private readonly modelService: IModelService,
+  ) {
+    super();
+  }
 
-	static async open(resource: URI, scheme: string, label: string, editorService: IEditorService, options?: ITextEditorOptions): Promise<void> {
-		await editorService.openEditor({
-      original: { resource: TextFileContentProvider.resourceToTextFile(scheme, resource) },
+  static async open(
+    resource: URI,
+    scheme: string,
+    label: string,
+    editorService: IEditorService,
+    options?: ITextEditorOptions,
+  ): Promise<void> {
+    await editorService.openEditor({
+      original: {
+        resource: TextFileContentProvider.resourceToTextFile(scheme, resource),
+      },
       modified: { resource },
       label,
       options,
     });
-	}
+  }
 
-	private static resourceToTextFile(scheme: string, resource: URI): URI {
-		return resource.with({
+  private static resourceToTextFile(scheme: string, resource: URI): URI {
+    return resource.with({
       scheme,
       query: JSON.stringify({ scheme: resource.scheme, query: resource.query }),
     });
-	}
+  }
 
-	private static textFileToResource(resource: URI): URI {
-		const { scheme, query } = JSON.parse(resource.query);
+  private static textFileToResource(resource: URI): URI {
+    const { scheme, query } = JSON.parse(resource.query);
 
-		return resource.with({ scheme, query });
-	}
+    return resource.with({ scheme, query });
+  }
 
-	async provideTextContent(resource: URI): Promise<ITextModel | null> {
-		if (!resource.query) {
-			// We require the URI to use the `query` to transport the original scheme and query
-			// as done by `resourceToTextFile`
-			return null;
-		}
+  async provideTextContent(resource: URI): Promise<ITextModel | null> {
+    if (!resource.query) {
+      // We require the URI to use the `query` to transport the original scheme and query
+      // as done by `resourceToTextFile`
+      return null;
+    }
 
-		const savedFileResource = TextFileContentProvider.textFileToResource(
-      resource,
-    );
+    const savedFileResource =
+      TextFileContentProvider.textFileToResource(resource);
 
-		// Make sure our text file is resolved up to date
-		const codeEditorModel = await this.resolveEditorModel(resource);
+    // Make sure our text file is resolved up to date
+    const codeEditorModel = await this.resolveEditorModel(resource);
 
-		// Make sure to keep contents up to date when it changes
-		if (!this.fileWatcherDisposable.value) {
-			const disposables = new DisposableStore();
-			this.fileWatcherDisposable.value = disposables;
-			disposables.add(this.fileService.onDidFilesChange(changes => {
-				if (changes.contains(savedFileResource, FileChangeType.UPDATED)) {
-					this.resolveEditorModel(resource, false /* do not create if missing */); // update model when resource changes
-				}
-			}));
+    // Make sure to keep contents up to date when it changes
+    if (!this.fileWatcherDisposable.value) {
+      const disposables = new DisposableStore();
+      this.fileWatcherDisposable.value = disposables;
+      disposables.add(
+        this.fileService.onDidFilesChange((changes) => {
+          if (changes.contains(savedFileResource, FileChangeType.UPDATED)) {
+            this.resolveEditorModel(
+              resource,
+              false /* do not create if missing */,
+            ); // update model when resource changes
+          }
+        }),
+      );
 
-			if (codeEditorModel) {
-				disposables.add(
-          Event.once(codeEditorModel.onWillDispose)(
-            () => this.fileWatcherDisposable.clear(),
+      if (codeEditorModel) {
+        disposables.add(
+          Event.once(codeEditorModel.onWillDispose)(() =>
+            this.fileWatcherDisposable.clear(),
           ),
         );
-			}
-		}
+      }
+    }
 
-		return codeEditorModel;
-	}
+    return codeEditorModel;
+  }
 
-	private resolveEditorModel(resource: URI, createAsNeeded?: true): Promise<ITextModel>;
-	private resolveEditorModel(resource: URI, createAsNeeded?: boolean): Promise<ITextModel | null>;
-	private async resolveEditorModel(resource: URI, createAsNeeded: boolean = true): Promise<ITextModel | null> {
-		const savedFileResource = TextFileContentProvider.textFileToResource(
-      resource,
-    );
+  private resolveEditorModel(
+    resource: URI,
+    createAsNeeded?: true,
+  ): Promise<ITextModel>;
+  private resolveEditorModel(
+    resource: URI,
+    createAsNeeded?: boolean,
+  ): Promise<ITextModel | null>;
+  private async resolveEditorModel(
+    resource: URI,
+    createAsNeeded: boolean = true,
+  ): Promise<ITextModel | null> {
+    const savedFileResource =
+      TextFileContentProvider.textFileToResource(resource);
 
-		const content = await this.textFileService.readStream(savedFileResource);
+    const content = await this.textFileService.readStream(savedFileResource);
 
-		let codeEditorModel = this.modelService.getModel(resource);
-		if (codeEditorModel) {
-			this.modelService.updateModel(codeEditorModel, content.value);
-		} else if (createAsNeeded) {
-			const textFileModel = this.modelService.getModel(savedFileResource);
+    let codeEditorModel = this.modelService.getModel(resource);
+    if (codeEditorModel) {
+      this.modelService.updateModel(codeEditorModel, content.value);
+    } else if (createAsNeeded) {
+      const textFileModel = this.modelService.getModel(savedFileResource);
 
-			let languageSelector: ILanguageSelection;
-			if (textFileModel) {
-				languageSelector = this.languageService.createById(
+      let languageSelector: ILanguageSelection;
+      if (textFileModel) {
+        languageSelector = this.languageService.createById(
           textFileModel.getLanguageId(),
         );
-			} else {
-				languageSelector = this.languageService.createByFilepathOrFirstLine(
-          savedFileResource,
-        );
-			}
+      } else {
+        languageSelector =
+          this.languageService.createByFilepathOrFirstLine(savedFileResource);
+      }
 
-			codeEditorModel = this.modelService.createModel(
+      codeEditorModel = this.modelService.createModel(
         content.value,
         languageSelector,
         resource,
       );
-		}
+    }
 
-		return codeEditorModel;
-	}
+    return codeEditorModel;
+  }
 }
 
 export class OpenEditor implements IEditorIdentifier {
+  private id: number;
+  private static COUNTER = 0;
 
-	private id: number;
-	private static COUNTER = 0;
+  constructor(
+    private _editor: EditorInput,
+    private _group: IEditorGroup,
+  ) {
+    this.id = OpenEditor.COUNTER++;
+  }
 
-	constructor(private _editor: EditorInput, private _group: IEditorGroup) {
-		this.id = OpenEditor.COUNTER++;
-	}
+  get editor() {
+    return this._editor;
+  }
 
-	get editor() {
-		return this._editor;
-	}
+  get group() {
+    return this._group;
+  }
 
-	get group() {
-		return this._group;
-	}
+  get groupId() {
+    return this._group.id;
+  }
 
-	get groupId() {
-		return this._group.id;
-	}
+  getId(): string {
+    return `openeditor:${this.groupId}:${this.id}`;
+  }
 
-	getId(): string {
-		return `openeditor:${this.groupId}:${this.id}`;
-	}
+  isPreview(): boolean {
+    return !this._group.isPinned(this.editor);
+  }
 
-	isPreview(): boolean {
-		return !this._group.isPinned(this.editor);
-	}
+  isSticky(): boolean {
+    return this._group.isSticky(this.editor);
+  }
 
-	isSticky(): boolean {
-		return this._group.isSticky(this.editor);
-	}
-
-	getResource(): URI | undefined {
-		return EditorResourceAccessor.getOriginalUri(this.editor, {
+  getResource(): URI | undefined {
+    return EditorResourceAccessor.getOriginalUri(this.editor, {
       supportSideBySide: SideBySideEditor.PRIMARY,
     });
-	}
+  }
 }

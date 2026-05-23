@@ -6,7 +6,11 @@
 import { IActionViewItemOptions } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
 import { AnchorAlignment } from "../../../../base/browser/ui/contextview/contextview.js";
 import { DropdownMenuActionViewItem } from "../../../../base/browser/ui/dropdown/dropdownActionViewItem.js";
-import { IAction, IActionRunner, Separator } from "../../../../base/common/actions.js";
+import {
+  IAction,
+  IActionRunner,
+  Separator,
+} from "../../../../base/common/actions.js";
 import { SuggestController } from "../../../../editor/contrib/suggest/browser/suggestController.js";
 import { localize } from "../../../../nls.js";
 import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
@@ -23,16 +27,16 @@ import {
 } from "../common/preferences.js";
 
 export class SettingsSearchFilterDropdownMenuActionViewItem extends DropdownMenuActionViewItem {
-	private readonly suggestController: SuggestController | null;
+  private readonly suggestController: SuggestController | null;
 
-	constructor(
-		action: IAction,
-		options: IActionViewItemOptions,
-		actionRunner: IActionRunner | undefined,
-		private readonly searchWidget: SuggestEnabledInput,
-		@IContextMenuService contextMenuService: IContextMenuService,
-	) {
-		super(action, { getActions: () => this.getActions() }, contextMenuService, {
+  constructor(
+    action: IAction,
+    options: IActionViewItemOptions,
+    actionRunner: IActionRunner | undefined,
+    private readonly searchWidget: SuggestEnabledInput,
+    @IContextMenuService contextMenuService: IContextMenuService,
+  ) {
+    super(action, { getActions: () => this.getActions() }, contextMenuService, {
       ...options,
       actionRunner,
       classNames: action.class,
@@ -40,102 +44,131 @@ export class SettingsSearchFilterDropdownMenuActionViewItem extends DropdownMenu
       menuAsChild: true,
     });
 
-		this.suggestController = SuggestController.get(
+    this.suggestController = SuggestController.get(
       this.searchWidget.inputWidget,
     );
-	}
+  }
 
-	override render(container: HTMLElement): void {
-		super.render(container);
-	}
+  override render(container: HTMLElement): void {
+    super.render(container);
+  }
 
-	private doSearchWidgetAction(queryToAppend: string, triggerSuggest: boolean) {
-		this.searchWidget.setValue(
+  private doSearchWidgetAction(queryToAppend: string, triggerSuggest: boolean) {
+    this.searchWidget.setValue(
       this.searchWidget.getValue().trimEnd() + " " + queryToAppend,
     );
-		this.searchWidget.focus();
-		if (triggerSuggest && this.suggestController) {
-			this.suggestController.triggerSuggest();
-		}
-	}
+    this.searchWidget.focus();
+    if (triggerSuggest && this.suggestController) {
+      this.suggestController.triggerSuggest();
+    }
+  }
 
-	/**
-	 * The created action appends a query to the search widget search string. It optionally triggers suggestions.
-	 */
-	private createAction(id: string, label: string, tooltip: string, queryToAppend: string, triggerSuggest: boolean): IAction {
-		return {
+  /**
+   * The created action appends a query to the search widget search string. It optionally triggers suggestions.
+   */
+  private createAction(
+    id: string,
+    label: string,
+    tooltip: string,
+    queryToAppend: string,
+    triggerSuggest: boolean,
+  ): IAction {
+    return {
       id,
       label,
       tooltip,
       class: undefined,
       enabled: true,
-      run: () => { this.doSearchWidgetAction(queryToAppend, triggerSuggest); },
+      run: () => {
+        this.doSearchWidgetAction(queryToAppend, triggerSuggest);
+      },
     };
-	}
+  }
 
-	/**
-	 * The created action appends a query to the search widget search string, if the query does not exist.
-	 * Otherwise, it removes the query from the search widget search string.
-	 * The action does not trigger suggestions after adding or removing the query.
-	 */
-	private createToggleAction(id: string, label: string, tooltip: string, queryToAppend: string): IAction {
-		const splitCurrentQuery = this.searchWidget.getValue().split(" ");
-		const queryContainsQueryToAppend = splitCurrentQuery.includes(
-      queryToAppend,
-    );
-		return {
-			id,
-			label,
-			tooltip,
-			class: undefined,
-			enabled: true,
-			checked: queryContainsQueryToAppend,
-			run: () => {
-				if (!queryContainsQueryToAppend) {
-					const trimmedCurrentQuery = this.searchWidget.getValue().trimEnd();
-					const newQuery = trimmedCurrentQuery ? trimmedCurrentQuery + " " + queryToAppend : queryToAppend;
-					this.searchWidget.setValue(newQuery);
-				} else {
-					const queryWithRemovedTags = this.searchWidget.getValue().split(" ")
-						.filter(word => word !== queryToAppend).join(" ");
-					this.searchWidget.setValue(queryWithRemovedTags);
-				}
-				this.searchWidget.focus();
-			},
-		};
-	}
+  /**
+   * The created action appends a query to the search widget search string, if the query does not exist.
+   * Otherwise, it removes the query from the search widget search string.
+   * The action does not trigger suggestions after adding or removing the query.
+   */
+  private createToggleAction(
+    id: string,
+    label: string,
+    tooltip: string,
+    queryToAppend: string,
+  ): IAction {
+    const splitCurrentQuery = this.searchWidget.getValue().split(" ");
+    const queryContainsQueryToAppend =
+      splitCurrentQuery.includes(queryToAppend);
+    return {
+      id,
+      label,
+      tooltip,
+      class: undefined,
+      enabled: true,
+      checked: queryContainsQueryToAppend,
+      run: () => {
+        if (!queryContainsQueryToAppend) {
+          const trimmedCurrentQuery = this.searchWidget.getValue().trimEnd();
+          const newQuery = trimmedCurrentQuery
+            ? trimmedCurrentQuery + " " + queryToAppend
+            : queryToAppend;
+          this.searchWidget.setValue(newQuery);
+        } else {
+          const queryWithRemovedTags = this.searchWidget
+            .getValue()
+            .split(" ")
+            .filter((word) => word !== queryToAppend)
+            .join(" ");
+          this.searchWidget.setValue(queryWithRemovedTags);
+        }
+        this.searchWidget.focus();
+      },
+    };
+  }
 
-	private createMutuallyExclusiveToggleAction(id: string, label: string, tooltip: string, filter: string, excludeFilters: string[]): IAction {
-		const isFilterEnabled = this.searchWidget.getValue().split(" ").includes(
-      filter,
-    );
-		return {
-			id,
-			label,
-			tooltip,
-			class: undefined,
-			enabled: true,
-			checked: isFilterEnabled,
-			run: () => {
-				if (isFilterEnabled) {
-					const queryWithRemovedTags = this.searchWidget.getValue().split(" ")
-						.filter(word => word !== filter).join(" ");
-					this.searchWidget.setValue(queryWithRemovedTags);
-				} else {
-					let newQuery = this.searchWidget.getValue().split(" ")
-						.filter(word => !excludeFilters.includes(word) && word !== filter)
-						.join(" ")
-						.trimEnd();
-					newQuery = newQuery ? newQuery + " " + filter : filter;
-					this.searchWidget.setValue(newQuery);
-				}
-				this.searchWidget.focus();
-			},
-		};
-	}
+  private createMutuallyExclusiveToggleAction(
+    id: string,
+    label: string,
+    tooltip: string,
+    filter: string,
+    excludeFilters: string[],
+  ): IAction {
+    const isFilterEnabled = this.searchWidget
+      .getValue()
+      .split(" ")
+      .includes(filter);
+    return {
+      id,
+      label,
+      tooltip,
+      class: undefined,
+      enabled: true,
+      checked: isFilterEnabled,
+      run: () => {
+        if (isFilterEnabled) {
+          const queryWithRemovedTags = this.searchWidget
+            .getValue()
+            .split(" ")
+            .filter((word) => word !== filter)
+            .join(" ");
+          this.searchWidget.setValue(queryWithRemovedTags);
+        } else {
+          let newQuery = this.searchWidget
+            .getValue()
+            .split(" ")
+            .filter((word) => !excludeFilters.includes(word) && word !== filter)
+            .join(" ")
+            .trimEnd();
+          newQuery = newQuery ? newQuery + " " + filter : filter;
+          this.searchWidget.setValue(newQuery);
+        }
+        this.searchWidget.focus();
+      },
+    };
+  }
 
-	getActions(): IAction[] {
-		return [
+  getActions(): IAction[] {
+    return [
       this.createToggleAction(
         "modifiedSettingsSearch",
         localize("modifiedSettingsSearch", "Modified"),
@@ -233,5 +266,5 @@ export class SettingsSearchFilterDropdownMenuActionViewItem extends DropdownMenu
         `@tag:${ADVANCED_SETTING_TAG}`,
       ),
     ];
-	}
+  }
 }

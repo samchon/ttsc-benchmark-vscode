@@ -22,36 +22,44 @@ import {
 } from "./userDataSync.js";
 
 interface IMcpSyncContent {
-	mcp?: string;
+  mcp?: string;
 }
 
-export function getMcpContentFromSyncContent(syncContent: string, logService: ILogService): string | null {
-	try {
-		const parsed = <IMcpSyncContent>JSON.parse(syncContent);
-		return parsed.mcp ?? null;
-	} catch (e) {
-		logService.error(e);
-		return null;
-	}
+export function getMcpContentFromSyncContent(
+  syncContent: string,
+  logService: ILogService,
+): string | null {
+  try {
+    const parsed = <IMcpSyncContent>JSON.parse(syncContent);
+    return parsed.mcp ?? null;
+  } catch (e) {
+    logService.error(e);
+    return null;
+  }
 }
 
-export class McpSynchroniser extends AbstractJsonSynchronizer implements IUserDataSynchroniser {
-
-	constructor(
-		profile: IUserDataProfile,
-		collection: string | undefined,
-		@IUserDataSyncStoreService userDataSyncStoreService: IUserDataSyncStoreService,
-		@IUserDataSyncLocalStoreService userDataSyncLocalStoreService: IUserDataSyncLocalStoreService,
-		@IUserDataSyncLogService logService: IUserDataSyncLogService,
-		@IConfigurationService configurationService: IConfigurationService,
-		@IUserDataSyncEnablementService userDataSyncEnablementService: IUserDataSyncEnablementService,
-		@IFileService fileService: IFileService,
-		@IEnvironmentService environmentService: IEnvironmentService,
-		@IStorageService storageService: IStorageService,
-		@ITelemetryService telemetryService: ITelemetryService,
-		@IUriIdentityService uriIdentityService: IUriIdentityService,
-	) {
-		super(
+export class McpSynchroniser
+  extends AbstractJsonSynchronizer
+  implements IUserDataSynchroniser
+{
+  constructor(
+    profile: IUserDataProfile,
+    collection: string | undefined,
+    @IUserDataSyncStoreService
+    userDataSyncStoreService: IUserDataSyncStoreService,
+    @IUserDataSyncLocalStoreService
+    userDataSyncLocalStoreService: IUserDataSyncLocalStoreService,
+    @IUserDataSyncLogService logService: IUserDataSyncLogService,
+    @IConfigurationService configurationService: IConfigurationService,
+    @IUserDataSyncEnablementService
+    userDataSyncEnablementService: IUserDataSyncEnablementService,
+    @IFileService fileService: IFileService,
+    @IEnvironmentService environmentService: IEnvironmentService,
+    @IStorageService storageService: IStorageService,
+    @ITelemetryService telemetryService: ITelemetryService,
+    @IUriIdentityService uriIdentityService: IUriIdentityService,
+  ) {
+    super(
       profile.mcpResource,
       { syncResource: SyncResource.Mcp, profile },
       collection,
@@ -67,13 +75,13 @@ export class McpSynchroniser extends AbstractJsonSynchronizer implements IUserDa
       configurationService,
       uriIdentityService,
     );
-	}
+  }
 
-	protected getContentFromSyncContent(syncContent: string): string | null {
-		return getMcpContentFromSyncContent(syncContent, this.logService);
-	}
+  protected getContentFromSyncContent(syncContent: string): string | null {
+    return getMcpContentFromSyncContent(syncContent, this.logService);
+  }
 
-	protected toSyncContent(mcp: string | null): IMcpSyncContent {
-		return mcp ? { mcp } : {};
-	}
+  protected toSyncContent(mcp: string | null): IMcpSyncContent {
+    return mcp ? { mcp } : {};
+  }
 }

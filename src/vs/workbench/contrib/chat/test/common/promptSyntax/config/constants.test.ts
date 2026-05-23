@@ -4,10 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from "assert";
-import { getCleanPromptName, isPromptOrInstructionsFile } from "../../../../common/promptSyntax/config/promptFileLocations.js";
+import {
+  getCleanPromptName,
+  isPromptOrInstructionsFile,
+} from "../../../../common/promptSyntax/config/promptFileLocations.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../../base/test/common/utils.js";
 import { URI } from "../../../../../../../base/common/uri.js";
-
 
 suite("Prompt Constants", () => {
   ensureNoDisposablesAreLeakedInTestSuite();

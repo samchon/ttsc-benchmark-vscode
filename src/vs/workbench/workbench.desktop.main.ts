@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-
 // #######################################################################
 // ###                                                                 ###
 // ### !!! PLEASE ADD COMMON IMPORTS INTO WORKBENCH.COMMON.MAIN.TS !!! ###
@@ -16,7 +15,6 @@ import "./workbench.common.main.js";
 
 //#endregion
 
-
 //#region --- workbench (desktop main)
 
 import "./electron-browser/desktop.main.js";
@@ -24,13 +22,11 @@ import "./electron-browser/desktop.contribution.js";
 
 //#endregion
 
-
 //#region --- workbench parts
 
 import "./electron-browser/parts/dialogs/dialog.contribution.js";
 
 //#endregion
-
 
 //#region --- workbench services
 
@@ -98,7 +94,10 @@ import "./services/process/electron-browser/processService.js";
 import "./services/power/electron-browser/powerService.js";
 
 import { registerSingleton } from "../platform/instantiation/common/extensions.js";
-import { IUserDataInitializationService, UserDataInitializationService } from "./services/userData/browser/userDataInit.js";
+import {
+  IUserDataInitializationService,
+  UserDataInitializationService,
+} from "./services/userData/browser/userDataInit.js";
 import { SyncDescriptor } from "../platform/instantiation/common/descriptors.js";
 
 registerSingleton(
@@ -106,9 +105,7 @@ registerSingleton(
   new SyncDescriptor(UserDataInitializationService, [[]], true),
 );
 
-
 //#endregion
-
 
 //#region --- workbench contributions
 
@@ -201,6 +198,5 @@ import "./contrib/policyExport/electron-browser/policyExport.contribution.js";
 import "./contrib/keybindingsExport/electron-browser/keybindingsExport.contribution.js";
 
 //#endregion
-
 
 export { main } from "./electron-browser/desktop.main.js";

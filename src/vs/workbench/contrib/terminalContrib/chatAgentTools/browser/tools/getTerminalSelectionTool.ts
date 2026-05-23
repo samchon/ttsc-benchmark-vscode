@@ -25,53 +25,75 @@ export const GetTerminalSelectionToolData: IToolData = {
   id: TerminalToolId.TerminalSelection,
   toolReferenceName: "terminalSelection",
   legacyToolReferenceFullNames: ["runCommands/terminalSelection"],
-  displayName: localize("terminalSelectionTool.displayName", "Get Terminal Selection"),
+  displayName: localize(
+    "terminalSelectionTool.displayName",
+    "Get Terminal Selection",
+  ),
   modelDescription: "Get the current selection in the active terminal.",
   source: ToolDataSource.Internal,
   icon: Codicon.terminal,
 };
 
 export class GetTerminalSelectionTool extends Disposable implements IToolImpl {
+  constructor(
+    @ITerminalService private readonly _terminalService: ITerminalService,
+  ) {
+    super();
+  }
 
-	constructor(
-		@ITerminalService private readonly _terminalService: ITerminalService,
-	) {
-		super();
-	}
-
-	async prepareToolInvocation(context: IToolInvocationPreparationContext, token: CancellationToken): Promise<IPreparedToolInvocation | undefined> {
-		return {
-      invocationMessage: localize("getTerminalSelection.progressive", "Reading terminal selection"),
-      pastTenseMessage: localize("getTerminalSelection.past", "Read terminal selection"),
+  async prepareToolInvocation(
+    context: IToolInvocationPreparationContext,
+    token: CancellationToken,
+  ): Promise<IPreparedToolInvocation | undefined> {
+    return {
+      invocationMessage: localize(
+        "getTerminalSelection.progressive",
+        "Reading terminal selection",
+      ),
+      pastTenseMessage: localize(
+        "getTerminalSelection.past",
+        "Read terminal selection",
+      ),
     };
-	}
+  }
 
-	async invoke(invocation: IToolInvocation, _countTokens: CountTokensCallback, _progress: ToolProgress, token: CancellationToken): Promise<IToolResult> {
-		const activeInstance = this._terminalService.activeInstance;
-		if (!activeInstance) {
-			return {
-				content: [{
-					kind: "text",
-					value: "No active terminal instance found.",
-				}],
-			};
-		}
+  async invoke(
+    invocation: IToolInvocation,
+    _countTokens: CountTokensCallback,
+    _progress: ToolProgress,
+    token: CancellationToken,
+  ): Promise<IToolResult> {
+    const activeInstance = this._terminalService.activeInstance;
+    if (!activeInstance) {
+      return {
+        content: [
+          {
+            kind: "text",
+            value: "No active terminal instance found.",
+          },
+        ],
+      };
+    }
 
-		const selection = activeInstance.selection;
-		if (!selection) {
-			return {
-				content: [{
-					kind: "text",
-					value: "No text is currently selected in the active terminal.",
-				}],
-			};
-		}
+    const selection = activeInstance.selection;
+    if (!selection) {
+      return {
+        content: [
+          {
+            kind: "text",
+            value: "No text is currently selected in the active terminal.",
+          },
+        ],
+      };
+    }
 
-		return {
-			content: [{
-				kind: "text",
-				value: `The active terminal's selection:\n${selection}`,
-			}],
-		};
-	}
+    return {
+      content: [
+        {
+          kind: "text",
+          value: `The active terminal's selection:\n${selection}`,
+        },
+      ],
+    };
+  }
 }

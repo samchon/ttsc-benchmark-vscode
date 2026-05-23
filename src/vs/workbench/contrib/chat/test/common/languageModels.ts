@@ -6,7 +6,10 @@
 import { CancellationToken } from "../../../../../base/common/cancellation.js";
 import { IStringDictionary } from "../../../../../base/common/collections.js";
 import { Event } from "../../../../../base/common/event.js";
-import { Disposable, IDisposable } from "../../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  IDisposable,
+} from "../../../../../base/common/lifecycle.js";
 import { observableValue } from "../../../../../base/common/observable.js";
 import { IAction } from "../../../../../base/common/actions.js";
 import { ExtensionIdentifier } from "../../../../../platform/extensions/common/extensions.js";
@@ -27,131 +30,178 @@ import {
 import { ILanguageModelsProviderGroup } from "../../common/languageModelsConfiguration.js";
 
 export class NullLanguageModelsService implements ILanguageModelsService {
-	_serviceBrand: undefined;
+  _serviceBrand: undefined;
 
-	registerLanguageModelProvider(vendor: string, provider: ILanguageModelChatProvider): IDisposable {
-		return Disposable.None;
-	}
+  registerLanguageModelProvider(
+    vendor: string,
+    provider: ILanguageModelChatProvider,
+  ): IDisposable {
+    return Disposable.None;
+  }
 
-	deltaLanguageModelChatProviderDescriptors(added: IUserFriendlyLanguageModel[], removed: IUserFriendlyLanguageModel[]): void {
-	}
+  deltaLanguageModelChatProviderDescriptors(
+    added: IUserFriendlyLanguageModel[],
+    removed: IUserFriendlyLanguageModel[],
+  ): void {}
 
-	onDidChangeLanguageModels = Event.None;
-	onDidChangeLanguageModelVendors = Event.None;
-	onDidChangeModelsControlManifest = Event.None;
-	onDidChangePinnedModels = Event.None;
-	onDidChangeModelVisibility = Event.None;
+  onDidChangeLanguageModels = Event.None;
+  onDidChangeLanguageModelVendors = Event.None;
+  onDidChangeModelsControlManifest = Event.None;
+  onDidChangePinnedModels = Event.None;
+  onDidChangeModelVisibility = Event.None;
 
-	getVendors(): ILanguageModelProviderDescriptor[] {
-		return [];
-	}
+  getVendors(): ILanguageModelProviderDescriptor[] {
+    return [];
+  }
 
-	getLanguageModelIds(): string[] {
-		return [];
-	}
+  getLanguageModelIds(): string[] {
+    return [];
+  }
 
-	lookupLanguageModel(identifier: string): ILanguageModelChatMetadata | undefined {
-		return undefined;
-	}
+  lookupLanguageModel(
+    identifier: string,
+  ): ILanguageModelChatMetadata | undefined {
+    return undefined;
+  }
 
-	lookupLanguageModelByQualifiedName(qualifiedName: string) {
-		return undefined;
-	}
+  lookupLanguageModelByQualifiedName(qualifiedName: string) {
+    return undefined;
+  }
 
-	getLanguageModels(): ILanguageModelChatMetadataAndIdentifier[] {
-		return [];
-	}
+  getLanguageModels(): ILanguageModelChatMetadataAndIdentifier[] {
+    return [];
+  }
 
-	setContributedSessionModels(): void {
-		return;
-	}
+  setContributedSessionModels(): void {
+    return;
+  }
 
-	clearContributedSessionModels(): void {
-		return;
-	}
+  clearContributedSessionModels(): void {
+    return;
+  }
 
-	getLanguageModelGroups(vendor: string): ILanguageModelsGroup[] {
-		return [];
-	}
+  getLanguageModelGroups(vendor: string): ILanguageModelsGroup[] {
+    return [];
+  }
 
-	hasResolvedVendor(vendor: string): boolean {
-		return false;
-	}
+  hasResolvedVendor(vendor: string): boolean {
+    return false;
+  }
 
-	async selectLanguageModels(selector: ILanguageModelChatSelector): Promise<string[]> {
-		return [];
-	}
+  async selectLanguageModels(
+    selector: ILanguageModelChatSelector,
+  ): Promise<string[]> {
+    return [];
+  }
 
-	sendChatRequest(identifier: string, from: ExtensionIdentifier | undefined, messages: IChatMessage[], options: ILanguageModelChatRequestOptions, token: CancellationToken): Promise<ILanguageModelChatResponse> {
-		throw new Error("Method not implemented.");
-	}
+  sendChatRequest(
+    identifier: string,
+    from: ExtensionIdentifier | undefined,
+    messages: IChatMessage[],
+    options: ILanguageModelChatRequestOptions,
+    token: CancellationToken,
+  ): Promise<ILanguageModelChatResponse> {
+    throw new Error("Method not implemented.");
+  }
 
-	computeTokenLength(identifier: string, message: string | IChatMessage, token: CancellationToken): Promise<number> {
-		throw new Error("Method not implemented.");
-	}
+  computeTokenLength(
+    identifier: string,
+    message: string | IChatMessage,
+    token: CancellationToken,
+  ): Promise<number> {
+    throw new Error("Method not implemented.");
+  }
 
-	getModelConfiguration(_modelId: string): IStringDictionary<unknown> | undefined {
-		return undefined;
-	}
+  getModelConfiguration(
+    _modelId: string,
+  ): IStringDictionary<unknown> | undefined {
+    return undefined;
+  }
 
-	async setModelConfiguration(_modelId: string, _values: IStringDictionary<unknown>): Promise<void> {
-	}
+  async setModelConfiguration(
+    _modelId: string,
+    _values: IStringDictionary<unknown>,
+  ): Promise<void> {}
 
-	getModelConfigurationActions(_modelId: string): IAction[] {
-		return [];
-	}
+  getModelConfigurationActions(_modelId: string): IAction[] {
+    return [];
+  }
 
-	async configureLanguageModelsProviderGroup(vendorId: string, name?: string): Promise<void> {
+  async configureLanguageModelsProviderGroup(
+    vendorId: string,
+    name?: string,
+  ): Promise<void> {}
 
-	}
+  async renameLanguageModelsProviderGroup(
+    vendorId: string,
+    providerGroupName: string,
+  ): Promise<void> {}
 
-	async renameLanguageModelsProviderGroup(vendorId: string, providerGroupName: string): Promise<void> {
-	}
+  async updateLanguageModelsProviderGroupApiKey(
+    vendorId: string,
+    providerGroupName: string,
+  ): Promise<void> {}
 
-	async updateLanguageModelsProviderGroupApiKey(vendorId: string, providerGroupName: string): Promise<void> {
-	}
+  async addLanguageModelsProviderGroupModel(
+    vendorId: string,
+    providerGroupName: string,
+  ): Promise<void> {}
 
-	async addLanguageModelsProviderGroupModel(vendorId: string, providerGroupName: string): Promise<void> {
-	}
+  async openLanguageModelsProviderGroupSettings(
+    vendorId: string,
+    providerGroupName: string,
+  ): Promise<void> {}
 
-	async openLanguageModelsProviderGroupSettings(vendorId: string, providerGroupName: string): Promise<void> {
-	}
+  async configureModel(_modelId: string): Promise<void> {}
 
-	async configureModel(_modelId: string): Promise<void> {
-	}
+  async addLanguageModelsProviderGroup(
+    name: string,
+    vendorId: string,
+    configuration: IStringDictionary<unknown> | undefined,
+  ): Promise<void> {}
 
-	async addLanguageModelsProviderGroup(name: string, vendorId: string, configuration: IStringDictionary<unknown> | undefined): Promise<void> {
+  async removeLanguageModelsProviderGroup(
+    vendorId: string,
+    providerGroupName: string,
+  ): Promise<void> {}
 
-	}
+  async migrateLanguageModelsProviderGroup(
+    languageModelsProviderGroup: ILanguageModelsProviderGroup,
+  ): Promise<void> {}
 
-	async removeLanguageModelsProviderGroup(vendorId: string, providerGroupName: string): Promise<void> {
-	}
+  getRecentlyUsedModelIds(): string[] {
+    return [];
+  }
 
-	async migrateLanguageModelsProviderGroup(languageModelsProviderGroup: ILanguageModelsProviderGroup): Promise<void> { }
+  addToRecentlyUsedList(): void {}
+  clearRecentlyUsedList(): void {}
 
-	getRecentlyUsedModelIds(): string[] {
-		return [];
-	}
+  getPinnedModelIds(): string[] {
+    return [];
+  }
+  pinModel(_modelIdentifier: string): void {}
+  unpinModel(_modelIdentifier: string): void {}
+  isModelPinned(_modelIdentifier: string): boolean {
+    return false;
+  }
 
-	addToRecentlyUsedList(): void { }
-	clearRecentlyUsedList(): void { }
+  isModelHidden(_modelIdentifier: string): boolean {
+    return false;
+  }
+  isGroupHidden(_vendor: string, _groupName: string): boolean {
+    return false;
+  }
+  setModelHidden(_modelIdentifier: string, _hidden: boolean): void {}
+  setGroupHidden(_vendor: string, _groupName: string, _hidden: boolean): void {}
+  getHiddenModelIds(): string[] {
+    return [];
+  }
 
-	getPinnedModelIds(): string[] { return []; }
-	pinModel(_modelIdentifier: string): void { }
-	unpinModel(_modelIdentifier: string): void { }
-	isModelPinned(_modelIdentifier: string): boolean { return false; }
+  getModelsControlManifest(): IModelsControlManifest {
+    return { free: {}, paid: {} };
+  }
 
-	isModelHidden(_modelIdentifier: string): boolean { return false; }
-	isGroupHidden(_vendor: string, _groupName: string): boolean { return false; }
-	setModelHidden(_modelIdentifier: string, _hidden: boolean): void { }
-	setGroupHidden(_vendor: string, _groupName: string, _hidden: boolean): void { }
-	getHiddenModelIds(): string[] { return []; }
-
-	getModelsControlManifest(): IModelsControlManifest {
-		return { free: {}, paid: {} };
-	}
-
-	restrictedChatParticipants = observableValue(
+  restrictedChatParticipants = observableValue(
     "restrictedChatParticipants",
     Object.create(null),
   );

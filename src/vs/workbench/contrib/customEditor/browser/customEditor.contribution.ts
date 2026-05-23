@@ -4,11 +4,23 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
-import { EditorPaneDescriptor, IEditorPaneRegistry } from "../../../browser/editor.js";
-import { WorkbenchPhase, registerWorkbenchContribution2 } from "../../../common/contributions.js";
-import { EditorExtensions, IEditorFactoryRegistry } from "../../../common/editor.js";
+import {
+  EditorPaneDescriptor,
+  IEditorPaneRegistry,
+} from "../../../browser/editor.js";
+import {
+  WorkbenchPhase,
+  registerWorkbenchContribution2,
+} from "../../../common/contributions.js";
+import {
+  EditorExtensions,
+  IEditorFactoryRegistry,
+} from "../../../common/editor.js";
 import {
   ComplexCustomWorkingCopyEditorHandler,
   CustomEditorDiffInputSerializer,
@@ -18,7 +30,10 @@ import {
 import { ICustomEditorService } from "../common/customEditor.js";
 import { WebviewEditor } from "../../webviewPanel/browser/webviewEditor.js";
 import { CustomEditorInput } from "./customEditorInput.js";
-import { CustomEditorDiffInput, CustomEditorSideBySideDiffInput } from "./customEditorDiffInput.js";
+import {
+  CustomEditorDiffInput,
+  CustomEditorSideBySideDiffInput,
+} from "./customEditorDiffInput.js";
 import { CustomEditorService } from "./customEditors.js";
 
 registerSingleton(
@@ -27,26 +42,41 @@ registerSingleton(
   InstantiationType.Delayed,
 );
 
-Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane)
-	.registerEditorPane(
-		EditorPaneDescriptor.create(
-			WebviewEditor,
-			WebviewEditor.ID,
-			"Webview Editor",
-		), [
-		new SyncDescriptor(CustomEditorInput),
-		new SyncDescriptor(CustomEditorDiffInput),
-		new SyncDescriptor(CustomEditorSideBySideDiffInput),
-	]);
+Registry.as<IEditorPaneRegistry>(
+  EditorExtensions.EditorPane,
+).registerEditorPane(
+  EditorPaneDescriptor.create(
+    WebviewEditor,
+    WebviewEditor.ID,
+    "Webview Editor",
+  ),
+  [
+    new SyncDescriptor(CustomEditorInput),
+    new SyncDescriptor(CustomEditorDiffInput),
+    new SyncDescriptor(CustomEditorSideBySideDiffInput),
+  ],
+);
 
-Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory)
-	.registerEditorSerializer(CustomEditorInputSerializer.ID, CustomEditorInputSerializer);
+Registry.as<IEditorFactoryRegistry>(
+  EditorExtensions.EditorFactory,
+).registerEditorSerializer(
+  CustomEditorInputSerializer.ID,
+  CustomEditorInputSerializer,
+);
 
-Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory)
-	.registerEditorSerializer(CustomEditorDiffInputSerializer.ID, CustomEditorDiffInputSerializer);
+Registry.as<IEditorFactoryRegistry>(
+  EditorExtensions.EditorFactory,
+).registerEditorSerializer(
+  CustomEditorDiffInputSerializer.ID,
+  CustomEditorDiffInputSerializer,
+);
 
-Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory)
-	.registerEditorSerializer(CustomEditorSideBySideDiffInputSerializer.ID, CustomEditorSideBySideDiffInputSerializer);
+Registry.as<IEditorFactoryRegistry>(
+  EditorExtensions.EditorFactory,
+).registerEditorSerializer(
+  CustomEditorSideBySideDiffInputSerializer.ID,
+  CustomEditorSideBySideDiffInputSerializer,
+);
 
 registerWorkbenchContribution2(
   ComplexCustomWorkingCopyEditorHandler.ID,

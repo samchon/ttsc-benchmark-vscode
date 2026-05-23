@@ -9,38 +9,50 @@ import { createDecorator } from "../../../../platform/instantiation/common/insta
 import { IRange } from "../../../../editor/common/core/range.js";
 import { IStringDictionary } from "../../../../base/common/collections.js";
 
-export const ILanguageModelsConfigurationService = createDecorator<ILanguageModelsConfigurationService>(
-  "ILanguageModelsConfigurationService",
-);
+export const ILanguageModelsConfigurationService =
+  createDecorator<ILanguageModelsConfigurationService>(
+    "ILanguageModelsConfigurationService",
+  );
 
 export interface ConfigureLanguageModelsOptions {
-	group: ILanguageModelsProviderGroup;
-	snippet?: string;
-	snippetTarget?: "group" | "models";
+  group: ILanguageModelsProviderGroup;
+  snippet?: string;
+  snippetTarget?: "group" | "models";
 }
 
 export interface ILanguageModelsConfigurationService {
-	readonly _serviceBrand: undefined;
+  readonly _serviceBrand: undefined;
 
-	readonly configurationFile: URI;
+  readonly configurationFile: URI;
 
-	readonly onDidChangeLanguageModelGroups: Event<readonly ILanguageModelsProviderGroup[]>;
+  readonly onDidChangeLanguageModelGroups: Event<
+    readonly ILanguageModelsProviderGroup[]
+  >;
 
-	getLanguageModelsProviderGroups(): readonly ILanguageModelsProviderGroup[];
+  getLanguageModelsProviderGroups(): readonly ILanguageModelsProviderGroup[];
 
-	addLanguageModelsProviderGroup(languageModelsProviderGroup: ILanguageModelsProviderGroup): Promise<ILanguageModelsProviderGroup>;
+  addLanguageModelsProviderGroup(
+    languageModelsProviderGroup: ILanguageModelsProviderGroup,
+  ): Promise<ILanguageModelsProviderGroup>;
 
-	updateLanguageModelsProviderGroup(from: ILanguageModelsProviderGroup, to: ILanguageModelsProviderGroup): Promise<ILanguageModelsProviderGroup>;
+  updateLanguageModelsProviderGroup(
+    from: ILanguageModelsProviderGroup,
+    to: ILanguageModelsProviderGroup,
+  ): Promise<ILanguageModelsProviderGroup>;
 
-	removeLanguageModelsProviderGroup(languageModelGroup: ILanguageModelsProviderGroup): Promise<void>;
+  removeLanguageModelsProviderGroup(
+    languageModelGroup: ILanguageModelsProviderGroup,
+  ): Promise<void>;
 
-	configureLanguageModels(options?: ConfigureLanguageModelsOptions): Promise<void>;
+  configureLanguageModels(
+    options?: ConfigureLanguageModelsOptions,
+  ): Promise<void>;
 }
 
 export interface ILanguageModelsProviderGroup extends IStringDictionary<unknown> {
-	readonly name: string;
-	readonly vendor: string;
-	readonly range?: IRange;
-	readonly modelsRange?: IRange;
-	readonly settings?: IStringDictionary<IStringDictionary<unknown>>;
+  readonly name: string;
+  readonly vendor: string;
+  readonly range?: IRange;
+  readonly modelsRange?: IRange;
+  readonly settings?: IStringDictionary<IStringDictionary<unknown>>;
 }

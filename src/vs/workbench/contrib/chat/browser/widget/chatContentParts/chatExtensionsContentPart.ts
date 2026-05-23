@@ -6,9 +6,15 @@
 import "./media/chatExtensionsContent.css";
 import * as dom from "../../../../../../base/browser/dom.js";
 import { Event } from "../../../../../../base/common/event.js";
-import { Disposable, IDisposable } from "../../../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  IDisposable,
+} from "../../../../../../base/common/lifecycle.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
-import { ExtensionsList, getExtensions } from "../../../../extensions/browser/extensionsViewer.js";
+import {
+  ExtensionsList,
+  getExtensions,
+} from "../../../../extensions/browser/extensionsViewer.js";
 import { IExtensionsWorkbenchService } from "../../../../extensions/common/extensions.js";
 import { IChatExtensionsContent } from "../../../common/chatService/chatService.js";
 import { IChatRendererContent } from "../../../common/model/chatViewModel.js";
@@ -19,30 +25,34 @@ import { Codicon } from "../../../../../../base/common/codicons.js";
 import { ThemeIcon } from "../../../../../../base/common/themables.js";
 import { localize } from "../../../../../../nls.js";
 
-export class ChatExtensionsContentPart extends Disposable implements IChatContentPart {
-	public readonly domNode: HTMLElement;
+export class ChatExtensionsContentPart
+  extends Disposable
+  implements IChatContentPart
+{
+  public readonly domNode: HTMLElement;
 
-	public get codeblocks(): IChatCodeBlockInfo[] {
-		return [];
-	}
+  public get codeblocks(): IChatCodeBlockInfo[] {
+    return [];
+  }
 
-	public get codeblocksPartId(): string | undefined {
-		return undefined;
-	}
+  public get codeblocksPartId(): string | undefined {
+    return undefined;
+  }
 
-	constructor(
-		private readonly extensionsContent: IChatExtensionsContent,
-		@IExtensionsWorkbenchService extensionsWorkbenchService: IExtensionsWorkbenchService,
-		@IInstantiationService instantiationService: IInstantiationService,
-	) {
-		super();
+  constructor(
+    private readonly extensionsContent: IChatExtensionsContent,
+    @IExtensionsWorkbenchService
+    extensionsWorkbenchService: IExtensionsWorkbenchService,
+    @IInstantiationService instantiationService: IInstantiationService,
+  ) {
+    super();
 
-		this.domNode = dom.$(".chat-extensions-content-part");
-		const loadingElement = dom.append(
+    this.domNode = dom.$(".chat-extensions-content-part");
+    const loadingElement = dom.append(
       this.domNode,
       dom.$(".loading-extensions-element"),
     );
-		dom.append(
+    dom.append(
       loadingElement,
       dom.$(ThemeIcon.asCSSSelector(ThemeIcon.modify(Codicon.loading, "spin"))),
       dom.$(
@@ -52,8 +62,8 @@ export class ChatExtensionsContentPart extends Disposable implements IChatConten
       ),
     );
 
-		const extensionsList = dom.append(this.domNode, dom.$(".extensions-list"));
-		const list = this._register(
+    const extensionsList = dom.append(this.domNode, dom.$(".extensions-list"));
+    const list = this._register(
       instantiationService.createInstance(
         ExtensionsList,
         extensionsList,
@@ -62,23 +72,34 @@ export class ChatExtensionsContentPart extends Disposable implements IChatConten
         { onFocus: Event.None, onBlur: Event.None, filters: {} },
       ),
     );
-		getExtensions(extensionsContent.extensions, extensionsWorkbenchService).then(extensions => {
-			loadingElement.remove();
-			if (this._store.isDisposed) {
-				return;
-			}
-			list.setModel(new PagedModel(extensions));
-			list.layout();
-		});
-	}
+    getExtensions(
+      extensionsContent.extensions,
+      extensionsWorkbenchService,
+    ).then((extensions) => {
+      loadingElement.remove();
+      if (this._store.isDisposed) {
+        return;
+      }
+      list.setModel(new PagedModel(extensions));
+      list.layout();
+    });
+  }
 
-	hasSameContent(other: IChatRendererContent, followingContent: IChatRendererContent[], element: ChatTreeItem): boolean {
-		return other.kind === "extensions" && other.extensions.length === this.extensionsContent.extensions.length && other.extensions.every(
-      ext => this.extensionsContent.extensions.includes(ext),
+  hasSameContent(
+    other: IChatRendererContent,
+    followingContent: IChatRendererContent[],
+    element: ChatTreeItem,
+  ): boolean {
+    return (
+      other.kind === "extensions" &&
+      other.extensions.length === this.extensionsContent.extensions.length &&
+      other.extensions.every((ext) =>
+        this.extensionsContent.extensions.includes(ext),
+      )
     );
-	}
+  }
 
-	addDisposable(disposable: IDisposable): void {
-		this._register(disposable);
-	}
+  addDisposable(disposable: IDisposable): void {
+    this._register(disposable);
+  }
 }

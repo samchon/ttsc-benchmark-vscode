@@ -13,24 +13,27 @@ import {
 import { IFileService } from "../../files/common/files.js";
 import { INativeEnvironmentService } from "../../environment/common/environment.js";
 import { URI } from "../../../base/common/uri.js";
-import { InstantiationType, registerSingleton } from "../../instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../instantiation/common/extensions.js";
 
 export class ExtensionsProfileScannerService extends AbstractExtensionsProfileScannerService {
-	constructor(
-		@INativeEnvironmentService environmentService: INativeEnvironmentService,
-		@IFileService fileService: IFileService,
-		@IUserDataProfilesService userDataProfilesService: IUserDataProfilesService,
-		@IUriIdentityService uriIdentityService: IUriIdentityService,
-		@ILogService logService: ILogService,
-	) {
-		super(
+  constructor(
+    @INativeEnvironmentService environmentService: INativeEnvironmentService,
+    @IFileService fileService: IFileService,
+    @IUserDataProfilesService userDataProfilesService: IUserDataProfilesService,
+    @IUriIdentityService uriIdentityService: IUriIdentityService,
+    @ILogService logService: ILogService,
+  ) {
+    super(
       URI.file(environmentService.extensionsPath),
       fileService,
       userDataProfilesService,
       uriIdentityService,
       logService,
     );
-	}
+  }
 }
 
 registerSingleton(

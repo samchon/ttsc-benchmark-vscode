@@ -14,7 +14,10 @@ import {
 export const diff = registerColor(
   "mergeEditor.change.background",
   "#9bb95533",
-  localize("mergeEditor.change.background", "The background color for changes."),
+  localize(
+    "mergeEditor.change.background",
+    "The background color for changes.",
+  ),
 );
 
 export const diffWord = registerColor(

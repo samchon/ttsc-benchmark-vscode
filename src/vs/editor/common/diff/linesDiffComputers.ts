@@ -13,4 +13,7 @@ export const linesDiffComputers = {
   getDefault: () => new DefaultLinesDiffComputer(),
   getAdvancedExternal: () => getExternalLinesDiffComputer(false),
   getAdvancedWasm: () => getExternalLinesDiffComputer(true),
-} satisfies Record<string, () => ILinesDiffComputer | Promise<ILinesDiffComputer>>;
+} satisfies Record<
+  string,
+  () => ILinesDiffComputer | Promise<ILinesDiffComputer>
+>;

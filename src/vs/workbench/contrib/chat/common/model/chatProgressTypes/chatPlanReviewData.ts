@@ -5,7 +5,11 @@
 
 import { DeferredPromise } from "../../../../../../base/common/async.js";
 import { UriComponents } from "../../../../../../base/common/uri.js";
-import { IChatPlanApprovalAction, IChatPlanReview, IChatPlanReviewResult } from "../../chatService/chatService.js";
+import {
+  IChatPlanApprovalAction,
+  IChatPlanReview,
+  IChatPlanReviewResult,
+} from "../../chatService/chatService.js";
 import { ToolDataSource } from "../../tools/languageModelToolsService.js";
 
 /**
@@ -14,37 +18,39 @@ import { ToolDataSource } from "../../tools/languageModelToolsService.js";
  * strips the completion so only serialisable data is persisted.
  */
 export class ChatPlanReviewData implements IChatPlanReview {
-	public readonly kind = "planReview" as const;
-	public readonly completion = new DeferredPromise<IChatPlanReviewResult | undefined>();
+  public readonly kind = "planReview" as const;
+  public readonly completion = new DeferredPromise<
+    IChatPlanReviewResult | undefined
+  >();
 
-	public draftFeedback: string | undefined;
-	public draftCollapsed: boolean | undefined;
+  public draftFeedback: string | undefined;
+  public draftCollapsed: boolean | undefined;
 
-	constructor(
-		public title: string,
-		public content: string,
-		public actions: IChatPlanApprovalAction[],
-		public canProvideFeedback: boolean,
-		public planUri?: UriComponents,
-		public resolveId?: string,
-		public data?: IChatPlanReviewResult,
-		public isUsed?: boolean,
-		public source?: ToolDataSource,
-	) { }
+  constructor(
+    public title: string,
+    public content: string,
+    public actions: IChatPlanApprovalAction[],
+    public canProvideFeedback: boolean,
+    public planUri?: UriComponents,
+    public resolveId?: string,
+    public data?: IChatPlanReviewResult,
+    public isUsed?: boolean,
+    public source?: ToolDataSource,
+  ) {}
 
-	/** Dismiss without a user choice (e.g. the response was cancelled). */
-	dismiss(): void {
-		if (this.isUsed) {
-			return;
-		}
-		this.isUsed = true;
-		this.draftFeedback = undefined;
-		this.draftCollapsed = undefined;
-		void this.completion.complete(undefined);
-	}
+  /** Dismiss without a user choice (e.g. the response was cancelled). */
+  dismiss(): void {
+    if (this.isUsed) {
+      return;
+    }
+    this.isUsed = true;
+    this.draftFeedback = undefined;
+    this.draftCollapsed = undefined;
+    void this.completion.complete(undefined);
+  }
 
-	toJSON(): IChatPlanReview {
-		return {
+  toJSON(): IChatPlanReview {
+    return {
       kind: this.kind,
       title: this.title,
       content: this.content,
@@ -56,5 +62,5 @@ export class ChatPlanReviewData implements IChatPlanReview {
       isUsed: this.isUsed,
       source: this.source,
     };
-	}
+  }
 }

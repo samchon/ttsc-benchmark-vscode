@@ -3,7 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createMarkdownCommandLink, IMarkdownString, MarkdownString } from "../../../../../../../base/common/htmlContent.js";
+import {
+  createMarkdownCommandLink,
+  IMarkdownString,
+  MarkdownString,
+} from "../../../../../../../base/common/htmlContent.js";
 import { localize } from "../../../../../../../nls.js";
 import {
   ConfirmedReason,
@@ -12,9 +16,12 @@ import {
   ToolConfirmKind,
 } from "../../../../common/chatService/chatService.js";
 
-export function isMcpToolInvocation(toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized): boolean {
-	return toolInvocation.source?.type === "mcp" || toolInvocation.toolId.toLowerCase().includes(
-    "mcp",
+export function isMcpToolInvocation(
+  toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized,
+): boolean {
+  return (
+    toolInvocation.source?.type === "mcp" ||
+    toolInvocation.toolId.toLowerCase().includes("mcp")
   );
 }
 
@@ -22,14 +29,19 @@ export function isMcpToolInvocation(toolInvocation: IChatToolInvocation | IChatT
  * Determines whether a tool invocation's progress text should shimmer.
  * MCP tools shimmer; askQuestions defers to the caller's default; all others opt out.
  */
-export function shouldShimmerForTool(toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized): boolean {
-	if (isMcpToolInvocation(toolInvocation)) {
-		return !IChatToolInvocation.isComplete(toolInvocation);
-	}
-	if (toolInvocation.toolId === "copilot_askQuestions" || toolInvocation.toolId === "vscode_askQuestions") {
-		return false;
-	}
-	return false;
+export function shouldShimmerForTool(
+  toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized,
+): boolean {
+  if (isMcpToolInvocation(toolInvocation)) {
+    return !IChatToolInvocation.isComplete(toolInvocation);
+  }
+  if (
+    toolInvocation.toolId === "copilot_askQuestions" ||
+    toolInvocation.toolId === "vscode_askQuestions"
+  ) {
+    return false;
+  }
+  return false;
 }
 
 /**
@@ -37,13 +49,15 @@ export function shouldShimmerForTool(toolInvocation: IChatToolInvocation | IChat
  * @param toolInvocation The tool invocation to get the approval message for
  * @returns A markdown string with the approval message, or undefined if no message should be shown
  */
-export function getToolApprovalMessage(toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized): IMarkdownString | undefined {
-	const reason = IChatToolInvocation.executionConfirmedOrDenied(toolInvocation);
-	if (!reason || typeof reason === "boolean") {
-		return undefined;
-	}
+export function getToolApprovalMessage(
+  toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized,
+): IMarkdownString | undefined {
+  const reason = IChatToolInvocation.executionConfirmedOrDenied(toolInvocation);
+  if (!reason || typeof reason === "boolean") {
+    return undefined;
+  }
 
-	return getApprovalMessageFromReason(reason);
+  return getApprovalMessageFromReason(reason);
 }
 
 /**
@@ -51,11 +65,13 @@ export function getToolApprovalMessage(toolInvocation: IChatToolInvocation | ICh
  * @param reason The confirmation reason
  * @returns A markdown string with the approval message, or undefined if no message should be shown
  */
-export function getApprovalMessageFromReason(reason: ConfirmedReason): IMarkdownString | undefined {
-	let md: string;
-	switch (reason.type) {
-		case ToolConfirmKind.Setting:
-			md = localize(
+export function getApprovalMessageFromReason(
+  reason: ConfirmedReason,
+): IMarkdownString | undefined {
+  let md: string;
+  switch (reason.type) {
+    case ToolConfirmKind.Setting:
+      md = localize(
         "chat.autoapprove.setting",
         "Auto approved by {0}",
         createMarkdownCommandLink(
@@ -68,41 +84,48 @@ export function getApprovalMessageFromReason(reason: ConfirmedReason): IMarkdown
           false,
         ),
       );
-			break;
-		case ToolConfirmKind.LmServicePerTool:
-			md = reason.scope === "session"
-				? localize(
-            "chat.autoapprove.lmServicePerTool.session",
-            "Auto approved for this session",
-          )
-				: reason.scope === "workspace"
-					? localize(
-              "chat.autoapprove.lmServicePerTool.workspace",
-              "Auto approved for this workspace",
+      break;
+    case ToolConfirmKind.LmServicePerTool:
+      md =
+        reason.scope === "session"
+          ? localize(
+              "chat.autoapprove.lmServicePerTool.session",
+              "Auto approved for this session",
             )
-					: localize(
-              "chat.autoapprove.lmServicePerTool.profile",
-              "Auto approved for this profile",
-            );
-			md += " (" + createMarkdownCommandLink({
-        text: localize("edit", "Edit"),
-        id: "workbench.action.chat.editToolApproval",
-        arguments: [reason.scope],
-        tooltip: localize("editToolApproval.tooltip", "Edit tool approval settings"),
-      }) + ")";
-			break;
-		case ToolConfirmKind.ConfirmationNotNeeded:
-			if (reason.reason) {
-				return typeof reason.reason === "string"
-					? new MarkdownString(reason.reason, { isTrusted: true })
-					: reason.reason;
-			}
-			return undefined;
-		case ToolConfirmKind.UserAction:
-		case ToolConfirmKind.Denied:
-		default:
-			return undefined;
-	}
+          : reason.scope === "workspace"
+            ? localize(
+                "chat.autoapprove.lmServicePerTool.workspace",
+                "Auto approved for this workspace",
+              )
+            : localize(
+                "chat.autoapprove.lmServicePerTool.profile",
+                "Auto approved for this profile",
+              );
+      md +=
+        " (" +
+        createMarkdownCommandLink({
+          text: localize("edit", "Edit"),
+          id: "workbench.action.chat.editToolApproval",
+          arguments: [reason.scope],
+          tooltip: localize(
+            "editToolApproval.tooltip",
+            "Edit tool approval settings",
+          ),
+        }) +
+        ")";
+      break;
+    case ToolConfirmKind.ConfirmationNotNeeded:
+      if (reason.reason) {
+        return typeof reason.reason === "string"
+          ? new MarkdownString(reason.reason, { isTrusted: true })
+          : reason.reason;
+      }
+      return undefined;
+    case ToolConfirmKind.UserAction:
+    case ToolConfirmKind.Denied:
+    default:
+      return undefined;
+  }
 
-	return new MarkdownString(md, { isTrusted: true });
+  return new MarkdownString(md, { isTrusted: true });
 }

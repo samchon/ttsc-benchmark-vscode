@@ -14,20 +14,22 @@ import {
   type IMcpServerDefinition,
   type IParsedHookCommand,
 } from "../../../../../platform/agentPlugins/common/pluginParsers.js";
-import { ContributionEnablementState, IEnablementModel } from "../enablement.js";
+import {
+  ContributionEnablementState,
+  IEnablementModel,
+} from "../enablement.js";
 import { HookType } from "../promptSyntax/hookTypes.js";
 import { IMarketplacePlugin } from "./pluginMarketplaceService.js";
 
-export const IAgentPluginService = createDecorator<IAgentPluginService>(
-  "agentPluginService",
-);
+export const IAgentPluginService =
+  createDecorator<IAgentPluginService>("agentPluginService");
 
 export interface IAgentPluginHook {
-	readonly type: HookType;
-	readonly hooks: readonly IParsedHookCommand[];
-	/** URI where this hook is defined -- not unique, multiple hooks may be in a manifest */
-	readonly uri: URI;
-	readonly originalId: string;
+  readonly type: HookType;
+  readonly hooks: readonly IParsedHookCommand[];
+  /** URI where this hook is defined -- not unique, multiple hooks may be in a manifest */
+  readonly uri: URI;
+  readonly originalId: string;
 }
 
 export type IAgentPluginCommand = INamedPluginResource;
@@ -37,73 +39,76 @@ export type IAgentPluginInstruction = INamedPluginResource;
 export type IAgentPluginMcpServerDefinition = IMcpServerDefinition;
 
 export interface IAgentPlugin {
-	readonly uri: URI;
-	/** Human-readable display name for the plugin. */
-	readonly label: string;
-	readonly enablement: IObservable<ContributionEnablementState>;
-	/** Removes this plugin from its discovery source (config or installed storage). */
-	remove(): void;
-	readonly hooks: IObservable<readonly IAgentPluginHook[]>;
-	readonly commands: IObservable<readonly IAgentPluginCommand[]>;
-	readonly skills: IObservable<readonly IAgentPluginSkill[]>;
-	readonly agents: IObservable<readonly IAgentPluginAgent[]>;
-	readonly instructions: IObservable<readonly IAgentPluginInstruction[]>;
-	readonly mcpServerDefinitions: IObservable<readonly IAgentPluginMcpServerDefinition[]>;
-	/** Set when the plugin was installed from a marketplace repository. */
-	readonly fromMarketplace?: IMarketplacePlugin;
+  readonly uri: URI;
+  /** Human-readable display name for the plugin. */
+  readonly label: string;
+  readonly enablement: IObservable<ContributionEnablementState>;
+  /** Removes this plugin from its discovery source (config or installed storage). */
+  remove(): void;
+  readonly hooks: IObservable<readonly IAgentPluginHook[]>;
+  readonly commands: IObservable<readonly IAgentPluginCommand[]>;
+  readonly skills: IObservable<readonly IAgentPluginSkill[]>;
+  readonly agents: IObservable<readonly IAgentPluginAgent[]>;
+  readonly instructions: IObservable<readonly IAgentPluginInstruction[]>;
+  readonly mcpServerDefinitions: IObservable<
+    readonly IAgentPluginMcpServerDefinition[]
+  >;
+  /** Set when the plugin was installed from a marketplace repository. */
+  readonly fromMarketplace?: IMarketplacePlugin;
 }
 
 export interface IAgentPluginService {
-	readonly _serviceBrand: undefined;
-	readonly plugins: IObservable<readonly IAgentPlugin[]>;
-	readonly enablementModel: IEnablementModel;
+  readonly _serviceBrand: undefined;
+  readonly plugins: IObservable<readonly IAgentPlugin[]>;
+  readonly enablementModel: IEnablementModel;
 }
 
 export interface IAgentPluginDiscovery extends IDisposable {
-	readonly plugins: IObservable<readonly IAgentPlugin[]>;
-	start(enablementModel: IEnablementModel): void;
+  readonly plugins: IObservable<readonly IAgentPlugin[]>;
+  start(enablementModel: IEnablementModel): void;
 }
 
-export function getCanonicalPluginCommandId(plugin: { readonly uri: URI }, commandName: string): string {
-	const pluginSegment = basename(plugin.uri);
-	const prefix = normalizePluginToken(pluginSegment);
-	const normalizedCommand = normalizePluginToken(commandName);
-	if (normalizedCommand.startsWith(`${prefix}:`)) {
-		return normalizedCommand;
-	}
+export function getCanonicalPluginCommandId(
+  plugin: { readonly uri: URI },
+  commandName: string,
+): string {
+  const pluginSegment = basename(plugin.uri);
+  const prefix = normalizePluginToken(pluginSegment);
+  const normalizedCommand = normalizePluginToken(commandName);
+  if (normalizedCommand.startsWith(`${prefix}:`)) {
+    return normalizedCommand;
+  }
 
-	// When the skill name matches the plugin name, use just the plugin
-	// name so the user can invoke `/plugin-name` instead of the redundant
-	// `/plugin-name:plugin-name`.
-	if (prefix === normalizedCommand) {
-		return prefix;
-	}
+  // When the skill name matches the plugin name, use just the plugin
+  // name so the user can invoke `/plugin-name` instead of the redundant
+  // `/plugin-name:plugin-name`.
+  if (prefix === normalizedCommand) {
+    return prefix;
+  }
 
-	return `${prefix}:${normalizedCommand}`;
+  return `${prefix}:${normalizedCommand}`;
 }
 
 function normalizePluginToken(value: string): string {
-	return value
-		.trim()
-		.toLowerCase()
-		.replace(/\s+/g, "-")
-		.replace(/[^a-z0-9_.:-]/g, "-")
-		.replace(/-+/g, "-")
-		.replace(/^[-:.]+|[-:.]+$/g, "");
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9_.:-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^[-:.]+|[-:.]+$/g, "");
 }
 
 class AgentPluginDiscoveryRegistry {
-	private readonly _discovery: SyncDescriptor0<IAgentPluginDiscovery>[] = [];
+  private readonly _discovery: SyncDescriptor0<IAgentPluginDiscovery>[] = [];
 
-	register(descriptor: SyncDescriptor0<IAgentPluginDiscovery>): void {
-		this._discovery.push(descriptor);
-	}
+  register(descriptor: SyncDescriptor0<IAgentPluginDiscovery>): void {
+    this._discovery.push(descriptor);
+  }
 
-	getAll(): readonly SyncDescriptor0<IAgentPluginDiscovery>[] {
-		return this._discovery;
-	}
+  getAll(): readonly SyncDescriptor0<IAgentPluginDiscovery>[] {
+    return this._discovery;
+  }
 }
 
 export const agentPluginDiscoveryRegistry = new AgentPluginDiscoveryRegistry();
-
-

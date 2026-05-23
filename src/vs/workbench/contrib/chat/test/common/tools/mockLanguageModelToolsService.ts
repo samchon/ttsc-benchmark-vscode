@@ -6,8 +6,15 @@
 import { CancellationToken } from "../../../../../../base/common/cancellation.js";
 import { Codicon } from "../../../../../../base/common/codicons.js";
 import { Emitter, Event } from "../../../../../../base/common/event.js";
-import { Disposable, IDisposable } from "../../../../../../base/common/lifecycle.js";
-import { constObservable, IObservable, IReader } from "../../../../../../base/common/observable.js";
+import {
+  Disposable,
+  IDisposable,
+} from "../../../../../../base/common/lifecycle.js";
+import {
+  constObservable,
+  IObservable,
+  IReader,
+} from "../../../../../../base/common/observable.js";
 import { ThemeIcon } from "../../../../../../base/common/themables.js";
 import { URI } from "../../../../../../base/common/uri.js";
 import { MockContextKeyService } from "../../../../../../platform/keybinding/test/common/mockKeybindingService.js";
@@ -31,9 +38,12 @@ import {
   ToolSet,
 } from "../../../common/tools/languageModelToolsService.js";
 
-export class MockLanguageModelToolsService extends Disposable implements ILanguageModelToolsService {
-	_serviceBrand: undefined;
-	vscodeToolSet: ToolSet = new ToolSet(
+export class MockLanguageModelToolsService
+  extends Disposable
+  implements ILanguageModelToolsService
+{
+  _serviceBrand: undefined;
+  vscodeToolSet: ToolSet = new ToolSet(
     "vscode",
     "vscode",
     ThemeIcon.fromId(Codicon.code.id),
@@ -42,7 +52,7 @@ export class MockLanguageModelToolsService extends Disposable implements ILangua
     undefined,
     new MockContextKeyService(),
   );
-	executeToolSet: ToolSet = new ToolSet(
+  executeToolSet: ToolSet = new ToolSet(
     "execute",
     "execute",
     ThemeIcon.fromId(Codicon.terminal.id),
@@ -51,7 +61,7 @@ export class MockLanguageModelToolsService extends Disposable implements ILangua
     undefined,
     new MockContextKeyService(),
   );
-	readToolSet: ToolSet = new ToolSet(
+  readToolSet: ToolSet = new ToolSet(
     "read",
     "read",
     ThemeIcon.fromId(Codicon.book.id),
@@ -60,7 +70,7 @@ export class MockLanguageModelToolsService extends Disposable implements ILangua
     undefined,
     new MockContextKeyService(),
   );
-	agentToolSet: ToolSet = new ToolSet(
+  agentToolSet: ToolSet = new ToolSet(
     "agent",
     "agent",
     ThemeIcon.fromId(Codicon.agent.id),
@@ -70,178 +80,194 @@ export class MockLanguageModelToolsService extends Disposable implements ILangua
     new MockContextKeyService(),
   );
 
-	private readonly _onDidInvokeTool = this._register(
+  private readonly _onDidInvokeTool = this._register(
     new Emitter<IToolInvokedEvent>(),
   );
 
-	private readonly _registeredToolIds = new Set<string>();
-	private readonly _registeredToolSetNames = new Set<string>();
-	private readonly _toolSetTools = new Map<string, IToolData[]>();
+  private readonly _registeredToolIds = new Set<string>();
+  private readonly _registeredToolSetNames = new Set<string>();
+  private readonly _toolSetTools = new Map<string, IToolData[]>();
 
-	constructor() {
-		super();
-	}
+  constructor() {
+    super();
+  }
 
-	readonly onDidChangeTools: Event<void> = Event.None;
-	readonly onDidPrepareToolCallBecomeUnresponsive: Event<{ sessionResource: URI; toolData: IToolData }> = Event.None;
-	readonly onDidInvokeTool = this._onDidInvokeTool.event;
+  readonly onDidChangeTools: Event<void> = Event.None;
+  readonly onDidPrepareToolCallBecomeUnresponsive: Event<{
+    sessionResource: URI;
+    toolData: IToolData;
+  }> = Event.None;
+  readonly onDidInvokeTool = this._onDidInvokeTool.event;
 
-	fireOnDidInvokeTool(event: IToolInvokedEvent): void {
-		this._onDidInvokeTool.fire(event);
-	}
+  fireOnDidInvokeTool(event: IToolInvokedEvent): void {
+    this._onDidInvokeTool.fire(event);
+  }
 
-	registerToolData(toolData: IToolData): IDisposable {
-		return Disposable.None;
-	}
+  registerToolData(toolData: IToolData): IDisposable {
+    return Disposable.None;
+  }
 
-	resetToolAutoConfirmation(): void {
+  resetToolAutoConfirmation(): void {}
 
-	}
+  getToolPostExecutionAutoConfirmation(
+    toolId: string,
+  ): "workspace" | "profile" | "session" | "never" {
+    return "never";
+  }
 
-	getToolPostExecutionAutoConfirmation(toolId: string): "workspace" | "profile" | "session" | "never" {
-		return "never";
-	}
+  resetToolPostExecutionAutoConfirmation(): void {}
 
-	resetToolPostExecutionAutoConfirmation(): void {
+  flushToolUpdates(): void {}
 
-	}
+  cancelToolCallsForRequest(requestId: string): void {}
 
-	flushToolUpdates(): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setToolAutoConfirmation(toolId: string, scope: any): void {}
 
-	}
+  getToolAutoConfirmation(toolId: string): "never" {
+    return "never";
+  }
 
-	cancelToolCallsForRequest(requestId: string): void {
+  registerToolImplementation(name: string, tool: IToolImpl): IDisposable {
+    return Disposable.None;
+  }
 
-	}
+  registerTool(toolData: IToolData, tool: IToolImpl): IDisposable {
+    return Disposable.None;
+  }
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	setToolAutoConfirmation(toolId: string, scope: any): void {
+  getTools(): Iterable<IToolData> {
+    return [];
+  }
 
-	}
+  getAllToolsIncludingDisabled(): Iterable<IToolData> {
+    return [];
+  }
 
-	getToolAutoConfirmation(toolId: string): "never" {
-		return "never";
-	}
+  addRegisteredToolId(id: string): void {
+    this._registeredToolIds.add(id);
+  }
 
-	registerToolImplementation(name: string, tool: IToolImpl): IDisposable {
-		return Disposable.None;
-	}
-
-	registerTool(toolData: IToolData, tool: IToolImpl): IDisposable {
-		return Disposable.None;
-	}
-
-	getTools(): Iterable<IToolData> {
-		return [];
-	}
-
-	getAllToolsIncludingDisabled(): Iterable<IToolData> {
-		return [];
-	}
-
-	addRegisteredToolId(id: string): void {
-		this._registeredToolIds.add(id);
-	}
-
-	getTool(id: string): IToolData | undefined {
-		if (this._registeredToolIds.has(id)) {
-			return {
+  getTool(id: string): IToolData | undefined {
+    if (this._registeredToolIds.has(id)) {
+      return {
         id,
         source: ToolDataSource.Internal,
         displayName: id,
         modelDescription: id,
       };
-		}
-		return undefined;
-	}
+    }
+    return undefined;
+  }
 
-	observeTools(): IObservable<readonly IToolData[]> {
-		return constObservable([]);
-	}
+  observeTools(): IObservable<readonly IToolData[]> {
+    return constObservable([]);
+  }
 
-	getToolByName(name: string): IToolData | undefined {
-		return undefined;
-	}
+  getToolByName(name: string): IToolData | undefined {
+    return undefined;
+  }
 
-	acceptProgress(sessionId: string | undefined, callId: string, progress: IProgressStep): void {
+  acceptProgress(
+    sessionId: string | undefined,
+    callId: string,
+    progress: IProgressStep,
+  ): void {}
 
-	}
-
-	async invokeTool(dto: IToolInvocation, countTokens: CountTokensCallback, token: CancellationToken): Promise<IToolResult> {
-		return {
+  async invokeTool(
+    dto: IToolInvocation,
+    countTokens: CountTokensCallback,
+    token: CancellationToken,
+  ): Promise<IToolResult> {
+    return {
       content: [{ kind: "text", value: "result" }],
     };
-	}
+  }
 
-	beginToolCall(_options: IBeginToolCallOptions): IChatToolInvocation | undefined {
-		// Mock implementation - return undefined
-		return undefined;
-	}
+  beginToolCall(
+    _options: IBeginToolCallOptions,
+  ): IChatToolInvocation | undefined {
+    // Mock implementation - return undefined
+    return undefined;
+  }
 
-	async updateToolStream(_toolCallId: string, _partialInput: unknown, _token: CancellationToken): Promise<void> {
-		// Mock implementation - do nothing
-	}
+  async updateToolStream(
+    _toolCallId: string,
+    _partialInput: unknown,
+    _token: CancellationToken,
+  ): Promise<void> {
+    // Mock implementation - do nothing
+  }
 
-	toolSets: IObservable<readonly IToolSet[]> = constObservable([]);
+  toolSets: IObservable<readonly IToolSet[]> = constObservable([]);
 
-	getToolSetsForModel(model: ILanguageModelChatMetadata | undefined, reader?: IReader): Iterable<IToolSet> {
-		return [];
-	}
+  getToolSetsForModel(
+    model: ILanguageModelChatMetadata | undefined,
+    reader?: IReader,
+  ): Iterable<IToolSet> {
+    return [];
+  }
 
-	addRegisteredToolSetName(name: string, tools?: IToolData[]): void {
-		this._registeredToolSetNames.add(name);
-		if (tools) {
-			this._toolSetTools.set(name, tools);
-		}
-	}
+  addRegisteredToolSetName(name: string, tools?: IToolData[]): void {
+    this._registeredToolSetNames.add(name);
+    if (tools) {
+      this._toolSetTools.set(name, tools);
+    }
+  }
 
-	getToolSetByName(name: string): IToolSet | undefined {
-		if (this._registeredToolSetNames.has(name)) {
-			const tools = this._toolSetTools.get(name) ?? [];
-			return {
+  getToolSetByName(name: string): IToolSet | undefined {
+    if (this._registeredToolSetNames.has(name)) {
+      const tools = this._toolSetTools.get(name) ?? [];
+      return {
         id: name,
         referenceName: name,
         icon: ThemeIcon.fromId(Codicon.tools.id),
         source: ToolDataSource.Internal,
         getTools: () => tools,
       };
-		}
-		return undefined;
-	}
+    }
+    return undefined;
+  }
 
-	getToolSet(id: string): IToolSet | undefined {
-		return undefined;
-	}
+  getToolSet(id: string): IToolSet | undefined {
+    return undefined;
+  }
 
-	createToolSet(): ToolSet & IDisposable {
-		throw new Error("Method not implemented.");
-	}
+  createToolSet(): ToolSet & IDisposable {
+    throw new Error("Method not implemented.");
+  }
 
-	toToolAndToolSetEnablementMap(toolOrToolSetNames: readonly string[]): IToolAndToolSetEnablementMap {
-		throw new Error("Method not implemented.");
-	}
+  toToolAndToolSetEnablementMap(
+    toolOrToolSetNames: readonly string[],
+  ): IToolAndToolSetEnablementMap {
+    throw new Error("Method not implemented.");
+  }
 
-	toToolReferences(variableReferences: readonly IVariableReference[]): ChatRequestToolReferenceEntry[] {
-		throw new Error("Method not implemented.");
-	}
+  toToolReferences(
+    variableReferences: readonly IVariableReference[],
+  ): ChatRequestToolReferenceEntry[] {
+    throw new Error("Method not implemented.");
+  }
 
-	getFullReferenceNames(): Iterable<string> {
-		throw new Error("Method not implemented.");
-	}
+  getFullReferenceNames(): Iterable<string> {
+    throw new Error("Method not implemented.");
+  }
 
-	getToolByFullReferenceName(qualifiedName: string): IToolData | IToolSet | undefined {
-		throw new Error("Method not implemented.");
-	}
+  getToolByFullReferenceName(
+    qualifiedName: string,
+  ): IToolData | IToolSet | undefined {
+    throw new Error("Method not implemented.");
+  }
 
-	getFullReferenceName(tool: IToolData, set?: IToolSet): string {
-		throw new Error("Method not implemented.");
-	}
+  getFullReferenceName(tool: IToolData, set?: IToolSet): string {
+    throw new Error("Method not implemented.");
+  }
 
-	toFullReferenceNames(map: IToolAndToolSetEnablementMap): string[] {
-		throw new Error("Method not implemented.");
-	}
+  toFullReferenceNames(map: IToolAndToolSetEnablementMap): string[] {
+    throw new Error("Method not implemented.");
+  }
 
-	getDeprecatedFullReferenceNames(): Map<string, Set<string>> {
-		throw new Error("Method not implemented.");
-	}
+  getDeprecatedFullReferenceNames(): Map<string, Set<string>> {
+    throw new Error("Method not implemented.");
+  }
 }

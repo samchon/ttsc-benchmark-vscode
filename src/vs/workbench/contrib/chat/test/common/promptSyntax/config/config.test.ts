@@ -8,35 +8,43 @@ import { mockService } from "../utils/mock.js";
 import { PromptsConfig } from "../../../../common/promptSyntax/config/config.js";
 import { PromptsType } from "../../../../common/promptSyntax/promptTypes.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../../base/test/common/utils.js";
-import { IConfigurationOverrides, IConfigurationService } from "../../../../../../../platform/configuration/common/configuration.js";
+import {
+  IConfigurationOverrides,
+  IConfigurationService,
+} from "../../../../../../../platform/configuration/common/configuration.js";
 import { IPromptSourceFolder } from "../../../../common/promptSyntax/config/promptFileLocations.js";
 
 /**
  * Helper to extract just the paths from IPromptSourceFolder array for testing.
  */
 function getPaths(folders: IPromptSourceFolder[]): string[] {
-	return folders.map(f => f.path);
+  return folders.map((f) => f.path);
 }
 
 /**
  * Mocked instance of {@link IConfigurationService}.
  */
 function createMock<T>(value: T): IConfigurationService {
-	return mockService<IConfigurationService>({
-		getValue(key?: string | IConfigurationOverrides) {
-			assert(
-				typeof key === "string",
-				`Expected string configuration key, got '${typeof key}'.`,
-			);
+  return mockService<IConfigurationService>({
+    getValue(key?: string | IConfigurationOverrides) {
+      assert(
+        typeof key === "string",
+        `Expected string configuration key, got '${typeof key}'.`,
+      );
 
-			assert(
-				[PromptsConfig.PROMPT_LOCATIONS_KEY, PromptsConfig.INSTRUCTIONS_LOCATION_KEY, PromptsConfig.MODE_LOCATION_KEY, PromptsConfig.SKILLS_LOCATION_KEY].includes(key),
-				`Unsupported configuration key '${key}'.`,
-			);
+      assert(
+        [
+          PromptsConfig.PROMPT_LOCATIONS_KEY,
+          PromptsConfig.INSTRUCTIONS_LOCATION_KEY,
+          PromptsConfig.MODE_LOCATION_KEY,
+          PromptsConfig.SKILLS_LOCATION_KEY,
+        ].includes(key),
+        `Unsupported configuration key '${key}'.`,
+      );
 
-			return value;
-		},
-	});
+      return value;
+    },
+  });
 }
 
 suite("PromptsConfig", () => {
@@ -474,7 +482,10 @@ suite("PromptsConfig", () => {
       test("empty object returns default skill folders", () => {
         assert.deepStrictEqual(
           getPaths(
-            PromptsConfig.promptSourceFolders(createMock({}), PromptsType.skill),
+            PromptsConfig.promptSourceFolders(
+              createMock({}),
+              PromptsType.skill,
+            ),
           ),
           [
             ".agents/skills",

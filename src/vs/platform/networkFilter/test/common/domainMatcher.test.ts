@@ -20,7 +20,11 @@ suite("domainMatcher", () => {
   suite("normalizeDomain", () => {
     test("returns undefined for empty/falsy input", () => {
       assert.deepStrictEqual(
-        [normalizeDomain(undefined), normalizeDomain(""), normalizeDomain("  ")],
+        [
+          normalizeDomain(undefined),
+          normalizeDomain(""),
+          normalizeDomain("  "),
+        ],
         [undefined, undefined, undefined],
       );
     });
@@ -46,10 +50,10 @@ suite("domainMatcher", () => {
     });
 
     test("rejects . and ..", () => {
-      assert.deepStrictEqual([normalizeDomain("."), normalizeDomain("..")], [
-        undefined,
-        undefined,
-      ]);
+      assert.deepStrictEqual(
+        [normalizeDomain("."), normalizeDomain("..")],
+        [undefined, undefined],
+      );
     });
 
     test("accepts bare wildcard", () => {
@@ -91,7 +95,10 @@ suite("domainMatcher", () => {
 
   suite("extractDomainPattern", () => {
     test("returns trimmed input when no scheme", () => {
-      assert.strictEqual(extractDomainPattern("  example.com  "), "example.com");
+      assert.strictEqual(
+        extractDomainPattern("  example.com  "),
+        "example.com",
+      );
     });
 
     test("returns bare wildcard as-is", () => {
@@ -223,7 +230,10 @@ suite("domainMatcher", () => {
     });
 
     test("wildcard allowed with specific deny", () => {
-      assert.strictEqual(isDomainAllowed("safe.com", ["*"], ["evil.com"]), true);
+      assert.strictEqual(
+        isDomainAllowed("safe.com", ["*"], ["evil.com"]),
+        true,
+      );
       assert.strictEqual(
         isDomainAllowed("evil.com", ["*"], ["evil.com"]),
         false,

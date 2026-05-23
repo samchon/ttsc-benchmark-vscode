@@ -20,19 +20,23 @@ import { IUriIdentityService } from "../../platform/uriIdentity/common/uriIdenti
 import { IUserDataProfilesService } from "../../platform/userDataProfile/common/userDataProfile.js";
 import { getNLSConfiguration } from "./remoteLanguagePacks.js";
 
-export class ExtensionsScannerService extends AbstractExtensionsScannerService implements IExtensionsScannerService {
-
-	constructor(
-		@IUserDataProfilesService userDataProfilesService: IUserDataProfilesService,
-		@IExtensionsProfileScannerService extensionsProfileScannerService: IExtensionsProfileScannerService,
-		@IFileService fileService: IFileService,
-		@ILogService logService: ILogService,
-		@INativeEnvironmentService private readonly nativeEnvironmentService: INativeEnvironmentService,
-		@IProductService productService: IProductService,
-		@IUriIdentityService uriIdentityService: IUriIdentityService,
-		@IInstantiationService instantiationService: IInstantiationService,
-	) {
-		super(
+export class ExtensionsScannerService
+  extends AbstractExtensionsScannerService
+  implements IExtensionsScannerService
+{
+  constructor(
+    @IUserDataProfilesService userDataProfilesService: IUserDataProfilesService,
+    @IExtensionsProfileScannerService
+    extensionsProfileScannerService: IExtensionsProfileScannerService,
+    @IFileService fileService: IFileService,
+    @ILogService logService: ILogService,
+    @INativeEnvironmentService
+    private readonly nativeEnvironmentService: INativeEnvironmentService,
+    @IProductService productService: IProductService,
+    @IUriIdentityService uriIdentityService: IUriIdentityService,
+    @IInstantiationService instantiationService: IInstantiationService,
+  ) {
+    super(
       URI.file(nativeEnvironmentService.builtinExtensionsPath),
       URI.file(nativeEnvironmentService.extensionsPath),
       joinPath(
@@ -51,22 +55,23 @@ export class ExtensionsScannerService extends AbstractExtensionsScannerService i
       uriIdentityService,
       instantiationService,
     );
-	}
+  }
 
-	protected async getTranslations(language: string): Promise<Translations> {
-		const config = await getNLSConfiguration(
+  protected async getTranslations(language: string): Promise<Translations> {
+    const config = await getNLSConfiguration(
       language,
       this.nativeEnvironmentService.userDataPath,
     );
-		if (config.languagePack) {
-			try {
-				const content = await this.fileService.readFile(
+    if (config.languagePack) {
+      try {
+        const content = await this.fileService.readFile(
           URI.file(config.languagePack.translationsConfigFile),
         );
-				return JSON.parse(content.value.toString());
-			} catch (err) { /* Ignore error */ }
-		}
-		return Object.create(null);
-	}
-
+        return JSON.parse(content.value.toString());
+      } catch (err) {
+        /* Ignore error */
+      }
+    }
+    return Object.create(null);
+  }
 }

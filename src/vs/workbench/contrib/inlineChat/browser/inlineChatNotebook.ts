@@ -12,43 +12,43 @@ import { INotebookEditorService } from "../../notebook/browser/services/notebook
 import { CellUri } from "../../notebook/common/notebookCommon.js";
 
 export class InlineChatNotebookContribution {
+  readonly #store = new DisposableStore();
 
-	readonly #store = new DisposableStore();
+  constructor(
+    @IInlineChatSessionService sessionService: IInlineChatSessionService,
+    @INotebookEditorService notebookEditorService: INotebookEditorService,
+  ) {
+    this.#store.add(
+      sessionService.onWillStartSession((newSessionEditor) => {
+        const candidate = CellUri.parse(newSessionEditor.getModel().uri);
+        if (!candidate) {
+          return;
+        }
+        for (const notebookEditor of notebookEditorService.listNotebookEditors()) {
+          if (isEqual(notebookEditor.textModel?.uri, candidate.notebook)) {
+            let found = false;
+            const editors: ICodeEditor[] = [];
+            for (const [, codeEditor] of notebookEditor.codeEditors) {
+              editors.push(codeEditor);
+              found = codeEditor === newSessionEditor || found;
+            }
+            if (found) {
+              // found the this editor in the outer notebook editor -> make sure to
+              // cancel all sibling sessions
+              for (const editor of editors) {
+                if (editor !== newSessionEditor) {
+                  InlineChatController.get(editor)?.acceptSession();
+                }
+              }
+              break;
+            }
+          }
+        }
+      }),
+    );
+  }
 
-	constructor(
-		@IInlineChatSessionService sessionService: IInlineChatSessionService,
-		@INotebookEditorService notebookEditorService: INotebookEditorService,
-	) {
-
-		this.#store.add(sessionService.onWillStartSession(newSessionEditor => {
-			const candidate = CellUri.parse(newSessionEditor.getModel().uri);
-			if (!candidate) {
-				return;
-			}
-			for (const notebookEditor of notebookEditorService.listNotebookEditors()) {
-				if (isEqual(notebookEditor.textModel?.uri, candidate.notebook)) {
-					let found = false;
-					const editors: ICodeEditor[] = [];
-					for (const [, codeEditor] of notebookEditor.codeEditors) {
-						editors.push(codeEditor);
-						found = codeEditor === newSessionEditor || found;
-					}
-					if (found) {
-						// found the this editor in the outer notebook editor -> make sure to
-						// cancel all sibling sessions
-						for (const editor of editors) {
-							if (editor !== newSessionEditor) {
-								InlineChatController.get(editor)?.acceptSession();
-							}
-						}
-						break;
-					}
-				}
-			}
-		}));
-	}
-
-	dispose(): void {
-		this.#store.dispose();
-	}
+  dispose(): void {
+    this.#store.dispose();
+  }
 }

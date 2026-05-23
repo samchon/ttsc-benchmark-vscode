@@ -11,8 +11,13 @@ export const ITreeSitterThemeService = createDecorator<ITreeSitterThemeService>(
 );
 
 export interface ITreeSitterThemeService {
-	readonly _serviceBrand: undefined;
-	readonly onChange: IObservable<void>;
+  readonly _serviceBrand: undefined;
+  readonly onChange: IObservable<void>;
 
-	findMetadata(captureNames: string[], languageId: number, bracket: boolean, reader: IReader | undefined): number;
+  findMetadata(
+    captureNames: string[],
+    languageId: number,
+    bracket: boolean,
+    reader: IReader | undefined,
+  ): number;
 }

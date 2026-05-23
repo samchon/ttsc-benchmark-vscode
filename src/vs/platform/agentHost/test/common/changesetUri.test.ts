@@ -107,49 +107,46 @@ suite("changesetUri", () => {
     );
   });
 
-  test(
-    "parseChangesetUri returns undefined for non-changeset / malformed URIs",
-    () => {
-      assert.strictEqual(parseChangesetUri(sessionUri), undefined);
-      assert.strictEqual(parseChangesetUri("agenthost:/root"), undefined);
-      assert.strictEqual(
-        parseChangesetUri(`${sessionUri}/changeset/foo/bar`),
-        undefined,
-      );
-      assert.strictEqual(
-        parseChangesetUri(buildTurnChangesetUriTemplate(sessionUri)),
-        undefined,
-      );
-      assert.strictEqual(
-        parseChangesetUri(`${sessionUri}/changeset/turn/`),
-        undefined,
-      );
-      assert.strictEqual(
-        parseChangesetUri(`${sessionUri}/changeset/turn/a/b`),
-        undefined,
-      );
-      assert.strictEqual(
-        parseChangesetUri(buildCompareTurnsChangesetUriTemplate(sessionUri)),
-        undefined,
-      );
-      assert.strictEqual(
-        parseChangesetUri(`${sessionUri}/changeset/compare/t1`),
-        undefined,
-      );
-      assert.strictEqual(
-        parseChangesetUri(`${sessionUri}/changeset/compare/t1/t2/t3`),
-        undefined,
-      );
-      assert.strictEqual(
-        parseChangesetUri(`${sessionUri}/changeset/compare/{originalTurnId}/t2`),
-        undefined,
-      );
-      assert.strictEqual(
-        parseChangesetUri(`${sessionUri}/changeset/compare/t1/{modifiedTurnId}`),
-        undefined,
-      );
-    },
-  );
+  test("parseChangesetUri returns undefined for non-changeset / malformed URIs", () => {
+    assert.strictEqual(parseChangesetUri(sessionUri), undefined);
+    assert.strictEqual(parseChangesetUri("agenthost:/root"), undefined);
+    assert.strictEqual(
+      parseChangesetUri(`${sessionUri}/changeset/foo/bar`),
+      undefined,
+    );
+    assert.strictEqual(
+      parseChangesetUri(buildTurnChangesetUriTemplate(sessionUri)),
+      undefined,
+    );
+    assert.strictEqual(
+      parseChangesetUri(`${sessionUri}/changeset/turn/`),
+      undefined,
+    );
+    assert.strictEqual(
+      parseChangesetUri(`${sessionUri}/changeset/turn/a/b`),
+      undefined,
+    );
+    assert.strictEqual(
+      parseChangesetUri(buildCompareTurnsChangesetUriTemplate(sessionUri)),
+      undefined,
+    );
+    assert.strictEqual(
+      parseChangesetUri(`${sessionUri}/changeset/compare/t1`),
+      undefined,
+    );
+    assert.strictEqual(
+      parseChangesetUri(`${sessionUri}/changeset/compare/t1/t2/t3`),
+      undefined,
+    );
+    assert.strictEqual(
+      parseChangesetUri(`${sessionUri}/changeset/compare/{originalTurnId}/t2`),
+      undefined,
+    );
+    assert.strictEqual(
+      parseChangesetUri(`${sessionUri}/changeset/compare/t1/{modifiedTurnId}`),
+      undefined,
+    );
+  });
 
   test("parseTurnChangesetUri only matches expanded turn URIs", () => {
     assert.deepStrictEqual(
@@ -172,31 +169,28 @@ suite("changesetUri", () => {
     );
   });
 
-  test(
-    "parseCompareTurnsChangesetUri only matches expanded compare URIs",
-    () => {
-      assert.deepStrictEqual(
-        parseCompareTurnsChangesetUri(
-          buildCompareTurnsChangesetUri(sessionUri, "t1", "t2"),
-        ),
-        { sessionUri, originalTurnId: "t1", modifiedTurnId: "t2" },
-      );
-      assert.strictEqual(
-        parseCompareTurnsChangesetUri(buildSessionChangesetUri(sessionUri)),
-        undefined,
-      );
-      assert.strictEqual(
-        parseCompareTurnsChangesetUri(buildTurnChangesetUri(sessionUri, "t1")),
-        undefined,
-      );
-      assert.strictEqual(
-        parseCompareTurnsChangesetUri(
-          buildCompareTurnsChangesetUriTemplate(sessionUri),
-        ),
-        undefined,
-      );
-    },
-  );
+  test("parseCompareTurnsChangesetUri only matches expanded compare URIs", () => {
+    assert.deepStrictEqual(
+      parseCompareTurnsChangesetUri(
+        buildCompareTurnsChangesetUri(sessionUri, "t1", "t2"),
+      ),
+      { sessionUri, originalTurnId: "t1", modifiedTurnId: "t2" },
+    );
+    assert.strictEqual(
+      parseCompareTurnsChangesetUri(buildSessionChangesetUri(sessionUri)),
+      undefined,
+    );
+    assert.strictEqual(
+      parseCompareTurnsChangesetUri(buildTurnChangesetUri(sessionUri, "t1")),
+      undefined,
+    );
+    assert.strictEqual(
+      parseCompareTurnsChangesetUri(
+        buildCompareTurnsChangesetUriTemplate(sessionUri),
+      ),
+      undefined,
+    );
+  });
 
   test("predicates match the parser semantics", () => {
     assert.strictEqual(

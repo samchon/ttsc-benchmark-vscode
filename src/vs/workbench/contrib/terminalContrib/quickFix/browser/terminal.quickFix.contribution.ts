@@ -5,14 +5,27 @@
 
 import type { Terminal as RawXtermTerminal } from "@xterm/xterm";
 import { KeyCode, KeyMod } from "../../../../../base/common/keyCodes.js";
-import { DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import {
+  DisposableStore,
+  MutableDisposable,
+} from "../../../../../base/common/lifecycle.js";
 import { localize2 } from "../../../../../nls.js";
-import { InstantiationType, registerSingleton } from "../../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../../platform/instantiation/common/extensions.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
-import { ITerminalContribution, ITerminalInstance, IXtermTerminal } from "../../../terminal/browser/terminal.js";
+import {
+  ITerminalContribution,
+  ITerminalInstance,
+  IXtermTerminal,
+} from "../../../terminal/browser/terminal.js";
 import { registerActiveInstanceAction } from "../../../terminal/browser/terminalActions.js";
-import { registerTerminalContribution, type ITerminalContributionContext } from "../../../terminal/browser/terminalExtensions.js";
+import {
+  registerTerminalContribution,
+  type ITerminalContributionContext,
+} from "../../../terminal/browser/terminalExtensions.js";
 import { TerminalContextKeys } from "../../../terminal/common/terminalContextKey.js";
 import "./media/terminalQuickFix.css";
 import { ITerminalQuickFixService } from "./quickFix.js";
@@ -41,60 +54,64 @@ registerSingleton(
 
 // #region Contributions
 
-class TerminalQuickFixContribution extends DisposableStore implements ITerminalContribution {
-	static readonly ID = "quickFix";
+class TerminalQuickFixContribution
+  extends DisposableStore
+  implements ITerminalContribution
+{
+  static readonly ID = "quickFix";
 
-	static get(instance: ITerminalInstance): TerminalQuickFixContribution | null {
-		return instance.getContribution<TerminalQuickFixContribution>(
+  static get(instance: ITerminalInstance): TerminalQuickFixContribution | null {
+    return instance.getContribution<TerminalQuickFixContribution>(
       TerminalQuickFixContribution.ID,
     );
-	}
+  }
 
-	private _addon?: TerminalQuickFixAddon;
-	get addon(): TerminalQuickFixAddon | undefined { return this._addon; }
+  private _addon?: TerminalQuickFixAddon;
+  get addon(): TerminalQuickFixAddon | undefined {
+    return this._addon;
+  }
 
-	private readonly _quickFixMenuItems = this.add(new MutableDisposable());
+  private readonly _quickFixMenuItems = this.add(new MutableDisposable());
 
-	constructor(
-		private readonly _ctx: ITerminalContributionContext,
-		@IInstantiationService private readonly _instantiationService: IInstantiationService,
-	) {
-		super();
-	}
+  constructor(
+    private readonly _ctx: ITerminalContributionContext,
+    @IInstantiationService
+    private readonly _instantiationService: IInstantiationService,
+  ) {
+    super();
+  }
 
-	xtermReady(xterm: IXtermTerminal & { raw: RawXtermTerminal }): void {
-		// Create addon
-		this._addon = this._instantiationService.createInstance(
+  xtermReady(xterm: IXtermTerminal & { raw: RawXtermTerminal }): void {
+    // Create addon
+    this._addon = this._instantiationService.createInstance(
       TerminalQuickFixAddon,
       this._ctx.instance.sessionId,
       undefined,
       this._ctx.instance.capabilities,
     );
-		xterm.raw.loadAddon(this._addon);
+    xterm.raw.loadAddon(this._addon);
 
-		// Hook up listeners
-		this.add(
-      this._addon.onDidRequestRerunCommand(
-        (e) => this._ctx.instance.runCommand(
-          e.command,
-          e.shouldExecute || false,
-        ),
+    // Hook up listeners
+    this.add(
+      this._addon.onDidRequestRerunCommand((e) =>
+        this._ctx.instance.runCommand(e.command, e.shouldExecute || false),
       ),
     );
-		this.add(this._addon.onDidUpdateQuickFixes(e => {
-			// Only track the latest command's quick fixes
-			this._quickFixMenuItems.value = e.actions ? xterm.decorationAddon.registerMenuItems(e.command, e.actions) : undefined;
-		}));
+    this.add(
+      this._addon.onDidUpdateQuickFixes((e) => {
+        // Only track the latest command's quick fixes
+        this._quickFixMenuItems.value = e.actions
+          ? xterm.decorationAddon.registerMenuItems(e.command, e.actions)
+          : undefined;
+      }),
+    );
 
-		// Register quick fixes
-		for (const actionOption of [
+    // Register quick fixes
+    for (const actionOption of [
       gitTwoDashes(),
       gitFastForwardPull(),
-      freePort(
-        (port: string, command: string) => this._ctx.instance.freePortKillProcess(
-          port,
-          command,
-        ),
+      freePort((port: string, command: string) =>
+        this._ctx.instance.freePortKillProcess(port, command),
       ),
       gitSimilar(),
       gitPushSetUpstream(),
@@ -102,9 +119,9 @@ class TerminalQuickFixContribution extends DisposableStore implements ITerminalC
       pwshUnixCommandNotFoundError(),
       pwshGeneralError(),
     ]) {
-			this._addon.registerCommandFinishedListener(actionOption);
-		}
-	}
+      this._addon.registerCommandFinishedListener(actionOption);
+    }
+  }
 }
 registerTerminalContribution(
   TerminalQuickFixContribution.ID,
@@ -116,18 +133,22 @@ registerTerminalContribution(
 // #region Actions
 
 const enum TerminalQuickFixCommandId {
-	ShowQuickFixes = "workbench.action.terminal.showQuickFixes",
+  ShowQuickFixes = "workbench.action.terminal.showQuickFixes",
 }
 
 registerActiveInstanceAction({
-	id: TerminalQuickFixCommandId.ShowQuickFixes,
-	title: localize2("workbench.action.terminal.showQuickFixes", "Show Terminal Quick Fixes"),
-	precondition: TerminalContextKeys.focus,
-	keybinding: {
-		primary: KeyMod.CtrlCmd | KeyCode.Period,
-		weight: KeybindingWeight.WorkbenchContrib,
-	},
-	run: (activeInstance) => TerminalQuickFixContribution.get(activeInstance)?.addon?.showMenu(),
+  id: TerminalQuickFixCommandId.ShowQuickFixes,
+  title: localize2(
+    "workbench.action.terminal.showQuickFixes",
+    "Show Terminal Quick Fixes",
+  ),
+  precondition: TerminalContextKeys.focus,
+  keybinding: {
+    primary: KeyMod.CtrlCmd | KeyCode.Period,
+    weight: KeybindingWeight.WorkbenchContrib,
+  },
+  run: (activeInstance) =>
+    TerminalQuickFixContribution.get(activeInstance)?.addon?.showMenu(),
 });
 
 // #endregion

@@ -5,7 +5,13 @@
 
 import { deepStrictEqual, ok, strictEqual } from "assert";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
-import { parseCommand, parseCommandHead, segmentHasFlag, segmentHead, tokenize } from "../../browser/tools/terminalCommandParser.js";
+import {
+  parseCommand,
+  parseCommandHead,
+  segmentHasFlag,
+  segmentHead,
+  tokenize,
+} from "../../browser/tools/terminalCommandParser.js";
 
 suite("terminalCommandParser", () => {
   ensureNoDisposablesAreLeakedInTestSuite();

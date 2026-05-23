@@ -6,10 +6,9 @@
 import { createDecorator } from "../../instantiation/common/instantiation.js";
 import { ISandboxHelperService } from "../common/sandboxHelperService.js";
 
-export const ISandboxHelperMainService = createDecorator<ISandboxHelperMainService>(
-  "sandboxHelper",
-);
+export const ISandboxHelperMainService =
+  createDecorator<ISandboxHelperMainService>("sandboxHelper");
 
 export interface ISandboxHelperMainService extends ISandboxHelperService {
-	readonly _serviceBrand: undefined;
+  readonly _serviceBrand: undefined;
 }

@@ -26,9 +26,12 @@ import {
  * At runtime, logs a warning instead of throwing so that forward-compatible
  * clients receiving unknown actions from a newer server degrade gracefully.
  */
-export function softAssertNever(value: never, log?: (msg: string) => void): void {
-	const msg = `Unhandled action type: ${JSON.stringify(value)}`;
-	(log ?? console.warn)(msg);
+export function softAssertNever(
+  value: never,
+  log?: (msg: string) => void,
+): void {
+  const msg = `Unhandled action type: ${JSON.stringify(value)}`;
+  (log ?? console.warn)(msg);
 }
 
 // ─── Dispatch Validation ─────────────────────────────────────────────────────
@@ -39,6 +42,12 @@ export function softAssertNever(value: never, log?: (msg: string) => void): void
  * Servers SHOULD call this to validate incoming `dispatchAction` requests
  * and reject any action the client is not allowed to originate.
  */
-export function isClientDispatchable(action: RootAction | SessionAction | TerminalAction | ChangesetAction): action is ClientRootAction | ClientSessionAction | ClientTerminalAction | ClientChangesetAction {
-	return IS_CLIENT_DISPATCHABLE[action.type];
+export function isClientDispatchable(
+  action: RootAction | SessionAction | TerminalAction | ChangesetAction,
+): action is
+  | ClientRootAction
+  | ClientSessionAction
+  | ClientTerminalAction
+  | ClientChangesetAction {
+  return IS_CLIENT_DISPATCHABLE[action.type];
 }

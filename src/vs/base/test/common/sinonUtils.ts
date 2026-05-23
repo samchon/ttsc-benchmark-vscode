@@ -5,6 +5,8 @@
 
 import * as sinon from "sinon";
 
-export function asSinonMethodStub<T extends (...args: never[]) => unknown>(method: T): sinon.SinonStubbedMember<T> {
-	return method as unknown as sinon.SinonStubbedMember<T>;
+export function asSinonMethodStub<T extends (...args: never[]) => unknown>(
+  method: T,
+): sinon.SinonStubbedMember<T> {
+  return method as unknown as sinon.SinonStubbedMember<T>;
 }

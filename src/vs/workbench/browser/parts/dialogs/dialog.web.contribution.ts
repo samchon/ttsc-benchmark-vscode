@@ -3,7 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDialogHandler, IDialogResult, IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import {
+  IDialogHandler,
+  IDialogResult,
+  IDialogService,
+} from "../../../../platform/dialogs/common/dialogs.js";
 import { IProductService } from "../../../../platform/product/common/productService.js";
 import {
   IWorkbenchContribution,
@@ -18,73 +22,77 @@ import { IInstantiationService } from "../../../../platform/instantiation/common
 import { Lazy } from "../../../../base/common/lazy.js";
 import { createBrowserAboutDialogDetails } from "./dialog.js";
 
-export class DialogHandlerContribution extends Disposable implements IWorkbenchContribution {
+export class DialogHandlerContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "workbench.contrib.dialogHandler";
 
-	static readonly ID = "workbench.contrib.dialogHandler";
+  private readonly model: IDialogsModel;
+  private readonly impl: Lazy<IDialogHandler>;
 
-	private readonly model: IDialogsModel;
-	private readonly impl: Lazy<IDialogHandler>;
+  private currentDialog: IDialogViewItem | undefined;
 
-	private currentDialog: IDialogViewItem | undefined;
+  constructor(
+    @IDialogService private dialogService: IDialogService,
+    @IInstantiationService instantiationService: IInstantiationService,
+    @IProductService private productService: IProductService,
+  ) {
+    super();
 
-	constructor(
-		@IDialogService private dialogService: IDialogService,
-		@IInstantiationService instantiationService: IInstantiationService,
-		@IProductService private productService: IProductService,
-	) {
-		super();
-
-		this.impl = new Lazy(
-      () => instantiationService.createInstance(BrowserDialogHandler),
+    this.impl = new Lazy(() =>
+      instantiationService.createInstance(BrowserDialogHandler),
     );
-		this.model = (this.dialogService as DialogService).model;
+    this.model = (this.dialogService as DialogService).model;
 
-		this._register(this.model.onWillShowDialog(() => {
-			if (!this.currentDialog) {
-				this.processDialogs();
-			}
-		}));
+    this._register(
+      this.model.onWillShowDialog(() => {
+        if (!this.currentDialog) {
+          this.processDialogs();
+        }
+      }),
+    );
 
-		this.processDialogs();
-	}
+    this.processDialogs();
+  }
 
-	private async processDialogs(): Promise<void> {
-		while (this.model.dialogs.length) {
-			this.currentDialog = this.model.dialogs[0];
+  private async processDialogs(): Promise<void> {
+    while (this.model.dialogs.length) {
+      this.currentDialog = this.model.dialogs[0];
 
-			let result: IDialogResult | Error | undefined = undefined;
-			try {
-				if (this.currentDialog.args.confirmArgs) {
-					const args = this.currentDialog.args.confirmArgs;
-					result = await this.impl.value.confirm(args.confirmation);
-				} else if (this.currentDialog.args.inputArgs) {
-					const args = this.currentDialog.args.inputArgs;
-					result = await this.impl.value.input(args.input);
-				} else if (this.currentDialog.args.promptArgs) {
-					const args = this.currentDialog.args.promptArgs;
-					result = await this.impl.value.prompt(args.prompt);
-				} else {
-					const aboutDialogDetails = createBrowserAboutDialogDetails(
+      let result: IDialogResult | Error | undefined = undefined;
+      try {
+        if (this.currentDialog.args.confirmArgs) {
+          const args = this.currentDialog.args.confirmArgs;
+          result = await this.impl.value.confirm(args.confirmation);
+        } else if (this.currentDialog.args.inputArgs) {
+          const args = this.currentDialog.args.inputArgs;
+          result = await this.impl.value.input(args.input);
+        } else if (this.currentDialog.args.promptArgs) {
+          const args = this.currentDialog.args.promptArgs;
+          result = await this.impl.value.prompt(args.prompt);
+        } else {
+          const aboutDialogDetails = createBrowserAboutDialogDetails(
             this.productService,
           );
-					await this.impl.value.about(
+          await this.impl.value.about(
             aboutDialogDetails.title,
             aboutDialogDetails.details,
             aboutDialogDetails.detailsToCopy,
           );
-				}
-			} catch (error) {
-				result = error;
-			}
+        }
+      } catch (error) {
+        result = error;
+      }
 
-			this.currentDialog.close(result);
-			this.currentDialog = undefined;
-		}
-	}
+      this.currentDialog.close(result);
+      this.currentDialog = undefined;
+    }
+  }
 }
 
 registerWorkbenchContribution2(
-	DialogHandlerContribution.ID,
-	DialogHandlerContribution,
-	WorkbenchPhase.BlockStartup, // Block to allow for dialogs to show before restore finished
+  DialogHandlerContribution.ID,
+  DialogHandlerContribution,
+  WorkbenchPhase.BlockStartup, // Block to allow for dialogs to show before restore finished
 );

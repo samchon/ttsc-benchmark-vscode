@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { URI } from "../../../base/common/uri.js";
-import type { CustomizationAgentRef, SessionCustomization } from "./state/protocol/state.js";
+import type {
+  CustomizationAgentRef,
+  SessionCustomization,
+} from "./state/protocol/state.js";
 
 /**
  * Computes the effective set of selectable custom agents for a session.
@@ -20,27 +23,29 @@ import type { CustomizationAgentRef, SessionCustomization } from "./state/protoc
  * duplicates within the session's customization list are coalesced.
  */
 export function getEffectiveAgents(
-	sessionCustomizations: readonly SessionCustomization[] | undefined,
+  sessionCustomizations: readonly SessionCustomization[] | undefined,
 ): readonly CustomizationAgentRef[] {
-	const seen = new Map<string, CustomizationAgentRef>();
-	if (sessionCustomizations) {
-		for (const customization of sessionCustomizations) {
-			if (customization.enabled === false || !customization.agents) {
-				continue;
-			}
-			for (const agent of customization.agents) {
-				const key = agent.uri.toString();
-				if (!seen.has(key)) {
-					seen.set(key, agent);
-				}
-			}
-		}
-	}
-	const result = [...seen.values()];
-	result.sort(
-    (a, b) => a.name.localeCompare(b.name) || a.uri.toString().localeCompare(b.uri.toString()),
+  const seen = new Map<string, CustomizationAgentRef>();
+  if (sessionCustomizations) {
+    for (const customization of sessionCustomizations) {
+      if (customization.enabled === false || !customization.agents) {
+        continue;
+      }
+      for (const agent of customization.agents) {
+        const key = agent.uri.toString();
+        if (!seen.has(key)) {
+          seen.set(key, agent);
+        }
+      }
+    }
+  }
+  const result = [...seen.values()];
+  result.sort(
+    (a, b) =>
+      a.name.localeCompare(b.name) ||
+      a.uri.toString().localeCompare(b.uri.toString()),
   );
-	return result;
+  return result;
 }
 
 /**
@@ -50,7 +55,7 @@ export function getEffectiveAgents(
  * the default for new (untitled) sessions.
  */
 export function agentHostAgentPickerStorageKey(resourceScheme: string): string {
-	return `workbench.agentsession.agentHostAgentPicker.${resourceScheme}.selectedAgentUri`;
+  return `workbench.agentsession.agentHostAgentPicker.${resourceScheme}.selectedAgentUri`;
 }
 
 /**
@@ -65,18 +70,21 @@ export function agentHostAgentPickerStorageKey(resourceScheme: string): string {
  * sessions-layer `ISessionAgentRef` both provide URI strings.
  */
 export function resolveAgentHostAgent(
-	agents: readonly CustomizationAgentRef[],
-	sessionAgentUri: URI | string | undefined,
-	storedAgentUri: string | undefined,
+  agents: readonly CustomizationAgentRef[],
+  sessionAgentUri: URI | string | undefined,
+  storedAgentUri: string | undefined,
 ): CustomizationAgentRef | undefined {
-	if (sessionAgentUri !== undefined) {
-		const sessionStr = typeof sessionAgentUri === "string" ? sessionAgentUri : sessionAgentUri.toString();
-		const match = agents.find(a => a.uri === sessionStr);
-		if (match) {
-			return match;
-		}
-	}
-	return storedAgentUri ? agents.find(
-    a => a.uri === storedAgentUri,
-  ) : undefined;
+  if (sessionAgentUri !== undefined) {
+    const sessionStr =
+      typeof sessionAgentUri === "string"
+        ? sessionAgentUri
+        : sessionAgentUri.toString();
+    const match = agents.find((a) => a.uri === sessionStr);
+    if (match) {
+      return match;
+    }
+  }
+  return storedAgentUri
+    ? agents.find((a) => a.uri === storedAgentUri)
+    : undefined;
 }

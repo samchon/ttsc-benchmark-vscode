@@ -8,7 +8,10 @@
 
 import type { URI } from "../common/state.js";
 import type { BaseParams } from "../common/commands.js";
-import type { SessionSummary, SessionConfigSchema } from "../channels-session/state.js";
+import type {
+  SessionSummary,
+  SessionConfigSchema,
+} from "../channels-session/state.js";
 
 // Re-export schema types so the legacy `commands.ts` aggregator continues to
 // expose them from the same import path.
@@ -34,15 +37,15 @@ export type {
  * @version 1
  */
 export interface ListSessionsParams extends BaseParams {
-	channel: "ahp-root://";
-	/** Optional filter criteria */
-	filter?: object;
+  channel: "ahp-root://";
+  /** Optional filter criteria */
+  filter?: object;
 }
 
 /** Result of the `listSessions` command. */
 export interface ListSessionsResult {
-	/** The list of session summaries. */
-	items: SessionSummary[];
+  /** The list of session summaries. */
+  items: SessionSummary[];
 }
 
 // ─── resolveSessionConfig ────────────────────────────────────────────────────
@@ -104,23 +107,23 @@ export interface ListSessionsResult {
  * ```
  */
 export interface ResolveSessionConfigParams extends BaseParams {
-	channel: "ahp-root://";
-	/** Agent provider ID */
-	provider?: string;
-	/** Working directory for the session */
-	workingDirectory?: URI;
-	/** Current user-filled configuration values */
-	config?: Record<string, unknown>;
+  channel: "ahp-root://";
+  /** Agent provider ID */
+  provider?: string;
+  /** Working directory for the session */
+  workingDirectory?: URI;
+  /** Current user-filled configuration values */
+  config?: Record<string, unknown>;
 }
 
 /**
  * Result of the `resolveSessionConfig` command.
  */
 export interface ResolveSessionConfigResult {
-	/** JSON Schema describing available configuration properties given the current context */
-	schema: SessionConfigSchema;
-	/** Current configuration values (echoed back with server-resolved defaults applied) */
-	values: Record<string, unknown>;
+  /** JSON Schema describing available configuration properties given the current context */
+  schema: SessionConfigSchema;
+  /** Current configuration values (echoed back with server-resolved defaults applied) */
+  values: Record<string, unknown>;
 }
 
 // ─── sessionConfigCompletions ────────────────────────────────────────────────
@@ -131,12 +134,12 @@ export interface ResolveSessionConfigResult {
  * @category Commands
  */
 export interface SessionConfigValueItem {
-	/** The value to store in config */
-	value: string;
-	/** Human-readable display label */
-	label: string;
-	/** Optional secondary description */
-	description?: string;
+  /** The value to store in config */
+  value: string;
+  /** Human-readable display label */
+  label: string;
+  /** Optional secondary description */
+  description?: string;
 }
 
 /**
@@ -169,23 +172,23 @@ export interface SessionConfigValueItem {
  * ```
  */
 export interface SessionConfigCompletionsParams extends BaseParams {
-	channel: "ahp-root://";
-	/** Agent provider ID */
-	provider?: string;
-	/** Working directory for the session */
-	workingDirectory?: URI;
-	/** Current user-filled configuration values (provides context for the query) */
-	config?: Record<string, unknown>;
-	/** Property id from the schema to query values for */
-	property: string;
-	/** Search filter text (empty or omitted returns default/recent values) */
-	query?: string;
+  channel: "ahp-root://";
+  /** Agent provider ID */
+  provider?: string;
+  /** Working directory for the session */
+  workingDirectory?: URI;
+  /** Current user-filled configuration values (provides context for the query) */
+  config?: Record<string, unknown>;
+  /** Property id from the schema to query values for */
+  property: string;
+  /** Search filter text (empty or omitted returns default/recent values) */
+  query?: string;
 }
 
 /**
  * Result of the `sessionConfigCompletions` command.
  */
 export interface SessionConfigCompletionsResult {
-	/** Matching value items */
-	items: SessionConfigValueItem[];
+  /** Matching value items */
+  items: SessionConfigValueItem[];
 }

@@ -7,25 +7,25 @@ import { RawContextKey } from "../../../../platform/contextkey/common/contextkey
 import type { IView } from "../../../common/views.js";
 
 export const enum OutlineSortOrder {
-	ByPosition,
-	ByName,
-	ByKind
+  ByPosition,
+  ByName,
+  ByKind,
 }
 
 export interface IOutlineViewState {
-	followCursor: boolean;
-	filterOnType: boolean;
-	sortBy: OutlineSortOrder;
+  followCursor: boolean;
+  filterOnType: boolean;
+  sortBy: OutlineSortOrder;
 }
 
 export namespace IOutlinePane {
-	export const Id = "outline";
+  export const Id = "outline";
 }
 
 export interface IOutlinePane extends IView {
-	outlineViewState: IOutlineViewState;
-	collapseAll(): void;
-	expandAll(): void;
+  outlineViewState: IOutlineViewState;
+  collapseAll(): void;
+  expandAll(): void;
 }
 
 // --- context keys

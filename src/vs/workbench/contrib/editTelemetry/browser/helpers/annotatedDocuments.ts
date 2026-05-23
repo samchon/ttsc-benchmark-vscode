@@ -25,110 +25,137 @@ import {
   CombineStreamedChanges,
   MinimizeEditsProcessor,
 } from "./documentWithAnnotatedEdits.js";
-import { ObservableWorkspace, IObservableDocument } from "./observableWorkspace.js";
+import {
+  ObservableWorkspace,
+  IObservableDocument,
+} from "./observableWorkspace.js";
 
 export interface IAnnotatedDocuments {
-	readonly documents: IObservable<readonly AnnotatedDocument[]>;
+  readonly documents: IObservable<readonly AnnotatedDocument[]>;
 }
 
-export class AnnotatedDocuments extends Disposable implements IAnnotatedDocuments {
-	public readonly documents: IObservable<readonly AnnotatedDocument[]>;
-	private readonly _states;
+export class AnnotatedDocuments
+  extends Disposable
+  implements IAnnotatedDocuments
+{
+  public readonly documents: IObservable<readonly AnnotatedDocument[]>;
+  private readonly _states;
 
-	constructor(
-		private readonly _workspace: ObservableWorkspace,
-		@IInstantiationService private readonly _instantiationService: IInstantiationService,
-	) {
-		super();
+  constructor(
+    private readonly _workspace: ObservableWorkspace,
+    @IInstantiationService
+    private readonly _instantiationService: IInstantiationService,
+  ) {
+    super();
 
-		const uriVisibilityProvider = this._instantiationService.createInstance(
+    const uriVisibilityProvider = this._instantiationService.createInstance(
       UriVisibilityProvider,
     );
 
-		this._states = mapObservableArrayCached(
+    this._states = mapObservableArrayCached(
       this,
       this._workspace.documents,
       (doc, store) => {
-        const docIsVisible = derived(reader => uriVisibilityProvider.isVisible(doc.uri, reader));
-        const wasEverVisible = derivedObservableWithCache<boolean>(this, (reader, lastVal) => lastVal || docIsVisible.read(reader));
-        return wasEverVisible.map(
-          v => v ? store.add(this._instantiationService.createInstance(AnnotatedDocument, doc, docIsVisible)) : undefined,
+        const docIsVisible = derived((reader) =>
+          uriVisibilityProvider.isVisible(doc.uri, reader),
+        );
+        const wasEverVisible = derivedObservableWithCache<boolean>(
+          this,
+          (reader, lastVal) => lastVal || docIsVisible.read(reader),
+        );
+        return wasEverVisible.map((v) =>
+          v
+            ? store.add(
+                this._instantiationService.createInstance(
+                  AnnotatedDocument,
+                  doc,
+                  docIsVisible,
+                ),
+              )
+            : undefined,
         );
       },
     );
 
-		this.documents = this._states.map(
-      (vals, reader) => vals.map(v => v.read(reader)).filter(isDefined),
+    this.documents = this._states.map((vals, reader) =>
+      vals.map((v) => v.read(reader)).filter(isDefined),
     );
 
-		this.documents.recomputeInitiallyAndOnChange(this._store);
-	}
+    this.documents.recomputeInitiallyAndOnChange(this._store);
+  }
 }
 
 export class UriVisibilityProvider {
-	private readonly visibleUris: IObservable<Map<string, URI>>;
+  private readonly visibleUris: IObservable<Map<string, URI>>;
 
-	constructor(
-		@IEditorGroupsService private readonly _editorGroupsService: IEditorGroupsService,
-	) {
-		const onDidAddGroupSignal = observableSignalFromEvent(
+  constructor(
+    @IEditorGroupsService
+    private readonly _editorGroupsService: IEditorGroupsService,
+  ) {
+    const onDidAddGroupSignal = observableSignalFromEvent(
       this,
       this._editorGroupsService.onDidAddGroup,
     );
-		const onDidRemoveGroupSignal = observableSignalFromEvent(
+    const onDidRemoveGroupSignal = observableSignalFromEvent(
       this,
       this._editorGroupsService.onDidRemoveGroup,
     );
-		const groups = derived(this, reader => {
+    const groups = derived(this, (reader) => {
       onDidAddGroupSignal.read(reader);
       onDidRemoveGroupSignal.read(reader);
       return this._editorGroupsService.groups;
     });
 
-		this.visibleUris = mapObservableArrayCached(this, groups, g => {
-			const editors = observableFromEvent(this, g.onDidModelChange, () => g.editors);
-			return editors.map(e => e.map(editor => EditorResourceAccessor.getCanonicalUri(editor)));
-		}).map((editors, reader) => {
-			const map = new Map<string, URI>();
-			for (const urisObs of editors) {
-				for (const uri of urisObs.read(reader)) {
-					if (isDefined(uri)) {
-						map.set(uri.toString(), uri);
-					}
-				}
-			}
-			return map;
-		});
-	}
+    this.visibleUris = mapObservableArrayCached(this, groups, (g) => {
+      const editors = observableFromEvent(
+        this,
+        g.onDidModelChange,
+        () => g.editors,
+      );
+      return editors.map((e) =>
+        e.map((editor) => EditorResourceAccessor.getCanonicalUri(editor)),
+      );
+    }).map((editors, reader) => {
+      const map = new Map<string, URI>();
+      for (const urisObs of editors) {
+        for (const uri of urisObs.read(reader)) {
+          if (isDefined(uri)) {
+            map.set(uri.toString(), uri);
+          }
+        }
+      }
+      return map;
+    });
+  }
 
-	public isVisible(uri: URI, reader: IReader): boolean {
-		return this.visibleUris.read(reader).has(uri.toString());
-	}
+  public isVisible(uri: URI, reader: IReader): boolean {
+    return this.visibleUris.read(reader).has(uri.toString());
+  }
 }
 
 export class AnnotatedDocument extends Disposable {
-	public readonly documentWithAnnotations;
+  public readonly documentWithAnnotations;
 
-	constructor(
-		public readonly document: IObservableDocument,
-		public readonly isVisible: IObservable<boolean>,
-		@IInstantiationService private readonly _instantiationService: IInstantiationService,
-	) {
-		super();
+  constructor(
+    public readonly document: IObservableDocument,
+    public readonly isVisible: IObservable<boolean>,
+    @IInstantiationService
+    private readonly _instantiationService: IInstantiationService,
+  ) {
+    super();
 
-		let processedDoc: IDocumentWithAnnotatedEdits<EditSourceData> = this._store.add(
-      new DocumentWithSourceAnnotatedEdits(document),
-    );
-		// Combine streaming edits into one and make edit smaller
-		processedDoc = this._store.add(
+    let processedDoc: IDocumentWithAnnotatedEdits<EditSourceData> =
+      this._store.add(new DocumentWithSourceAnnotatedEdits(document));
+    // Combine streaming edits into one and make edit smaller
+    processedDoc = this._store.add(
       this._instantiationService.createInstance(
-        (CombineStreamedChanges<EditSourceData>),
+        CombineStreamedChanges<EditSourceData>,
         processedDoc,
       ),
     );
-		// Remove common suffix and prefix from edits
-		processedDoc = this._store.add(new MinimizeEditsProcessor(processedDoc));
+    // Remove common suffix and prefix from edits
+    processedDoc = this._store.add(new MinimizeEditsProcessor(processedDoc));
 
-		this.documentWithAnnotations = processedDoc;
-	}
+    this.documentWithAnnotations = processedDoc;
+  }
 }

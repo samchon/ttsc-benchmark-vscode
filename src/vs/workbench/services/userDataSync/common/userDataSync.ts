@@ -12,7 +12,10 @@ import {
   IResourcePreview,
 } from "../../../../platform/userDataSync/common/userDataSync.js";
 import { Event } from "../../../../base/common/event.js";
-import { ContextKeyExpr, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import {
+  ContextKeyExpr,
+  RawContextKey,
+} from "../../../../platform/contextkey/common/contextkey.js";
 import { localize, localize2 } from "../../../../nls.js";
 import { URI } from "../../../../base/common/uri.js";
 import { Codicon } from "../../../../base/common/codicons.js";
@@ -23,79 +26,83 @@ import { IAction2Options } from "../../../../platform/actions/common/actions.js"
 import { ILocalizedString } from "../../../../platform/action/common/action.js";
 
 export interface IUserDataSyncAccount {
-	readonly authenticationProviderId: string;
-	readonly accountName: string;
-	readonly accountId: string;
+  readonly authenticationProviderId: string;
+  readonly accountName: string;
+  readonly accountId: string;
 }
 
-export const IUserDataSyncWorkbenchService = createDecorator<IUserDataSyncWorkbenchService>(
-  "IUserDataSyncWorkbenchService",
-);
+export const IUserDataSyncWorkbenchService =
+  createDecorator<IUserDataSyncWorkbenchService>(
+    "IUserDataSyncWorkbenchService",
+  );
 export interface IUserDataSyncWorkbenchService {
-	_serviceBrand: undefined;
+  _serviceBrand: undefined;
 
-	readonly enabled: boolean;
-	readonly authenticationProviders: IAuthenticationProvider[];
+  readonly enabled: boolean;
+  readonly authenticationProviders: IAuthenticationProvider[];
 
-	readonly current: IUserDataSyncAccount | undefined;
+  readonly current: IUserDataSyncAccount | undefined;
 
-	readonly accountStatus: AccountStatus;
-	readonly onDidChangeAccountStatus: Event<AccountStatus>;
+  readonly accountStatus: AccountStatus;
+  readonly onDidChangeAccountStatus: Event<AccountStatus>;
 
-	readonly onDidTurnOnSync: Event<void>;
+  readonly onDidTurnOnSync: Event<void>;
 
-	turnOn(): Promise<void>;
-	turnoff(everyWhere: boolean): Promise<void>;
-	signIn(): Promise<void>;
+  turnOn(): Promise<void>;
+  turnoff(everyWhere: boolean): Promise<void>;
+  signIn(): Promise<void>;
 
-	resetSyncedData(): Promise<void>;
-	showSyncActivity(): Promise<void>;
-	syncNow(): Promise<void>;
+  resetSyncedData(): Promise<void>;
+  showSyncActivity(): Promise<void>;
+  syncNow(): Promise<void>;
 
-	synchroniseUserDataSyncStoreType(): Promise<void>;
+  synchroniseUserDataSyncStoreType(): Promise<void>;
 
-	showConflicts(conflictToOpen?: IResourcePreview): Promise<void>;
-	accept(resource: IUserDataSyncResource, conflictResource: URI, content: string | null | undefined, apply: boolean): Promise<void>;
+  showConflicts(conflictToOpen?: IResourcePreview): Promise<void>;
+  accept(
+    resource: IUserDataSyncResource,
+    conflictResource: URI,
+    content: string | null | undefined,
+    apply: boolean,
+  ): Promise<void>;
 
-	getAllLogResources(): Promise<URI[]>;
-	downloadSyncActivity(): Promise<URI | undefined>;
+  getAllLogResources(): Promise<URI[]>;
+  downloadSyncActivity(): Promise<URI | undefined>;
 }
 
 export function getSyncAreaLabel(source: SyncResource): string {
-	switch (source) {
-		case SyncResource.Settings: return localize("settings", "Settings");
-		case SyncResource.Keybindings: return localize(
-      "keybindings",
-      "Keyboard Shortcuts",
-    );
-		case SyncResource.Snippets: return localize("snippets", "Snippets");
-		case SyncResource.Prompts: return localize(
-      "prompts",
-      "Prompts and Instructions",
-    );
-		case SyncResource.Tasks: return localize("tasks", "Tasks");
-		case SyncResource.Mcp: return localize("mcp", "MCP Servers");
-		case SyncResource.Extensions: return localize("extensions", "Extensions");
-		case SyncResource.GlobalState: return localize(
-      "ui state label",
-      "UI State",
-    );
-		case SyncResource.Profiles: return localize("profiles", "Profiles");
-		case SyncResource.WorkspaceState: return localize(
-      "workspace state label",
-      "Workspace State",
-    );
-	}
+  switch (source) {
+    case SyncResource.Settings:
+      return localize("settings", "Settings");
+    case SyncResource.Keybindings:
+      return localize("keybindings", "Keyboard Shortcuts");
+    case SyncResource.Snippets:
+      return localize("snippets", "Snippets");
+    case SyncResource.Prompts:
+      return localize("prompts", "Prompts and Instructions");
+    case SyncResource.Tasks:
+      return localize("tasks", "Tasks");
+    case SyncResource.Mcp:
+      return localize("mcp", "MCP Servers");
+    case SyncResource.Extensions:
+      return localize("extensions", "Extensions");
+    case SyncResource.GlobalState:
+      return localize("ui state label", "UI State");
+    case SyncResource.Profiles:
+      return localize("profiles", "Profiles");
+    case SyncResource.WorkspaceState:
+      return localize("workspace state label", "Workspace State");
+  }
 }
 
 export const enum AccountStatus {
-	Uninitialized = "uninitialized",
-	Unavailable = "unavailable",
-	Available = "available",
+  Uninitialized = "uninitialized",
+  Unavailable = "unavailable",
+  Available = "available",
 }
 
 export interface IUserDataSyncConflictsView extends IView {
-	open(conflict: IResourcePreview): Promise<void>;
+  open(conflict: IResourcePreview): Promise<void>;
 }
 
 export const SYNC_TITLE: ILocalizedString = localize2(
@@ -136,8 +143,10 @@ export const CONTEXT_HAS_CONFLICTS = new RawContextKey<boolean>(
 );
 
 // Commands
-export const CONFIGURE_SYNC_COMMAND_ID = "workbench.userDataSync.actions.configure";
-export const SHOW_SYNC_LOG_COMMAND_ID = "workbench.userDataSync.actions.showLog";
+export const CONFIGURE_SYNC_COMMAND_ID =
+  "workbench.userDataSync.actions.configure";
+export const SHOW_SYNC_LOG_COMMAND_ID =
+  "workbench.userDataSync.actions.showLog";
 
 // VIEWS
 export const SYNC_VIEW_CONTAINER_ID = "workbench.view.sync";
@@ -145,8 +154,14 @@ export const SYNC_CONFLICTS_VIEW_ID = "workbench.views.sync.conflicts";
 
 export const DOWNLOAD_ACTIVITY_ACTION_DESCRIPTOR: Readonly<IAction2Options> = {
   id: "workbench.userDataSync.actions.downloadSyncActivity",
-  title: localize2("download sync activity title", "Download Settings Sync Activity"),
+  title: localize2(
+    "download sync activity title",
+    "Download Settings Sync Activity",
+  ),
   category: Categories.Developer,
   f1: true,
-  precondition: ContextKeyExpr.and(CONTEXT_ACCOUNT_STATE.isEqualTo(AccountStatus.Available), CONTEXT_SYNC_STATE.notEqualsTo(SyncStatus.Uninitialized)),
+  precondition: ContextKeyExpr.and(
+    CONTEXT_ACCOUNT_STATE.isEqualTo(AccountStatus.Available),
+    CONTEXT_SYNC_STATE.notEqualsTo(SyncStatus.Uninitialized),
+  ),
 };

@@ -5,7 +5,10 @@
 
 import { Disposable } from "../../../base/common/lifecycle.js";
 import { IMeteredConnectionService } from "../../../platform/meteredConnection/common/meteredConnection.js";
-import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import {
+  extHostNamedCustomer,
+  IExtHostContext,
+} from "../../services/extensions/common/extHostCustomers.js";
 import {
   ExtHostContext,
   ExtHostMeteredConnectionShape,
@@ -14,32 +17,35 @@ import {
 } from "../common/extHost.protocol.js";
 
 @extHostNamedCustomer(MainContext.MainThreadMeteredConnection)
-export class MainThreadMeteredConnection extends Disposable implements MainThreadMeteredConnectionShape {
+export class MainThreadMeteredConnection
+  extends Disposable
+  implements MainThreadMeteredConnectionShape
+{
+  private readonly _proxy: ExtHostMeteredConnectionShape;
 
-	private readonly _proxy: ExtHostMeteredConnectionShape;
+  constructor(
+    extHostContext: IExtHostContext,
+    @IMeteredConnectionService
+    private readonly meteredConnectionService: IMeteredConnectionService,
+  ) {
+    super();
 
-	constructor(
-		extHostContext: IExtHostContext,
-		@IMeteredConnectionService private readonly meteredConnectionService: IMeteredConnectionService,
-	) {
-		super();
-
-		this._proxy = extHostContext.getProxy(
+    this._proxy = extHostContext.getProxy(
       ExtHostContext.ExtHostMeteredConnection,
     );
 
-		// Send initial value
-		this._proxy.$initializeIsConnectionMetered(
+    // Send initial value
+    this._proxy.$initializeIsConnectionMetered(
       this.meteredConnectionService.isConnectionMetered,
     );
 
-		// Listen for changes and forward to extension host
-		this._register(
+    // Listen for changes and forward to extension host
+    this._register(
       this.meteredConnectionService.onDidChangeIsConnectionMetered(
-        isMetered => {
+        (isMetered) => {
           this._proxy.$onDidChangeIsConnectionMetered(isMetered);
         },
       ),
     );
-	}
+  }
 }

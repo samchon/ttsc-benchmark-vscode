@@ -7,7 +7,11 @@ import "./media/filesView.css";
 import * as dom from "../../../../base/browser/dom.js";
 import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
 import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
-import { IViewPaneLocationColors, IViewPaneOptions, ViewPane } from "../../../../workbench/browser/parts/views/viewPane.js";
+import {
+  IViewPaneLocationColors,
+  IViewPaneOptions,
+  ViewPane,
+} from "../../../../workbench/browser/parts/views/viewPane.js";
 import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
 import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
 import { IViewDescriptorService } from "../../../../workbench/common/views.js";
@@ -31,48 +35,51 @@ export const SESSIONS_FILES_VIEW_ID = "sessions.files.explorer";
 export const SESSIONS_FILES_EMPTY_VIEW_ID = "sessions.files.explorer.empty";
 
 export class SessionsExplorerView extends ExplorerView {
-	protected override get primaryActionGroups(): string[] | undefined {
-		return ["1_files"];
-	}
+  protected override get primaryActionGroups(): string[] | undefined {
+    return ["1_files"];
+  }
 
-	protected override getLocationBasedColors(): IViewPaneLocationColors {
-		const colors = super.getLocationBasedColors();
-		return {
-			...colors,
-			background: agentsPanelBackground,
-			listOverrideStyles: {
-				...colors.listOverrideStyles,
-				listBackground: agentsPanelBackground,
-			},
-		};
-	}
+  protected override getLocationBasedColors(): IViewPaneLocationColors {
+    const colors = super.getLocationBasedColors();
+    return {
+      ...colors,
+      background: agentsPanelBackground,
+      listOverrideStyles: {
+        ...colors.listOverrideStyles,
+        listBackground: agentsPanelBackground,
+      },
+    };
+  }
 
-	override createActionViewItem(action: IAction, options?: IDropdownMenuActionViewItemOptions): IActionViewItem | undefined {
-		if (action.id === "sessions.files.action.syncChanges") {
-			return this.instantiationService.createInstance(
+  override createActionViewItem(
+    action: IAction,
+    options?: IDropdownMenuActionViewItemOptions,
+  ): IActionViewItem | undefined {
+    if (action.id === "sessions.files.action.syncChanges") {
+      return this.instantiationService.createInstance(
         SyncChangesActionViewItem,
         action,
         options,
       );
-		}
-		return super.createActionViewItem(action, options);
-	}
+    }
+    return super.createActionViewItem(action, options);
+  }
 }
 
 export class SessionsExplorerEmptyView extends ViewPane {
-	constructor(
-		options: IViewPaneOptions,
-		@IKeybindingService keybindingService: IKeybindingService,
-		@IContextMenuService contextMenuService: IContextMenuService,
-		@IConfigurationService configurationService: IConfigurationService,
-		@IContextKeyService contextKeyService: IContextKeyService,
-		@IViewDescriptorService viewDescriptorService: IViewDescriptorService,
-		@IInstantiationService instantiationService: IInstantiationService,
-		@IOpenerService openerService: IOpenerService,
-		@IThemeService themeService: IThemeService,
-		@IHoverService hoverService: IHoverService,
-	) {
-		super(
+  constructor(
+    options: IViewPaneOptions,
+    @IKeybindingService keybindingService: IKeybindingService,
+    @IContextMenuService contextMenuService: IContextMenuService,
+    @IConfigurationService configurationService: IConfigurationService,
+    @IContextKeyService contextKeyService: IContextKeyService,
+    @IViewDescriptorService viewDescriptorService: IViewDescriptorService,
+    @IInstantiationService instantiationService: IInstantiationService,
+    @IOpenerService openerService: IOpenerService,
+    @IThemeService themeService: IThemeService,
+    @IHoverService hoverService: IHoverService,
+  ) {
+    super(
       options,
       keybindingService,
       contextMenuService,
@@ -84,30 +91,30 @@ export class SessionsExplorerEmptyView extends ViewPane {
       themeService,
       hoverService,
     );
-	}
+  }
 
-	protected override renderBody(container: HTMLElement): void {
-		super.renderBody(container);
+  protected override renderBody(container: HTMLElement): void {
+    super.renderBody(container);
 
-		const bodyContainer = dom.append(container, $(".files-empty-view-body"));
-		const welcomeContainer = dom.append(
+    const bodyContainer = dom.append(container, $(".files-empty-view-body"));
+    const welcomeContainer = dom.append(
       bodyContainer,
       $(".files-empty-welcome"),
     );
 
-		const welcomeIcon = dom.append(
+    const welcomeIcon = dom.append(
       welcomeContainer,
       $(".files-empty-welcome-icon"),
     );
-		welcomeIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.files));
+    welcomeIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.files));
 
-		const welcomeMessage = dom.append(
+    const welcomeMessage = dom.append(
       welcomeContainer,
       $(".files-empty-welcome-message"),
     );
-		welcomeMessage.textContent = localize(
+    welcomeMessage.textContent = localize(
       "filesView.noFiles",
       "Folders and files will appear here.",
     );
-	}
+  }
 }

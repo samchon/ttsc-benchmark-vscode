@@ -3,11 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Extensions as ConfigurationExtensions, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  Extensions as ConfigurationExtensions,
+  IConfigurationRegistry,
+} from "../../../../platform/configuration/common/configurationRegistry.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
 import { externalUriOpenersConfigurationNode } from "./configuration.js";
-import { ExternalUriOpenerService, IExternalUriOpenerService } from "./externalUriOpenerService.js";
+import {
+  ExternalUriOpenerService,
+  IExternalUriOpenerService,
+} from "./externalUriOpenerService.js";
 
 registerSingleton(
   IExternalUriOpenerService,
@@ -15,5 +24,6 @@ registerSingleton(
   InstantiationType.Delayed,
 );
 
-Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration)
-	.registerConfiguration(externalUriOpenersConfigurationNode);
+Registry.as<IConfigurationRegistry>(
+  ConfigurationExtensions.Configuration,
+).registerConfiguration(externalUriOpenersConfigurationNode);

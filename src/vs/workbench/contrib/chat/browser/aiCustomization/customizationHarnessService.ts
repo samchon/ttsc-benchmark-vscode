@@ -3,7 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstantiationType, registerSingleton } from "../../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../../platform/instantiation/common/extensions.js";
 import {
   CustomizationHarnessServiceBase,
   ICustomizationHarnessService,
@@ -21,32 +24,30 @@ import { URI } from "../../../../../base/common/uri.js";
  * (e.g. Copilot CLI) are contributed by extensions via the provider API.
  */
 class CustomizationHarnessService extends CustomizationHarnessServiceBase {
-	constructor(
-		@IPromptsService promptsService: IPromptsService,
-	) {
-		const localExtras = [
+  constructor(@IPromptsService promptsService: IPromptsService) {
+    const localExtras = [
       AICustomizationSources.extension,
       AICustomizationSources.builtin,
     ];
-		super(
+    super(
       [createVSCodeHarnessDescriptor(localExtras)],
       SessionType.Local,
       promptsService,
     );
-	}
+  }
 
-	override getSessionResourceForHarness(sessionType: string): URI {
-		// const lastUsedSession = this.agentSessionsService.model.sessions
-		// 	.filter(session => session.providerType === sessionType)
-		// 	.sort((a, b) => (b.timing.lastRequestEnded ?? b.timing.created) - (a.timing.lastRequestEnded ?? a.timing.created))
-		// 	.at(0);
+  override getSessionResourceForHarness(sessionType: string): URI {
+    // const lastUsedSession = this.agentSessionsService.model.sessions
+    // 	.filter(session => session.providerType === sessionType)
+    // 	.sort((a, b) => (b.timing.lastRequestEnded ?? b.timing.created) - (a.timing.lastRequestEnded ?? a.timing.created))
+    // 	.at(0);
 
-		// if (lastUsedSession) {
-		// 	return lastUsedSession.resource;
-		// }
+    // if (lastUsedSession) {
+    // 	return lastUsedSession.resource;
+    // }
 
-		return super.getSessionResourceForHarness(sessionType);
-	}
+    return super.getSessionResourceForHarness(sessionType);
+  }
 }
 
 registerSingleton(
@@ -54,4 +55,3 @@ registerSingleton(
   CustomizationHarnessService,
   InstantiationType.Delayed,
 );
-

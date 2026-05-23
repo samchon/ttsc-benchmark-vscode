@@ -11,25 +11,29 @@ import {
   IExtensionsProfileScannerService,
 } from "../../../../platform/extensionManagement/common/extensionsProfileScannerService.js";
 import { IFileService } from "../../../../platform/files/common/files.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
 
 export class ExtensionsProfileScannerService extends AbstractExtensionsProfileScannerService {
-	constructor(
-		@IWorkbenchEnvironmentService environmentService: IWorkbenchEnvironmentService,
-		@IFileService fileService: IFileService,
-		@IUserDataProfilesService userDataProfilesService: IUserDataProfilesService,
-		@IUriIdentityService uriIdentityService: IUriIdentityService,
-		@ILogService logService: ILogService,
-	) {
-		super(
+  constructor(
+    @IWorkbenchEnvironmentService
+    environmentService: IWorkbenchEnvironmentService,
+    @IFileService fileService: IFileService,
+    @IUserDataProfilesService userDataProfilesService: IUserDataProfilesService,
+    @IUriIdentityService uriIdentityService: IUriIdentityService,
+    @ILogService logService: ILogService,
+  ) {
+    super(
       environmentService.userRoamingDataHome,
       fileService,
       userDataProfilesService,
       uriIdentityService,
       logService,
     );
-	}
+  }
 }
 
 registerSingleton(

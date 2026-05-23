@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./media/chatStatus.css";
-import { Disposable, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  DisposableStore,
+  MutableDisposable,
+} from "../../../../../base/common/lifecycle.js";
 import { localize } from "../../../../../nls.js";
 import { IWorkbenchContribution } from "../../../../common/contributions.js";
 import {
@@ -31,7 +35,10 @@ import { IInlineCompletionsService } from "../../../../../editor/browser/service
 import { IChatSessionsService } from "../../common/chatSessionsService.js";
 import { ChatStatusDashboard } from "./chatStatusDashboard.js";
 import { mainWindow } from "../../../../../base/browser/window.js";
-import { $ as h, disposableWindowInterval } from "../../../../../base/browser/dom.js";
+import {
+  $ as h,
+  disposableWindowInterval,
+} from "../../../../../base/browser/dom.js";
 import { isNewUser } from "./chatStatus.js";
 import product from "../../../../../platform/product/common/product.js";
 import { isCompletionsEnabled } from "../../../../../editor/common/services/completionsEnablement.js";
@@ -41,75 +48,93 @@ import { isWeb } from "../../../../../base/common/platform.js";
 import { InEditorZenModeContext } from "../../../../common/contextkeys.js";
 import { ChatConfiguration } from "../../common/constants.js";
 
-export class ChatStatusBarEntry extends Disposable implements IWorkbenchContribution {
+export class ChatStatusBarEntry
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "workbench.contrib.chatStatusBarEntry";
 
-	static readonly ID = "workbench.contrib.chatStatusBarEntry";
-
-	private static readonly TITLE_BAR_CONTEXT_KEYS = new Set([
+  private static readonly TITLE_BAR_CONTEXT_KEYS = new Set([
     "updateTitleBar",
     InEditorZenModeContext.key,
     ChatEntitlementContextKeys.hasByokModels.key,
   ]);
 
-	private entry: IStatusbarEntryAccessor | undefined = undefined;
+  private entry: IStatusbarEntryAccessor | undefined = undefined;
 
-	private readonly activeCodeEditorListener = this._register(
+  private readonly activeCodeEditorListener = this._register(
     new MutableDisposable(),
   );
-	private readonly entryAnchor = h("span");
-	private readonly dashboardTooltip: IStatusbarEntry["tooltip"];
+  private readonly entryAnchor = h("span");
+  private readonly dashboardTooltip: IStatusbarEntry["tooltip"];
 
-	private runningSessionsCount: number;
+  private runningSessionsCount: number;
 
-	constructor(
-		@IChatEntitlementService private readonly chatEntitlementService: ChatEntitlementService,
-		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@IStatusbarService private readonly statusbarService: IStatusbarService,
-		@IEditorService private readonly editorService: IEditorService,
-		@IConfigurationService private readonly configurationService: IConfigurationService,
-		@IInlineCompletionsService private readonly completionsService: IInlineCompletionsService,
-		@IChatSessionsService private readonly chatSessionsService: IChatSessionsService,
-		@IContextKeyService private readonly contextKeyService: IContextKeyService,
-	) {
-		super();
+  constructor(
+    @IChatEntitlementService
+    private readonly chatEntitlementService: ChatEntitlementService,
+    @IInstantiationService
+    private readonly instantiationService: IInstantiationService,
+    @IStatusbarService private readonly statusbarService: IStatusbarService,
+    @IEditorService private readonly editorService: IEditorService,
+    @IConfigurationService
+    private readonly configurationService: IConfigurationService,
+    @IInlineCompletionsService
+    private readonly completionsService: IInlineCompletionsService,
+    @IChatSessionsService
+    private readonly chatSessionsService: IChatSessionsService,
+    @IContextKeyService private readonly contextKeyService: IContextKeyService,
+  ) {
+    super();
 
-		this.runningSessionsCount = this.chatSessionsService.getInProgress().reduce(
-      (total, item) => total + item.count,
-      0,
-    );
+    this.runningSessionsCount = this.chatSessionsService
+      .getInProgress()
+      .reduce((total, item) => total + item.count, 0);
 
-		this.dashboardTooltip = {
-			element: (token: CancellationToken) => {
-				const store = new DisposableStore();
-				store.add(token.onCancellationRequested(() => {
-					store.dispose();
-				}));
-				const elem = ChatStatusDashboard.instantiateInContents(this.instantiationService, store, undefined);
+    this.dashboardTooltip = {
+      element: (token: CancellationToken) => {
+        const store = new DisposableStore();
+        store.add(
+          token.onCancellationRequested(() => {
+            store.dispose();
+          }),
+        );
+        const elem = ChatStatusDashboard.instantiateInContents(
+          this.instantiationService,
+          store,
+          undefined,
+        );
 
-				// todo@connor4312/@benibenj: workaround for #257923
-				store.add(disposableWindowInterval(mainWindow, () => {
-					if (!elem.isConnected) {
-						store.dispose();
-					}
-				}, 2000));
+        // todo@connor4312/@benibenj: workaround for #257923
+        store.add(
+          disposableWindowInterval(
+            mainWindow,
+            () => {
+              if (!elem.isConnected) {
+                store.dispose();
+              }
+            },
+            2000,
+          ),
+        );
 
-				return elem;
-			},
-		};
+        return elem;
+      },
+    };
 
-		this.update();
+    this.update();
 
-		this.registerListeners();
-	}
+    this.registerListeners();
+  }
 
-	private update(): void {
-		const sentiment = this.chatEntitlementService.sentiment;
-		if (!sentiment.hidden) {
-			const props = this.getEntryProps();
-			if (this.entry) {
-				this.entry.update(props);
-			} else {
-				this.entry = this.statusbarService.addEntry(
+  private update(): void {
+    const sentiment = this.chatEntitlementService.sentiment;
+    if (!sentiment.hidden) {
+      const props = this.getEntryProps();
+      if (this.entry) {
+        this.entry.update(props);
+      } else {
+        this.entry = this.statusbarService.addEntry(
           props,
           "chat.statusBarEntry",
           StatusbarAlignment.RIGHT,
@@ -118,183 +143,215 @@ export class ChatStatusBarEntry extends Disposable implements IWorkbenchContribu
             alignment: StatusbarAlignment.RIGHT,
           },
         );
-			}
-		} else {
-			this.entry?.dispose();
-			this.entry = undefined;
-		}
-	}
+      }
+    } else {
+      this.entry?.dispose();
+      this.entry = undefined;
+    }
+  }
 
-	private registerListeners(): void {
-		this._register(
+  private registerListeners(): void {
+    this._register(
       this.chatEntitlementService.onDidChangeQuotaExceeded(() => this.update()),
     );
-		this._register(
+    this._register(
       this.chatEntitlementService.onDidChangeSentiment(() => this.update()),
     );
-		this._register(
+    this._register(
       this.chatEntitlementService.onDidChangeEntitlement(() => this.update()),
     );
-		this._register(this.contextKeyService.onDidChangeContext(e => {
-			if (e.affectsSome(ChatStatusBarEntry.TITLE_BAR_CONTEXT_KEYS)) {
-				this.update();
-			}
-		}));
+    this._register(
+      this.contextKeyService.onDidChangeContext((e) => {
+        if (e.affectsSome(ChatStatusBarEntry.TITLE_BAR_CONTEXT_KEYS)) {
+          this.update();
+        }
+      }),
+    );
 
-		this._register(
+    this._register(
       this.completionsService.onDidChangeIsSnoozing(() => this.update()),
     );
 
-		this._register(this.chatSessionsService.onDidChangeInProgress(() => {
-			const oldSessionsCount = this.runningSessionsCount;
-			this.runningSessionsCount = this.chatSessionsService.getInProgress().reduce((total, item) => total + item.count, 0);
-			if (this.runningSessionsCount !== oldSessionsCount) {
-				this.update();
-			}
-		}));
+    this._register(
+      this.chatSessionsService.onDidChangeInProgress(() => {
+        const oldSessionsCount = this.runningSessionsCount;
+        this.runningSessionsCount = this.chatSessionsService
+          .getInProgress()
+          .reduce((total, item) => total + item.count, 0);
+        if (this.runningSessionsCount !== oldSessionsCount) {
+          this.update();
+        }
+      }),
+    );
 
-		this._register(
-      this.editorService.onDidActiveEditorChange(
-        () => this.onDidActiveEditorChange(),
+    this._register(
+      this.editorService.onDidActiveEditorChange(() =>
+        this.onDidActiveEditorChange(),
       ),
     );
 
-		this._register(this.configurationService.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration(product.defaultChatAgent?.completionsEnablementSetting) || e.affectsConfiguration(ChatConfiguration.TitleBarSignInEnabled)) {
-				this.update();
-			}
-		}));
-	}
+    this._register(
+      this.configurationService.onDidChangeConfiguration((e) => {
+        if (
+          e.affectsConfiguration(
+            product.defaultChatAgent?.completionsEnablementSetting,
+          ) ||
+          e.affectsConfiguration(ChatConfiguration.TitleBarSignInEnabled)
+        ) {
+          this.update();
+        }
+      }),
+    );
+  }
 
-	private onDidActiveEditorChange(): void {
-		this.update();
+  private onDidActiveEditorChange(): void {
+    this.update();
 
-		this.activeCodeEditorListener.clear();
+    this.activeCodeEditorListener.clear();
 
-		// Listen to language changes in the active code editor
-		const activeCodeEditor = getCodeEditor(
+    // Listen to language changes in the active code editor
+    const activeCodeEditor = getCodeEditor(
       this.editorService.activeTextEditorControl,
     );
-		if (activeCodeEditor) {
-			this.activeCodeEditorListener.value = activeCodeEditor.onDidChangeModelLanguage(
-        () => {
+    if (activeCodeEditor) {
+      this.activeCodeEditorListener.value =
+        activeCodeEditor.onDidChangeModelLanguage(() => {
           this.update();
-        },
-      );
-		}
-	}
+        });
+    }
+  }
 
-	private getEntryProps(): IStatusbarEntry {
-		let text = "$(copilot)";
-		let ariaLabel = localize("chatStatusAria", "Copilot status");
-		let kind: StatusbarEntryKind | undefined;
+  private getEntryProps(): IStatusbarEntry {
+    let text = "$(copilot)";
+    let ariaLabel = localize("chatStatusAria", "Copilot status");
+    let kind: StatusbarEntryKind | undefined;
 
-		if (isNewUser(this.chatEntitlementService)) {
-			const entitlement = this.chatEntitlementService.entitlement;
+    if (isNewUser(this.chatEntitlementService)) {
+      const entitlement = this.chatEntitlementService.entitlement;
 
-			// Sign In
-			if (
-				this.chatEntitlementService.sentiment.later ||	// user skipped setup
-				entitlement === ChatEntitlement.Available ||	// user is entitled
-				isProUser(entitlement) ||						// user is already pro
-				entitlement === ChatEntitlement.Free			// user is already free
-			) {
-				return this.getSetupEntryProps();
-			}
-		} else {
-			const quotas = this.chatEntitlementService.quotas;
-			const chatQuotaExceeded = quotas.chat?.percentRemaining === 0;
-			const completionsQuotaExceeded = quotas.completions?.percentRemaining === 0;
-			const isPooledQuotaDepleted = quotas.premiumChat?.unlimited && quotas.premiumChat.hasQuota === false && !(quotas.additionalUsageEnabled ?? false);
+      // Sign In
+      if (
+        this.chatEntitlementService.sentiment.later || // user skipped setup
+        entitlement === ChatEntitlement.Available || // user is entitled
+        isProUser(entitlement) || // user is already pro
+        entitlement === ChatEntitlement.Free // user is already free
+      ) {
+        return this.getSetupEntryProps();
+      }
+    } else {
+      const quotas = this.chatEntitlementService.quotas;
+      const chatQuotaExceeded = quotas.chat?.percentRemaining === 0;
+      const completionsQuotaExceeded =
+        quotas.completions?.percentRemaining === 0;
+      const isPooledQuotaDepleted =
+        quotas.premiumChat?.unlimited &&
+        quotas.premiumChat.hasQuota === false &&
+        !(quotas.additionalUsageEnabled ?? false);
 
-			// Disabled
-			if (this.chatEntitlementService.sentiment.disabled || this.chatEntitlementService.sentiment.untrusted) {
-				text = "$(copilot-unavailable)";
-				ariaLabel = localize("copilotDisabledStatus", "Copilot disabled");
-			}
+      // Disabled
+      if (
+        this.chatEntitlementService.sentiment.disabled ||
+        this.chatEntitlementService.sentiment.untrusted
+      ) {
+        text = "$(copilot-unavailable)";
+        ariaLabel = localize("copilotDisabledStatus", "Copilot disabled");
+      }
 
-			// Sessions in progress
-			else if (this.runningSessionsCount > 0) {
-				text = "$(copilot-in-progress)";
-				if (this.runningSessionsCount > 1) {
-					ariaLabel = localize(
+      // Sessions in progress
+      else if (this.runningSessionsCount > 0) {
+        text = "$(copilot-in-progress)";
+        if (this.runningSessionsCount > 1) {
+          ariaLabel = localize(
             "chatSessionsInProgressStatus",
             "{0} agent sessions in progress",
             this.runningSessionsCount,
           );
-				} else {
-					ariaLabel = localize(
+        } else {
+          ariaLabel = localize(
             "chatSessionInProgressStatus",
             "1 agent session in progress",
           );
-				}
-			}
+        }
+      }
 
-			// Signed out — keep showing Sign-in affordance even when BYOK models are present
-			// so air-gapped users can still authenticate to unlock the full Copilot experience.
-			else if (this.chatEntitlementService.entitlement === ChatEntitlement.Unknown) {
-				return this.getSetupEntryProps();
-			}
+      // Signed out — keep showing Sign-in affordance even when BYOK models are present
+      // so air-gapped users can still authenticate to unlock the full Copilot experience.
+      else if (
+        this.chatEntitlementService.entitlement === ChatEntitlement.Unknown
+      ) {
+        return this.getSetupEntryProps();
+      }
 
-			// Free Quota Exceeded
-			else if (this.chatEntitlementService.entitlement === ChatEntitlement.Free && (chatQuotaExceeded || completionsQuotaExceeded)) {
-				let quotaWarning: string;
-				if (chatQuotaExceeded && !completionsQuotaExceeded) {
-					quotaWarning = localize(
+      // Free Quota Exceeded
+      else if (
+        this.chatEntitlementService.entitlement === ChatEntitlement.Free &&
+        (chatQuotaExceeded || completionsQuotaExceeded)
+      ) {
+        let quotaWarning: string;
+        if (chatQuotaExceeded && !completionsQuotaExceeded) {
+          quotaWarning = localize(
             "chatQuotaExceededStatus",
             "Chat quota reached",
           );
-				} else if (completionsQuotaExceeded && !chatQuotaExceeded) {
-					quotaWarning = localize(
+        } else if (completionsQuotaExceeded && !chatQuotaExceeded) {
+          quotaWarning = localize(
             "completionsQuotaExceededStatus",
             "Inline suggestions quota reached",
           );
-				} else {
-					quotaWarning = localize(
+        } else {
+          quotaWarning = localize(
             "chatAndCompletionsQuotaExceededStatus",
             "Quota reached",
           );
-				}
+        }
 
-				text = `$(copilot-warning) ${quotaWarning}`;
-				ariaLabel = quotaWarning;
-				kind = "prominent";
-			}
+        text = `$(copilot-warning) ${quotaWarning}`;
+        ariaLabel = quotaWarning;
+        kind = "prominent";
+      }
 
-			// Pooled Entitlement Exhausted (Business/Enterprise)
-			else if ((this.chatEntitlementService.entitlement === ChatEntitlement.Business || this.chatEntitlementService.entitlement === ChatEntitlement.Enterprise) && isPooledQuotaDepleted) {
-				const quotaWarning = localize(
+      // Pooled Entitlement Exhausted (Business/Enterprise)
+      else if (
+        (this.chatEntitlementService.entitlement === ChatEntitlement.Business ||
+          this.chatEntitlementService.entitlement ===
+            ChatEntitlement.Enterprise) &&
+        isPooledQuotaDepleted
+      ) {
+        const quotaWarning = localize(
           "chatAndCompletionsQuotaExceededStatus",
           "Quota reached",
         );
-				text = `$(copilot-warning) ${quotaWarning}`;
-				ariaLabel = quotaWarning;
-				kind = "prominent";
-			}
+        text = `$(copilot-warning) ${quotaWarning}`;
+        ariaLabel = quotaWarning;
+        kind = "prominent";
+      }
 
-			// Completions Disabled
-			else if (this.editorService.activeTextEditorLanguageId && !isCompletionsEnabled(
-        this.configurationService,
-        this.editorService.activeTextEditorLanguageId,
-      )) {
-				text = "$(copilot-unavailable)";
-				ariaLabel = localize(
+      // Completions Disabled
+      else if (
+        this.editorService.activeTextEditorLanguageId &&
+        !isCompletionsEnabled(
+          this.configurationService,
+          this.editorService.activeTextEditorLanguageId,
+        )
+      ) {
+        text = "$(copilot-unavailable)";
+        ariaLabel = localize(
           "completionsDisabledStatus",
           "Inline suggestions disabled",
         );
-			}
+      }
 
-			// Completions Snoozed
-			else if (this.completionsService.isSnoozing()) {
-				text = "$(copilot-snooze)";
-				ariaLabel = localize(
+      // Completions Snoozed
+      else if (this.completionsService.isSnoozing()) {
+        text = "$(copilot-snooze)";
+        ariaLabel = localize(
           "completionsSnoozedStatus",
           "Inline suggestions snoozed",
         );
-			}
-		}
+      }
+    }
 
-		const baseResult = {
+    const baseResult = {
       name: localize("chatStatus", "Copilot Status"),
       text,
       ariaLabel,
@@ -305,61 +362,67 @@ export class ChatStatusBarEntry extends Disposable implements IWorkbenchContribu
       tooltip: this.dashboardTooltip,
     } satisfies IStatusbarEntry;
 
-		return baseResult;
-	}
+    return baseResult;
+  }
 
-	private getSetupEntryProps(): IStatusbarEntry {
-		const showSignInLabel = !this.isSignInTitleBarAffordanceVisible();
-		const signInLabel = localize("signIn", "Sign In");
-		return {
+  private getSetupEntryProps(): IStatusbarEntry {
+    const showSignInLabel = !this.isSignInTitleBarAffordanceVisible();
+    const signInLabel = localize("signIn", "Sign In");
+    return {
       name: localize("chatStatus", "Copilot Status"),
       text: showSignInLabel ? `$(copilot) ${signInLabel}` : "$(copilot)",
-      ariaLabel: showSignInLabel ? signInLabel : localize("chatStatusAria", "Copilot status"),
+      ariaLabel: showSignInLabel
+        ? signInLabel
+        : localize("chatStatusAria", "Copilot status"),
       command: CHAT_SETUP_ACTION_ID,
       showInAllWindows: true,
       kind: undefined,
       content: this.entryAnchor,
     };
-	}
+  }
 
-	private isSignInTitleBarAffordanceVisible(): boolean {
-		if (isWeb) {
-			return false;
-		}
+  private isSignInTitleBarAffordanceVisible(): boolean {
+    if (isWeb) {
+      return false;
+    }
 
-		// Title bar sign-in button only shows when user is signed out
-		if (this.chatEntitlementService.entitlement !== ChatEntitlement.Unknown) {
-			return false;
-		}
+    // Title bar sign-in button only shows when user is signed out
+    if (this.chatEntitlementService.entitlement !== ChatEntitlement.Unknown) {
+      return false;
+    }
 
-		if (this.chatEntitlementService.sentiment.hidden || this.chatEntitlementService.sentiment.disabledInWorkspace) {
-			return false;
-		}
+    if (
+      this.chatEntitlementService.sentiment.hidden ||
+      this.chatEntitlementService.sentiment.disabledInWorkspace
+    ) {
+      return false;
+    }
 
-		const hasTitleBarUpdate = Boolean(
+    const hasTitleBarUpdate = Boolean(
       this.contextKeyService.getContextKeyValue("updateTitleBar"),
     );
-		if (hasTitleBarUpdate) {
-			return false;
-		}
+    if (hasTitleBarUpdate) {
+      return false;
+    }
 
-		const inZenMode = Boolean(
+    const inZenMode = Boolean(
       this.contextKeyService.getContextKeyValue(InEditorZenModeContext.key),
     );
-		if (inZenMode) {
-			return false;
-		}
+    if (inZenMode) {
+      return false;
+    }
 
-		const signInTitleBarEnabled = this.configurationService.getValue<boolean>(
-      ChatConfiguration.TitleBarSignInEnabled,
-    ) !== false;
-		return signInTitleBarEnabled;
-	}
+    const signInTitleBarEnabled =
+      this.configurationService.getValue<boolean>(
+        ChatConfiguration.TitleBarSignInEnabled,
+      ) !== false;
+    return signInTitleBarEnabled;
+  }
 
-	override dispose(): void {
-		super.dispose();
+  override dispose(): void {
+    super.dispose();
 
-		this.entry?.dispose();
-		this.entry = undefined;
-	}
+    this.entry?.dispose();
+    this.entry = undefined;
+  }
 }

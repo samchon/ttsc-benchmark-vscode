@@ -17,7 +17,10 @@ import {
   transparent,
 } from "../../../../../platform/theme/common/colorRegistry.js";
 import { buttonBackground } from "../../../../../platform/theme/common/colors/inputColors.js";
-import { darken, lighten } from "../../../../../platform/theme/common/colorUtils.js";
+import {
+  darken,
+  lighten,
+} from "../../../../../platform/theme/common/colorUtils.js";
 
 // This color intentionally matches commandCenter.background but is separate so that it
 // doesn't get overridden when debugging (the debug toolbar overrides commandCenter.background).
@@ -39,8 +42,8 @@ export const agentStatusIndicatorBackground = registerColor(
 export const chatRequestBorder = registerColor(
   "chat.requestBorder",
   {
-    dark: new Color(new RGBA(255, 255, 255, 0.10)),
-    light: new Color(new RGBA(0, 0, 0, 0.10)),
+    dark: new Color(new RGBA(255, 255, 255, 0.1)),
+    light: new Color(new RGBA(0, 0, 0, 0.1)),
     hcDark: contrastBorder,
     hcLight: contrastBorder,
   },

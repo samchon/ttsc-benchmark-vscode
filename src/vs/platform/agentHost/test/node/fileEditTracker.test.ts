@@ -17,153 +17,234 @@ import { InstantiationService } from "../../../instantiation/common/instantiatio
 import { ServiceCollection } from "../../../instantiation/common/serviceCollection.js";
 import { IDiffComputeService } from "../../common/diffComputeService.js";
 import { ToolResultContentType } from "../../common/state/sessionState.js";
-import { createZeroDiffComputeService, TestDiffComputeService } from "../common/sessionTestHelpers.js";
+import {
+  createZeroDiffComputeService,
+  TestDiffComputeService,
+} from "../common/sessionTestHelpers.js";
 import { SessionDatabase } from "../../node/sessionDatabase.js";
-import { FileEditTracker, buildSessionDbUri, parseSessionDbUri } from "../../node/shared/fileEditTracker.js";
+import {
+  FileEditTracker,
+  buildSessionDbUri,
+  parseSessionDbUri,
+} from "../../node/shared/fileEditTracker.js";
 
 suite("FileEditTracker", () => {
+  const disposables = new DisposableStore();
+  let fileService: FileService;
+  let db: SessionDatabase;
+  let tracker: FileEditTracker;
 
-	const disposables = new DisposableStore();
-	let fileService: FileService;
-	let db: SessionDatabase;
-	let tracker: FileEditTracker;
+  setup(async () => {
+    fileService = disposables.add(new FileService(new NullLogService()));
+    const sourceFs = disposables.add(new InMemoryFileSystemProvider());
+    disposables.add(fileService.registerProvider("file", sourceFs));
 
-	setup(async () => {
-		fileService = disposables.add(new FileService(new NullLogService()));
-		const sourceFs = disposables.add(new InMemoryFileSystemProvider());
-		disposables.add(fileService.registerProvider("file", sourceFs));
+    db = disposables.add(await SessionDatabase.open(":memory:"));
+    await db.createTurn("turn-1");
 
-		db = disposables.add(await SessionDatabase.open(":memory:"));
-		await db.createTurn("turn-1");
+    const services = new ServiceCollection();
+    services.set(ILogService, new NullLogService());
+    services.set(IFileService, fileService);
+    services.set(IDiffComputeService, createZeroDiffComputeService());
+    const instantiationService: IInstantiationService = disposables.add(
+      new InstantiationService(services),
+    );
+    tracker = instantiationService.createInstance(
+      FileEditTracker,
+      "copilot:/test-session",
+      db,
+    );
+  });
 
-		const services = new ServiceCollection();
-		services.set(ILogService, new NullLogService());
-		services.set(IFileService, fileService);
-		services.set(IDiffComputeService, createZeroDiffComputeService());
-		const instantiationService: IInstantiationService = disposables.add(new InstantiationService(services));
-		tracker = instantiationService.createInstance(FileEditTracker, "copilot:/test-session", db);
-	});
+  teardown(async () => {
+    disposables.clear();
+    await db.close();
+  });
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-	teardown(async () => {
-		disposables.clear();
-		await db.close();
-	});
-	ensureNoDisposablesAreLeakedInTestSuite();
+  test("tracks edit start and complete for existing file", async () => {
+    await fileService.writeFile(
+      URI.file("/workspace/test.txt"),
+      VSBuffer.fromString("original content\nline 2"),
+    );
 
-	test("tracks edit start and complete for existing file", async () => {
-		await fileService.writeFile(URI.file("/workspace/test.txt"), VSBuffer.fromString("original content\nline 2"));
+    await tracker.trackEditStart("/workspace/test.txt");
+    await fileService.writeFile(
+      URI.file("/workspace/test.txt"),
+      VSBuffer.fromString("modified content\nline 2\nline 3"),
+    );
+    await tracker.completeEdit("/workspace/test.txt");
 
-		await tracker.trackEditStart("/workspace/test.txt");
-		await fileService.writeFile(URI.file("/workspace/test.txt"), VSBuffer.fromString("modified content\nline 2\nline 3"));
-		await tracker.completeEdit("/workspace/test.txt");
+    const fileEdit = await tracker.takeCompletedEdit(
+      "turn-1",
+      "tc-1",
+      "/workspace/test.txt",
+    );
+    assert.ok(fileEdit);
+    assert.strictEqual(fileEdit.type, ToolResultContentType.FileEdit);
 
-		const fileEdit = await tracker.takeCompletedEdit("turn-1", "tc-1", "/workspace/test.txt");
-		assert.ok(fileEdit);
-		assert.strictEqual(fileEdit.type, ToolResultContentType.FileEdit);
+    // URIs are parseable session-db: URIs
+    const beforeFields = parseSessionDbUri(fileEdit.before!.content.uri);
+    assert.ok(beforeFields);
+    assert.strictEqual(beforeFields.sessionUri, "copilot:/test-session");
+    assert.strictEqual(beforeFields.toolCallId, "tc-1");
+    assert.strictEqual(beforeFields.filePath, "/workspace/test.txt");
+    assert.strictEqual(beforeFields.part, "before");
 
-		// URIs are parseable session-db: URIs
-		const beforeFields = parseSessionDbUri(fileEdit.before!.content.uri);
-		assert.ok(beforeFields);
-		assert.strictEqual(beforeFields.sessionUri, "copilot:/test-session");
-		assert.strictEqual(beforeFields.toolCallId, "tc-1");
-		assert.strictEqual(beforeFields.filePath, "/workspace/test.txt");
-		assert.strictEqual(beforeFields.part, "before");
+    const afterFields = parseSessionDbUri(fileEdit.after!.content.uri);
+    assert.ok(afterFields);
+    assert.strictEqual(afterFields.part, "after");
 
-		const afterFields = parseSessionDbUri(fileEdit.after!.content.uri);
-		assert.ok(afterFields);
-		assert.strictEqual(afterFields.part, "after");
+    // Content is persisted in the database (wait for fire-and-forget write)
+    await new Promise((r) => setTimeout(r, 50));
 
-		// Content is persisted in the database (wait for fire-and-forget write)
-		await new Promise(r => setTimeout(r, 50));
+    const content = await db.readFileEditContent("tc-1", "/workspace/test.txt");
+    assert.ok(content);
+    assert.strictEqual(
+      new TextDecoder().decode(content.beforeContent),
+      "original content\nline 2",
+    );
+    assert.strictEqual(
+      new TextDecoder().decode(content.afterContent),
+      "modified content\nline 2\nline 3",
+    );
+  });
 
-		const content = await db.readFileEditContent("tc-1", "/workspace/test.txt");
-		assert.ok(content);
-		assert.strictEqual(new TextDecoder().decode(content.beforeContent), "original content\nline 2");
-		assert.strictEqual(new TextDecoder().decode(content.afterContent), "modified content\nline 2\nline 3");
-	});
+  test("tracks edit for newly created file (no before content)", async () => {
+    await tracker.trackEditStart("/workspace/new-file.txt");
+    await fileService.writeFile(
+      URI.file("/workspace/new-file.txt"),
+      VSBuffer.fromString("new file\ncontent"),
+    );
+    await tracker.completeEdit("/workspace/new-file.txt");
 
-	test("tracks edit for newly created file (no before content)", async () => {
-		await tracker.trackEditStart("/workspace/new-file.txt");
-		await fileService.writeFile(URI.file("/workspace/new-file.txt"), VSBuffer.fromString("new file\ncontent"));
-		await tracker.completeEdit("/workspace/new-file.txt");
+    const fileEdit = await tracker.takeCompletedEdit(
+      "turn-1",
+      "tc-2",
+      "/workspace/new-file.txt",
+    );
+    assert.ok(fileEdit);
 
-		const fileEdit = await tracker.takeCompletedEdit("turn-1", "tc-2", "/workspace/new-file.txt");
-		assert.ok(fileEdit);
+    // Wait for the fire-and-forget DB write to complete
+    await new Promise((r) => setTimeout(r, 50));
 
-		// Wait for the fire-and-forget DB write to complete
-		await new Promise(r => setTimeout(r, 50));
+    const content = await db.readFileEditContent(
+      "tc-2",
+      "/workspace/new-file.txt",
+    );
+    assert.ok(content);
+    assert.strictEqual(new TextDecoder().decode(content.beforeContent), "");
+    assert.strictEqual(
+      new TextDecoder().decode(content.afterContent),
+      "new file\ncontent",
+    );
+  });
 
-		const content = await db.readFileEditContent("tc-2", "/workspace/new-file.txt");
-		assert.ok(content);
-		assert.strictEqual(new TextDecoder().decode(content.beforeContent), "");
-		assert.strictEqual(new TextDecoder().decode(content.afterContent), "new file\ncontent");
-	});
+  test("takeCompletedEdit returns undefined for unknown file path", async () => {
+    const result = await tracker.takeCompletedEdit(
+      "turn-1",
+      "tc-x",
+      "/nonexistent",
+    );
+    assert.strictEqual(result, undefined);
+  });
 
-	test("takeCompletedEdit returns undefined for unknown file path", async () => {
-		const result = await tracker.takeCompletedEdit("turn-1", "tc-x", "/nonexistent");
-		assert.strictEqual(result, undefined);
-	});
+  test("Write to non-existent file records kind=create with removed=0", async () => {
+    // Phase 8 live-E2E finding: a `Write` to a brand-new file was reporting
+    // `diff.removed=1` because the differ saw an empty before-content
+    // against a one-line after-content. The tracker now overrides
+    // `removed` to 0 when the file did not exist before the edit, and
+    // records `kind=create` instead of `edit`. Other counts (`added`)
+    // are still passed through from the diff service unchanged.
+    const services = new ServiceCollection();
+    services.set(ILogService, new NullLogService());
+    services.set(IFileService, fileService);
+    // Fixed `{ added: 1, removed: 1 }` matches the production diff
+    // output observed in the live-E2E run; the tracker should clamp
+    // `removed` to 0 for create.
+    services.set(
+      IDiffComputeService,
+      new TestDiffComputeService({ added: 1, removed: 1 }),
+    );
+    const inst: IInstantiationService = disposables.add(
+      new InstantiationService(services),
+    );
+    const localTracker = inst.createInstance(
+      FileEditTracker,
+      "copilot:/test-session",
+      db,
+    );
 
-	test("Write to non-existent file records kind=create with removed=0", async () => {
-		// Phase 8 live-E2E finding: a `Write` to a brand-new file was reporting
-		// `diff.removed=1` because the differ saw an empty before-content
-		// against a one-line after-content. The tracker now overrides
-		// `removed` to 0 when the file did not exist before the edit, and
-		// records `kind=create` instead of `edit`. Other counts (`added`)
-		// are still passed through from the diff service unchanged.
-		const services = new ServiceCollection();
-		services.set(ILogService, new NullLogService());
-		services.set(IFileService, fileService);
-		// Fixed `{ added: 1, removed: 1 }` matches the production diff
-		// output observed in the live-E2E run; the tracker should clamp
-		// `removed` to 0 for create.
-		services.set(IDiffComputeService, new TestDiffComputeService({ added: 1, removed: 1 }));
-		const inst: IInstantiationService = disposables.add(new InstantiationService(services));
-		const localTracker = inst.createInstance(FileEditTracker, "copilot:/test-session", db);
+    await localTracker.trackEditStart("/workspace/brand-new.txt");
+    await fileService.writeFile(
+      URI.file("/workspace/brand-new.txt"),
+      VSBuffer.fromString("fresh"),
+    );
+    await localTracker.completeEdit("/workspace/brand-new.txt");
 
-		await localTracker.trackEditStart("/workspace/brand-new.txt");
-		await fileService.writeFile(URI.file("/workspace/brand-new.txt"), VSBuffer.fromString("fresh"));
-		await localTracker.completeEdit("/workspace/brand-new.txt");
+    const fileEdit = await localTracker.takeCompletedEdit(
+      "turn-1",
+      "tc-create",
+      "/workspace/brand-new.txt",
+    );
+    assert.ok(fileEdit);
 
-		const fileEdit = await localTracker.takeCompletedEdit("turn-1", "tc-create", "/workspace/brand-new.txt");
-		assert.ok(fileEdit);
+    const records = await db.getAllFileEdits();
+    const created = records.find((r) => r.toolCallId === "tc-create");
+    assert.deepStrictEqual(
+      {
+        diff: fileEdit.diff,
+        kind: created?.kind,
+        addedLines: created?.addedLines,
+        removedLines: created?.removedLines,
+      },
+      {
+        diff: { added: 1, removed: 0 },
+        kind: "create",
+        addedLines: 1,
+        removedLines: 0,
+      },
+    );
+  });
 
-		const records = await db.getAllFileEdits();
-		const created = records.find(r => r.toolCallId === "tc-create");
-		assert.deepStrictEqual({
-			diff: fileEdit.diff,
-			kind: created?.kind,
-			addedLines: created?.addedLines,
-			removedLines: created?.removedLines,
-		}, {
-			diff: { added: 1, removed: 0 },
-			kind: "create",
-			addedLines: 1,
-			removedLines: 0,
-		});
-	});
+  test("before and after content can be read from database", async () => {
+    await fileService.writeFile(
+      URI.file("/workspace/file.ts"),
+      VSBuffer.fromString("original"),
+    );
 
-	test("before and after content can be read from database", async () => {
-		await fileService.writeFile(URI.file("/workspace/file.ts"), VSBuffer.fromString("original"));
+    await tracker.trackEditStart("/workspace/file.ts");
+    await fileService.writeFile(
+      URI.file("/workspace/file.ts"),
+      VSBuffer.fromString("modified"),
+    );
+    await tracker.completeEdit("/workspace/file.ts");
 
-		await tracker.trackEditStart("/workspace/file.ts");
-		await fileService.writeFile(URI.file("/workspace/file.ts"), VSBuffer.fromString("modified"));
-		await tracker.completeEdit("/workspace/file.ts");
+    await tracker.takeCompletedEdit("turn-1", "tc-3", "/workspace/file.ts");
 
-		await tracker.takeCompletedEdit("turn-1", "tc-3", "/workspace/file.ts");
-
-		const content = await db.readFileEditContent("tc-3", "/workspace/file.ts");
-		assert.ok(content);
-		assert.strictEqual(new TextDecoder().decode(content.beforeContent), "original");
-		assert.strictEqual(new TextDecoder().decode(content.afterContent), "modified");
-	});
+    const content = await db.readFileEditContent("tc-3", "/workspace/file.ts");
+    assert.ok(content);
+    assert.strictEqual(
+      new TextDecoder().decode(content.beforeContent),
+      "original",
+    );
+    assert.strictEqual(
+      new TextDecoder().decode(content.afterContent),
+      "modified",
+    );
+  });
 });
 
 suite("buildSessionDbUri / parseSessionDbUri", () => {
   ensureNoDisposablesAreLeakedInTestSuite();
 
   test("round-trips a simple URI", () => {
-    const uri = buildSessionDbUri("copilot:/abc-123", "tc-1", "/workspace/file.ts", "before");
+    const uri = buildSessionDbUri(
+      "copilot:/abc-123",
+      "tc-1",
+      "/workspace/file.ts",
+      "before",
+    );
     const parsed = parseSessionDbUri(uri);
     assert.ok(parsed);
     assert.deepStrictEqual(parsed, {
@@ -175,7 +256,12 @@ suite("buildSessionDbUri / parseSessionDbUri", () => {
   });
 
   test("round-trips with special characters in filePath", () => {
-    const uri = buildSessionDbUri("copilot:/s1", "tc-2", "/work space/file (1).ts", "after");
+    const uri = buildSessionDbUri(
+      "copilot:/s1",
+      "tc-2",
+      "/work space/file (1).ts",
+      "after",
+    );
     const parsed = parseSessionDbUri(uri);
     assert.ok(parsed);
     assert.strictEqual(parsed.filePath, "/work space/file (1).ts");
@@ -183,7 +269,12 @@ suite("buildSessionDbUri / parseSessionDbUri", () => {
   });
 
   test("round-trips with special characters in toolCallId", () => {
-    const uri = buildSessionDbUri("copilot:/s1", "call_abc=123&x", "/file.ts", "before");
+    const uri = buildSessionDbUri(
+      "copilot:/s1",
+      "call_abc=123&x",
+      "/file.ts",
+      "before",
+    );
     const parsed = parseSessionDbUri(uri);
     assert.ok(parsed);
     assert.strictEqual(parsed.toolCallId, "call_abc=123&x");
@@ -194,35 +285,39 @@ suite("buildSessionDbUri / parseSessionDbUri", () => {
     assert.strictEqual(parseSessionDbUri("https://example.com"), undefined);
   });
 
-  test(
-    "parseSessionDbUri returns undefined for malformed session-db URIs",
-    () => {
-      assert.strictEqual(parseSessionDbUri("session-db:copilot:/s1"), undefined);
-      assert.strictEqual(
-        parseSessionDbUri("session-db:copilot:/s1?toolCallId=tc-1"),
-        undefined,
-      );
-      assert.strictEqual(
-        parseSessionDbUri(
-          "session-db:copilot:/s1?toolCallId=tc-1&filePath=/f&part=middle",
-        ),
-        undefined,
-      );
-    },
-  );
+  test("parseSessionDbUri returns undefined for malformed session-db URIs", () => {
+    assert.strictEqual(parseSessionDbUri("session-db:copilot:/s1"), undefined);
+    assert.strictEqual(
+      parseSessionDbUri("session-db:copilot:/s1?toolCallId=tc-1"),
+      undefined,
+    );
+    assert.strictEqual(
+      parseSessionDbUri(
+        "session-db:copilot:/s1?toolCallId=tc-1&filePath=/f&part=middle",
+      ),
+      undefined,
+    );
+  });
 
   test("URI path ends with the basename of the file", () => {
-    const uri = buildSessionDbUri("copilot:/s1", "tc-1", "/workspace/src/index.ts", "before");
+    const uri = buildSessionDbUri(
+      "copilot:/s1",
+      "tc-1",
+      "/workspace/src/index.ts",
+      "before",
+    );
     const parsed = URI.parse(uri);
     assert.ok(parsed.path.endsWith("/index.ts"));
   });
 
-  test(
-    "URI path ends with basename for files with spaces and special chars",
-    () => {
-      const uri = buildSessionDbUri("copilot:/s1", "tc-1", "/work space/file (1).ts", "after");
-      const parsed = URI.parse(uri);
-      assert.ok(parsed.path.endsWith("/file (1).ts"));
-    },
-  );
+  test("URI path ends with basename for files with spaces and special chars", () => {
+    const uri = buildSessionDbUri(
+      "copilot:/s1",
+      "tc-1",
+      "/work space/file (1).ts",
+      "after",
+    );
+    const parsed = URI.parse(uri);
+    assert.ok(parsed.path.endsWith("/file (1).ts"));
+  });
 });

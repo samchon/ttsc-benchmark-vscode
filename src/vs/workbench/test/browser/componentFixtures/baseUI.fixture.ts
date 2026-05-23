@@ -9,9 +9,22 @@ import { ThemeIcon } from "../../../../base/common/themables.js";
 import { Action, Separator } from "../../../../base/common/actions.js";
 
 // UI Components
-import { Button, ButtonBar, ButtonWithDescription, unthemedButtonStyles } from "../../../../base/browser/ui/button/button.js";
-import { Toggle, Checkbox, unthemedToggleStyles } from "../../../../base/browser/ui/toggle/toggle.js";
-import { InputBox, MessageType, unthemedInboxStyles } from "../../../../base/browser/ui/inputbox/inputBox.js";
+import {
+  Button,
+  ButtonBar,
+  ButtonWithDescription,
+  unthemedButtonStyles,
+} from "../../../../base/browser/ui/button/button.js";
+import {
+  Toggle,
+  Checkbox,
+  unthemedToggleStyles,
+} from "../../../../base/browser/ui/toggle/toggle.js";
+import {
+  InputBox,
+  MessageType,
+  unthemedInboxStyles,
+} from "../../../../base/browser/ui/inputbox/inputBox.js";
 import { CountBadge } from "../../../../base/browser/ui/countBadge/countBadge.js";
 import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
 import { ProgressBar } from "../../../../base/browser/ui/progressbar/progressbar.js";
@@ -23,49 +36,47 @@ import {
   defineThemedFixtureGroup,
 } from "./fixtureUtils.js";
 
-
 export default defineThemedFixtureGroup({
-	Buttons: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: renderButtons,
-	}),
+  Buttons: defineComponentFixture({
+    labels: { kind: "screenshot" },
+    render: renderButtons,
+  }),
 
-	ButtonBar: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: renderButtonBar,
-	}),
+  ButtonBar: defineComponentFixture({
+    labels: { kind: "screenshot" },
+    render: renderButtonBar,
+  }),
 
-	Toggles: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: renderToggles,
-	}),
+  Toggles: defineComponentFixture({
+    labels: { kind: "screenshot" },
+    render: renderToggles,
+  }),
 
-	InputBoxes: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: renderInputBoxes,
-	}),
+  InputBoxes: defineComponentFixture({
+    labels: { kind: "screenshot" },
+    render: renderInputBoxes,
+  }),
 
-	CountBadges: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: renderCountBadges,
-	}),
+  CountBadges: defineComponentFixture({
+    labels: { kind: "screenshot" },
+    render: renderCountBadges,
+  }),
 
-	ActionBar: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: renderActionBar,
-	}),
+  ActionBar: defineComponentFixture({
+    labels: { kind: "screenshot" },
+    render: renderActionBar,
+  }),
 
-	ProgressBars: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: renderProgressBars,
-	}),
+  ProgressBars: defineComponentFixture({
+    labels: { kind: "screenshot" },
+    render: renderProgressBars,
+  }),
 
-	HighlightedLabels: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: renderHighlightedLabels,
-	}),
+  HighlightedLabels: defineComponentFixture({
+    labels: { kind: "screenshot" },
+    render: renderHighlightedLabels,
+  }),
 });
-
 
 // ============================================================================
 // Styles (themed versions for fixture display)
@@ -77,7 +88,8 @@ const themedButtonStyles = {
   buttonHoverBackground: "var(--vscode-button-hoverBackground)",
   buttonForeground: "var(--vscode-button-foreground)",
   buttonSecondaryBackground: "var(--vscode-button-secondaryBackground)",
-  buttonSecondaryHoverBackground: "var(--vscode-button-secondaryHoverBackground)",
+  buttonSecondaryHoverBackground:
+    "var(--vscode-button-secondaryHoverBackground)",
   buttonSecondaryForeground: "var(--vscode-button-secondaryForeground)",
   buttonBorder: "var(--vscode-button-border)",
 };
@@ -104,9 +116,11 @@ const themedInputBoxStyles = {
   inputBorder: "var(--vscode-input-border)",
   inputValidationInfoBackground: "var(--vscode-inputValidation-infoBackground)",
   inputValidationInfoBorder: "var(--vscode-inputValidation-infoBorder)",
-  inputValidationWarningBackground: "var(--vscode-inputValidation-warningBackground)",
+  inputValidationWarningBackground:
+    "var(--vscode-inputValidation-warningBackground)",
   inputValidationWarningBorder: "var(--vscode-inputValidation-warningBorder)",
-  inputValidationErrorBackground: "var(--vscode-inputValidation-errorBackground)",
+  inputValidationErrorBackground:
+    "var(--vscode-inputValidation-errorBackground)",
   inputValidationErrorBorder: "var(--vscode-inputValidation-errorBorder)",
 };
 
@@ -120,67 +134,69 @@ const themedProgressBarOptions = {
   progressBarBackground: "var(--vscode-progressBar-background)",
 };
 
-
 // ============================================================================
 // Buttons
 // ============================================================================
 
-function renderButtons({ container, disposableStore }: ComponentFixtureContext): void {
-	container.style.padding = "16px";
-	container.style.display = "flex";
-	container.style.flexDirection = "column";
-	container.style.gap = "12px";
+function renderButtons({
+  container,
+  disposableStore,
+}: ComponentFixtureContext): void {
+  container.style.padding = "16px";
+  container.style.display = "flex";
+  container.style.flexDirection = "column";
+  container.style.gap = "12px";
 
-	// Section: Primary Buttons
-	const primarySection = $("div");
-	primarySection.style.display = "flex";
-	primarySection.style.gap = "8px";
-	primarySection.style.alignItems = "center";
-	container.appendChild(primarySection);
+  // Section: Primary Buttons
+  const primarySection = $("div");
+  primarySection.style.display = "flex";
+  primarySection.style.gap = "8px";
+  primarySection.style.alignItems = "center";
+  container.appendChild(primarySection);
 
-	const primaryButton = disposableStore.add(
+  const primaryButton = disposableStore.add(
     new Button(primarySection, {
       ...themedButtonStyles,
       title: "Primary button",
     }),
   );
-	primaryButton.label = "Primary Button";
+  primaryButton.label = "Primary Button";
 
-	const primaryIconButton = disposableStore.add(
+  const primaryIconButton = disposableStore.add(
     new Button(primarySection, {
       ...themedButtonStyles,
       title: "With Icon",
       supportIcons: true,
     }),
   );
-	primaryIconButton.label = "$(add) Add Item";
+  primaryIconButton.label = "$(add) Add Item";
 
-	const smallButton = disposableStore.add(
+  const smallButton = disposableStore.add(
     new Button(primarySection, {
       ...themedButtonStyles,
       title: "Small button",
       small: true,
     }),
   );
-	smallButton.label = "Small";
+  smallButton.label = "Small";
 
-	// Section: Secondary Buttons
-	const secondarySection = $("div");
-	secondarySection.style.display = "flex";
-	secondarySection.style.gap = "8px";
-	secondarySection.style.alignItems = "center";
-	container.appendChild(secondarySection);
+  // Section: Secondary Buttons
+  const secondarySection = $("div");
+  secondarySection.style.display = "flex";
+  secondarySection.style.gap = "8px";
+  secondarySection.style.alignItems = "center";
+  container.appendChild(secondarySection);
 
-	const secondaryButton = disposableStore.add(
+  const secondaryButton = disposableStore.add(
     new Button(secondarySection, {
       ...themedButtonStyles,
       secondary: true,
       title: "Secondary button",
     }),
   );
-	secondaryButton.label = "Secondary Button";
+  secondaryButton.label = "Secondary Button";
 
-	const secondaryIconButton = disposableStore.add(
+  const secondaryIconButton = disposableStore.add(
     new Button(secondarySection, {
       ...themedButtonStyles,
       secondary: true,
@@ -188,26 +204,26 @@ function renderButtons({ container, disposableStore }: ComponentFixtureContext):
       supportIcons: true,
     }),
   );
-	secondaryIconButton.label = "$(close) Cancel";
+  secondaryIconButton.label = "$(close) Cancel";
 
-	// Section: Disabled Buttons
-	const disabledSection = $("div");
-	disabledSection.style.display = "flex";
-	disabledSection.style.gap = "8px";
-	disabledSection.style.alignItems = "center";
-	container.appendChild(disabledSection);
+  // Section: Disabled Buttons
+  const disabledSection = $("div");
+  disabledSection.style.display = "flex";
+  disabledSection.style.gap = "8px";
+  disabledSection.style.alignItems = "center";
+  container.appendChild(disabledSection);
 
-	const disabledButton = disposableStore.add(
+  const disabledButton = disposableStore.add(
     new Button(disabledSection, {
       ...themedButtonStyles,
       title: "Disabled",
       disabled: true,
     }),
   );
-	disabledButton.label = "Disabled";
-	disabledButton.enabled = false;
+  disabledButton.label = "Disabled";
+  disabledButton.enabled = false;
 
-	const disabledSecondary = disposableStore.add(
+  const disabledSecondary = disposableStore.add(
     new Button(disabledSection, {
       ...themedButtonStyles,
       secondary: true,
@@ -215,68 +231,74 @@ function renderButtons({ container, disposableStore }: ComponentFixtureContext):
       disabled: true,
     }),
   );
-	disabledSecondary.label = "Disabled Secondary";
-	disabledSecondary.enabled = false;
+  disabledSecondary.label = "Disabled Secondary";
+  disabledSecondary.enabled = false;
 }
 
-function renderButtonBar({ container, disposableStore }: ComponentFixtureContext): void {
-	container.style.padding = "16px";
-	container.style.display = "flex";
-	container.style.flexDirection = "column";
-	container.style.gap = "16px";
+function renderButtonBar({
+  container,
+  disposableStore,
+}: ComponentFixtureContext): void {
+  container.style.padding = "16px";
+  container.style.display = "flex";
+  container.style.flexDirection = "column";
+  container.style.gap = "16px";
 
-	// Button Bar
-	const barContainer = $("div");
-	container.appendChild(barContainer);
+  // Button Bar
+  const barContainer = $("div");
+  container.appendChild(barContainer);
 
-	const buttonBar = new ButtonBar(barContainer);
-	disposableStore.add(buttonBar);
+  const buttonBar = new ButtonBar(barContainer);
+  disposableStore.add(buttonBar);
 
-	const okButton = buttonBar.addButton({ ...themedButtonStyles, title: "OK" });
-	okButton.label = "OK";
+  const okButton = buttonBar.addButton({ ...themedButtonStyles, title: "OK" });
+  okButton.label = "OK";
 
-	const cancelButton = buttonBar.addButton({
+  const cancelButton = buttonBar.addButton({
     ...themedButtonStyles,
     secondary: true,
     title: "Cancel",
   });
-	cancelButton.label = "Cancel";
+  cancelButton.label = "Cancel";
 
-	// Button with Description
-	const descContainer = $("div");
-	descContainer.style.width = "300px";
-	container.appendChild(descContainer);
+  // Button with Description
+  const descContainer = $("div");
+  descContainer.style.width = "300px";
+  container.appendChild(descContainer);
 
-	const buttonWithDesc = disposableStore.add(
+  const buttonWithDesc = disposableStore.add(
     new ButtonWithDescription(descContainer, {
       ...themedButtonStyles,
       title: "Install Extension",
       supportIcons: true,
     }),
   );
-	buttonWithDesc.label = "$(extensions) Install Extension";
-	buttonWithDesc.description = "This will install the extension and enable it globally";
+  buttonWithDesc.label = "$(extensions) Install Extension";
+  buttonWithDesc.description =
+    "This will install the extension and enable it globally";
 }
-
 
 // ============================================================================
 // Toggles and Checkboxes
 // ============================================================================
 
-function renderToggles({ container, disposableStore }: ComponentFixtureContext): void {
-	container.style.padding = "16px";
-	container.style.display = "flex";
-	container.style.flexDirection = "column";
-	container.style.gap = "12px";
+function renderToggles({
+  container,
+  disposableStore,
+}: ComponentFixtureContext): void {
+  container.style.padding = "16px";
+  container.style.display = "flex";
+  container.style.flexDirection = "column";
+  container.style.gap = "12px";
 
-	// Toggles
-	const toggleSection = $("div");
-	toggleSection.style.display = "flex";
-	toggleSection.style.gap = "16px";
-	toggleSection.style.alignItems = "center";
-	container.appendChild(toggleSection);
+  // Toggles
+  const toggleSection = $("div");
+  toggleSection.style.display = "flex";
+  toggleSection.style.gap = "16px";
+  toggleSection.style.alignItems = "center";
+  container.appendChild(toggleSection);
 
-	const toggle1 = disposableStore.add(
+  const toggle1 = disposableStore.add(
     new Toggle({
       ...themedToggleStyles,
       title: "Case Sensitive",
@@ -284,9 +306,9 @@ function renderToggles({ container, disposableStore }: ComponentFixtureContext):
       icon: Codicon.caseSensitive,
     }),
   );
-	toggleSection.appendChild(toggle1.domNode);
+  toggleSection.appendChild(toggle1.domNode);
 
-	const toggle2 = disposableStore.add(
+  const toggle2 = disposableStore.add(
     new Toggle({
       ...themedToggleStyles,
       title: "Whole Word",
@@ -294,9 +316,9 @@ function renderToggles({ container, disposableStore }: ComponentFixtureContext):
       icon: Codicon.wholeWord,
     }),
   );
-	toggleSection.appendChild(toggle2.domNode);
+  toggleSection.appendChild(toggle2.domNode);
 
-	const toggle3 = disposableStore.add(
+  const toggle3 = disposableStore.add(
     new Toggle({
       ...themedToggleStyles,
       title: "Use Regular Expression",
@@ -304,154 +326,185 @@ function renderToggles({ container, disposableStore }: ComponentFixtureContext):
       icon: Codicon.regex,
     }),
   );
-	toggleSection.appendChild(toggle3.domNode);
+  toggleSection.appendChild(toggle3.domNode);
 
-	// Checkboxes
-	const checkboxSection = $("div");
-	checkboxSection.style.display = "flex";
-	checkboxSection.style.flexDirection = "column";
-	checkboxSection.style.gap = "8px";
-	container.appendChild(checkboxSection);
+  // Checkboxes
+  const checkboxSection = $("div");
+  checkboxSection.style.display = "flex";
+  checkboxSection.style.flexDirection = "column";
+  checkboxSection.style.gap = "8px";
+  container.appendChild(checkboxSection);
 
-	const createCheckboxRow = (label: string, checked: boolean) => {
-		const row = $("div");
-		row.style.display = "flex";
-		row.style.alignItems = "center";
-		row.style.gap = "8px";
+  const createCheckboxRow = (label: string, checked: boolean) => {
+    const row = $("div");
+    row.style.display = "flex";
+    row.style.alignItems = "center";
+    row.style.gap = "8px";
 
-		const checkbox = disposableStore.add(
+    const checkbox = disposableStore.add(
       new Checkbox(label, checked, themedCheckboxStyles),
     );
-		row.appendChild(checkbox.domNode);
+    row.appendChild(checkbox.domNode);
 
-		const labelEl = $("span");
-		labelEl.textContent = label;
-		labelEl.style.color = "var(--vscode-foreground)";
-		row.appendChild(labelEl);
+    const labelEl = $("span");
+    labelEl.textContent = label;
+    labelEl.style.color = "var(--vscode-foreground)";
+    row.appendChild(labelEl);
 
-		return row;
-	};
+    return row;
+  };
 
-	checkboxSection.appendChild(createCheckboxRow("Enable auto-save", true));
-	checkboxSection.appendChild(createCheckboxRow("Show line numbers", true));
-	checkboxSection.appendChild(createCheckboxRow("Word wrap", false));
+  checkboxSection.appendChild(createCheckboxRow("Enable auto-save", true));
+  checkboxSection.appendChild(createCheckboxRow("Show line numbers", true));
+  checkboxSection.appendChild(createCheckboxRow("Word wrap", false));
 }
-
 
 // ============================================================================
 // Input Boxes
 // ============================================================================
 
-function renderInputBoxes({ container, disposableStore }: ComponentFixtureContext): void {
-	container.style.padding = "16px";
-	container.style.display = "flex";
-	container.style.flexDirection = "column";
-	container.style.gap = "16px";
-	container.style.width = "350px";
+function renderInputBoxes({
+  container,
+  disposableStore,
+}: ComponentFixtureContext): void {
+  container.style.padding = "16px";
+  container.style.display = "flex";
+  container.style.flexDirection = "column";
+  container.style.gap = "16px";
+  container.style.width = "350px";
 
-	// Input with value
-	const filledInput = disposableStore.add(
+  // Input with value
+  const filledInput = disposableStore.add(
     new InputBox(container, undefined, {
       placeholder: "File path",
       inputBoxStyles: themedInputBoxStyles,
     }),
   );
-	filledInput.value = "/src/vs/editor/browser";
+  filledInput.value = "/src/vs/editor/browser";
 
-	// Input with info validation
-	const infoInput = disposableStore.add(new InputBox(container, undefined, {
-		placeholder: "Username",
-		inputBoxStyles: themedInputBoxStyles,
-		validationOptions: {
-			validation: (value) => value.length < 3 ? { content: "Username must be at least 3 characters", type: MessageType.INFO } : null,
-		},
-	}));
-	infoInput.value = "ab";
-	infoInput.validate();
+  // Input with info validation
+  const infoInput = disposableStore.add(
+    new InputBox(container, undefined, {
+      placeholder: "Username",
+      inputBoxStyles: themedInputBoxStyles,
+      validationOptions: {
+        validation: (value) =>
+          value.length < 3
+            ? {
+                content: "Username must be at least 3 characters",
+                type: MessageType.INFO,
+              }
+            : null,
+      },
+    }),
+  );
+  infoInput.value = "ab";
+  infoInput.validate();
 
-	// Input with warning validation
-	const warningInput = disposableStore.add(new InputBox(container, undefined, {
-		placeholder: "Password",
-		inputBoxStyles: themedInputBoxStyles,
-		validationOptions: {
-			validation: (value) => value.length < 8 ? { content: "Password should be at least 8 characters for security", type: MessageType.WARNING } : null,
-		},
-	}));
-	warningInput.value = "pass";
-	warningInput.validate();
+  // Input with warning validation
+  const warningInput = disposableStore.add(
+    new InputBox(container, undefined, {
+      placeholder: "Password",
+      inputBoxStyles: themedInputBoxStyles,
+      validationOptions: {
+        validation: (value) =>
+          value.length < 8
+            ? {
+                content:
+                  "Password should be at least 8 characters for security",
+                type: MessageType.WARNING,
+              }
+            : null,
+      },
+    }),
+  );
+  warningInput.value = "pass";
+  warningInput.validate();
 
-	// Input with error validation
-	const errorInput = disposableStore.add(new InputBox(container, undefined, {
-		placeholder: "Email address",
-		inputBoxStyles: themedInputBoxStyles,
-		validationOptions: {
-			validation: (value) => !value.includes("@") ? { content: "Please enter a valid email address", type: MessageType.ERROR } : null,
-		},
-	}));
-	errorInput.value = "invalid-email";
-	errorInput.validate();
+  // Input with error validation
+  const errorInput = disposableStore.add(
+    new InputBox(container, undefined, {
+      placeholder: "Email address",
+      inputBoxStyles: themedInputBoxStyles,
+      validationOptions: {
+        validation: (value) =>
+          !value.includes("@")
+            ? {
+                content: "Please enter a valid email address",
+                type: MessageType.ERROR,
+              }
+            : null,
+      },
+    }),
+  );
+  errorInput.value = "invalid-email";
+  errorInput.validate();
 }
-
 
 // ============================================================================
 // Count Badges
 // ============================================================================
 
-function renderCountBadges({ container, disposableStore }: ComponentFixtureContext): void {
-	container.style.padding = "16px";
-	container.style.display = "flex";
-	container.style.gap = "12px";
-	container.style.alignItems = "center";
+function renderCountBadges({
+  container,
+  disposableStore,
+}: ComponentFixtureContext): void {
+  container.style.padding = "16px";
+  container.style.display = "flex";
+  container.style.gap = "12px";
+  container.style.alignItems = "center";
 
-	// Various badge counts
-	const counts = [1, 5, 12, 99, 999];
+  // Various badge counts
+  const counts = [1, 5, 12, 99, 999];
 
-	for (const count of counts) {
-		const badgeContainer = $("div");
-		badgeContainer.style.display = "flex";
-		badgeContainer.style.alignItems = "center";
-		badgeContainer.style.gap = "8px";
+  for (const count of counts) {
+    const badgeContainer = $("div");
+    badgeContainer.style.display = "flex";
+    badgeContainer.style.alignItems = "center";
+    badgeContainer.style.gap = "8px";
 
-		const label = $("span");
-		label.textContent = "Issues";
-		label.style.color = "var(--vscode-foreground)";
-		badgeContainer.appendChild(label);
+    const label = $("span");
+    label.textContent = "Issues";
+    label.style.color = "var(--vscode-foreground)";
+    badgeContainer.appendChild(label);
 
-		disposableStore.add(
+    disposableStore.add(
       new CountBadge(badgeContainer, { count }, themedBadgeStyles),
     );
-		container.appendChild(badgeContainer);
-	}
+    container.appendChild(badgeContainer);
+  }
 }
-
 
 // ============================================================================
 // Action Bar
 // ============================================================================
 
-function renderActionBar({ container, disposableStore }: ComponentFixtureContext): void {
-	container.style.padding = "16px";
-	container.style.display = "flex";
-	container.style.flexDirection = "column";
-	container.style.gap = "16px";
+function renderActionBar({
+  container,
+  disposableStore,
+}: ComponentFixtureContext): void {
+  container.style.padding = "16px";
+  container.style.display = "flex";
+  container.style.flexDirection = "column";
+  container.style.gap = "16px";
 
-	// Horizontal action bar
-	const horizontalLabel = $("div");
-	horizontalLabel.textContent = "Horizontal Actions:";
-	horizontalLabel.style.color = "var(--vscode-foreground)";
-	horizontalLabel.style.marginBottom = "4px";
-	container.appendChild(horizontalLabel);
+  // Horizontal action bar
+  const horizontalLabel = $("div");
+  horizontalLabel.textContent = "Horizontal Actions:";
+  horizontalLabel.style.color = "var(--vscode-foreground)";
+  horizontalLabel.style.marginBottom = "4px";
+  container.appendChild(horizontalLabel);
 
-	const horizontalContainer = $("div");
-	container.appendChild(horizontalContainer);
+  const horizontalContainer = $("div");
+  container.appendChild(horizontalContainer);
 
-	const horizontalBar = disposableStore.add(
+  const horizontalBar = disposableStore.add(
     new ActionBar(horizontalContainer, {
       ariaLabel: "Editor Actions",
     }),
   );
 
-	horizontalBar.push([
+  horizontalBar.push([
     disposableStore.add(
       new Action(
         "editor.action.save",
@@ -500,23 +553,23 @@ function renderActionBar({ container, disposableStore }: ComponentFixtureContext
     ),
   ]);
 
-	// Action bar with disabled items
-	const mixedLabel = $("div");
-	mixedLabel.textContent = "Mixed States:";
-	mixedLabel.style.color = "var(--vscode-foreground)";
-	mixedLabel.style.marginBottom = "4px";
-	container.appendChild(mixedLabel);
+  // Action bar with disabled items
+  const mixedLabel = $("div");
+  mixedLabel.textContent = "Mixed States:";
+  mixedLabel.style.color = "var(--vscode-foreground)";
+  mixedLabel.style.marginBottom = "4px";
+  container.appendChild(mixedLabel);
 
-	const mixedContainer = $("div");
-	container.appendChild(mixedContainer);
+  const mixedContainer = $("div");
+  container.appendChild(mixedContainer);
 
-	const mixedBar = disposableStore.add(
+  const mixedBar = disposableStore.add(
     new ActionBar(mixedContainer, {
       ariaLabel: "Mixed Actions",
     }),
   );
 
-	mixedBar.push([
+  mixedBar.push([
     disposableStore.add(
       new Action(
         "action.enabled",
@@ -547,120 +600,127 @@ function renderActionBar({ container, disposableStore }: ComponentFixtureContext
   ]);
 }
 
-
 // ============================================================================
 // Progress Bar
 // ============================================================================
 
-function renderProgressBars({ container, disposableStore }: ComponentFixtureContext): void {
-	container.style.padding = "16px";
-	container.style.display = "flex";
-	container.style.flexDirection = "column";
-	container.style.gap = "24px";
-	container.style.width = "400px";
+function renderProgressBars({
+  container,
+  disposableStore,
+}: ComponentFixtureContext): void {
+  container.style.padding = "16px";
+  container.style.display = "flex";
+  container.style.flexDirection = "column";
+  container.style.gap = "24px";
+  container.style.width = "400px";
 
-	const createSection = (label: string) => {
-		const section = $("div");
-		const labelEl = $("div");
-		labelEl.textContent = label;
-		labelEl.style.color = "var(--vscode-foreground)";
-		labelEl.style.marginBottom = "8px";
-		labelEl.style.fontSize = "12px";
-		section.appendChild(labelEl);
+  const createSection = (label: string) => {
+    const section = $("div");
+    const labelEl = $("div");
+    labelEl.textContent = label;
+    labelEl.style.color = "var(--vscode-foreground)";
+    labelEl.style.marginBottom = "8px";
+    labelEl.style.fontSize = "12px";
+    section.appendChild(labelEl);
 
-		// Progress bar container with proper constraints
-		const barContainer = $("div");
-		barContainer.style.position = "relative";
-		barContainer.style.width = "100%";
-		barContainer.style.height = "4px";
-		barContainer.style.overflow = "hidden";
-		section.appendChild(barContainer);
+    // Progress bar container with proper constraints
+    const barContainer = $("div");
+    barContainer.style.position = "relative";
+    barContainer.style.width = "100%";
+    barContainer.style.height = "4px";
+    barContainer.style.overflow = "hidden";
+    section.appendChild(barContainer);
 
-		container.appendChild(section);
-		return barContainer;
-	};
+    container.appendChild(section);
+    return barContainer;
+  };
 
-	// Discrete progress - 30%
-	const progress30Section = createSection("Discrete Progress - 30%");
-	const progress30Bar = disposableStore.add(
+  // Discrete progress - 30%
+  const progress30Section = createSection("Discrete Progress - 30%");
+  const progress30Bar = disposableStore.add(
     new ProgressBar(progress30Section, themedProgressBarOptions),
   );
-	progress30Bar.total(100);
-	progress30Bar.worked(30);
+  progress30Bar.total(100);
+  progress30Bar.worked(30);
 
-	// Discrete progress - 60%
-	const progress60Section = createSection("Discrete Progress - 60%");
-	const progress60Bar = disposableStore.add(
+  // Discrete progress - 60%
+  const progress60Section = createSection("Discrete Progress - 60%");
+  const progress60Bar = disposableStore.add(
     new ProgressBar(progress60Section, themedProgressBarOptions),
   );
-	progress60Bar.total(100);
-	progress60Bar.worked(60);
+  progress60Bar.total(100);
+  progress60Bar.worked(60);
 
-	// Discrete progress - 90%
-	const progress90Section = createSection("Discrete Progress - 90%");
-	const progress90Bar = disposableStore.add(
+  // Discrete progress - 90%
+  const progress90Section = createSection("Discrete Progress - 90%");
+  const progress90Bar = disposableStore.add(
     new ProgressBar(progress90Section, themedProgressBarOptions),
   );
-	progress90Bar.total(100);
-	progress90Bar.worked(90);
+  progress90Bar.total(100);
+  progress90Bar.worked(90);
 
-	// Completed progress
-	const doneSection = createSection("Completed (100%)");
-	const doneBar = disposableStore.add(
+  // Completed progress
+  const doneSection = createSection("Completed (100%)");
+  const doneBar = disposableStore.add(
     new ProgressBar(doneSection, themedProgressBarOptions),
   );
-	doneBar.total(100);
-	doneBar.worked(100);
+  doneBar.total(100);
+  doneBar.worked(100);
 }
-
 
 // ============================================================================
 // Highlighted Label
 // ============================================================================
 
-function renderHighlightedLabels({ container, disposableStore }: ComponentFixtureContext): void {
-	container.style.padding = "16px";
-	container.style.display = "flex";
-	container.style.flexDirection = "column";
-	container.style.gap = "8px";
-	container.style.color = "var(--vscode-foreground)";
+function renderHighlightedLabels({
+  container,
+  disposableStore,
+}: ComponentFixtureContext): void {
+  container.style.padding = "16px";
+  container.style.display = "flex";
+  container.style.flexDirection = "column";
+  container.style.gap = "8px";
+  container.style.color = "var(--vscode-foreground)";
 
-	const createHighlightedLabel = (text: string, highlights: { start: number; end: number }[]) => {
-		const row = $("div");
-		row.style.display = "flex";
-		row.style.alignItems = "center";
-		row.style.gap = "8px";
+  const createHighlightedLabel = (
+    text: string,
+    highlights: { start: number; end: number }[],
+  ) => {
+    const row = $("div");
+    row.style.display = "flex";
+    row.style.alignItems = "center";
+    row.style.gap = "8px";
 
-		const labelContainer = $("div");
-		const label = disposableStore.add(new HighlightedLabel(labelContainer));
-		label.set(text, highlights);
-		row.appendChild(labelContainer);
+    const labelContainer = $("div");
+    const label = disposableStore.add(new HighlightedLabel(labelContainer));
+    label.set(text, highlights);
+    row.appendChild(labelContainer);
 
-		const queryLabel = $("span");
-		queryLabel.style.color = "var(--vscode-descriptionForeground)";
-		queryLabel.style.fontSize = "12px";
-		queryLabel.textContent = `(matches highlighted)`;
-		row.appendChild(queryLabel);
+    const queryLabel = $("span");
+    queryLabel.style.color = "var(--vscode-descriptionForeground)";
+    queryLabel.style.fontSize = "12px";
+    queryLabel.textContent = `(matches highlighted)`;
+    row.appendChild(queryLabel);
 
-		return row;
-	};
+    return row;
+  };
 
-	// File search examples
-	container.appendChild(
+  // File search examples
+  container.appendChild(
     createHighlightedLabel("codeEditorWidget.ts", [{ start: 0, end: 4 }]),
   ); // "code"
-	container.appendChild(
+  container.appendChild(
     createHighlightedLabel("inlineCompletionsController.ts", [
       { start: 6, end: 10 },
     ]),
   ); // "Comp"
-	container.appendChild(
+  container.appendChild(
     createHighlightedLabel("diffEditorViewModel.ts", [
       { start: 0, end: 4 },
       { start: 10, end: 14 },
     ]),
   ); // "diff" and "View"
-	container.appendChild(
+  container.appendChild(
     createHighlightedLabel("workbenchTestServices.ts", [{ start: 9, end: 13 }]),
   ); // "Test"
 }

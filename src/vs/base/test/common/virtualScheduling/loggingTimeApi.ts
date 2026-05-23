@@ -13,30 +13,42 @@ import { TimeApi } from "./timeApi.js";
  * virtual time, to find leaks of real-time scheduling into a fixture.
  */
 export function createLoggingTimeApi(
-	underlying: TimeApi,
-	onCall: (name: string, stack: string | undefined, handler?: () => void) => void,
+  underlying: TimeApi,
+  onCall: (
+    name: string,
+    stack: string | undefined,
+    handler?: () => void,
+  ) => void,
 ): TimeApi {
-	return {
-		setTimeout(handler, timeout) {
-			onCall("setTimeout", new Error().stack, handler);
-			return underlying.setTimeout(handler, timeout);
-		},
-		clearTimeout(id) { return underlying.clearTimeout(id); },
-		setInterval(handler, interval) {
-			onCall("setInterval", new Error().stack, handler);
-			return underlying.setInterval(handler, interval);
-		},
-		clearInterval(id) { return underlying.clearInterval(id); },
-		setImmediate: underlying.setImmediate ? handler => {
-			onCall("setImmediate", new Error().stack, handler);
-			return underlying.setImmediate!(handler);
-		} : undefined,
-		clearImmediate: underlying.clearImmediate,
-		requestAnimationFrame: underlying.requestAnimationFrame ? cb => {
-			onCall("requestAnimationFrame", new Error().stack, cb as () => void);
-			return underlying.requestAnimationFrame!(cb);
-		} : undefined,
-		cancelAnimationFrame: underlying.cancelAnimationFrame,
-		Date: underlying.Date,
-	};
+  return {
+    setTimeout(handler, timeout) {
+      onCall("setTimeout", new Error().stack, handler);
+      return underlying.setTimeout(handler, timeout);
+    },
+    clearTimeout(id) {
+      return underlying.clearTimeout(id);
+    },
+    setInterval(handler, interval) {
+      onCall("setInterval", new Error().stack, handler);
+      return underlying.setInterval(handler, interval);
+    },
+    clearInterval(id) {
+      return underlying.clearInterval(id);
+    },
+    setImmediate: underlying.setImmediate
+      ? (handler) => {
+          onCall("setImmediate", new Error().stack, handler);
+          return underlying.setImmediate!(handler);
+        }
+      : undefined,
+    clearImmediate: underlying.clearImmediate,
+    requestAnimationFrame: underlying.requestAnimationFrame
+      ? (cb) => {
+          onCall("requestAnimationFrame", new Error().stack, cb as () => void);
+          return underlying.requestAnimationFrame!(cb);
+        }
+      : undefined,
+    cancelAnimationFrame: underlying.cancelAnimationFrame,
+    Date: underlying.Date,
+  };
 }

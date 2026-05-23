@@ -7,7 +7,13 @@ import * as nls from "../../../../nls.js";
 
 // Import the effects we need
 import { Color } from "../../../../base/common/color.js";
-import { registerColor, darken, lighten, transparent, ifDefinedThenElse } from "../colorUtils.js";
+import {
+  registerColor,
+  darken,
+  lighten,
+  transparent,
+  ifDefinedThenElse,
+} from "../colorUtils.js";
 
 // Import the colors we need
 import {
@@ -24,7 +30,6 @@ import {
   widgetShadow,
   editorWidgetForeground,
 } from "./editorColors.js";
-
 
 export const listFocusBackground = registerColor(
   "list.focusBackground",
@@ -208,7 +213,11 @@ export const listFocusHighlightForeground = registerColor(
   "list.focusHighlightForeground",
   {
     dark: listHighlightForeground,
-    light: ifDefinedThenElse(listActiveSelectionBackground, listHighlightForeground, "#BBE7FF"),
+    light: ifDefinedThenElse(
+      listActiveSelectionBackground,
+      listHighlightForeground,
+      "#BBE7FF",
+    ),
     hcDark: listHighlightForeground,
     hcLight: listHighlightForeground,
   },
@@ -333,7 +342,6 @@ export const listDeemphasizedForeground = registerColor(
   ),
 );
 
-
 // ------ tree
 
 export const treeIndentGuidesStroke = registerColor(
@@ -353,7 +361,6 @@ export const treeInactiveIndentGuidesStroke = registerColor(
     "Tree stroke color for the indentation guides that are not active.",
   ),
 );
-
 
 // ------ table
 

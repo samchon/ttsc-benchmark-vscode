@@ -16,101 +16,129 @@ import { IWorkspaceFolderCreationData } from "../../../../platform/workspaces/co
 import { Queue } from "../../../../base/common/async.js";
 import { ISession } from "../../../services/sessions/common/session.js";
 
-export class WorkspaceFolderManagementContribution extends Disposable implements IWorkbenchContribution {
+export class WorkspaceFolderManagementContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "workbench.contrib.workspaceFolderManagement";
+  private queue = this._register(new Queue<void>());
 
-	static readonly ID = "workbench.contrib.workspaceFolderManagement";
-	private queue = this._register(new Queue<void>());
+  constructor(
+    @ISessionsManagementService
+    private readonly sessionManagementService: ISessionsManagementService,
+    @IUriIdentityService
+    private readonly uriIdentityService: IUriIdentityService,
+    @IWorkspaceContextService
+    private readonly workspaceContextService: IWorkspaceContextService,
+    @IWorkspaceEditingService
+    private readonly workspaceEditingService: IWorkspaceEditingService,
+    @IWorkspaceTrustManagementService
+    private readonly workspaceTrustManagementService: IWorkspaceTrustManagementService,
+  ) {
+    super();
+    this._register(
+      autorun((reader) => {
+        const activeSession =
+          this.sessionManagementService.activeSession.read(reader);
+        activeSession?.workspace.read(reader);
+        this.queue.queue(() =>
+          this.updateWorkspaceFoldersForSession(activeSession),
+        );
+      }),
+    );
+  }
 
-	constructor(
-		@ISessionsManagementService private readonly sessionManagementService: ISessionsManagementService,
-		@IUriIdentityService private readonly uriIdentityService: IUriIdentityService,
-		@IWorkspaceContextService private readonly workspaceContextService: IWorkspaceContextService,
-		@IWorkspaceEditingService private readonly workspaceEditingService: IWorkspaceEditingService,
-		@IWorkspaceTrustManagementService private readonly workspaceTrustManagementService: IWorkspaceTrustManagementService,
-	) {
-		super();
-		this._register(autorun(reader => {
-			const activeSession = this.sessionManagementService.activeSession.read(reader);
-			activeSession?.workspace.read(reader);
-			this.queue.queue(() => this.updateWorkspaceFoldersForSession(activeSession));
-		}));
-	}
+  private async updateWorkspaceFoldersForSession(
+    session: ISession | undefined,
+  ): Promise<void> {
+    await this.manageTrustWorkspaceForSession(session);
+    const activeSessionFolderData = this.getActiveSessionFolderData(session);
+    const currentRepo =
+      this.workspaceContextService.getWorkspace().folders[0]?.uri;
 
-	private async updateWorkspaceFoldersForSession(session: ISession | undefined): Promise<void> {
-		await this.manageTrustWorkspaceForSession(session);
-		const activeSessionFolderData = this.getActiveSessionFolderData(session);
-		const currentRepo = this.workspaceContextService.getWorkspace().folders[0]?.uri;
+    if (!activeSessionFolderData) {
+      if (currentRepo) {
+        await this.workspaceEditingService.removeFolders([currentRepo], true);
+      }
+      return;
+    }
 
-		if (!activeSessionFolderData) {
-			if (currentRepo) {
-				await this.workspaceEditingService.removeFolders([currentRepo], true);
-			}
-			return;
-		}
-
-		if (!currentRepo) {
-			await this.workspaceEditingService.addFolders(
+    if (!currentRepo) {
+      await this.workspaceEditingService.addFolders(
         [activeSessionFolderData],
         true,
       );
-			return;
-		}
+      return;
+    }
 
-		if (this.uriIdentityService.extUri.isEqual(
-      currentRepo,
-      activeSessionFolderData.uri,
-    )) {
-			return;
-		}
+    if (
+      this.uriIdentityService.extUri.isEqual(
+        currentRepo,
+        activeSessionFolderData.uri,
+      )
+    ) {
+      return;
+    }
 
-		await this.workspaceEditingService.updateFolders(
+    await this.workspaceEditingService.updateFolders(
       0,
       1,
       [activeSessionFolderData],
       true,
     );
-	}
+  }
 
-	private getActiveSessionFolderData(session: ISession | undefined): IWorkspaceFolderCreationData | undefined {
-		if (!session) {
-			return undefined;
-		}
+  private getActiveSessionFolderData(
+    session: ISession | undefined,
+  ): IWorkspaceFolderCreationData | undefined {
+    if (!session) {
+      return undefined;
+    }
 
-		const workspace = session.workspace.get();
-		const folder = workspace?.folders[0];
+    const workspace = session.workspace.get();
+    const folder = workspace?.folders[0];
 
-		if (!folder) {
-			return undefined;
-		}
+    if (!folder) {
+      return undefined;
+    }
 
-		return {
+    return {
       uri: folder.workingDirectory,
-      name: this.uriIdentityService.extUri.isEqual(folder.root, folder.workingDirectory) ? workspace.label : `${this.uriIdentityService.extUri.basename(folder.root)} (${folder.gitRepository?.branchName ?? this.uriIdentityService.extUri.basename(folder.workingDirectory)})`,
+      name: this.uriIdentityService.extUri.isEqual(
+        folder.root,
+        folder.workingDirectory,
+      )
+        ? workspace.label
+        : `${this.uriIdentityService.extUri.basename(folder.root)} (${folder.gitRepository?.branchName ?? this.uriIdentityService.extUri.basename(folder.workingDirectory)})`,
     };
-	}
+  }
 
-	private async manageTrustWorkspaceForSession(session: ISession | undefined): Promise<void> {
-		const workspace = session?.workspace.get();
-		if (!workspace?.requiresWorkspaceTrust) {
-			return;
-		}
+  private async manageTrustWorkspaceForSession(
+    session: ISession | undefined,
+  ): Promise<void> {
+    const workspace = session?.workspace.get();
+    if (!workspace?.requiresWorkspaceTrust) {
+      return;
+    }
 
-		const folder = workspace?.folders[0];
-		if (!folder) {
-			return;
-		}
+    const folder = workspace?.folders[0];
+    if (!folder) {
+      return;
+    }
 
-		if (!this.isUriTrusted(folder.workingDirectory)) {
-			await this.workspaceTrustManagementService.setUrisTrust(
+    if (!this.isUriTrusted(folder.workingDirectory)) {
+      await this.workspaceTrustManagementService.setUrisTrust(
         [folder.workingDirectory],
         true,
       );
-		}
-	}
+    }
+  }
 
-	private isUriTrusted(uri: URI): boolean {
-		return this.workspaceTrustManagementService.getTrustedUris().some(
-      trustedUri => this.uriIdentityService.extUri.isEqual(trustedUri, uri),
-    );
-	}
+  private isUriTrusted(uri: URI): boolean {
+    return this.workspaceTrustManagementService
+      .getTrustedUris()
+      .some((trustedUri) =>
+        this.uriIdentityService.extUri.isEqual(trustedUri, uri),
+      );
+  }
 }

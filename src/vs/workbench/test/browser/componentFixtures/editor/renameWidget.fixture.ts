@@ -13,7 +13,10 @@ import {
   defineComponentFixture,
   defineThemedFixtureGroup,
 } from "../fixtureUtils.js";
-import { CodeEditorWidget, ICodeEditorWidgetOptions } from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import {
+  CodeEditorWidget,
+  ICodeEditorWidgetOptions,
+} from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
 import { RenameWidget } from "../../../../../editor/contrib/rename/browser/renameWidget.js";
 
 import "../../../../../editor/contrib/rename/browser/renameWidget.css";
@@ -33,24 +36,24 @@ const SAMPLE_CODE = `class UserService {
 `;
 
 interface RenameFixtureOptions extends ComponentFixtureContext {
-	cursorLine: number;
-	cursorColumn: number;
-	currentName: string;
-	rangeStartColumn: number;
-	rangeEndColumn: number;
+  cursorLine: number;
+  cursorColumn: number;
+  currentName: string;
+  rangeStartColumn: number;
+  rangeEndColumn: number;
 }
 
 function renderRenameWidget(options: RenameFixtureOptions): void {
-	const { container, disposableStore, theme } = options;
-	container.style.width = "500px";
-	container.style.height = "280px";
-	container.style.border = "1px solid var(--vscode-editorWidget-border)";
+  const { container, disposableStore, theme } = options;
+  container.style.width = "500px";
+  container.style.height = "280px";
+  container.style.border = "1px solid var(--vscode-editorWidget-border)";
 
-	const instantiationService = createEditorServices(disposableStore, {
+  const instantiationService = createEditorServices(disposableStore, {
     colorTheme: theme,
   });
 
-	const textModel = disposableStore.add(
+  const textModel = disposableStore.add(
     createTextModel(
       instantiationService,
       SAMPLE_CODE,
@@ -59,11 +62,11 @@ function renderRenameWidget(options: RenameFixtureOptions): void {
     ),
   );
 
-	const editorWidgetOptions: ICodeEditorWidgetOptions = {
+  const editorWidgetOptions: ICodeEditorWidgetOptions = {
     contributions: [],
   };
 
-	const editor = disposableStore.add(
+  const editor = disposableStore.add(
     instantiationService.createInstance(
       CodeEditorWidget,
       container,
@@ -79,23 +82,23 @@ function renderRenameWidget(options: RenameFixtureOptions): void {
     ),
   );
 
-	editor.setModel(textModel);
-	editor.setPosition({
+  editor.setModel(textModel);
+  editor.setPosition({
     lineNumber: options.cursorLine,
     column: options.cursorColumn,
   });
 
-	const renameWidget = instantiationService.createInstance(
+  const renameWidget = instantiationService.createInstance(
     RenameWidget,
     editor,
     ["editor.action.rename", "editor.action.rename"],
   );
-	disposableStore.add(renameWidget);
+  disposableStore.add(renameWidget);
 
-	const cts = new CancellationTokenSource();
-	disposableStore.add(cts);
+  const cts = new CancellationTokenSource();
+  disposableStore.add(cts);
 
-	renameWidget.getInput(
+  renameWidget.getInput(
     {
       startLineNumber: options.cursorLine,
       startColumn: options.rangeStartColumn,
@@ -107,32 +110,37 @@ function renderRenameWidget(options: RenameFixtureOptions): void {
     undefined,
     cts,
   );
-	disposableStore.add(
+  disposableStore.add(
     toDisposable(() => renameWidget.cancelInput(false, "fixture-teardown")),
   );
 }
 
-export default defineThemedFixtureGroup({ path: "editor/" }, {
-	RenameVariable: defineComponentFixture({
-		labels: { kind: "animated" },
-		render: (context) => renderRenameWidget({
-			...context,
-			cursorLine: 4,
-			cursorColumn: 2,
-			currentName: "getUser",
-			rangeStartColumn: 2,
-			rangeEndColumn: 9,
-		}),
-	}),
-	RenameClass: defineComponentFixture({
-		labels: { kind: "animated" },
-		render: (context) => renderRenameWidget({
-			...context,
-			cursorLine: 1,
-			cursorColumn: 7,
-			currentName: "UserService",
-			rangeStartColumn: 7,
-			rangeEndColumn: 18,
-		}),
-	}),
-});
+export default defineThemedFixtureGroup(
+  { path: "editor/" },
+  {
+    RenameVariable: defineComponentFixture({
+      labels: { kind: "animated" },
+      render: (context) =>
+        renderRenameWidget({
+          ...context,
+          cursorLine: 4,
+          cursorColumn: 2,
+          currentName: "getUser",
+          rangeStartColumn: 2,
+          rangeEndColumn: 9,
+        }),
+    }),
+    RenameClass: defineComponentFixture({
+      labels: { kind: "animated" },
+      render: (context) =>
+        renderRenameWidget({
+          ...context,
+          cursorLine: 1,
+          cursorColumn: 7,
+          currentName: "UserService",
+          rangeStartColumn: 7,
+          rangeEndColumn: 18,
+        }),
+    }),
+  },
+);

@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-
 // #######################################################################
 // ###                                                                 ###
 // ### !!! PLEASE ADD COMMON IMPORTS INTO WORKBENCH.COMMON.MAIN.TS !!! ###
@@ -16,7 +15,6 @@ import "./sessions.common.main.js";
 
 //#endregion
 
-
 //#region --- workbench (sessions desktop main)
 
 import "./electron-browser/sessions.main.js";
@@ -24,13 +22,11 @@ import "../workbench/electron-browser/desktop.contribution.js";
 
 //#endregion
 
-
 //#region --- workbench parts
 
 import "../workbench/electron-browser/parts/dialogs/dialog.contribution.js";
 
 //#endregion
-
 
 //#region --- workbench services
 
@@ -95,11 +91,17 @@ import "../workbench/services/process/electron-browser/processService.js";
 import "../workbench/services/power/electron-browser/powerService.js";
 
 import { ILocalGitService } from "../platform/git/common/localGitService.js";
-import { InstantiationType, registerSingleton } from "../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../platform/instantiation/common/extensions.js";
 import { registerSharedProcessRemoteService } from "../platform/ipc/electron-browser/services.js";
 import { IPluginGitService } from "../workbench/contrib/chat/common/plugins/pluginGitService.js";
 import { NativePluginGitCommandService } from "../workbench/contrib/chat/electron-browser/pluginGitCommandService.js";
-import { IUserDataInitializationService, UserDataInitializationService } from "../workbench/services/userData/browser/userDataInit.js";
+import {
+  IUserDataInitializationService,
+  UserDataInitializationService,
+} from "../workbench/services/userData/browser/userDataInit.js";
 import { SyncDescriptor } from "../platform/instantiation/common/descriptors.js";
 
 registerSingleton(
@@ -116,9 +118,7 @@ registerSingleton(
 );
 registerSharedProcessRemoteService(ILocalGitService, "localGit");
 
-
 //#endregion
-
 
 //#region --- workbench contributions
 
@@ -142,7 +142,6 @@ import "../workbench/contrib/extensions/electron-browser/devtoolsExtensionHost.c
 
 // Extensions Management (runtime extensions editor, profiling, remote extensions, etc.)
 import "../workbench/contrib/extensions/electron-browser/extensions.contribution.js";
-
 
 // Issues
 import "../workbench/contrib/issue/electron-browser/issue.contribution.js";
@@ -205,7 +204,6 @@ import "../workbench/contrib/mcp/electron-browser/mcp.contribution.js";
 import "../workbench/contrib/policyExport/electron-browser/policyExport.contribution.js";
 
 //#endregion
-
 
 //#region --- sessions contributions
 

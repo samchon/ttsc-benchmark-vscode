@@ -19,34 +19,35 @@ const DisassemblyEditorIcon = registerIcon(
 );
 
 export class DisassemblyViewInput extends EditorInput {
+  static readonly ID = "debug.disassemblyView.input";
 
-	static readonly ID = "debug.disassemblyView.input";
+  override get typeId(): string {
+    return DisassemblyViewInput.ID;
+  }
 
-	override get typeId(): string {
-		return DisassemblyViewInput.ID;
-	}
+  static _instance: DisassemblyViewInput;
+  static get instance() {
+    if (
+      !DisassemblyViewInput._instance ||
+      DisassemblyViewInput._instance.isDisposed()
+    ) {
+      DisassemblyViewInput._instance = new DisassemblyViewInput();
+    }
 
-	static _instance: DisassemblyViewInput;
-	static get instance() {
-		if (!DisassemblyViewInput._instance || DisassemblyViewInput._instance.isDisposed()) {
-			DisassemblyViewInput._instance = new DisassemblyViewInput();
-		}
+    return DisassemblyViewInput._instance;
+  }
 
-		return DisassemblyViewInput._instance;
-	}
+  readonly resource = undefined;
 
-	readonly resource = undefined;
+  override getName(): string {
+    return localize("disassemblyInputName", "Disassembly");
+  }
 
-	override getName(): string {
-		return localize("disassemblyInputName", "Disassembly");
-	}
+  override getIcon(): ThemeIcon {
+    return DisassemblyEditorIcon;
+  }
 
-	override getIcon(): ThemeIcon {
-		return DisassemblyEditorIcon;
-	}
-
-	override matches(other: unknown): boolean {
-		return other instanceof DisassemblyViewInput;
-	}
-
+  override matches(other: unknown): boolean {
+    return other instanceof DisassemblyViewInput;
+  }
 }

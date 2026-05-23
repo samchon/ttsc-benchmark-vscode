@@ -11,14 +11,23 @@ import { InMemoryFileSystemProvider } from "../../../../../platform/files/common
 import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
 import { NullLogService } from "../../../../../platform/log/common/log.js";
 import { workbenchInstantiationService } from "../../../../test/browser/workbenchTestServices.js";
-import { IExtensionStorageService, ExtensionStorageService } from "../../../../../platform/extensionManagement/common/extensionStorage.js";
+import {
+  IExtensionStorageService,
+  ExtensionStorageService,
+} from "../../../../../platform/extensionManagement/common/extensionStorage.js";
 import { URI } from "../../../../../base/common/uri.js";
 import { joinPath } from "../../../../../base/common/resources.js";
 import { VSBuffer } from "../../../../../base/common/buffer.js";
 import { TestWorkspace } from "../../../../../platform/workspace/test/common/testWorkspace.js";
 import { migrateExtensionStorage } from "../../common/extensionStorageMigration.js";
-import { IStorageService, StorageScope } from "../../../../../platform/storage/common/storage.js";
-import { IUserDataProfilesService, UserDataProfilesService } from "../../../../../platform/userDataProfile/common/userDataProfile.js";
+import {
+  IStorageService,
+  StorageScope,
+} from "../../../../../platform/storage/common/storage.js";
+import {
+  IUserDataProfilesService,
+  UserDataProfilesService,
+} from "../../../../../platform/userDataProfile/common/userDataProfile.js";
 import { UserDataProfileService } from "../../../userDataProfile/common/userDataProfileService.js";
 import { IUserDataProfileService } from "../../../userDataProfile/common/userDataProfile.js";
 import { UriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentityService.js";
@@ -32,7 +41,10 @@ suite("ExtensionStorageMigration", () => {
   let instantiationService: TestInstantiationService;
 
   setup(() => {
-    instantiationService = workbenchInstantiationService(undefined, disposables);
+    instantiationService = workbenchInstantiationService(
+      undefined,
+      disposables,
+    );
 
     const fileService = disposables.add(new FileService(new NullLogService()));
     disposables.add(
@@ -42,8 +54,22 @@ suite("ExtensionStorageMigration", () => {
       ),
     );
     instantiationService.stub(IFileService, fileService);
-    const environmentService = instantiationService.stub(IEnvironmentService, { userRoamingDataHome: ROOT, workspaceStorageHome, cacheHome: ROOT });
-    const userDataProfilesService = instantiationService.stub(IUserDataProfilesService, disposables.add(new UserDataProfilesService(environmentService, fileService, disposables.add(new UriIdentityService(fileService)), new NullLogService())));
+    const environmentService = instantiationService.stub(IEnvironmentService, {
+      userRoamingDataHome: ROOT,
+      workspaceStorageHome,
+      cacheHome: ROOT,
+    });
+    const userDataProfilesService = instantiationService.stub(
+      IUserDataProfilesService,
+      disposables.add(
+        new UserDataProfilesService(
+          environmentService,
+          fileService,
+          disposables.add(new UriIdentityService(fileService)),
+          new NullLogService(),
+        ),
+      ),
+    );
     instantiationService.stub(
       IUserDataProfileService,
       disposables.add(
@@ -60,8 +86,17 @@ suite("ExtensionStorageMigration", () => {
   });
 
   test("migrate extension storage", async () => {
-    const fromExtensionId = "pub.from", toExtensionId = "pub.to", storageMigratedKey = `extensionStorage.migrate.${fromExtensionId}-${toExtensionId}`;
-    const extensionStorageService = instantiationService.get(IExtensionStorageService), fileService = instantiationService.get(IFileService), storageService = instantiationService.get(IStorageService), userDataProfilesService = instantiationService.get(IUserDataProfilesService);
+    const fromExtensionId = "pub.from",
+      toExtensionId = "pub.to",
+      storageMigratedKey = `extensionStorage.migrate.${fromExtensionId}-${toExtensionId}`;
+    const extensionStorageService = instantiationService.get(
+        IExtensionStorageService,
+      ),
+      fileService = instantiationService.get(IFileService),
+      storageService = instantiationService.get(IStorageService),
+      userDataProfilesService = instantiationService.get(
+        IUserDataProfilesService,
+      );
 
     extensionStorageService.setExtensionState(
       fromExtensionId,
@@ -73,11 +108,30 @@ suite("ExtensionStorageMigration", () => {
       { workspaceKey: "hello workspace state" },
       false,
     );
-    await fileService.writeFile(joinPath(userDataProfilesService.defaultProfile.globalStorageHome, fromExtensionId), VSBuffer.fromString("hello global storage"));
-    await fileService.writeFile(joinPath(workspaceStorageHome, TestWorkspace.id, fromExtensionId), VSBuffer.fromString("hello workspace storage"));
+    await fileService.writeFile(
+      joinPath(
+        userDataProfilesService.defaultProfile.globalStorageHome,
+        fromExtensionId,
+      ),
+      VSBuffer.fromString("hello global storage"),
+    );
+    await fileService.writeFile(
+      joinPath(workspaceStorageHome, TestWorkspace.id, fromExtensionId),
+      VSBuffer.fromString("hello workspace storage"),
+    );
 
-    await migrateExtensionStorage(fromExtensionId, toExtensionId, true, instantiationService);
-    await migrateExtensionStorage(fromExtensionId, toExtensionId, false, instantiationService);
+    await migrateExtensionStorage(
+      fromExtensionId,
+      toExtensionId,
+      true,
+      instantiationService,
+    );
+    await migrateExtensionStorage(
+      fromExtensionId,
+      toExtensionId,
+      false,
+      instantiationService,
+    );
 
     assert.deepStrictEqual(
       extensionStorageService.getExtensionState(fromExtensionId, true),
@@ -88,11 +142,18 @@ suite("ExtensionStorageMigration", () => {
       undefined,
     );
     assert.deepStrictEqual(
-      (await fileService.exists(joinPath(userDataProfilesService.defaultProfile.globalStorageHome, fromExtensionId))),
+      await fileService.exists(
+        joinPath(
+          userDataProfilesService.defaultProfile.globalStorageHome,
+          fromExtensionId,
+        ),
+      ),
       false,
     );
     assert.deepStrictEqual(
-      (await fileService.exists(joinPath(workspaceStorageHome, TestWorkspace.id, fromExtensionId))),
+      await fileService.exists(
+        joinPath(workspaceStorageHome, TestWorkspace.id, fromExtensionId),
+      ),
       false,
     );
 
@@ -105,11 +166,22 @@ suite("ExtensionStorageMigration", () => {
       { workspaceKey: "hello workspace state" },
     );
     assert.deepStrictEqual(
-      (await fileService.readFile(joinPath(userDataProfilesService.defaultProfile.globalStorageHome, toExtensionId))).value.toString(),
+      (
+        await fileService.readFile(
+          joinPath(
+            userDataProfilesService.defaultProfile.globalStorageHome,
+            toExtensionId,
+          ),
+        )
+      ).value.toString(),
       "hello global storage",
     );
     assert.deepStrictEqual(
-      (await fileService.readFile(joinPath(workspaceStorageHome, TestWorkspace.id, toExtensionId))).value.toString(),
+      (
+        await fileService.readFile(
+          joinPath(workspaceStorageHome, TestWorkspace.id, toExtensionId),
+        )
+      ).value.toString(),
       "hello workspace storage",
     );
 
@@ -124,11 +196,30 @@ suite("ExtensionStorageMigration", () => {
   });
 
   test("migrate extension storage when does not exist", async () => {
-    const fromExtensionId = "pub.from", toExtensionId = "pub.to", storageMigratedKey = `extensionStorage.migrate.${fromExtensionId}-${toExtensionId}`;
-    const extensionStorageService = instantiationService.get(IExtensionStorageService), fileService = instantiationService.get(IFileService), storageService = instantiationService.get(IStorageService), userDataProfilesService = instantiationService.get(IUserDataProfilesService);
+    const fromExtensionId = "pub.from",
+      toExtensionId = "pub.to",
+      storageMigratedKey = `extensionStorage.migrate.${fromExtensionId}-${toExtensionId}`;
+    const extensionStorageService = instantiationService.get(
+        IExtensionStorageService,
+      ),
+      fileService = instantiationService.get(IFileService),
+      storageService = instantiationService.get(IStorageService),
+      userDataProfilesService = instantiationService.get(
+        IUserDataProfilesService,
+      );
 
-    await migrateExtensionStorage(fromExtensionId, toExtensionId, true, instantiationService);
-    await migrateExtensionStorage(fromExtensionId, toExtensionId, false, instantiationService);
+    await migrateExtensionStorage(
+      fromExtensionId,
+      toExtensionId,
+      true,
+      instantiationService,
+    );
+    await migrateExtensionStorage(
+      fromExtensionId,
+      toExtensionId,
+      false,
+      instantiationService,
+    );
 
     assert.deepStrictEqual(
       extensionStorageService.getExtensionState(fromExtensionId, true),
@@ -139,11 +230,18 @@ suite("ExtensionStorageMigration", () => {
       undefined,
     );
     assert.deepStrictEqual(
-      (await fileService.exists(joinPath(userDataProfilesService.defaultProfile.globalStorageHome, fromExtensionId))),
+      await fileService.exists(
+        joinPath(
+          userDataProfilesService.defaultProfile.globalStorageHome,
+          fromExtensionId,
+        ),
+      ),
       false,
     );
     assert.deepStrictEqual(
-      (await fileService.exists(joinPath(workspaceStorageHome, TestWorkspace.id, fromExtensionId))),
+      await fileService.exists(
+        joinPath(workspaceStorageHome, TestWorkspace.id, fromExtensionId),
+      ),
       false,
     );
 
@@ -156,11 +254,18 @@ suite("ExtensionStorageMigration", () => {
       undefined,
     );
     assert.deepStrictEqual(
-      (await fileService.exists(joinPath(userDataProfilesService.defaultProfile.globalStorageHome, toExtensionId))),
+      await fileService.exists(
+        joinPath(
+          userDataProfilesService.defaultProfile.globalStorageHome,
+          toExtensionId,
+        ),
+      ),
       false,
     );
     assert.deepStrictEqual(
-      (await fileService.exists(joinPath(workspaceStorageHome, TestWorkspace.id, toExtensionId))),
+      await fileService.exists(
+        joinPath(workspaceStorageHome, TestWorkspace.id, toExtensionId),
+      ),
       false,
     );
 

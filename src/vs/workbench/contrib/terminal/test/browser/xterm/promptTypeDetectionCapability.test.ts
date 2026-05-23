@@ -9,45 +9,45 @@ import { PromptTypeDetectionCapability } from "../../../../../../platform/termin
 import { TerminalCapability } from "../../../../../../platform/terminal/common/capabilities/capabilities.js";
 
 suite("PromptTypeDetectionCapability", () => {
-	const store = ensureNoDisposablesAreLeakedInTestSuite();
+  const store = ensureNoDisposablesAreLeakedInTestSuite();
 
-	test("should have correct capability type", () => {
-		const capability = store.add(new PromptTypeDetectionCapability());
-		strictEqual(capability.type, TerminalCapability.PromptTypeDetection);
-	});
+  test("should have correct capability type", () => {
+    const capability = store.add(new PromptTypeDetectionCapability());
+    strictEqual(capability.type, TerminalCapability.PromptTypeDetection);
+  });
 
-	test("should initialize with undefined prompt type", () => {
-		const capability = store.add(new PromptTypeDetectionCapability());
-		strictEqual(capability.promptType, undefined);
-	});
+  test("should initialize with undefined prompt type", () => {
+    const capability = store.add(new PromptTypeDetectionCapability());
+    strictEqual(capability.promptType, undefined);
+  });
 
-	test("should set and get prompt type", () => {
-		const capability = store.add(new PromptTypeDetectionCapability());
+  test("should set and get prompt type", () => {
+    const capability = store.add(new PromptTypeDetectionCapability());
 
-		capability.setPromptType("p10k");
-		strictEqual(capability.promptType, "p10k");
+    capability.setPromptType("p10k");
+    strictEqual(capability.promptType, "p10k");
 
-		capability.setPromptType("posh-git");
-		strictEqual(capability.promptType, "posh-git");
-	});
+    capability.setPromptType("posh-git");
+    strictEqual(capability.promptType, "posh-git");
+  });
 
-	test("should fire event when prompt type changes", () => {
-		const capability = store.add(new PromptTypeDetectionCapability());
-		let eventFiredCount = 0;
-		let lastEventValue: string | undefined;
+  test("should fire event when prompt type changes", () => {
+    const capability = store.add(new PromptTypeDetectionCapability());
+    let eventFiredCount = 0;
+    let lastEventValue: string | undefined;
 
-		const disposable = capability.onPromptTypeChanged(value => {
-			eventFiredCount++;
-			lastEventValue = value;
-		});
-		store.add(disposable);
+    const disposable = capability.onPromptTypeChanged((value) => {
+      eventFiredCount++;
+      lastEventValue = value;
+    });
+    store.add(disposable);
 
-		capability.setPromptType("starship");
-		strictEqual(eventFiredCount, 1);
-		strictEqual(lastEventValue, "starship");
+    capability.setPromptType("starship");
+    strictEqual(eventFiredCount, 1);
+    strictEqual(lastEventValue, "starship");
 
-		capability.setPromptType("oh-my-zsh");
-		strictEqual(eventFiredCount, 2);
-		strictEqual(lastEventValue, "oh-my-zsh");
-	});
+    capability.setPromptType("oh-my-zsh");
+    strictEqual(eventFiredCount, 2);
+    strictEqual(lastEventValue, "oh-my-zsh");
+  });
 });

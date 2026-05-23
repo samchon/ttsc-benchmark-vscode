@@ -11,34 +11,46 @@ export const IWebviewManagerService = createDecorator<IWebviewManagerService>(
 );
 
 export interface WebviewWebContentsId {
-	readonly webContentsId: number;
+  readonly webContentsId: number;
 }
 
 export interface WebviewWindowId {
-	readonly windowId: number;
+  readonly windowId: number;
 }
 
 export interface FindInFrameOptions {
-	readonly forward?: boolean;
-	readonly findNext?: boolean;
-	readonly matchCase?: boolean;
+  readonly forward?: boolean;
+  readonly findNext?: boolean;
+  readonly matchCase?: boolean;
 }
 
 export interface FoundInFrameResult {
-	readonly requestId: number;
-	readonly activeMatchOrdinal: number;
-	readonly matches: number;
-	readonly finalUpdate: boolean;
+  readonly requestId: number;
+  readonly activeMatchOrdinal: number;
+  readonly matches: number;
+  readonly finalUpdate: boolean;
 }
 
 export interface IWebviewManagerService {
-	_serviceBrand: unknown;
+  _serviceBrand: unknown;
 
-	readonly onFoundInFrame: Event<FoundInFrameResult>;
+  readonly onFoundInFrame: Event<FoundInFrameResult>;
 
-	setIgnoreMenuShortcuts(id: WebviewWebContentsId | WebviewWindowId, enabled: boolean): Promise<void>;
+  setIgnoreMenuShortcuts(
+    id: WebviewWebContentsId | WebviewWindowId,
+    enabled: boolean,
+  ): Promise<void>;
 
-	findInFrame(windowId: WebviewWindowId, frameName: string, text: string, options: FindInFrameOptions): Promise<void>;
+  findInFrame(
+    windowId: WebviewWindowId,
+    frameName: string,
+    text: string,
+    options: FindInFrameOptions,
+  ): Promise<void>;
 
-	stopFindInFrame(windowId: WebviewWindowId, frameName: string, options: { keepSelection?: boolean }): Promise<void>;
+  stopFindInFrame(
+    windowId: WebviewWindowId,
+    frameName: string,
+    options: { keepSelection?: boolean },
+  ): Promise<void>;
 }

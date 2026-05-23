@@ -14,5 +14,5 @@ const _rgDiskPath = new Lazy(async () => {
 });
 
 export function rgDiskPath(): Promise<string> {
-	return _rgDiskPath.value;
+  return _rgDiskPath.value;
 }

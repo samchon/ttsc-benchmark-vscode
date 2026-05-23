@@ -9,7 +9,10 @@ import { localize } from "../../../../../nls.js";
 import { IClipboardService } from "../../../../../platform/clipboard/common/clipboardService.js";
 import { ILanguageService } from "../../../../../editor/common/languages/language.js";
 import { IChatDebugEventModelTurnContent } from "../../common/chatDebugService.js";
-import { renderSection, tokenizeContent } from "./chatDebugToolCallContentRenderer.js";
+import {
+  renderSection,
+  tokenizeContent,
+} from "./chatDebugToolCallContentRenderer.js";
 import { safeIntl } from "../../../../../base/common/date.js";
 
 const $ = DOM.$;
@@ -20,13 +23,18 @@ const numberFormatter = safeIntl.NumberFormat();
  * request metadata, token usage, and timing.
  * When JSON is detected in section content, renders it with syntax highlighting.
  */
-export async function renderModelTurnContent(content: IChatDebugEventModelTurnContent, languageService: ILanguageService, clipboardService?: IClipboardService, scrollable?: { scanDomNode(): void }): Promise<{ element: HTMLElement; disposables: DisposableStore }> {
-	const disposables = new DisposableStore();
-	const container = $("div.chat-debug-message-content");
-	container.tabIndex = 0;
+export async function renderModelTurnContent(
+  content: IChatDebugEventModelTurnContent,
+  languageService: ILanguageService,
+  clipboardService?: IClipboardService,
+  scrollable?: { scanDomNode(): void },
+): Promise<{ element: HTMLElement; disposables: DisposableStore }> {
+  const disposables = new DisposableStore();
+  const container = $("div.chat-debug-message-content");
+  container.tabIndex = 0;
 
-	// Header: Model Turn
-	DOM.append(
+  // Header: Model Turn
+  DOM.append(
     container,
     $(
       "div.chat-debug-message-content-title",
@@ -35,28 +43,28 @@ export async function renderModelTurnContent(content: IChatDebugEventModelTurnCo
     ),
   );
 
-	// Status summary line
-	const statusParts: string[] = [];
-	if (content.requestName) {
-		statusParts.push(content.requestName);
-	}
-	if (content.model) {
-		statusParts.push(content.model);
-	}
-	if (content.status && content.status !== "unknown") {
-		statusParts.push(content.status);
-	}
-	if (content.durationInMillis !== undefined) {
-		statusParts.push(
+  // Status summary line
+  const statusParts: string[] = [];
+  if (content.requestName) {
+    statusParts.push(content.requestName);
+  }
+  if (content.model) {
+    statusParts.push(content.model);
+  }
+  if (content.status && content.status !== "unknown") {
+    statusParts.push(content.status);
+  }
+  if (content.durationInMillis !== undefined) {
+    statusParts.push(
       localize(
         "chatDebug.modelTurn.duration",
         "{0}ms",
         numberFormatter.value.format(content.durationInMillis),
       ),
     );
-	}
-	if (statusParts.length > 0) {
-		DOM.append(
+  }
+  if (statusParts.length > 0) {
+    DOM.append(
       container,
       $(
         "div.chat-debug-message-content-summary",
@@ -64,16 +72,16 @@ export async function renderModelTurnContent(content: IChatDebugEventModelTurnCo
         statusParts.join(" \u00b7 "),
       ),
     );
-	}
+  }
 
-	// Token usage details
-	const detailsContainer = DOM.append(
+  // Token usage details
+  const detailsContainer = DOM.append(
     container,
     $("div.chat-debug-model-turn-details"),
   );
 
-	if (content.inputTokens !== undefined) {
-		DOM.append(
+  if (content.inputTokens !== undefined) {
+    DOM.append(
       detailsContainer,
       $(
         "div",
@@ -85,9 +93,9 @@ export async function renderModelTurnContent(content: IChatDebugEventModelTurnCo
         ),
       ),
     );
-	}
-	if (content.outputTokens !== undefined) {
-		DOM.append(
+  }
+  if (content.outputTokens !== undefined) {
+    DOM.append(
       detailsContainer,
       $(
         "div",
@@ -99,9 +107,9 @@ export async function renderModelTurnContent(content: IChatDebugEventModelTurnCo
         ),
       ),
     );
-	}
-	if (content.cachedTokens !== undefined) {
-		DOM.append(
+  }
+  if (content.cachedTokens !== undefined) {
+    DOM.append(
       detailsContainer,
       $(
         "div",
@@ -113,9 +121,9 @@ export async function renderModelTurnContent(content: IChatDebugEventModelTurnCo
         ),
       ),
     );
-	}
-	if (content.totalTokens !== undefined) {
-		DOM.append(
+  }
+  if (content.totalTokens !== undefined) {
+    DOM.append(
       detailsContainer,
       $(
         "div",
@@ -127,9 +135,9 @@ export async function renderModelTurnContent(content: IChatDebugEventModelTurnCo
         ),
       ),
     );
-	}
-	if (content.timeToFirstTokenInMillis !== undefined) {
-		DOM.append(
+  }
+  if (content.timeToFirstTokenInMillis !== undefined) {
+    DOM.append(
       detailsContainer,
       $(
         "div",
@@ -141,9 +149,9 @@ export async function renderModelTurnContent(content: IChatDebugEventModelTurnCo
         ),
       ),
     );
-	}
-	if (content.maxInputTokens !== undefined) {
-		DOM.append(
+  }
+  if (content.maxInputTokens !== undefined) {
+    DOM.append(
       detailsContainer,
       $(
         "div",
@@ -155,9 +163,9 @@ export async function renderModelTurnContent(content: IChatDebugEventModelTurnCo
         ),
       ),
     );
-	}
-	if (content.maxOutputTokens !== undefined) {
-		DOM.append(
+  }
+  if (content.maxOutputTokens !== undefined) {
+    DOM.append(
       detailsContainer,
       $(
         "div",
@@ -169,9 +177,9 @@ export async function renderModelTurnContent(content: IChatDebugEventModelTurnCo
         ),
       ),
     );
-	}
-	if (content.errorMessage) {
-		DOM.append(
+  }
+  if (content.errorMessage) {
+    DOM.append(
       detailsContainer,
       $(
         "div.chat-debug-model-turn-error",
@@ -183,15 +191,15 @@ export async function renderModelTurnContent(content: IChatDebugEventModelTurnCo
         ),
       ),
     );
-	}
+  }
 
-	// Collapsible sections (e.g., system prompt, user prompt, tools, response)
-	if (content.sections && content.sections.length > 0) {
-		const sectionsContainer = DOM.append(
+  // Collapsible sections (e.g., system prompt, user prompt, tools, response)
+  if (content.sections && content.sections.length > 0) {
+    const sectionsContainer = DOM.append(
       container,
       $("div.chat-debug-message-sections"),
     );
-		DOM.append(
+    DOM.append(
       sectionsContainer,
       $(
         "div.chat-debug-message-sections-label",
@@ -204,12 +212,12 @@ export async function renderModelTurnContent(content: IChatDebugEventModelTurnCo
       ),
     );
 
-		for (const section of content.sections) {
-			const { plainText, tokenizedHtml } = await tokenizeContent(
+    for (const section of content.sections) {
+      const { plainText, tokenizedHtml } = await tokenizeContent(
         section.content,
         languageService,
       );
-			renderSection(
+      renderSection(
         sectionsContainer,
         section.name,
         plainText,
@@ -219,18 +227,20 @@ export async function renderModelTurnContent(content: IChatDebugEventModelTurnCo
         clipboardService,
         scrollable,
       );
-		}
-	}
+    }
+  }
 
-	return { element: container, disposables };
+  return { element: container, disposables };
 }
 
 /**
  * Convert a resolved model turn content to plain text for clipboard / editor output.
  */
-export function modelTurnContentToPlainText(content: IChatDebugEventModelTurnContent): string {
-	const lines: string[] = [];
-	lines.push(
+export function modelTurnContentToPlainText(
+  content: IChatDebugEventModelTurnContent,
+): string {
+  const lines: string[] = [];
+  lines.push(
     localize(
       "chatDebug.modelTurn.requestLabel",
       "Request: {0}",
@@ -238,106 +248,110 @@ export function modelTurnContentToPlainText(content: IChatDebugEventModelTurnCon
     ),
   );
 
-	if (content.model) {
-		lines.push(
+  if (content.model) {
+    lines.push(
       localize("chatDebug.modelTurn.modelLabel", "Model: {0}", content.model),
     );
-	}
-	if (content.status && content.status !== "unknown") {
-		lines.push(
-      localize("chatDebug.modelTurn.statusLabel", "Status: {0}", content.status),
+  }
+  if (content.status && content.status !== "unknown") {
+    lines.push(
+      localize(
+        "chatDebug.modelTurn.statusLabel",
+        "Status: {0}",
+        content.status,
+      ),
     );
-	}
-	if (content.durationInMillis !== undefined) {
-		lines.push(
+  }
+  if (content.durationInMillis !== undefined) {
+    lines.push(
       localize(
         "chatDebug.modelTurn.durationLabel",
         "Duration: {0}ms",
         numberFormatter.value.format(content.durationInMillis),
       ),
     );
-	}
-	if (content.timeToFirstTokenInMillis !== undefined) {
-		lines.push(
+  }
+  if (content.timeToFirstTokenInMillis !== undefined) {
+    lines.push(
       localize(
         "chatDebug.modelTurn.ttftLabel",
         "Time to first token: {0}ms",
         numberFormatter.value.format(content.timeToFirstTokenInMillis),
       ),
     );
-	}
-	if (content.inputTokens !== undefined) {
-		lines.push(
+  }
+  if (content.inputTokens !== undefined) {
+    lines.push(
       localize(
         "chatDebug.modelTurn.inputTokensLabel",
         "Input tokens: {0}",
         numberFormatter.value.format(content.inputTokens),
       ),
     );
-	}
-	if (content.outputTokens !== undefined) {
-		lines.push(
+  }
+  if (content.outputTokens !== undefined) {
+    lines.push(
       localize(
         "chatDebug.modelTurn.outputTokensLabel",
         "Output tokens: {0}",
         numberFormatter.value.format(content.outputTokens),
       ),
     );
-	}
-	if (content.cachedTokens !== undefined) {
-		lines.push(
+  }
+  if (content.cachedTokens !== undefined) {
+    lines.push(
       localize(
         "chatDebug.modelTurn.cachedTokensLabel",
         "Cached tokens: {0}",
         numberFormatter.value.format(content.cachedTokens),
       ),
     );
-	}
-	if (content.totalTokens !== undefined) {
-		lines.push(
+  }
+  if (content.totalTokens !== undefined) {
+    lines.push(
       localize(
         "chatDebug.modelTurn.totalTokensLabel",
         "Total tokens: {0}",
         numberFormatter.value.format(content.totalTokens),
       ),
     );
-	}
-	if (content.maxInputTokens !== undefined) {
-		lines.push(
+  }
+  if (content.maxInputTokens !== undefined) {
+    lines.push(
       localize(
         "chatDebug.modelTurn.maxInputTokensLabel",
         "Max input tokens: {0}",
         numberFormatter.value.format(content.maxInputTokens),
       ),
     );
-	}
-	if (content.maxOutputTokens !== undefined) {
-		lines.push(
+  }
+  if (content.maxOutputTokens !== undefined) {
+    lines.push(
       localize(
         "chatDebug.modelTurn.maxOutputTokensLabel",
         "Max output tokens: {0}",
         numberFormatter.value.format(content.maxOutputTokens),
       ),
     );
-	}
-	if (content.errorMessage) {
-		lines.push(
+  }
+  if (content.errorMessage) {
+    lines.push(
       localize(
         "chatDebug.modelTurn.errorLabel",
         "Error: {0}",
         content.errorMessage,
       ),
     );
-	}
+  }
 
-	if (content.sections && content.sections.length > 0) {
-		lines.push("");
-		for (const section of content.sections) {
-			lines.push(`--- ${section.name} ---`);
-			lines.push(section.content);
-			lines.push("");
-		}
-	}
+  if (content.sections && content.sections.length > 0) {
+    lines.push("");
+    for (const section of content.sections) {
+      lines.push(`--- ${section.name} ---`);
+      lines.push(section.content);
+      lines.push("");
+    }
+  }
 
-	return lines.join("\n");
+  return lines.join("\n");
 }

@@ -6,12 +6,17 @@
 import { localize } from "../../../../nls.js";
 import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
-import { EditorPaneDescriptor, IEditorPaneRegistry } from "../../../browser/editor.js";
+import {
+  EditorPaneDescriptor,
+  IEditorPaneRegistry,
+} from "../../../browser/editor.js";
 import { EditorExtensions } from "../../../common/editor.js";
 import { ProcessExplorerEditorInput } from "./processExplorerEditorInput.js";
 import { ProcessExplorerEditor } from "./processExplorerEditor.js";
 
-Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane(
+Registry.as<IEditorPaneRegistry>(
+  EditorExtensions.EditorPane,
+).registerEditorPane(
   EditorPaneDescriptor.create(
     ProcessExplorerEditor,
     ProcessExplorerEditor.ID,

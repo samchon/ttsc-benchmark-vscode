@@ -11,7 +11,11 @@ import { SessionClientToolsDiff } from "../../../node/claude/clientTools/claudeS
 const tool = (over: Partial<ToolDefinition> = {}): ToolDefinition => ({
   name: "echo",
   description: "echoes",
-  inputSchema: { type: "object", properties: { msg: { type: "string" } }, required: ["msg"] },
+  inputSchema: {
+    type: "object",
+    properties: { msg: { type: "string" } },
+    required: ["msg"],
+  },
   ...over,
 });
 
@@ -27,14 +31,11 @@ suite("SessionClientToolsDiff", () => {
     assert.strictEqual(diff.hasDifference, false);
   });
 
-  test(
-    "setTools(undefined → []) does NOT flip dirty (undefined ≡ [])",
-    () => {
-      const diff = disposables.add(new SessionClientToolsDiff());
-      diff.model.setTools([]);
-      assert.strictEqual(diff.hasDifference, false);
-    },
-  );
+  test("setTools(undefined → []) does NOT flip dirty (undefined ≡ [])", () => {
+    const diff = disposables.add(new SessionClientToolsDiff());
+    diff.model.setTools([]);
+    assert.strictEqual(diff.hasDifference, false);
+  });
 
   test("setTools with a real snapshot flips dirty", () => {
     const diff = disposables.add(new SessionClientToolsDiff());
@@ -50,35 +51,33 @@ suite("SessionClientToolsDiff", () => {
     assert.strictEqual(diff.hasDifference, false);
   });
 
-  test(
-    "setTools with a structurally-equal snapshot does NOT re-flip dirty after consume",
-    () => {
-      const diff = disposables.add(new SessionClientToolsDiff());
-      diff.model.setTools([tool()]);
-      diff.consume();
-      diff.model.setTools([
-        {
-          name: "echo",
-          description: "echoes",
-          inputSchema: { type: "object", properties: { msg: { type: "string" } }, required: ["msg"] },
+  test("setTools with a structurally-equal snapshot does NOT re-flip dirty after consume", () => {
+    const diff = disposables.add(new SessionClientToolsDiff());
+    diff.model.setTools([tool()]);
+    diff.consume();
+    diff.model.setTools([
+      {
+        name: "echo",
+        description: "echoes",
+        inputSchema: {
+          type: "object",
+          properties: { msg: { type: "string" } },
+          required: ["msg"],
         },
-      ]);
-      assert.strictEqual(diff.hasDifference, false);
-    },
-  );
+      },
+    ]);
+    assert.strictEqual(diff.hasDifference, false);
+  });
 
-  test(
-    "C6: setTools racing async work after consume re-flips dirty via autorun",
-    async () => {
-      const diff = disposables.add(new SessionClientToolsDiff());
-      diff.model.setTools([tool({ name: "original" })]);
-      const state = diff.consume();
-      assert.deepStrictEqual(state.tools, [tool({ name: "original" })]);
-      await Promise.resolve();
-      diff.model.setTools([tool({ name: "racer" })]);
-      assert.strictEqual(diff.hasDifference, true);
-    },
-  );
+  test("C6: setTools racing async work after consume re-flips dirty via autorun", async () => {
+    const diff = disposables.add(new SessionClientToolsDiff());
+    diff.model.setTools([tool({ name: "original" })]);
+    const state = diff.consume();
+    assert.deepStrictEqual(state.tools, [tool({ name: "original" })]);
+    await Promise.resolve();
+    diff.model.setTools([tool({ name: "racer" })]);
+    assert.strictEqual(diff.hasDifference, true);
+  });
 
   test("markDirty re-flips after a failed downstream build", () => {
     const diff = disposables.add(new SessionClientToolsDiff());
@@ -89,46 +88,51 @@ suite("SessionClientToolsDiff", () => {
     assert.strictEqual(diff.hasDifference, true);
   });
 
-  test(
-    "hasDifference detects rename / description / inputSchema; ignores title",
-    () => {
-      const diff = disposables.add(new SessionClientToolsDiff());
-      diff.model.setTools([tool({ name: "a" })]);
-      diff.consume();
+  test("hasDifference detects rename / description / inputSchema; ignores title", () => {
+    const diff = disposables.add(new SessionClientToolsDiff());
+    diff.model.setTools([tool({ name: "a" })]);
+    diff.consume();
 
-      diff.model.setTools([tool({ name: "b" })]);
-      assert.strictEqual(diff.hasDifference, true);
-      diff.consume();
+    diff.model.setTools([tool({ name: "b" })]);
+    assert.strictEqual(diff.hasDifference, true);
+    diff.consume();
 
-      diff.model.setTools([tool({ name: "b", description: "new" })]);
-      assert.strictEqual(diff.hasDifference, true);
-      diff.consume();
+    diff.model.setTools([tool({ name: "b", description: "new" })]);
+    assert.strictEqual(diff.hasDifference, true);
+    diff.consume();
 
-      diff.model.setTools([
-        tool({
-          name: "b",
-          description: "new",
-          inputSchema: { type: "object", properties: { msg: { type: "number" } }, required: ["msg"] },
-        }),
-      ]);
-      assert.strictEqual(diff.hasDifference, true);
-      diff.consume();
+    diff.model.setTools([
+      tool({
+        name: "b",
+        description: "new",
+        inputSchema: {
+          type: "object",
+          properties: { msg: { type: "number" } },
+          required: ["msg"],
+        },
+      }),
+    ]);
+    assert.strictEqual(diff.hasDifference, true);
+    diff.consume();
 
-      diff.model.setTools([
-        tool({
-          name: "b",
-          description: "new",
-          inputSchema: { type: "object", properties: { msg: { type: "number" } }, required: ["msg"] },
-          title: "X",
-        }),
-      ]);
-      assert.strictEqual(
-        diff.hasDifference,
-        false,
-        "title is outside the diff scope",
-      );
-    },
-  );
+    diff.model.setTools([
+      tool({
+        name: "b",
+        description: "new",
+        inputSchema: {
+          type: "object",
+          properties: { msg: { type: "number" } },
+          required: ["msg"],
+        },
+        title: "X",
+      }),
+    ]);
+    assert.strictEqual(
+      diff.hasDifference,
+      false,
+      "title is outside the diff scope",
+    );
+  });
 
   test("order-insensitive: reordering tools does not flip dirty", () => {
     const diff = disposables.add(new SessionClientToolsDiff());

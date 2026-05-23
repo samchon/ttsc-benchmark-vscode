@@ -10,9 +10,12 @@ import { createMockDebugModel } from "./mockDebugModel.js";
 
 // Expressions
 
-function assertWatchExpressions(watchExpressions: Expression[], expectedName: string) {
-	assert.strictEqual(watchExpressions.length, 2);
-	watchExpressions.forEach(we => {
+function assertWatchExpressions(
+  watchExpressions: Expression[],
+  expectedName: string,
+) {
+  assert.strictEqual(watchExpressions.length, 2);
+  watchExpressions.forEach((we) => {
     assert.strictEqual(we.available, false);
     assert.strictEqual(we.reference, 0);
     assert.strictEqual(we.name, expectedName);

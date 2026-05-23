@@ -15,9 +15,16 @@
 import { Emitter } from "../../../base/common/event.js";
 import { Disposable } from "../../../base/common/lifecycle.js";
 import type { IChannel } from "../../../base/parts/ipc/common/ipc.js";
-import type { AhpServerNotification, JsonRpcResponse, ProtocolMessage } from "../common/state/sessionProtocol.js";
+import type {
+  AhpServerNotification,
+  JsonRpcResponse,
+  ProtocolMessage,
+} from "../common/state/sessionProtocol.js";
 import type { IClientTransport } from "../common/state/sessionTransport.js";
-import { MALFORMED_FRAMES_FORCE_CLOSE_THRESHOLD, MALFORMED_FRAMES_LOG_CAP } from "../common/transportConstants.js";
+import {
+  MALFORMED_FRAMES_FORCE_CLOSE_THRESHOLD,
+  MALFORMED_FRAMES_LOG_CAP,
+} from "../common/transportConstants.js";
 
 /**
  * Wraps an {@link IChannel} as an {@link IClientTransport} for the agent
@@ -30,94 +37,98 @@ import { MALFORMED_FRAMES_FORCE_CLOSE_THRESHOLD, MALFORMED_FRAMES_LOG_CAP } from
  * - `call('connect')` → opens the upstream connection; resolves when ready.
  * - `call('send', frame)` → forwards a JSON frame upstream.
  */
-export class AgentHostIpcChannelTransport extends Disposable implements IClientTransport {
+export class AgentHostIpcChannelTransport
+  extends Disposable
+  implements IClientTransport
+{
+  private readonly _onMessage = this._register(new Emitter<ProtocolMessage>());
+  readonly onMessage = this._onMessage.event;
 
-	private readonly _onMessage = this._register(new Emitter<ProtocolMessage>());
-	readonly onMessage = this._onMessage.event;
+  private readonly _onClose = this._register(new Emitter<void>());
+  readonly onClose = this._onClose.event;
 
-	private readonly _onClose = this._register(new Emitter<void>());
-	readonly onClose = this._onClose.event;
+  private _isOpen = false;
+  private _closeFired = false;
+  private _malformedFrames = 0;
 
-	private _isOpen = false;
-	private _closeFired = false;
-	private _malformedFrames = 0;
+  constructor(private readonly _channel: IChannel) {
+    super();
+  }
 
-	constructor(private readonly _channel: IChannel) {
-		super();
-	}
+  get isOpen(): boolean {
+    return this._isOpen && !this._closeFired;
+  }
 
-	get isOpen(): boolean {
-		return this._isOpen && !this._closeFired;
-	}
-
-	async connect(): Promise<void> {
-		if (this._store.isDisposed) {
-			throw new Error("Transport is disposed");
-		}
-		// Subscribe before connecting so we don't miss any frames the upstream
-		// host emits between open and our listener attaching.
-		this._register(
-      this._channel.listen<string>("frame")(text => this._handleFrame(text)),
+  async connect(): Promise<void> {
+    if (this._store.isDisposed) {
+      throw new Error("Transport is disposed");
+    }
+    // Subscribe before connecting so we don't miss any frames the upstream
+    // host emits between open and our listener attaching.
+    this._register(
+      this._channel.listen<string>("frame")((text) => this._handleFrame(text)),
     );
-		this._register(
+    this._register(
       this._channel.listen<void>("close")(() => this._fireClose()),
     );
-		await this._channel.call("connect");
-		this._isOpen = true;
-	}
+    await this._channel.call("connect");
+    this._isOpen = true;
+  }
 
-	send(message: ProtocolMessage | AhpServerNotification | JsonRpcResponse): void {
-		if (!this._isOpen || this._closeFired) {
-			// Surface the failure via the close event; callers observe that.
-			this._fireClose();
-			return;
-		}
-		// Fire-and-forget. The channel call resolves asynchronously; failures
-		// are surfaced via the close event from the server side.
-		this._channel.call("send", JSON.stringify(message)).catch(
-      () => this._fireClose(),
-    );
-	}
+  send(
+    message: ProtocolMessage | AhpServerNotification | JsonRpcResponse,
+  ): void {
+    if (!this._isOpen || this._closeFired) {
+      // Surface the failure via the close event; callers observe that.
+      this._fireClose();
+      return;
+    }
+    // Fire-and-forget. The channel call resolves asynchronously; failures
+    // are surfaced via the close event from the server side.
+    this._channel
+      .call("send", JSON.stringify(message))
+      .catch(() => this._fireClose());
+  }
 
-	override dispose(): void {
-		if (this._isOpen && !this._closeFired) {
-			// Best-effort close — ignore any rejection since we're tearing down.
-			this._channel.call("close").catch(() => { });
-		}
-		this._fireClose();
-		super.dispose();
-	}
+  override dispose(): void {
+    if (this._isOpen && !this._closeFired) {
+      // Best-effort close — ignore any rejection since we're tearing down.
+      this._channel.call("close").catch(() => {});
+    }
+    this._fireClose();
+    super.dispose();
+  }
 
-	private _handleFrame(text: string): void {
-		let message: ProtocolMessage;
-		try {
-			message = JSON.parse(text) as ProtocolMessage;
-		} catch (err) {
-			this._malformedFrames++;
-			if (this._malformedFrames <= MALFORMED_FRAMES_LOG_CAP) {
-				const preview = text.length > 80 ? text.slice(0, 80) + "…" : text;
-				console.warn(
+  private _handleFrame(text: string): void {
+    let message: ProtocolMessage;
+    try {
+      message = JSON.parse(text) as ProtocolMessage;
+    } catch (err) {
+      this._malformedFrames++;
+      if (this._malformedFrames <= MALFORMED_FRAMES_LOG_CAP) {
+        const preview = text.length > 80 ? text.slice(0, 80) + "…" : text;
+        console.warn(
           `[AgentHostIpcChannelTransport] Malformed frame #${this._malformedFrames} (len=${text.length}): ${preview}`,
           err instanceof Error ? err.message : String(err),
         );
-			}
-			if (this._malformedFrames > MALFORMED_FRAMES_FORCE_CLOSE_THRESHOLD) {
-				console.warn(
+      }
+      if (this._malformedFrames > MALFORMED_FRAMES_FORCE_CLOSE_THRESHOLD) {
+        console.warn(
           "[AgentHostIpcChannelTransport] Malformed frame threshold exceeded; closing transport.",
         );
-				this._fireClose();
-			}
-			return;
-		}
-		this._onMessage.fire(message);
-	}
+        this._fireClose();
+      }
+      return;
+    }
+    this._onMessage.fire(message);
+  }
 
-	private _fireClose(): void {
-		if (this._closeFired) {
-			return;
-		}
-		this._closeFired = true;
-		this._isOpen = false;
-		this._onClose.fire();
-	}
+  private _fireClose(): void {
+    if (this._closeFired) {
+      return;
+    }
+    this._closeFired = true;
+    this._isOpen = false;
+    this._onClose.fire();
+  }
 }

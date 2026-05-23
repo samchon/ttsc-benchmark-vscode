@@ -6,18 +6,36 @@
 import { IDisposable } from "../../../../base/common/lifecycle.js";
 import { localize, localize2 } from "../../../../nls.js";
 import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
-import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import {
+  Action2,
+  registerAction2,
+} from "../../../../platform/actions/common/actions.js";
 import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
 import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
-import { Extensions as ConfigurationExtensions, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  Extensions as ConfigurationExtensions,
+  IConfigurationRegistry,
+} from "../../../../platform/configuration/common/configurationRegistry.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
 import { IProcessService } from "../../../../platform/process/common/process.js";
 import { IProductService } from "../../../../platform/product/common/productService.js";
-import { IQuickAccessRegistry, Extensions as QuickAccessExtensions } from "../../../../platform/quickinput/common/quickAccess.js";
+import {
+  IQuickAccessRegistry,
+  Extensions as QuickAccessExtensions,
+} from "../../../../platform/quickinput/common/quickAccess.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
-import { Extensions, IWorkbenchContributionsRegistry } from "../../../common/contributions.js";
-import { EditorPaneDescriptor, IEditorPaneRegistry } from "../../../browser/editor.js";
+import {
+  Extensions,
+  IWorkbenchContributionsRegistry,
+} from "../../../common/contributions.js";
+import {
+  EditorPaneDescriptor,
+  IEditorPaneRegistry,
+} from "../../../browser/editor.js";
 import { EditorExtensions } from "../../../common/editor.js";
 import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
 import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
@@ -25,7 +43,11 @@ import { IssueQuickAccess } from "../browser/issueQuickAccess.js";
 import "../browser/issueTroubleshoot.js";
 import "../browser/issueReporterKeybindings.js";
 import { BaseIssueContribution } from "../common/issue.contribution.js";
-import { IIssueFormService, IWorkbenchIssueService, IssueType } from "../common/issue.js";
+import {
+  IIssueFormService,
+  IWorkbenchIssueService,
+  IssueType,
+} from "../common/issue.js";
 import { NativeIssueService } from "./issueService.js";
 import { NativeIssueFormService } from "./nativeIssueFormService.js";
 import { IScreenshotService } from "../browser/screenshotService.js";
@@ -65,28 +87,38 @@ registerSingleton(
 );
 
 // Settings
-Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
-	id: "issueReporter",
-	title: localize("issueReporterConfigurationTitle", "Issue Reporter"),
-	type: "object",
-	properties: {
-		"issueReporter.wizard.enabled": {
-			type: "boolean",
-			default: false,
-			description: localize("issueReporter.wizard.enabled", "Enable the new issue reporter wizard instead of the classic issue reporter."),
-			experiment: { mode: "auto" },
-		},
-		"issueReporter.wizard.fullWorkspaceScan": {
-			type: "boolean",
-			default: true,
-			description: localize("issueReporter.wizard.fullWorkspaceScan", "When auto-collecting performance diagnostics for the issue reporter wizard, walk the full workspace instead of stopping at the default 20,000-file cap. Set to false on very large workspaces if the scan slows the initial wizard render."),
-			experiment: { mode: "auto" },
-		},
-	},
+Registry.as<IConfigurationRegistry>(
+  ConfigurationExtensions.Configuration,
+).registerConfiguration({
+  id: "issueReporter",
+  title: localize("issueReporterConfigurationTitle", "Issue Reporter"),
+  type: "object",
+  properties: {
+    "issueReporter.wizard.enabled": {
+      type: "boolean",
+      default: false,
+      description: localize(
+        "issueReporter.wizard.enabled",
+        "Enable the new issue reporter wizard instead of the classic issue reporter.",
+      ),
+      experiment: { mode: "auto" },
+    },
+    "issueReporter.wizard.fullWorkspaceScan": {
+      type: "boolean",
+      default: true,
+      description: localize(
+        "issueReporter.wizard.fullWorkspaceScan",
+        "When auto-collecting performance diagnostics for the issue reporter wizard, walk the full workspace instead of stopping at the default 20,000-file cap. Set to false on very large workspaces if the scan slows the initial wizard render.",
+      ),
+      experiment: { mode: "auto" },
+    },
+  },
 });
 
 // Editor pane for tab display mode
-Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane(
+Registry.as<IEditorPaneRegistry>(
+  EditorExtensions.EditorPane,
+).registerEditorPane(
   EditorPaneDescriptor.create(
     IssueReporterEditorPane,
     IssueReporterEditorPane.ID,
@@ -96,79 +128,99 @@ Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane
 );
 
 class NativeIssueContribution extends BaseIssueContribution {
+  constructor(
+    @IProductService productService: IProductService,
+    @IConfigurationService configurationService: IConfigurationService,
+  ) {
+    super(productService, configurationService);
 
-	constructor(
-		@IProductService productService: IProductService,
-		@IConfigurationService configurationService: IConfigurationService,
-	) {
-		super(productService, configurationService);
+    if (!configurationService.getValue<boolean>("telemetry.feedback.enabled")) {
+      return;
+    }
 
-		if (!configurationService.getValue<boolean>("telemetry.feedback.enabled")) {
-			return;
-		}
-
-		if (productService.reportIssueUrl) {
-			this._register(
+    if (productService.reportIssueUrl) {
+      this._register(
         registerAction2(ReportPerformanceIssueUsingReporterAction),
       );
-		}
+    }
 
-		let disposable: IDisposable | undefined;
+    let disposable: IDisposable | undefined;
 
-		const registerQuickAccessProvider = () => {
-			disposable = Registry.as<IQuickAccessRegistry>(QuickAccessExtensions.Quickaccess).registerQuickAccessProvider({
-				ctor: IssueQuickAccess,
-				prefix: IssueQuickAccess.PREFIX,
-				contextKey: "inReportIssuePicker",
-				placeholder: localize("tasksQuickAccessPlaceholder", "Type the name of an extension to report on."),
-				helpEntries: [{
-					description: localize("openIssueReporter", "Open Issue Reporter"),
-					commandId: "workbench.action.openIssueReporter",
-				}],
-			});
-		};
+    const registerQuickAccessProvider = () => {
+      disposable = Registry.as<IQuickAccessRegistry>(
+        QuickAccessExtensions.Quickaccess,
+      ).registerQuickAccessProvider({
+        ctor: IssueQuickAccess,
+        prefix: IssueQuickAccess.PREFIX,
+        contextKey: "inReportIssuePicker",
+        placeholder: localize(
+          "tasksQuickAccessPlaceholder",
+          "Type the name of an extension to report on.",
+        ),
+        helpEntries: [
+          {
+            description: localize("openIssueReporter", "Open Issue Reporter"),
+            commandId: "workbench.action.openIssueReporter",
+          },
+        ],
+      });
+    };
 
-		this._register(configurationService.onDidChangeConfiguration(e => {
-			if (!configurationService.getValue<boolean>("extensions.experimental.issueQuickAccess") && disposable) {
-				disposable.dispose();
-				disposable = undefined;
-			} else if (!disposable) {
-				registerQuickAccessProvider();
-			}
-		}));
+    this._register(
+      configurationService.onDidChangeConfiguration((e) => {
+        if (
+          !configurationService.getValue<boolean>(
+            "extensions.experimental.issueQuickAccess",
+          ) &&
+          disposable
+        ) {
+          disposable.dispose();
+          disposable = undefined;
+        } else if (!disposable) {
+          registerQuickAccessProvider();
+        }
+      }),
+    );
 
-		if (configurationService.getValue<boolean>(
-      "extensions.experimental.issueQuickAccess",
-    )) {
-			registerQuickAccessProvider();
-		}
-	}
+    if (
+      configurationService.getValue<boolean>(
+        "extensions.experimental.issueQuickAccess",
+      )
+    ) {
+      registerQuickAccessProvider();
+    }
+  }
 }
-Registry.as<IWorkbenchContributionsRegistry>(Extensions.Workbench).registerWorkbenchContribution(
+Registry.as<IWorkbenchContributionsRegistry>(
+  Extensions.Workbench,
+).registerWorkbenchContribution(
   NativeIssueContribution,
   LifecyclePhase.Restored,
 );
 
 class ReportPerformanceIssueUsingReporterAction extends Action2 {
+  static readonly ID = "workbench.action.reportPerformanceIssueUsingReporter";
 
-	static readonly ID = "workbench.action.reportPerformanceIssueUsingReporter";
-
-	constructor() {
-		super({
+  constructor() {
+    super({
       id: ReportPerformanceIssueUsingReporterAction.ID,
-      title: localize2({ key: "reportPerformanceIssue", comment: [`Here, 'issue' means problem or bug`] }, "Report Performance Issue..."),
+      title: localize2(
+        {
+          key: "reportPerformanceIssue",
+          comment: [`Here, 'issue' means problem or bug`],
+        },
+        "Report Performance Issue...",
+      ),
       category: Categories.Help,
       f1: true,
     });
-	}
+  }
 
-	override async run(accessor: ServicesAccessor): Promise<void> {
-		const issueService = accessor.get(
-      IWorkbenchIssueService,
-    ); // later can just get IIssueFormService
+  override async run(accessor: ServicesAccessor): Promise<void> {
+    const issueService = accessor.get(IWorkbenchIssueService); // later can just get IIssueFormService
 
-		return issueService.openReporter({ issueType: IssueType.PerformanceIssue });
-	}
+    return issueService.openReporter({ issueType: IssueType.PerformanceIssue });
+  }
 }
 
 CommandsRegistry.registerCommand("_issues.getSystemStatus", (accessor) => {

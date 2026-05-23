@@ -23,87 +23,100 @@ import { IChatCodeBlockInfo } from "../../../chat.js";
 import { IChatOutputRendererService } from "../../../chatOutputItemRenderer.js";
 import { IChatContentPartRenderContext } from "../chatContentParts.js";
 import { ChatProgressSubPart } from "../chatProgressContentPart.js";
-import { IChatOutputPartStateCache, IOutputPartState } from "../chatOutputPartStateCache.js";
+import {
+  IChatOutputPartStateCache,
+  IOutputPartState,
+} from "../chatOutputPartStateCache.js";
 import { BaseChatToolInvocationSubPart } from "./chatToolInvocationSubPart.js";
 
 // TODO: see if we can reuse existing types instead of adding ChatToolOutputSubPart
 export class ChatToolOutputSubPart extends BaseChatToolInvocationSubPart {
+  public readonly domNode: HTMLElement;
 
-	public readonly domNode: HTMLElement;
+  public override readonly codeblocks: IChatCodeBlockInfo[] = [];
 
-	public override readonly codeblocks: IChatCodeBlockInfo[] = [];
+  private readonly _disposeCts = this._register(new CancellationTokenSource());
 
-	private readonly _disposeCts = this._register(new CancellationTokenSource());
+  constructor(
+    toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized,
+    private readonly context: IChatContentPartRenderContext,
+    private readonly onDidRemount: Event<void>,
+    @IChatOutputRendererService
+    private readonly chatOutputItemRendererService: IChatOutputRendererService,
+    @IInstantiationService
+    private readonly instantiationService: IInstantiationService,
+    @IChatOutputPartStateCache
+    private readonly stateCache: IChatOutputPartStateCache,
+  ) {
+    super(toolInvocation);
 
-	constructor(
-		toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized,
-		private readonly context: IChatContentPartRenderContext,
-		private readonly onDidRemount: Event<void>,
-		@IChatOutputRendererService private readonly chatOutputItemRendererService: IChatOutputRendererService,
-		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@IChatOutputPartStateCache private readonly stateCache: IChatOutputPartStateCache,
-	) {
-		super(toolInvocation);
+    const details: IToolResultOutputDetails =
+      toolInvocation.kind === "toolInvocation"
+        ? (IChatToolInvocation.resultDetails(
+            toolInvocation,
+          ) as IToolResultOutputDetails)
+        : {
+            output: {
+              type: "data",
+              mimeType: (
+                toolInvocation.resultDetails as IToolResultOutputDetailsSerialized
+              ).output.mimeType,
+              value: decodeBase64(
+                (
+                  toolInvocation.resultDetails as IToolResultOutputDetailsSerialized
+                ).output.base64Data,
+              ),
+            },
+          };
 
-		const details: IToolResultOutputDetails = toolInvocation.kind === "toolInvocation"
-			? IChatToolInvocation.resultDetails(
-          toolInvocation,
-        ) as IToolResultOutputDetails
-			: {
-				output: {
-					type: "data",
-					mimeType: (toolInvocation.resultDetails as IToolResultOutputDetailsSerialized).output.mimeType,
-					value: decodeBase64((toolInvocation.resultDetails as IToolResultOutputDetailsSerialized).output.base64Data),
-				},
-			};
+    this.domNode = dom.$("div.tool-output-part");
 
-		this.domNode = dom.$("div.tool-output-part");
-
-		if (toolInvocation.invocationMessage) {
-			const titleEl = dom.$(".output-title");
-			this.domNode.appendChild(titleEl);
-			if (typeof toolInvocation.invocationMessage === "string") {
-				titleEl.textContent = toolInvocation.invocationMessage;
-			} else {
-				const md = this._register(
+    if (toolInvocation.invocationMessage) {
+      const titleEl = dom.$(".output-title");
+      this.domNode.appendChild(titleEl);
+      if (typeof toolInvocation.invocationMessage === "string") {
+        titleEl.textContent = toolInvocation.invocationMessage;
+      } else {
+        const md = this._register(
           renderMarkdown(toolInvocation.invocationMessage),
         );
-				titleEl.appendChild(md.element);
-			}
-		}
+        titleEl.appendChild(md.element);
+      }
+    }
 
-		this.domNode.appendChild(this.createOutputPart(toolInvocation, details));
-	}
+    this.domNode.appendChild(this.createOutputPart(toolInvocation, details));
+  }
 
-	public override dispose(): void {
-		this._disposeCts.dispose(true);
-		super.dispose();
-	}
+  public override dispose(): void {
+    this._disposeCts.dispose(true);
+    super.dispose();
+  }
 
-	private createOutputPart(toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized, details: IToolResultOutputDetails): HTMLElement {
-		const parent = dom.$("div.webview-output");
-		parent.style.maxHeight = "80vh";
+  private createOutputPart(
+    toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized,
+    details: IToolResultOutputDetails,
+  ): HTMLElement {
+    const parent = dom.$("div.webview-output");
+    parent.style.maxHeight = "80vh";
 
-		// Try to restore cached state, or create new state
-		const partState: IOutputPartState = this.stateCache.get(
+    // Try to restore cached state, or create new state
+    const partState: IOutputPartState = this.stateCache.get(
       toolInvocation.toolCallId,
-    ) ?? {
-      height: 0,
-    };
+    ) ?? { height: 0 };
 
-		// Always update the cache with the current state reference
-		this.stateCache.set(toolInvocation.toolCallId, partState);
+    // Always update the cache with the current state reference
+    this.stateCache.set(toolInvocation.toolCallId, partState);
 
-		if (partState.height) {
-			parent.style.height = `${partState.height}px`;
-		}
+    if (partState.height) {
+      parent.style.height = `${partState.height}px`;
+    }
 
-		const progressMessage = dom.$("span");
-		progressMessage.textContent = localize(
+    const progressMessage = dom.$("span");
+    progressMessage.textContent = localize(
       "loading",
       "Rendering tool output...",
     );
-		const progressPart = this._register(
+    const progressPart = this._register(
       this.instantiationService.createInstance(
         ChatProgressSubPart,
         progressMessage,
@@ -111,66 +124,90 @@ export class ChatToolOutputSubPart extends BaseChatToolInvocationSubPart {
         undefined,
       ),
     );
-		parent.appendChild(progressPart.domNode);
+    parent.appendChild(progressPart.domNode);
 
-		// TODO: we also need to show the tool output in the UI
-		this.chatOutputItemRendererService.renderOutputPart(details.output.mimeType, details.output.value.buffer, parent, {
-			webviewState: partState.webviewState,
-			chatSessionResource: this.context.element.sessionResource,
-		}, this._disposeCts.token).then((renderedItem) => {
-			if (this._disposeCts.token.isCancellationRequested) {
-				return;
-			}
+    // TODO: we also need to show the tool output in the UI
+    this.chatOutputItemRendererService
+      .renderOutputPart(
+        details.output.mimeType,
+        details.output.value.buffer,
+        parent,
+        {
+          webviewState: partState.webviewState,
+          chatSessionResource: this.context.element.sessionResource,
+        },
+        this._disposeCts.token,
+      )
+      .then(
+        (renderedItem) => {
+          if (this._disposeCts.token.isCancellationRequested) {
+            return;
+          }
 
-			this._register(renderedItem);
+          this._register(renderedItem);
 
-			progressPart.domNode.remove();
+          progressPart.domNode.remove();
 
-			this._register(renderedItem.webview.onDidUpdateState(e => {
-				partState.webviewState = e;
-			}));
+          this._register(
+            renderedItem.webview.onDidUpdateState((e) => {
+              partState.webviewState = e;
+            }),
+          );
 
-			this._register(renderedItem.onDidChangeHeight(newHeight => {
-				partState.height = newHeight;
-			}));
+          this._register(
+            renderedItem.onDidChangeHeight((newHeight) => {
+              partState.height = newHeight;
+            }),
+          );
 
-			// When the webview is disconnected from the DOM due to being hidden, we need to reload it when it is shown again.
-			this._register(this.context.onDidChangeVisibility(visible => {
-				if (visible) {
-					renderedItem.reinitialize();
-				}
-			}));
+          // When the webview is disconnected from the DOM due to being hidden, we need to reload it when it is shown again.
+          this._register(
+            this.context.onDidChangeVisibility((visible) => {
+              if (visible) {
+                renderedItem.reinitialize();
+              }
+            }),
+          );
 
-			this._register(this.onDidRemount(() => {
-				renderedItem.reinitialize();
-			}));
-		}, (error) => {
-			if (isCancellationError(error)) {
-				return;
-			}
+          this._register(
+            this.onDidRemount(() => {
+              renderedItem.reinitialize();
+            }),
+          );
+        },
+        (error) => {
+          if (isCancellationError(error)) {
+            return;
+          }
 
-			console.error("Error rendering tool output:", error);
+          console.error("Error rendering tool output:", error);
 
-			const errorNode = dom.$(".output-error");
+          const errorNode = dom.$(".output-error");
 
-			const errorHeaderNode = dom.$(".output-error-header");
-			dom.append(errorNode, errorHeaderNode);
+          const errorHeaderNode = dom.$(".output-error-header");
+          dom.append(errorNode, errorHeaderNode);
 
-			const iconElement = dom.$("div");
-			iconElement.classList.add(...ThemeIcon.asClassNameArray(Codicon.error));
-			errorHeaderNode.append(iconElement);
+          const iconElement = dom.$("div");
+          iconElement.classList.add(
+            ...ThemeIcon.asClassNameArray(Codicon.error),
+          );
+          errorHeaderNode.append(iconElement);
 
-			const errorTitleNode = dom.$(".output-error-title");
-			errorTitleNode.textContent = localize("chat.toolOutputError", "Error rendering the tool output");
-			errorHeaderNode.append(errorTitleNode);
+          const errorTitleNode = dom.$(".output-error-title");
+          errorTitleNode.textContent = localize(
+            "chat.toolOutputError",
+            "Error rendering the tool output",
+          );
+          errorHeaderNode.append(errorTitleNode);
 
-			const errorMessageNode = dom.$(".output-error-details");
-			errorMessageNode.textContent = error?.message || String(error);
-			errorNode.append(errorMessageNode);
+          const errorMessageNode = dom.$(".output-error-details");
+          errorMessageNode.textContent = error?.message || String(error);
+          errorNode.append(errorMessageNode);
 
-			progressPart.domNode.replaceWith(errorNode);
-		});
+          progressPart.domNode.replaceWith(errorNode);
+        },
+      );
 
-		return parent;
-	}
+    return parent;
+  }
 }

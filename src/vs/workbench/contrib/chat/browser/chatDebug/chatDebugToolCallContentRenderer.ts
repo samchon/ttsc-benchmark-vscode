@@ -19,17 +19,19 @@ import { setupCollapsibleToggle } from "./chatDebugCollapsible.js";
 const $ = DOM.$;
 
 const _ttpPolicy = createTrustedTypesPolicy("chatDebugTokenizer", {
-	createHTML(html: string) {
-		return html;
-	},
+  createHTML(html: string) {
+    return html;
+  },
 });
 
-export function tryParseJSON(text: string): { parsed: unknown; isJSON: true } | { isJSON: false } {
-	try {
-		return { parsed: JSON.parse(text), isJSON: true };
-	} catch {
-		return { isJSON: false };
-	}
+export function tryParseJSON(
+  text: string,
+): { parsed: unknown; isJSON: true } | { isJSON: false } {
+  try {
+    return { parsed: JSON.parse(text), isJSON: true };
+  } catch {
+    return { isJSON: false };
+  }
 }
 
 /**
@@ -37,20 +39,21 @@ export function tryParseJSON(text: string): { parsed: unknown; isJSON: true } | 
  * When the content is valid JSON it is pretty-printed and tokenized as JSON;
  * otherwise it is tokenized as markdown.
  */
-export async function tokenizeContent(text: string, languageService: ILanguageService): Promise<{ plainText: string; tokenizedHtml: string }> {
-	const result = tryParseJSON(text);
-	const plainText = result.isJSON ? JSON.stringify(
-    result.parsed,
-    null,
-    2,
-  ) : text;
-	const language = result.isJSON ? "json" : "markdown";
-	const tokenizedHtml = await tokenizeToString(
+export async function tokenizeContent(
+  text: string,
+  languageService: ILanguageService,
+): Promise<{ plainText: string; tokenizedHtml: string }> {
+  const result = tryParseJSON(text);
+  const plainText = result.isJSON
+    ? JSON.stringify(result.parsed, null, 2)
+    : text;
+  const language = result.isJSON ? "json" : "markdown";
+  const tokenizedHtml = await tokenizeToString(
     languageService,
     plainText,
     language,
   );
-	return { plainText, tokenizedHtml };
+  return { plainText, tokenizedHtml };
 }
 
 /**
@@ -59,40 +62,40 @@ export async function tokenizeContent(text: string, languageService: ILanguageSe
  * Optionally adds a copy button when `clipboardService` is provided.
  */
 export function renderSection(
-	parent: HTMLElement,
-	label: string,
-	plainText: string,
-	tokenizedHtml: string | undefined,
-	disposables: DisposableStore,
-	initiallyCollapsed: boolean = false,
-	clipboardService?: IClipboardService,
-	scrollable?: { scanDomNode(): void },
+  parent: HTMLElement,
+  label: string,
+  plainText: string,
+  tokenizedHtml: string | undefined,
+  disposables: DisposableStore,
+  initiallyCollapsed: boolean = false,
+  clipboardService?: IClipboardService,
+  scrollable?: { scanDomNode(): void },
 ): void {
-	const sectionEl = DOM.append(parent, $("div.chat-debug-message-section"));
-	const header = DOM.append(
+  const sectionEl = DOM.append(parent, $("div.chat-debug-message-section"));
+  const header = DOM.append(
     sectionEl,
     $("div.chat-debug-message-section-header"),
   );
-	const chevron = DOM.append(
+  const chevron = DOM.append(
     header,
     $("span.chat-debug-message-section-chevron"),
   );
-	DOM.append(
+  DOM.append(
     header,
     $("span.chat-debug-message-section-title", undefined, label),
   );
 
-	if (clipboardService) {
-		const copyBtn = disposables.add(
+  if (clipboardService) {
+    const copyBtn = disposables.add(
       new Button(header, {
         title: localize("chatDebug.section.copy", "Copy"),
         ariaLabel: localize("chatDebug.section.copy", "Copy"),
         hoverDelegate: getDefaultHoverDelegate("mouse"),
       }),
     );
-		copyBtn.icon = Codicon.copy;
-		copyBtn.element.classList.add("chat-debug-section-copy-btn");
-		disposables.add(
+    copyBtn.icon = Codicon.copy;
+    copyBtn.element.classList.add("chat-debug-section-copy-btn");
+    disposables.add(
       DOM.addDisposableListener(
         copyBtn.element,
         DOM.EventType.MOUSE_ENTER,
@@ -101,7 +104,7 @@ export function renderSection(
         },
       ),
     );
-		disposables.add(
+    disposables.add(
       DOM.addDisposableListener(
         copyBtn.element,
         DOM.EventType.MOUSE_LEAVE,
@@ -110,32 +113,34 @@ export function renderSection(
         },
       ),
     );
-		disposables.add(copyBtn.onDidClick(e => {
-			if (e) {
-				DOM.EventHelper.stop(e, true);
-			}
-			clipboardService.writeText(plainText);
-		}));
-	}
+    disposables.add(
+      copyBtn.onDidClick((e) => {
+        if (e) {
+          DOM.EventHelper.stop(e, true);
+        }
+        clipboardService.writeText(plainText);
+      }),
+    );
+  }
 
-	const wrapper = DOM.append(
+  const wrapper = DOM.append(
     sectionEl,
     $("div.chat-debug-message-section-content-wrapper"),
   );
-	const contentEl = DOM.append(
+  const contentEl = DOM.append(
     wrapper,
     $("pre.chat-debug-message-section-content"),
   );
-	contentEl.tabIndex = 0;
+  contentEl.tabIndex = 0;
 
-	if (tokenizedHtml) {
-		const trustedHtml = _ttpPolicy?.createHTML(tokenizedHtml) ?? tokenizedHtml;
-		contentEl.innerHTML = trustedHtml as string;
-	} else {
-		contentEl.textContent = plainText;
-	}
+  if (tokenizedHtml) {
+    const trustedHtml = _ttpPolicy?.createHTML(tokenizedHtml) ?? tokenizedHtml;
+    contentEl.innerHTML = trustedHtml as string;
+  } else {
+    contentEl.textContent = plainText;
+  }
 
-	setupCollapsibleToggle(
+  setupCollapsibleToggle(
     chevron,
     header,
     wrapper,
@@ -152,31 +157,42 @@ export function renderSection(
  * When JSON is detected in input/output, renders it with syntax highlighting
  * using the editor's tokenization.
  */
-export async function renderToolCallContent(content: IChatDebugEventToolCallContent, languageService: ILanguageService, clipboardService?: IClipboardService, scrollable?: { scanDomNode(): void }): Promise<{ element: HTMLElement; disposables: DisposableStore }> {
-	const disposables = new DisposableStore();
-	const container = $("div.chat-debug-message-content");
-	container.tabIndex = 0;
+export async function renderToolCallContent(
+  content: IChatDebugEventToolCallContent,
+  languageService: ILanguageService,
+  clipboardService?: IClipboardService,
+  scrollable?: { scanDomNode(): void },
+): Promise<{ element: HTMLElement; disposables: DisposableStore }> {
+  const disposables = new DisposableStore();
+  const container = $("div.chat-debug-message-content");
+  container.tabIndex = 0;
 
-	// Header: tool name
-	DOM.append(
+  // Header: tool name
+  DOM.append(
     container,
     $("div.chat-debug-message-content-title", undefined, content.toolName),
   );
 
-	// Status summary line
-	const statusParts: string[] = [];
-	if (content.result) {
-		statusParts.push(content.result === "success"
-			? localize("chatDebug.toolCall.success", "Success")
-			: localize("chatDebug.toolCall.error", "Error"));
-	}
-	if (content.durationInMillis !== undefined) {
-		statusParts.push(
-      localize("chatDebug.toolCall.duration", "{0}ms", content.durationInMillis),
+  // Status summary line
+  const statusParts: string[] = [];
+  if (content.result) {
+    statusParts.push(
+      content.result === "success"
+        ? localize("chatDebug.toolCall.success", "Success")
+        : localize("chatDebug.toolCall.error", "Error"),
     );
-	}
-	if (statusParts.length > 0) {
-		DOM.append(
+  }
+  if (content.durationInMillis !== undefined) {
+    statusParts.push(
+      localize(
+        "chatDebug.toolCall.duration",
+        "{0}ms",
+        content.durationInMillis,
+      ),
+    );
+  }
+  if (statusParts.length > 0) {
+    DOM.append(
       container,
       $(
         "div.chat-debug-message-content-summary",
@@ -184,20 +200,20 @@ export async function renderToolCallContent(content: IChatDebugEventToolCallCont
         statusParts.join(" \u00b7 "),
       ),
     );
-	}
+  }
 
-	// Build collapsible sections for arguments and output
-	const sectionsContainer = DOM.append(
+  // Build collapsible sections for arguments and output
+  const sectionsContainer = DOM.append(
     container,
     $("div.chat-debug-message-sections"),
   );
 
-	if (content.input) {
-		const { plainText, tokenizedHtml } = await tokenizeContent(
+  if (content.input) {
+    const { plainText, tokenizedHtml } = await tokenizeContent(
       content.input,
       languageService,
     );
-		renderSection(
+    renderSection(
       sectionsContainer,
       localize("chatDebug.toolCall.arguments", "Arguments"),
       plainText,
@@ -207,14 +223,14 @@ export async function renderToolCallContent(content: IChatDebugEventToolCallCont
       clipboardService,
       scrollable,
     );
-	}
+  }
 
-	if (content.output) {
-		const { plainText, tokenizedHtml } = await tokenizeContent(
+  if (content.output) {
+    const { plainText, tokenizedHtml } = await tokenizeContent(
       content.output,
       languageService,
     );
-		renderSection(
+    renderSection(
       sectionsContainer,
       localize("chatDebug.toolCall.output", "Output"),
       plainText,
@@ -224,56 +240,58 @@ export async function renderToolCallContent(content: IChatDebugEventToolCallCont
       clipboardService,
       scrollable,
     );
-	}
+  }
 
-	return { element: container, disposables };
+  return { element: container, disposables };
 }
 
 /**
  * Convert a resolved tool call content to plain text for clipboard / editor output.
  */
-export function toolCallContentToPlainText(content: IChatDebugEventToolCallContent): string {
-	const lines: string[] = [];
-	lines.push(
+export function toolCallContentToPlainText(
+  content: IChatDebugEventToolCallContent,
+): string {
+  const lines: string[] = [];
+  lines.push(
     localize("chatDebug.toolCall.toolLabel", "Tool: {0}", content.toolName),
   );
 
-	if (content.result) {
-		lines.push(
+  if (content.result) {
+    lines.push(
       localize("chatDebug.toolCall.statusLabel", "Status: {0}", content.result),
     );
-	}
-	if (content.durationInMillis !== undefined) {
-		lines.push(
+  }
+  if (content.durationInMillis !== undefined) {
+    lines.push(
       localize(
         "chatDebug.toolCall.durationLabel",
         "Duration: {0}ms",
         content.durationInMillis,
       ),
     );
-	}
+  }
 
-	if (content.input) {
-		lines.push("");
-		lines.push(`[${localize("chatDebug.toolCall.arguments", "Arguments")}]`);
-		try {
-			const parsed = JSON.parse(content.input);
-			lines.push(JSON.stringify(parsed, null, 2));
-		} catch {
-			lines.push(content.input);
-		}
-	}
+  if (content.input) {
+    lines.push("");
+    lines.push(`[${localize("chatDebug.toolCall.arguments", "Arguments")}]`);
+    try {
+      const parsed = JSON.parse(content.input);
+      lines.push(JSON.stringify(parsed, null, 2));
+    } catch {
+      lines.push(content.input);
+    }
+  }
 
-	if (content.output) {
-		lines.push("");
-		lines.push(`[${localize("chatDebug.toolCall.output", "Output")}]`);
-		try {
-			const parsed = JSON.parse(content.output);
-			lines.push(JSON.stringify(parsed, null, 2));
-		} catch {
-			lines.push(content.output);
-		}
-	}
+  if (content.output) {
+    lines.push("");
+    lines.push(`[${localize("chatDebug.toolCall.output", "Output")}]`);
+    try {
+      const parsed = JSON.parse(content.output);
+      lines.push(JSON.stringify(parsed, null, 2));
+    } catch {
+      lines.push(content.output);
+    }
+  }
 
-	return lines.join("\n");
+  return lines.join("\n");
 }

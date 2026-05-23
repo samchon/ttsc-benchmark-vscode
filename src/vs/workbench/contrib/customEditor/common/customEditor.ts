@@ -23,163 +23,194 @@ export const ICustomEditorService = createDecorator<ICustomEditorService>(
   "customEditorService",
 );
 
-export const CONTEXT_ACTIVE_CUSTOM_EDITOR_ID = new RawContextKey<string>("activeCustomEditorId", "", {
-	type: "string",
-	description: nls.localize("context.customEditor", "The viewType of the currently active custom editor."),
-});
-
-export const CONTEXT_FOCUSED_CUSTOM_EDITOR_IS_EDITABLE = new RawContextKey<boolean>(
-  "focusedCustomEditorIsEditable",
-  false,
+export const CONTEXT_ACTIVE_CUSTOM_EDITOR_ID = new RawContextKey<string>(
+  "activeCustomEditorId",
+  "",
+  {
+    type: "string",
+    description: nls.localize(
+      "context.customEditor",
+      "The viewType of the currently active custom editor.",
+    ),
+  },
 );
 
+export const CONTEXT_FOCUSED_CUSTOM_EDITOR_IS_EDITABLE =
+  new RawContextKey<boolean>("focusedCustomEditorIsEditable", false);
+
 export interface CustomEditorCapabilities {
-	readonly supportsMultipleEditorsPerDocument?: boolean;
-	readonly isTextEditor?: boolean;
-	readonly supportsInlineDiff?: boolean;
-	readonly supportsSideBySideDiff?: boolean;
+  readonly supportsMultipleEditorsPerDocument?: boolean;
+  readonly isTextEditor?: boolean;
+  readonly supportsInlineDiff?: boolean;
+  readonly supportsSideBySideDiff?: boolean;
 }
 
 export interface ICustomEditorService {
-	_serviceBrand: any;
+  _serviceBrand: any;
 
-	readonly models: ICustomEditorModelManager;
+  readonly models: ICustomEditorModelManager;
 
-	getCustomEditor(viewType: string): CustomEditorInfo | undefined;
-	getAllCustomEditors(resource: URI): CustomEditorInfoCollection;
-	getContributedCustomEditors(resource: URI): CustomEditorInfoCollection;
-	getUserConfiguredCustomEditors(resource: URI): CustomEditorInfoCollection;
+  getCustomEditor(viewType: string): CustomEditorInfo | undefined;
+  getAllCustomEditors(resource: URI): CustomEditorInfoCollection;
+  getContributedCustomEditors(resource: URI): CustomEditorInfoCollection;
+  getUserConfiguredCustomEditors(resource: URI): CustomEditorInfoCollection;
 
-	registerCustomEditorCapabilities(viewType: string, options: CustomEditorCapabilities): IDisposable;
-	getCustomEditorCapabilities(viewType: string): CustomEditorCapabilities | undefined;
+  registerCustomEditorCapabilities(
+    viewType: string,
+    options: CustomEditorCapabilities,
+  ): IDisposable;
+  getCustomEditorCapabilities(
+    viewType: string,
+  ): CustomEditorCapabilities | undefined;
 }
 
 export interface ICustomEditorModelManager {
-	getAllModels(resource: URI): Promise<ICustomEditorModel[]>;
+  getAllModels(resource: URI): Promise<ICustomEditorModel[]>;
 
-	get(resource: URI, viewType: string): Promise<ICustomEditorModel | undefined>;
+  get(resource: URI, viewType: string): Promise<ICustomEditorModel | undefined>;
 
-	tryRetain(resource: URI, viewType: string): Promise<IReference<ICustomEditorModel>> | undefined;
+  tryRetain(
+    resource: URI,
+    viewType: string,
+  ): Promise<IReference<ICustomEditorModel>> | undefined;
 
-	add(resource: URI, viewType: string, model: Promise<ICustomEditorModel>): Promise<IReference<ICustomEditorModel>>;
+  add(
+    resource: URI,
+    viewType: string,
+    model: Promise<ICustomEditorModel>,
+  ): Promise<IReference<ICustomEditorModel>>;
 
-	disposeAllModelsForView(viewType: string): void;
+  disposeAllModelsForView(viewType: string): void;
 }
 
 export interface ICustomEditorModel extends IDisposable {
-	readonly viewType: string;
-	readonly resource: URI;
-	readonly backupId: string | undefined;
-	readonly canHotExit: boolean;
+  readonly viewType: string;
+  readonly resource: URI;
+  readonly backupId: string | undefined;
+  readonly canHotExit: boolean;
 
-	isReadonly(): boolean | IMarkdownString;
-	readonly onDidChangeReadonly: Event<void>;
+  isReadonly(): boolean | IMarkdownString;
+  readonly onDidChangeReadonly: Event<void>;
 
-	isOrphaned(): boolean;
-	readonly onDidChangeOrphaned: Event<void>;
+  isOrphaned(): boolean;
+  readonly onDidChangeOrphaned: Event<void>;
 
-	isDirty(): boolean;
-	readonly onDidChangeDirty: Event<void>;
+  isDirty(): boolean;
+  readonly onDidChangeDirty: Event<void>;
 
-	revert(options?: IRevertOptions): Promise<void>;
+  revert(options?: IRevertOptions): Promise<void>;
 
-	saveCustomEditor(options?: ISaveOptions): Promise<URI | undefined>;
-	saveCustomEditorAs(resource: URI, targetResource: URI, currentOptions?: ISaveOptions): Promise<boolean>;
+  saveCustomEditor(options?: ISaveOptions): Promise<URI | undefined>;
+  saveCustomEditorAs(
+    resource: URI,
+    targetResource: URI,
+    currentOptions?: ISaveOptions,
+  ): Promise<boolean>;
 }
 
 export const enum CustomEditorPriority {
-	default = "default",
-	builtin = "builtin",
-	option = "option",
+  default = "default",
+  builtin = "builtin",
+  option = "option",
 }
 
 export const enum CustomEditorDiffEditorLayout {
-	Inline = "inline",
-	SideBySide = "sideBySide",
+  Inline = "inline",
+  SideBySide = "sideBySide",
 }
 
 export interface CustomEditorSelector {
-	readonly filenamePattern?: string;
+  readonly filenamePattern?: string;
 }
 
 export type CustomEditorPriorityInfo = RegisteredEditorPriorityInfo;
 
 export interface CustomEditorDescriptor {
-	readonly id: string;
-	readonly displayName: string;
-	readonly providerDisplayName: string;
-	readonly priority: CustomEditorPriorityInfo;
-	readonly selector: readonly CustomEditorSelector[];
+  readonly id: string;
+  readonly displayName: string;
+  readonly providerDisplayName: string;
+  readonly priority: CustomEditorPriorityInfo;
+  readonly selector: readonly CustomEditorSelector[];
 }
 
 export class CustomEditorInfo implements CustomEditorDescriptor {
+  public readonly id: string;
+  public readonly displayName: string;
+  public readonly providerDisplayName: string;
+  public readonly priority: CustomEditorPriorityInfo;
+  public readonly selector: readonly CustomEditorSelector[];
 
-	public readonly id: string;
-	public readonly displayName: string;
-	public readonly providerDisplayName: string;
-	public readonly priority: CustomEditorPriorityInfo;
-	public readonly selector: readonly CustomEditorSelector[];
+  constructor(descriptor: CustomEditorDescriptor) {
+    this.id = descriptor.id;
+    this.displayName = descriptor.displayName;
+    this.providerDisplayName = descriptor.providerDisplayName;
+    this.priority = descriptor.priority;
+    this.selector = descriptor.selector;
+  }
 
-	constructor(descriptor: CustomEditorDescriptor) {
-		this.id = descriptor.id;
-		this.displayName = descriptor.displayName;
-		this.providerDisplayName = descriptor.providerDisplayName;
-		this.priority = descriptor.priority;
-		this.selector = descriptor.selector;
-	}
-
-	matches(resource: URI): boolean {
-		return this.selector.some(
-      selector => selector.filenamePattern && globMatchesResource(selector.filenamePattern, resource),
+  matches(resource: URI): boolean {
+    return this.selector.some(
+      (selector) =>
+        selector.filenamePattern &&
+        globMatchesResource(selector.filenamePattern, resource),
     );
-	}
+  }
 }
 
 export class CustomEditorInfoCollection {
+  public readonly allEditors: readonly CustomEditorInfo[];
 
-	public readonly allEditors: readonly CustomEditorInfo[];
+  constructor(editors: readonly CustomEditorInfo[]) {
+    this.allEditors = distinct(editors, (editor) => editor.id);
+  }
 
-	constructor(
-		editors: readonly CustomEditorInfo[],
-	) {
-		this.allEditors = distinct(editors, editor => editor.id);
-	}
+  public get length(): number {
+    return this.allEditors.length;
+  }
 
-	public get length(): number { return this.allEditors.length; }
+  /**
+   * Find the single default editor to use (if any) by looking at the editor's priority and the
+   * other contributed editors.
+   */
+  public get defaultEditor(): CustomEditorInfo | undefined {
+    return this.allEditors.find((editor) => {
+      switch (editor.priority.editor) {
+        case RegisteredEditorPriority.default:
+        case RegisteredEditorPriority.builtin:
+          // A default editor must have higher priority than all other contributed editors.
+          return this.allEditors.every(
+            (otherEditor) =>
+              otherEditor === editor || isLowerPriority(otherEditor, editor),
+          );
 
-	/**
-	 * Find the single default editor to use (if any) by looking at the editor's priority and the
-	 * other contributed editors.
-	 */
-	public get defaultEditor(): CustomEditorInfo | undefined {
-		return this.allEditors.find(editor => {
-			switch (editor.priority.editor) {
-				case RegisteredEditorPriority.default:
-				case RegisteredEditorPriority.builtin:
-					// A default editor must have higher priority than all other contributed editors.
-					return this.allEditors.every(otherEditor =>
-						otherEditor === editor || isLowerPriority(otherEditor, editor));
-
-				default:
-					return false;
-			}
-		});
-	}
-
-	/**
-	 * Find the best available editor to use.
-	 *
-	 * Unlike the `defaultEditor`, a bestAvailableEditor can exist even if there are other editors with
-	 * the same priority.
-	 */
-	public get bestAvailableEditor(): CustomEditorInfo | undefined {
-		const editors = Array.from(this.allEditors).sort((a, b) => {
-      return priorityToRank(a.priority.editor) - priorityToRank(b.priority.editor);
+        default:
+          return false;
+      }
     });
-		return editors[0];
-	}
+  }
+
+  /**
+   * Find the best available editor to use.
+   *
+   * Unlike the `defaultEditor`, a bestAvailableEditor can exist even if there are other editors with
+   * the same priority.
+   */
+  public get bestAvailableEditor(): CustomEditorInfo | undefined {
+    const editors = Array.from(this.allEditors).sort((a, b) => {
+      return (
+        priorityToRank(a.priority.editor) - priorityToRank(b.priority.editor)
+      );
+    });
+    return editors[0];
+  }
 }
 
-function isLowerPriority(otherEditor: CustomEditorInfo, editor: CustomEditorInfo): unknown {
-	return priorityToRank(otherEditor.priority.editor) < priorityToRank(editor.priority.editor);
+function isLowerPriority(
+  otherEditor: CustomEditorInfo,
+  editor: CustomEditorInfo,
+): unknown {
+  return (
+    priorityToRank(otherEditor.priority.editor) <
+    priorityToRank(editor.priority.editor)
+  );
 }

@@ -24,8 +24,7 @@ import { fromAgentClientUri } from "./agentClientUri.js";
  * (e.g. via a reverse JSON-RPC request over the WebSocket transport).
  */
 export class AgentHostClientFileSystemProvider extends AHPFileSystemProvider {
-
-	protected _decodeUri(resource: URI): URI {
-		return fromAgentClientUri(resource);
-	}
+  protected _decodeUri(resource: URI): URI {
+    return fromAgentClientUri(resource);
+  }
 }

@@ -10,8 +10,10 @@ import { registerColor, transparent } from "../colorUtils.js";
 
 // Import the colors we need
 import { foreground } from "./baseColors.js";
-import { editorFindMatchHighlight, editorFindMatchHighlightBorder } from "./editorColors.js";
-
+import {
+  editorFindMatchHighlight,
+  editorFindMatchHighlightBorder,
+} from "./editorColors.js";
 
 export const searchResultsInfoForeground = registerColor(
   "search.resultsInfoForeground",
@@ -26,7 +28,6 @@ export const searchResultsInfoForeground = registerColor(
     "Color of the text in the search viewlet's completion message.",
   ),
 );
-
 
 // ----- search editor (Distinct from normal editor find match to allow for better differentiation)
 

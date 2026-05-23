@@ -54,7 +54,11 @@ suite("shellQuotePluginRootInCommand", () => {
 
   test("quotes path with ampersand", () => {
     assert.strictEqual(
-      shellQuotePluginRootInCommand("${PLUGIN_ROOT}/run.sh", "/path&dir", TOKEN),
+      shellQuotePluginRootInCommand(
+        "${PLUGIN_ROOT}/run.sh",
+        "/path&dir",
+        TOKEN,
+      ),
       '"/path&dir/run.sh"',
     );
   });
@@ -72,7 +76,11 @@ suite("shellQuotePluginRootInCommand", () => {
 
   test("does not double-quote when already in double quotes", () => {
     assert.strictEqual(
-      shellQuotePluginRootInCommand('"${PLUGIN_ROOT}/run.sh"', "/my dir", TOKEN),
+      shellQuotePluginRootInCommand(
+        '"${PLUGIN_ROOT}/run.sh"',
+        "/my dir",
+        TOKEN,
+      ),
       '"/my dir/run.sh"',
     );
   });

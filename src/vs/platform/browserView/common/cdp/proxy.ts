@@ -3,7 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap } from "../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  DisposableMap,
+} from "../../../../base/common/lifecycle.js";
 import { Emitter, Event } from "../../../../base/common/event.js";
 import { generateUuid } from "../../../../base/common/uuid.js";
 import {
@@ -26,183 +29,196 @@ import {
  * to the appropriate attached session by sessionId.
  */
 export class CDPBrowserProxy extends Disposable implements ICDPConnection {
-	readonly sessionId = `browser-session-${generateUuid()}`;
-	get targetId() {
-		return this.browserTarget.targetInfo.targetId;
-	}
+  readonly sessionId = `browser-session-${generateUuid()}`;
+  get targetId() {
+    return this.browserTarget.targetInfo.targetId;
+  }
 
-	// Browser session state
-	private _isAttachedToBrowserTarget = false;
-	private _autoAttach = false;
-	private _discover = false;
+  // Browser session state
+  private _isAttachedToBrowserTarget = false;
+  private _autoAttach = false;
+  private _discover = false;
 
-	/**
-	 * All sessions known to this proxy, keyed by sessionId.
-	 * Includes sessions from explicit attach, proxy auto-attach,
-	 * and client auto-attach children.
-	 */
-	private readonly _sessions = this._register(
+  /**
+   * All sessions known to this proxy, keyed by sessionId.
+   * Includes sessions from explicit attach, proxy auto-attach,
+   * and client auto-attach children.
+   */
+  private readonly _sessions = this._register(
     new DisposableMap<string, ICDPConnection>(),
   );
-	private readonly _targets = this._register(
+  private readonly _targets = this._register(
     new DisposableMap<string, ICDPTarget>(),
   );
 
-	// Only auto-attach once per target.
-	private readonly _autoAttachments = new WeakSet<ICDPTarget>();
+  // Only auto-attach once per target.
+  private readonly _autoAttachments = new WeakSet<ICDPTarget>();
 
-	// CDP method handlers map
-	private readonly _handlers = new Map<string, (params: unknown, sessionId?: string) => Promise<object> | object>(
+  // CDP method handlers map
+  private readonly _handlers = new Map<
+    string,
+    (params: unknown, sessionId?: string) => Promise<object> | object
+  >([
+    // Browser.* methods (https://chromedevtools.github.io/devtools-protocol/tot/Browser/)
+    ["Browser.addPrivacySandboxCoordinatorKeyConfig", () => ({})],
+    ["Browser.addPrivacySandboxEnrollmentOverride", () => ({})],
+    ["Browser.close", () => ({})],
+    ["Browser.getVersion", () => this.browserTarget.getVersion()],
+    ["Browser.resetPermissions", () => ({})],
     [
-      ["Browser.addPrivacySandboxCoordinatorKeyConfig", () => ({})],
-      ["Browser.addPrivacySandboxEnrollmentOverride", () => ({})],
-      ["Browser.close", () => ({})],
-      ["Browser.getVersion", () => this.browserTarget.getVersion()],
-      ["Browser.resetPermissions", () => ({})],
-      [
-        "Browser.getWindowForTarget",
-        (p, s) => this.handleBrowserGetWindowForTarget(
+      "Browser.getWindowForTarget",
+      (p, s) =>
+        this.handleBrowserGetWindowForTarget(
           p as { targetId?: string; sessionId?: string },
           s,
         ),
-      ],
-      ["Browser.setDownloadBehavior", () => ({})],
-      ["Browser.setWindowBounds", () => ({})],
-      [
-        "Target.activateTarget",
-        (p) => this.handleTargetActivateTarget(p as { targetId: string }),
-      ],
-      [
-        "Target.attachToTarget",
-        (p) => this.handleTargetAttachToTarget(
+    ],
+    ["Browser.setDownloadBehavior", () => ({})],
+    ["Browser.setWindowBounds", () => ({})],
+    // Target.* methods (https://chromedevtools.github.io/devtools-protocol/tot/Target/)
+    [
+      "Target.activateTarget",
+      (p) => this.handleTargetActivateTarget(p as { targetId: string }),
+    ],
+    [
+      "Target.attachToTarget",
+      (p) =>
+        this.handleTargetAttachToTarget(
           p as { targetId: string; flatten?: boolean },
         ),
-      ],
-      [
-        "Target.closeTarget",
-        (p) => this.handleTargetCloseTarget(p as { targetId: string }),
-      ],
-      [
-        "Target.createBrowserContext",
-        () => this.handleTargetCreateBrowserContext(),
-      ],
-      [
-        "Target.createTarget",
-        (p) => this.handleTargetCreateTarget(
+    ],
+    [
+      "Target.closeTarget",
+      (p) => this.handleTargetCloseTarget(p as { targetId: string }),
+    ],
+    [
+      "Target.createBrowserContext",
+      () => this.handleTargetCreateBrowserContext(),
+    ],
+    [
+      "Target.createTarget",
+      (p) =>
+        this.handleTargetCreateTarget(
           p as { url?: string; browserContextId?: string },
         ),
-      ],
-      [
-        "Target.detachFromTarget",
-        (p) => this.handleTargetDetachFromTarget(p as { sessionId: string }),
-      ],
-      [
-        "Target.disposeBrowserContext",
-        (p) => this.handleTargetDisposeBrowserContext(
+    ],
+    [
+      "Target.detachFromTarget",
+      (p) => this.handleTargetDetachFromTarget(p as { sessionId: string }),
+    ],
+    [
+      "Target.disposeBrowserContext",
+      (p) =>
+        this.handleTargetDisposeBrowserContext(
           p as { browserContextId: string },
         ),
-      ],
-      ["Target.getBrowserContexts", () => this.handleTargetGetBrowserContexts()],
-      ["Target.getTargets", () => this.handleTargetGetTargets()],
-      [
-        "Target.setAutoAttach",
-        (p, s) => this.handleTargetSetAutoAttach(
+    ],
+    ["Target.getBrowserContexts", () => this.handleTargetGetBrowserContexts()],
+    ["Target.getTargets", () => this.handleTargetGetTargets()],
+    [
+      "Target.setAutoAttach",
+      (p, s) =>
+        this.handleTargetSetAutoAttach(
           p as { autoAttach?: boolean; flatten?: boolean },
           s,
         ),
-      ],
-      [
-        "Target.setDiscoverTargets",
-        (p) => this.handleTargetSetDiscoverTargets(p as { discover?: boolean }),
-      ],
-      [
-        "Target.attachToBrowserTarget",
-        () => this.handleTargetAttachToBrowserTarget(),
-      ],
-      [
-        "Target.getTargetInfo",
-        (p) => this.handleTargetGetTargetInfo(
-          p as { targetId?: string } | undefined,
-        ),
-      ],
     ],
-  );
+    [
+      "Target.setDiscoverTargets",
+      (p) => this.handleTargetSetDiscoverTargets(p as { discover?: boolean }),
+    ],
+    [
+      "Target.attachToBrowserTarget",
+      () => this.handleTargetAttachToBrowserTarget(),
+    ],
+    [
+      "Target.getTargetInfo",
+      (p) =>
+        this.handleTargetGetTargetInfo(p as { targetId?: string } | undefined),
+    ],
+  ]);
 
-	constructor(
-		private readonly browserTarget: ICDPBrowserTarget,
-	) {
-		super();
-	}
+  constructor(private readonly browserTarget: ICDPBrowserTarget) {
+    super();
+  }
 
-	registerTarget(target: ICDPTarget): void {
-		const targetInfo = target.targetInfo;
-		if (this._targets.has(targetInfo.targetId)) {
-			return;
-		}
-		this._targets.set(targetInfo.targetId, target);
+  registerTarget(target: ICDPTarget): void {
+    const targetInfo = target.targetInfo;
+    if (this._targets.has(targetInfo.targetId)) {
+      return;
+    }
+    this._targets.set(targetInfo.targetId, target);
 
-		if (this._discover) {
-			this.sendEvent("Target.targetCreated", {
+    if (this._discover) {
+      this.sendEvent("Target.targetCreated", {
         targetInfo: target.targetInfo,
       });
-		}
-		if (this._autoAttach && !this._autoAttachments.has(target)) {
-			this._autoAttachments.add(target);
-			void target.attach();
-		}
+    }
+    if (this._autoAttach && !this._autoAttachments.has(target)) {
+      this._autoAttachments.add(target);
+      void target.attach();
+    }
 
-		target.onClose(() => {
-			this._targets.deleteAndDispose(targetInfo.targetId);
-			if (this._discover) {
-				this.sendEvent("Target.targetDestroyed", { targetId: targetInfo.targetId });
-			}
-		});
+    target.onClose(() => {
+      this._targets.deleteAndDispose(targetInfo.targetId);
+      if (this._discover) {
+        this.sendEvent("Target.targetDestroyed", {
+          targetId: targetInfo.targetId,
+        });
+      }
+    });
 
-		target.onTargetInfoChanged(info => {
-			if (this._discover) {
-				this.sendEvent("Target.targetInfoChanged", { targetInfo: info });
-			}
-		});
+    target.onTargetInfoChanged((info) => {
+      if (this._discover) {
+        this.sendEvent("Target.targetInfoChanged", { targetInfo: info });
+      }
+    });
 
-		for (const [, session] of target.sessions) {
-			this.registerSession(session, false);
-		}
-		target.onSessionCreated(({ session, waitingForDebugger }) => {
+    for (const [, session] of target.sessions) {
+      this.registerSession(session, false);
+    }
+    target.onSessionCreated(({ session, waitingForDebugger }) => {
       this.registerSession(session, waitingForDebugger);
     });
-	}
+  }
 
-	notifySessionCreated(session: ICDPConnection, waitingForDebugger: boolean): void {
-		if (this._sessions.has(session.sessionId)) {
-			return; // We already know about it.
-		}
-		if (!session.parentSessionId) {
-			return; // Created globally -- we don't care about it.
-		}
-		if (!this._sessions.has(session.parentSessionId)) {
-			return; // Not from one of our sessions -- ignore it.
-		}
-		const target = this._targets.get(session.targetId);
-		if (!target) {
-			return; // Target isn't known -- ignore it.
-		}
-		target.notifySessionCreated(session, waitingForDebugger);
-	}
+  notifySessionCreated(
+    session: ICDPConnection,
+    waitingForDebugger: boolean,
+  ): void {
+    if (this._sessions.has(session.sessionId)) {
+      return; // We already know about it.
+    }
+    if (!session.parentSessionId) {
+      return; // Created globally -- we don't care about it.
+    }
+    if (!this._sessions.has(session.parentSessionId)) {
+      return; // Not from one of our sessions -- ignore it.
+    }
+    const target = this._targets.get(session.targetId);
+    if (!target) {
+      return; // Target isn't known -- ignore it.
+    }
+    target.notifySessionCreated(session, waitingForDebugger);
+  }
 
-	private registerSession(session: ICDPConnection, waitingForDebugger: boolean): void {
-		if (this._sessions.has(session.sessionId)) {
-			return;
-		}
-		this._sessions.set(session.sessionId, session);
+  private registerSession(
+    session: ICDPConnection,
+    waitingForDebugger: boolean,
+  ): void {
+    if (this._sessions.has(session.sessionId)) {
+      return;
+    }
+    this._sessions.set(session.sessionId, session);
 
-		const target = this._targets.get(session.targetId);
-		if (!target) {
-			throw new CDPServerError(
+    const target = this._targets.get(session.targetId);
+    if (!target) {
+      throw new CDPServerError(
         `Unable to resolve target for session ${session.sessionId}`,
       );
-		}
+    }
 
-		this.sendEvent(
+    this.sendEvent(
       "Target.attachedToTarget",
       {
         sessionId: session.sessionId,
@@ -212,18 +228,22 @@ export class CDPBrowserProxy extends Disposable implements ICDPConnection {
       session.parentSessionId,
     );
 
-		// Forward non-Target events from the session to the external client.
-		// Target domain events are suppressed — the proxy emits its own
-		// lifecycle events (attachedToTarget, detachedFromTarget, etc.)
-		// via registerSession / onClose / sendEvent.
-		session.onEvent(event => {
-			if (event.method.startsWith("Target.")) {
-				return;
-			}
-			this.sendEvent(event.method, event.params, event.sessionId ?? session.sessionId);
-		});
+    // Forward non-Target events from the session to the external client.
+    // Target domain events are suppressed — the proxy emits its own
+    // lifecycle events (attachedToTarget, detachedFromTarget, etc.)
+    // via registerSession / onClose / sendEvent.
+    session.onEvent((event) => {
+      if (event.method.startsWith("Target.")) {
+        return;
+      }
+      this.sendEvent(
+        event.method,
+        event.params,
+        event.sessionId ?? session.sessionId,
+      );
+    });
 
-		session.onClose(() => {
+    session.onClose(() => {
       this._sessions.deleteAndDispose(session.sessionId);
 
       this.sendEvent(
@@ -235,248 +255,291 @@ export class CDPBrowserProxy extends Disposable implements ICDPConnection {
         session.parentSessionId,
       );
     });
-	}
+  }
 
-	/** Send a browser-level event to the client */
-	private sendEvent(method: string, params: unknown, sessionId?: string): void {
-		sessionId ||= (this._isAttachedToBrowserTarget ? this.sessionId : undefined);
-		this._onMessage.fire({ method, params, sessionId });
-		this._onEvent.fire({ method, params, sessionId });
-	}
+  /** Send a browser-level event to the client */
+  private sendEvent(method: string, params: unknown, sessionId?: string): void {
+    sessionId ||= this._isAttachedToBrowserTarget ? this.sessionId : undefined;
+    this._onMessage.fire({ method, params, sessionId });
+    this._onEvent.fire({ method, params, sessionId });
+  }
 
-	// #region Public API
+  // #region Public API
 
-	// Events to external clients
-	private readonly _onEvent = this._register(new Emitter<CDPEvent>());
-	readonly onEvent: Event<CDPEvent> = this._onEvent.event;
-	private readonly _onClose = this._register(new Emitter<void>());
-	readonly onClose: Event<void> = this._onClose.event;
-	private readonly _onMessage = this._register(
+  // Events to external clients
+  private readonly _onEvent = this._register(new Emitter<CDPEvent>());
+  readonly onEvent: Event<CDPEvent> = this._onEvent.event;
+  private readonly _onClose = this._register(new Emitter<void>());
+  readonly onClose: Event<void> = this._onClose.event;
+  private readonly _onMessage = this._register(
     new Emitter<CDPResponse | CDPEvent>(),
   );
-	readonly onMessage: Event<CDPResponse | CDPEvent> = this._onMessage.event;
+  readonly onMessage: Event<CDPResponse | CDPEvent> = this._onMessage.event;
 
-	/**
-	 * Send a CDP command and await the result.
-	 * Browser-level handlers (Browser.*, Target.*) are checked first.
-	 * Other commands are routed to the page session identified by sessionId.
-	 */
-	async sendCommand(method: string, params: unknown = {}, sessionId?: string): Promise<unknown> {
-		try {
-			// Browser-level command handling
-			if (
-				!sessionId ||
-				sessionId === this.sessionId ||
-				method.startsWith("Browser.") ||
-				method.startsWith("Target.")
-			) {
-				const handler = this._handlers.get(method);
-				if (!handler) {
-					throw new CDPMethodNotFoundError(method);
-				}
-				return await handler(params, sessionId);
-			}
+  /**
+   * Send a CDP command and await the result.
+   * Browser-level handlers (Browser.*, Target.*) are checked first.
+   * Other commands are routed to the page session identified by sessionId.
+   */
+  async sendCommand(
+    method: string,
+    params: unknown = {},
+    sessionId?: string,
+  ): Promise<unknown> {
+    try {
+      // Browser-level command handling
+      if (
+        !sessionId ||
+        sessionId === this.sessionId ||
+        method.startsWith("Browser.") ||
+        method.startsWith("Target.")
+      ) {
+        const handler = this._handlers.get(method);
+        if (!handler) {
+          throw new CDPMethodNotFoundError(method);
+        }
+        return await handler(params, sessionId);
+      }
 
-			const connection = this._sessions.get(sessionId);
-			if (!connection) {
-				throw new CDPServerError(`Session not found: ${sessionId}`);
-			}
+      const connection = this._sessions.get(sessionId);
+      if (!connection) {
+        throw new CDPServerError(`Session not found: ${sessionId}`);
+      }
 
-			const result = await connection.sendCommand(method, params);
-			return result ?? {};
-		} catch (error) {
-			if (error instanceof CDPError) {
-				throw error;
-			}
-			throw new CDPServerError(
+      const result = await connection.sendCommand(method, params);
+      return result ?? {};
+    } catch (error) {
+      if (error instanceof CDPError) {
+        throw error;
+      }
+      throw new CDPServerError(
         error instanceof Error ? error.message : "Unknown error",
       );
-		}
-	}
+    }
+  }
 
-	/**
-	 * Accept a CDP request from a message-based transport (WebSocket, IPC, etc.), route it,
-	 * and deliver the response or error via {@link onMessage}.
-	 */
-	async sendMessage({ id, method, params, sessionId }: CDPRequest): Promise<void> {
-		return this.sendCommand(method, params, sessionId)
-			.then(result => {
-				this._onMessage.fire({ id, result, sessionId });
-			})
-			.catch((error: Error) => {
-				this._onMessage.fire({
-					id,
-					error: {
-						code: error instanceof CDPError ? error.code : CDPErrorCode.ServerError,
-						message: error.message || "Unknown error",
-					},
-					sessionId,
-				});
-			});
-	}
+  /**
+   * Accept a CDP request from a message-based transport (WebSocket, IPC, etc.), route it,
+   * and deliver the response or error via {@link onMessage}.
+   */
+  async sendMessage({
+    id,
+    method,
+    params,
+    sessionId,
+  }: CDPRequest): Promise<void> {
+    return this.sendCommand(method, params, sessionId)
+      .then((result) => {
+        this._onMessage.fire({ id, result, sessionId });
+      })
+      .catch((error: Error) => {
+        this._onMessage.fire({
+          id,
+          error: {
+            code:
+              error instanceof CDPError ? error.code : CDPErrorCode.ServerError,
+            message: error.message || "Unknown error",
+          },
+          sessionId,
+        });
+      });
+  }
 
-	// #endregion
+  // #endregion
 
-	// #region CDP Commands
+  // #region CDP Commands
 
-	private handleBrowserGetWindowForTarget({ targetId }: { targetId?: string }, sessionId?: string) {
-		const resolvedTargetId = (sessionId && this._sessions.get(
-      sessionId,
-    )?.targetId) ?? targetId;
-		if (!resolvedTargetId) {
-			throw new CDPServerError("Unable to resolve target");
-		}
+  private handleBrowserGetWindowForTarget(
+    { targetId }: { targetId?: string },
+    sessionId?: string,
+  ) {
+    const resolvedTargetId =
+      (sessionId && this._sessions.get(sessionId)?.targetId) ?? targetId;
+    if (!resolvedTargetId) {
+      throw new CDPServerError("Unable to resolve target");
+    }
 
-		const target = this._targets.get(resolvedTargetId);
-		if (!target) {
-			throw new CDPServerError("Unable to resolve target");
-		}
+    const target = this._targets.get(resolvedTargetId);
+    if (!target) {
+      throw new CDPServerError("Unable to resolve target");
+    }
 
-		return this.browserTarget.getWindowForTarget(target);
-	}
+    return this.browserTarget.getWindowForTarget(target);
+  }
 
-	private handleTargetGetBrowserContexts() {
-		return { browserContextIds: this.browserTarget.getBrowserContexts() };
-	}
+  private handleTargetGetBrowserContexts() {
+    return { browserContextIds: this.browserTarget.getBrowserContexts() };
+  }
 
-	private async handleTargetCreateBrowserContext() {
-		const browserContextId = await this.browserTarget.createBrowserContext();
-		return { browserContextId };
-	}
+  private async handleTargetCreateBrowserContext() {
+    const browserContextId = await this.browserTarget.createBrowserContext();
+    return { browserContextId };
+  }
 
-	private async handleTargetDisposeBrowserContext({ browserContextId }: { browserContextId: string }) {
-		await this.browserTarget.disposeBrowserContext(browserContextId);
-		return {};
-	}
+  private async handleTargetDisposeBrowserContext({
+    browserContextId,
+  }: {
+    browserContextId: string;
+  }) {
+    await this.browserTarget.disposeBrowserContext(browserContextId);
+    return {};
+  }
 
-	private handleTargetAttachToBrowserTarget() {
-		this.sendEvent("Target.attachedToTarget", {
+  private handleTargetAttachToBrowserTarget() {
+    this.sendEvent("Target.attachedToTarget", {
       sessionId: this.sessionId,
       targetInfo: this.browserTarget.targetInfo,
       waitingForDebugger: false,
     });
-		this._isAttachedToBrowserTarget = true;
-		return { sessionId: this.sessionId };
-	}
+    this._isAttachedToBrowserTarget = true;
+    return { sessionId: this.sessionId };
+  }
 
-	private handleTargetActivateTarget({ targetId }: { targetId: string }) {
-		const target = this._targets.get(targetId);
-		if (!target) {
-			throw new CDPServerError("Unable to resolve target");
-		}
-		return this.browserTarget.activateTarget(target);
-	}
+  private handleTargetActivateTarget({ targetId }: { targetId: string }) {
+    const target = this._targets.get(targetId);
+    if (!target) {
+      throw new CDPServerError("Unable to resolve target");
+    }
+    return this.browserTarget.activateTarget(target);
+  }
 
-	private async handleTargetSetAutoAttach(params: { autoAttach?: boolean; flatten?: boolean }, sessionId?: string) {
-		if (sessionId && sessionId !== this.sessionId) {
-			const connection = this._sessions.get(sessionId);
-			if (!connection) {
-				throw new CDPServerError(`Session not found: ${sessionId}`);
-			}
-			return connection.sendCommand("Target.setAutoAttach", params);
-		}
+  private async handleTargetSetAutoAttach(
+    params: { autoAttach?: boolean; flatten?: boolean },
+    sessionId?: string,
+  ) {
+    if (sessionId && sessionId !== this.sessionId) {
+      const connection = this._sessions.get(sessionId);
+      if (!connection) {
+        throw new CDPServerError(`Session not found: ${sessionId}`);
+      }
+      return connection.sendCommand("Target.setAutoAttach", params);
+    }
 
-		if (!params.flatten) {
-			throw new CDPInvalidParamsError(
+    if (!params.flatten) {
+      throw new CDPInvalidParamsError(
         "This implementation only supports auto-attach with flatten=true",
       );
-		}
+    }
 
-		// Proxy-level auto-attach: attach to new targets as they are registered.
-		this._autoAttach = params.autoAttach ?? false;
+    // Proxy-level auto-attach: attach to new targets as they are registered.
+    this._autoAttach = params.autoAttach ?? false;
 
-		return {};
-	}
+    return {};
+  }
 
-	private async handleTargetSetDiscoverTargets({ discover = false }: { discover?: boolean }) {
-		if (discover !== this._discover) {
-			this._discover = discover;
+  private async handleTargetSetDiscoverTargets({
+    discover = false,
+  }: {
+    discover?: boolean;
+  }) {
+    if (discover !== this._discover) {
+      this._discover = discover;
 
-			if (this._discover) {
-				// Announce all existing targets
-				for (const target of this._targets.values()) {
-					this.sendEvent("Target.targetCreated", {
+      if (this._discover) {
+        // Announce all existing targets
+        for (const target of this._targets.values()) {
+          this.sendEvent("Target.targetCreated", {
             targetInfo: target.targetInfo,
           });
-				}
-			}
-		}
+        }
+      }
+    }
 
-		return {};
-	}
+    return {};
+  }
 
-	private async handleTargetGetTargets() {
-		return {
-      targetInfos: Array.from(this._targets.values()).map(target => target.targetInfo),
+  private async handleTargetGetTargets() {
+    return {
+      targetInfos: Array.from(this._targets.values()).map(
+        (target) => target.targetInfo,
+      ),
     };
-	}
+  }
 
-	private async handleTargetGetTargetInfo({ targetId }: { targetId?: string } = {}) {
-		if (!targetId) {
-			// No targetId specified -- return info about the browser target itself
-			return { targetInfo: this.browserTarget.targetInfo };
-		}
+  private async handleTargetGetTargetInfo({
+    targetId,
+  }: { targetId?: string } = {}) {
+    if (!targetId) {
+      // No targetId specified -- return info about the browser target itself
+      return { targetInfo: this.browserTarget.targetInfo };
+    }
 
-		const target = this._targets.get(targetId);
-		if (!target) {
-			throw new CDPServerError("Unable to resolve target");
-		}
-		return { targetInfo: target.targetInfo };
-	}
+    const target = this._targets.get(targetId);
+    if (!target) {
+      throw new CDPServerError("Unable to resolve target");
+    }
+    return { targetInfo: target.targetInfo };
+  }
 
-	private async handleTargetAttachToTarget({ targetId, flatten }: { targetId: string; flatten?: boolean }) {
-		if (!flatten) {
-			throw new CDPInvalidParamsError(
+  private async handleTargetAttachToTarget({
+    targetId,
+    flatten,
+  }: {
+    targetId: string;
+    flatten?: boolean;
+  }) {
+    if (!flatten) {
+      throw new CDPInvalidParamsError(
         "This implementation only supports attachToTarget with flatten=true",
       );
-		}
+    }
 
-		const target = this._targets.get(targetId);
-		if (!target) {
-			throw new CDPServerError("Unable to resolve target");
-		}
-		const connection = await target.attach();
-		return { sessionId: connection.sessionId };
-	}
+    const target = this._targets.get(targetId);
+    if (!target) {
+      throw new CDPServerError("Unable to resolve target");
+    }
+    const connection = await target.attach();
+    return { sessionId: connection.sessionId };
+  }
 
-	private async handleTargetDetachFromTarget({ sessionId }: { sessionId: string }) {
-		const connection = this._sessions.get(sessionId);
-		if (!connection) {
-			throw new CDPServerError(`Session not found: ${sessionId}`);
-		}
+  private async handleTargetDetachFromTarget({
+    sessionId,
+  }: {
+    sessionId: string;
+  }) {
+    const connection = this._sessions.get(sessionId);
+    if (!connection) {
+      throw new CDPServerError(`Session not found: ${sessionId}`);
+    }
 
-		connection.dispose();
-		return {};
-	}
+    connection.dispose();
+    return {};
+  }
 
-	private async handleTargetCreateTarget({ url, browserContextId }: { url?: string; browserContextId?: string }) {
-		const target = await this.browserTarget.createTarget(
+  private async handleTargetCreateTarget({
+    url,
+    browserContextId,
+  }: {
+    url?: string;
+    browserContextId?: string;
+  }) {
+    const target = await this.browserTarget.createTarget(
       url || "about:blank",
       browserContextId,
     );
-		this.registerTarget(target);
+    this.registerTarget(target);
 
-		// Playwright expects the attachment to happen before createTarget returns.
-		if (this._autoAttach && !this._autoAttachments.has(target)) {
-			this._autoAttachments.add(target);
-			await target.attach();
-		}
+    // Playwright expects the attachment to happen before createTarget returns.
+    if (this._autoAttach && !this._autoAttachments.has(target)) {
+      this._autoAttachments.add(target);
+      await target.attach();
+    }
 
-		return { targetId: target.targetInfo.targetId };
-	}
+    return { targetId: target.targetInfo.targetId };
+  }
 
-	private async handleTargetCloseTarget({ targetId }: { targetId: string }) {
-		try {
-			const target = this._targets.get(targetId);
-			if (!target) {
-				throw new CDPServerError("Unable to resolve target");
-			}
-			await this.browserTarget.closeTarget(target);
-			return { success: true };
-		} catch {
-			return { success: false };
-		}
-	}
+  private async handleTargetCloseTarget({ targetId }: { targetId: string }) {
+    try {
+      const target = this._targets.get(targetId);
+      if (!target) {
+        throw new CDPServerError("Unable to resolve target");
+      }
+      await this.browserTarget.closeTarget(target);
+      return { success: true };
+    } catch {
+      return { success: false };
+    }
+  }
 
-	// #endregion
+  // #endregion
 }

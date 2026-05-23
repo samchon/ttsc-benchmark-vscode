@@ -4,114 +4,159 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./media/chatViewTitleControl.css";
-import { addDisposableListener, EventType, h } from "../../../../../../base/browser/dom.js";
+import {
+  addDisposableListener,
+  EventType,
+  h,
+} from "../../../../../../base/browser/dom.js";
 import { renderAsPlaintext } from "../../../../../../base/browser/markdownRenderer.js";
-import { Gesture, EventType as TouchEventType } from "../../../../../../base/browser/touch.js";
+import {
+  Gesture,
+  EventType as TouchEventType,
+} from "../../../../../../base/browser/touch.js";
 import { Emitter } from "../../../../../../base/common/event.js";
 import { MarkdownString } from "../../../../../../base/common/htmlContent.js";
-import { Disposable, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  MutableDisposable,
+} from "../../../../../../base/common/lifecycle.js";
 import { MarshalledId } from "../../../../../../base/common/marshallingIds.js";
 import { localize } from "../../../../../../nls.js";
-import { HiddenItemStrategy, MenuWorkbenchToolBar } from "../../../../../../platform/actions/browser/toolbar.js";
-import { Action2, MenuId, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
-import { IInstantiationService, ServicesAccessor } from "../../../../../../platform/instantiation/common/instantiation.js";
+import {
+  HiddenItemStrategy,
+  MenuWorkbenchToolBar,
+} from "../../../../../../platform/actions/browser/toolbar.js";
+import {
+  Action2,
+  MenuId,
+  registerAction2,
+} from "../../../../../../platform/actions/common/actions.js";
+import {
+  IInstantiationService,
+  ServicesAccessor,
+} from "../../../../../../platform/instantiation/common/instantiation.js";
 import { IChatViewTitleActionContext } from "../../../common/actions/chatActions.js";
 import { IChatModel } from "../../../common/model/chatModel.js";
-import { ActionViewItem, IActionViewItemOptions } from "../../../../../../base/browser/ui/actionbar/actionViewItems.js";
+import {
+  ActionViewItem,
+  IActionViewItemOptions,
+} from "../../../../../../base/browser/ui/actionbar/actionViewItems.js";
 import { IAction } from "../../../../../../base/common/actions.js";
 import { AgentSessionsPicker } from "../../agentSessions/agentSessionsPicker.js";
 
 export interface IChatViewTitleDelegate {
-	focusChat(): void;
+  focusChat(): void;
 }
 
 export class ChatViewTitleControl extends Disposable {
+  private static readonly DEFAULT_TITLE = localize("chat", "Chat");
+  private static readonly PICK_AGENT_SESSION_ACTION_ID =
+    "workbench.action.chat.pickAgentSession";
 
-	private static readonly DEFAULT_TITLE = localize("chat", "Chat");
-	private static readonly PICK_AGENT_SESSION_ACTION_ID = "workbench.action.chat.pickAgentSession";
+  private readonly _onDidChangeHeight = this._register(new Emitter<void>());
+  readonly onDidChangeHeight = this._onDidChangeHeight.event;
 
-	private readonly _onDidChangeHeight = this._register(new Emitter<void>());
-	readonly onDidChangeHeight = this._onDidChangeHeight.event;
+  private title: string | undefined = undefined;
 
-	private title: string | undefined = undefined;
-
-	private titleContainer: HTMLElement | undefined;
-	private titleLabel = this._register(
+  private titleContainer: HTMLElement | undefined;
+  private titleLabel = this._register(
     new MutableDisposable<ChatViewTitleLabel>(),
   );
 
-	private model: IChatModel | undefined;
-	private modelDisposables = this._register(new MutableDisposable());
+  private model: IChatModel | undefined;
+  private modelDisposables = this._register(new MutableDisposable());
 
-	private navigationToolbar?: MenuWorkbenchToolBar;
-	private actionsToolbar?: MenuWorkbenchToolBar;
+  private navigationToolbar?: MenuWorkbenchToolBar;
+  private actionsToolbar?: MenuWorkbenchToolBar;
 
-	private lastKnownHeight = 0;
+  private lastKnownHeight = 0;
 
-	constructor(
-		private readonly container: HTMLElement,
-		private readonly delegate: IChatViewTitleDelegate,
-		@IInstantiationService private readonly instantiationService: IInstantiationService,
-	) {
-		super();
+  constructor(
+    private readonly container: HTMLElement,
+    private readonly delegate: IChatViewTitleDelegate,
+    @IInstantiationService
+    private readonly instantiationService: IInstantiationService,
+  ) {
+    super();
 
-		this.render(this.container);
+    this.render(this.container);
 
-		this.registerActions();
-	}
+    this.registerActions();
+  }
 
-	private registerActions(): void {
-		const that = this;
+  private registerActions(): void {
+    const that = this;
 
-		this._register(registerAction2(class extends Action2 {
-			constructor() {
-				super({
-					id: ChatViewTitleControl.PICK_AGENT_SESSION_ACTION_ID,
-					title: localize("chat.pickAgentSession", "Pick Agent Session"),
-					f1: false,
-					menu: [{
-						id: MenuId.ChatViewSessionTitleNavigationToolbar,
-						group: "navigation",
-						order: 2,
-					}],
-				});
-			}
+    this._register(
+      registerAction2(
+        class extends Action2 {
+          constructor() {
+            super({
+              id: ChatViewTitleControl.PICK_AGENT_SESSION_ACTION_ID,
+              title: localize("chat.pickAgentSession", "Pick Agent Session"),
+              f1: false,
+              menu: [
+                {
+                  id: MenuId.ChatViewSessionTitleNavigationToolbar,
+                  group: "navigation",
+                  order: 2,
+                },
+              ],
+            });
+          }
 
-			async run(accessor: ServicesAccessor): Promise<void> {
-				const instantiationService = accessor.get(IInstantiationService);
+          async run(accessor: ServicesAccessor): Promise<void> {
+            const instantiationService = accessor.get(IInstantiationService);
 
-				const agentSessionsPicker = instantiationService.createInstance(AgentSessionsPicker, that.titleLabel.value?.element, undefined);
-				await agentSessionsPicker.pickAgentSession();
-			}
-		}));
-	}
+            const agentSessionsPicker = instantiationService.createInstance(
+              AgentSessionsPicker,
+              that.titleLabel.value?.element,
+              undefined,
+            );
+            await agentSessionsPicker.pickAgentSession();
+          }
+        },
+      ),
+    );
+  }
 
-	private render(parent: HTMLElement): void {
-		const elements = h("div.chat-view-title-container", [
+  private render(parent: HTMLElement): void {
+    const elements = h("div.chat-view-title-container", [
       h("div.chat-view-title-inner", [
         h("div.chat-view-title-navigation-toolbar@navigationToolbar"),
         h("div.chat-view-title-actions-toolbar@actionsToolbar"),
       ]),
     ]);
 
-		// Toolbar on the left
-		this.navigationToolbar = this._register(this.instantiationService.createInstance(MenuWorkbenchToolBar, elements.navigationToolbar, MenuId.ChatViewSessionTitleNavigationToolbar, {
-			actionViewItemProvider: (action: IAction) => {
-				if (action.id === ChatViewTitleControl.PICK_AGENT_SESSION_ACTION_ID) {
-					this.titleLabel.value = new ChatViewTitleLabel(action);
-					this.titleLabel.value.updateTitle(this.title ?? ChatViewTitleControl.DEFAULT_TITLE);
+    // Toolbar on the left
+    this.navigationToolbar = this._register(
+      this.instantiationService.createInstance(
+        MenuWorkbenchToolBar,
+        elements.navigationToolbar,
+        MenuId.ChatViewSessionTitleNavigationToolbar,
+        {
+          actionViewItemProvider: (action: IAction) => {
+            if (
+              action.id === ChatViewTitleControl.PICK_AGENT_SESSION_ACTION_ID
+            ) {
+              this.titleLabel.value = new ChatViewTitleLabel(action);
+              this.titleLabel.value.updateTitle(
+                this.title ?? ChatViewTitleControl.DEFAULT_TITLE,
+              );
 
-					return this.titleLabel.value;
-				}
+              return this.titleLabel.value;
+            }
 
-				return undefined;
-			},
-			hiddenItemStrategy: HiddenItemStrategy.NoHide,
-			menuOptions: { shouldForwardArgs: true },
-		}));
+            return undefined;
+          },
+          hiddenItemStrategy: HiddenItemStrategy.NoHide,
+          menuOptions: { shouldForwardArgs: true },
+        },
+      ),
+    );
 
-		// Actions toolbar on the right
-		this.actionsToolbar = this._register(
+    // Actions toolbar on the right
+    this.actionsToolbar = this._register(
       this.instantiationService.createInstance(
         MenuWorkbenchToolBar,
         elements.actionsToolbar,
@@ -123,119 +168,120 @@ export class ChatViewTitleControl extends Disposable {
       ),
     );
 
-		// Title controls
-		this.titleContainer = elements.root;
-		this._register(Gesture.addTarget(this.titleContainer));
-		for (const eventType of [TouchEventType.Tap, EventType.CLICK]) {
-			this._register(
+    // Title controls
+    this.titleContainer = elements.root;
+    this._register(Gesture.addTarget(this.titleContainer));
+    for (const eventType of [TouchEventType.Tap, EventType.CLICK]) {
+      this._register(
         addDisposableListener(this.titleContainer, eventType, () => {
           this.delegate.focusChat();
         }),
       );
-		}
+    }
 
-		parent.appendChild(this.titleContainer);
-	}
+    parent.appendChild(this.titleContainer);
+  }
 
-	update(model: IChatModel | undefined): void {
-		this.model = model;
+  update(model: IChatModel | undefined): void {
+    this.model = model;
 
-		this.modelDisposables.value = model?.onDidChange(e => {
-			if (e.kind === "setCustomTitle" || e.kind === "addRequest") {
-				this.doUpdate();
-			}
-		});
+    this.modelDisposables.value = model?.onDidChange((e) => {
+      if (e.kind === "setCustomTitle" || e.kind === "addRequest") {
+        this.doUpdate();
+      }
+    });
 
-		this.doUpdate();
-	}
+    this.doUpdate();
+  }
 
-	private doUpdate(): void {
-		const markdownTitle = new MarkdownString(this.model?.title ?? "");
-		this.title = renderAsPlaintext(markdownTitle);
+  private doUpdate(): void {
+    const markdownTitle = new MarkdownString(this.model?.title ?? "");
+    this.title = renderAsPlaintext(markdownTitle);
 
-		this.updateTitle(this.title ?? ChatViewTitleControl.DEFAULT_TITLE);
+    this.updateTitle(this.title ?? ChatViewTitleControl.DEFAULT_TITLE);
 
-		const context = this.model && {
-      $mid: MarshalledId.ChatViewContext,
-      sessionResource: this.model.sessionResource,
-    } satisfies IChatViewTitleActionContext;
+    const context =
+      this.model &&
+      ({
+        $mid: MarshalledId.ChatViewContext,
+        sessionResource: this.model.sessionResource,
+      } satisfies IChatViewTitleActionContext);
 
-		if (this.navigationToolbar) {
-			this.navigationToolbar.context = context;
-		}
+    if (this.navigationToolbar) {
+      this.navigationToolbar.context = context;
+    }
 
-		if (this.actionsToolbar) {
-			this.actionsToolbar.context = context;
-		}
-	}
+    if (this.actionsToolbar) {
+      this.actionsToolbar.context = context;
+    }
+  }
 
-	private updateTitle(title: string): void {
-		if (!this.titleContainer) {
-			return;
-		}
+  private updateTitle(title: string): void {
+    if (!this.titleContainer) {
+      return;
+    }
 
-		this.titleContainer.classList.toggle("visible", this.shouldRender());
-		this.titleLabel.value?.updateTitle(title);
+    this.titleContainer.classList.toggle("visible", this.shouldRender());
+    this.titleLabel.value?.updateTitle(title);
 
-		const currentHeight = this.getHeight();
-		if (currentHeight !== this.lastKnownHeight) {
-			this.lastKnownHeight = currentHeight;
+    const currentHeight = this.getHeight();
+    if (currentHeight !== this.lastKnownHeight) {
+      this.lastKnownHeight = currentHeight;
 
-			this._onDidChangeHeight.fire();
-		}
-	}
+      this._onDidChangeHeight.fire();
+    }
+  }
 
-	private shouldRender(): boolean {
-		return !!this.model?.title; // we need a chat showing and not being empty
-	}
+  private shouldRender(): boolean {
+    return !!this.model?.title; // we need a chat showing and not being empty
+  }
 
-	getHeight(): number {
-		if (!this.titleContainer || this.titleContainer.style.display === "none") {
-			return 0;
-		}
+  getHeight(): number {
+    if (!this.titleContainer || this.titleContainer.style.display === "none") {
+      return 0;
+    }
 
-		return this.titleContainer.offsetHeight;
-	}
+    return this.titleContainer.offsetHeight;
+  }
 }
 
 class ChatViewTitleLabel extends ActionViewItem {
+  private title: string | undefined;
 
-	private title: string | undefined;
+  private titleLabel: HTMLSpanElement | undefined = undefined;
 
-	private titleLabel: HTMLSpanElement | undefined = undefined;
+  constructor(action: IAction, options?: IActionViewItemOptions) {
+    super(null, action, { ...options, icon: false, label: true });
+  }
 
-	constructor(action: IAction, options?: IActionViewItemOptions) {
-		super(null, action, { ...options, icon: false, label: true });
-	}
+  override render(container: HTMLElement): void {
+    super.render(container);
 
-	override render(container: HTMLElement): void {
-		super.render(container);
+    container.classList.add("chat-view-title-action-item");
+    this.label?.classList.add("chat-view-title-label-container");
 
-		container.classList.add("chat-view-title-action-item");
-		this.label?.classList.add("chat-view-title-label-container");
-
-		this.titleLabel = this.label?.appendChild(
+    this.titleLabel = this.label?.appendChild(
       h("span.chat-view-title-label").root,
     );
 
-		this.updateLabel();
-	}
+    this.updateLabel();
+  }
 
-	updateTitle(title: string): void {
-		this.title = title;
+  updateTitle(title: string): void {
+    this.title = title;
 
-		this.updateLabel();
-	}
+    this.updateLabel();
+  }
 
-	protected override updateLabel(): void {
-		if (!this.titleLabel) {
-			return;
-		}
+  protected override updateLabel(): void {
+    if (!this.titleLabel) {
+      return;
+    }
 
-		if (this.title) {
-			this.titleLabel.textContent = this.title;
-		} else {
-			this.titleLabel.textContent = "";
-		}
-	}
+    if (this.title) {
+      this.titleLabel.textContent = this.title;
+    } else {
+      this.titleLabel.textContent = "";
+    }
+  }
 }

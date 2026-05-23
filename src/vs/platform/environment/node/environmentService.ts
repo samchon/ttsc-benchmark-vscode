@@ -6,15 +6,17 @@
 import { homedir, tmpdir } from "os";
 import { NativeParsedArgs } from "../common/argv.js";
 import { IDebugParams } from "../common/environment.js";
-import { AbstractNativeEnvironmentService, parseDebugParams } from "../common/environmentService.js";
+import {
+  AbstractNativeEnvironmentService,
+  parseDebugParams,
+} from "../common/environmentService.js";
 import { getUserDataPath } from "./userDataPath.js";
 import { IProductService } from "../../product/common/productService.js";
 
 export class NativeEnvironmentService extends AbstractNativeEnvironmentService {
-
-	constructor(args: NativeParsedArgs, productService: IProductService) {
-		const homeDir = homedir();
-		super(
+  constructor(args: NativeParsedArgs, productService: IProductService) {
+    const homeDir = homedir();
+    super(
       args,
       {
         homeDir,
@@ -23,11 +25,14 @@ export class NativeEnvironmentService extends AbstractNativeEnvironmentService {
       },
       productService,
     );
-	}
+  }
 }
 
-export function parsePtyHostDebugPort(args: NativeParsedArgs, isBuilt: boolean): IDebugParams {
-	return parseDebugParams(
+export function parsePtyHostDebugPort(
+  args: NativeParsedArgs,
+  isBuilt: boolean,
+): IDebugParams {
+  return parseDebugParams(
     args["inspect-ptyhost"],
     args["inspect-brk-ptyhost"],
     5877,
@@ -36,8 +41,11 @@ export function parsePtyHostDebugPort(args: NativeParsedArgs, isBuilt: boolean):
   );
 }
 
-export function parseAgentHostDebugPort(args: NativeParsedArgs, isBuilt: boolean): IDebugParams {
-	return parseDebugParams(
+export function parseAgentHostDebugPort(
+  args: NativeParsedArgs,
+  isBuilt: boolean,
+): IDebugParams {
+  return parseDebugParams(
     args["inspect-agenthost"],
     args["inspect-brk-agenthost"],
     5878,
@@ -46,8 +54,11 @@ export function parseAgentHostDebugPort(args: NativeParsedArgs, isBuilt: boolean
   );
 }
 
-export function parseSharedProcessDebugPort(args: NativeParsedArgs, isBuilt: boolean): IDebugParams {
-	return parseDebugParams(
+export function parseSharedProcessDebugPort(
+  args: NativeParsedArgs,
+  isBuilt: boolean,
+): IDebugParams {
+  return parseDebugParams(
     args["inspect-sharedprocess"],
     args["inspect-brk-sharedprocess"],
     5879,

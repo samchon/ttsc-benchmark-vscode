@@ -10,28 +10,40 @@ import { URI } from "../../../../../base/common/uri.js";
 import { IMarkdownString } from "../../../../../base/common/htmlContent.js";
 
 export interface IChatContextItem {
-	icon?: ThemeIcon;
-	label?: string;
-	resourceUri?: URI;
-	modelDescription?: string;
-	tooltip?: IMarkdownString;
-	handle: number;
-	value?: string;
-	command?: {
-		id: string;
-	};
+  icon?: ThemeIcon;
+  label?: string;
+  resourceUri?: URI;
+  modelDescription?: string;
+  tooltip?: IMarkdownString;
+  handle: number;
+  value?: string;
+  command?: {
+    id: string;
+  };
 }
 
 export interface IChatWorkspaceContextProvider {
-	provideWorkspaceChatContext(token: CancellationToken): Promise<IChatContextItem[]>;
+  provideWorkspaceChatContext(
+    token: CancellationToken,
+  ): Promise<IChatContextItem[]>;
 }
 
 export interface IChatExplicitContextProvider {
-	provideChatContext(token: CancellationToken): Promise<IChatContextItem[]>;
-	resolveChatContext(context: IChatContextItem, token: CancellationToken): Promise<IChatContextItem>;
+  provideChatContext(token: CancellationToken): Promise<IChatContextItem[]>;
+  resolveChatContext(
+    context: IChatContextItem,
+    token: CancellationToken,
+  ): Promise<IChatContextItem>;
 }
 
 export interface IChatResourceContextProvider {
-	provideChatContext(resource: URI, withValue: boolean, token: CancellationToken): Promise<IChatContextItem | undefined>;
-	resolveChatContext(context: IChatContextItem, token: CancellationToken): Promise<IChatContextItem>;
+  provideChatContext(
+    resource: URI,
+    withValue: boolean,
+    token: CancellationToken,
+  ): Promise<IChatContextItem | undefined>;
+  resolveChatContext(
+    context: IChatContextItem,
+    token: CancellationToken,
+  ): Promise<IChatContextItem>;
 }

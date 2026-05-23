@@ -5,7 +5,10 @@
 
 import "./symbolIcons.css";
 import { localize } from "../../../../nls.js";
-import { foreground, registerColor } from "../../../../platform/theme/common/colorRegistry.js";
+import {
+  foreground,
+  registerColor,
+} from "../../../../platform/theme/common/colorRegistry.js";
 
 export const SYMBOL_ICON_ARRAY_FOREGROUND = registerColor(
   "symbolIcon.arrayForeground",

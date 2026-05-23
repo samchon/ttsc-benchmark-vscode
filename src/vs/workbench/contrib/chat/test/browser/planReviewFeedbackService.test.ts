@@ -4,13 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from "assert";
-import { IPlanReviewFeedbackService, PlanReviewFeedbackService } from "../../browser/planReviewFeedback/planReviewFeedbackService.js";
+import {
+  IPlanReviewFeedbackService,
+  PlanReviewFeedbackService,
+} from "../../browser/planReviewFeedback/planReviewFeedbackService.js";
 import { DisposableStore } from "../../../../../base/common/lifecycle.js";
 import { URI } from "../../../../../base/common/uri.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
 
-function feedbackSummary(items: readonly { line: number; column: number }[]): string[] {
-	return items.map(f => `${f.line}:${f.column}`);
+function feedbackSummary(
+  items: readonly { line: number; column: number }[],
+): string[] {
+  return items.map((f) => `${f.line}:${f.column}`);
 }
 
 suite("PlanReviewFeedbackService - Ordering", () => {
@@ -103,102 +108,101 @@ suite("PlanReviewFeedbackService - Ordering", () => {
 });
 
 suite("PlanReviewFeedbackService - Navigation", () => {
+  const store = new DisposableStore();
+  let service: IPlanReviewFeedbackService;
+  let planUri: URI;
 
-	const store = new DisposableStore();
-	let service: IPlanReviewFeedbackService;
-	let planUri: URI;
+  setup(() => {
+    service = store.add(new PlanReviewFeedbackService());
+    planUri = URI.parse("file:///plan.md");
+    store.add(service.registerPlanReview(planUri, () => {}));
+  });
 
-	setup(() => {
-		service = store.add(new PlanReviewFeedbackService());
-		planUri = URI.parse("file:///plan.md");
-		store.add(service.registerPlanReview(planUri, () => { }));
-	});
+  teardown(() => {
+    store.clear();
+  });
 
-	teardown(() => {
-		store.clear();
-	});
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-	ensureNoDisposablesAreLeakedInTestSuite();
+  test("navigation follows sorted order", () => {
+    service.addFeedback(planUri, 20, 1, "line 20");
+    service.addFeedback(planUri, 5, 1, "line 5");
+    service.addFeedback(planUri, 10, 1, "line 10");
 
-	test("navigation follows sorted order", () => {
-		service.addFeedback(planUri, 20, 1, "line 20");
-		service.addFeedback(planUri, 5, 1, "line 5");
-		service.addFeedback(planUri, 10, 1, "line 10");
+    // Expected order: 5, 10, 20
+    const first = service.getNextFeedback(planUri, true)!;
+    assert.strictEqual(first.line, 5);
 
-		// Expected order: 5, 10, 20
-		const first = service.getNextFeedback(planUri, true)!;
-		assert.strictEqual(first.line, 5);
+    const second = service.getNextFeedback(planUri, true)!;
+    assert.strictEqual(second.line, 10);
 
-		const second = service.getNextFeedback(planUri, true)!;
-		assert.strictEqual(second.line, 10);
+    const third = service.getNextFeedback(planUri, true)!;
+    assert.strictEqual(third.line, 20);
 
-		const third = service.getNextFeedback(planUri, true)!;
-		assert.strictEqual(third.line, 20);
+    // Wraps around
+    const fourth = service.getNextFeedback(planUri, true)!;
+    assert.strictEqual(fourth.line, 5);
+  });
 
-		// Wraps around
-		const fourth = service.getNextFeedback(planUri, true)!;
-		assert.strictEqual(fourth.line, 5);
-	});
+  test("navigation backwards", () => {
+    service.addFeedback(planUri, 5, 1, "line 5");
+    service.addFeedback(planUri, 10, 1, "line 10");
+    service.addFeedback(planUri, 20, 1, "line 20");
 
-	test("navigation backwards", () => {
-		service.addFeedback(planUri, 5, 1, "line 5");
-		service.addFeedback(planUri, 10, 1, "line 10");
-		service.addFeedback(planUri, 20, 1, "line 20");
+    // First backward nav goes to last item
+    const first = service.getNextFeedback(planUri, false)!;
+    assert.strictEqual(first.line, 20);
 
-		// First backward nav goes to last item
-		const first = service.getNextFeedback(planUri, false)!;
-		assert.strictEqual(first.line, 20);
+    const second = service.getNextFeedback(planUri, false)!;
+    assert.strictEqual(second.line, 10);
 
-		const second = service.getNextFeedback(planUri, false)!;
-		assert.strictEqual(second.line, 10);
+    const third = service.getNextFeedback(planUri, false)!;
+    assert.strictEqual(third.line, 5);
 
-		const third = service.getNextFeedback(planUri, false)!;
-		assert.strictEqual(third.line, 5);
+    // Wraps around
+    const fourth = service.getNextFeedback(planUri, false)!;
+    assert.strictEqual(fourth.line, 20);
+  });
 
-		// Wraps around
-		const fourth = service.getNextFeedback(planUri, false)!;
-		assert.strictEqual(fourth.line, 20);
-	});
+  test("navigation bearings reflect sorted position", () => {
+    service.addFeedback(planUri, 20, 1, "line 20");
+    service.addFeedback(planUri, 5, 1, "line 5");
+    service.addFeedback(planUri, 10, 1, "line 10");
 
-	test("navigation bearings reflect sorted position", () => {
-		service.addFeedback(planUri, 20, 1, "line 20");
-		service.addFeedback(planUri, 5, 1, "line 5");
-		service.addFeedback(planUri, 10, 1, "line 10");
+    // Before navigation, no anchor
+    let bearing = service.getNavigationBearing(planUri);
+    assert.strictEqual(bearing.activeIdx, -1);
+    assert.strictEqual(bearing.totalCount, 3);
 
-		// Before navigation, no anchor
-		let bearing = service.getNavigationBearing(planUri);
-		assert.strictEqual(bearing.activeIdx, -1);
-		assert.strictEqual(bearing.totalCount, 3);
+    // Navigate to first (5)
+    service.getNextFeedback(planUri, true);
+    bearing = service.getNavigationBearing(planUri);
+    assert.strictEqual(bearing.activeIdx, 0);
 
-		// Navigate to first (5)
-		service.getNextFeedback(planUri, true);
-		bearing = service.getNavigationBearing(planUri);
-		assert.strictEqual(bearing.activeIdx, 0);
+    // Navigate to second (10)
+    service.getNextFeedback(planUri, true);
+    bearing = service.getNavigationBearing(planUri);
+    assert.strictEqual(bearing.activeIdx, 1);
 
-		// Navigate to second (10)
-		service.getNextFeedback(planUri, true);
-		bearing = service.getNavigationBearing(planUri);
-		assert.strictEqual(bearing.activeIdx, 1);
+    // Navigate to third (20)
+    service.getNextFeedback(planUri, true);
+    bearing = service.getNavigationBearing(planUri);
+    assert.strictEqual(bearing.activeIdx, 2);
+  });
 
-		// Navigate to third (20)
-		service.getNextFeedback(planUri, true);
-		bearing = service.getNavigationBearing(planUri);
-		assert.strictEqual(bearing.activeIdx, 2);
-	});
+  test("navigation returns undefined for empty feedback", () => {
+    const result = service.getNextFeedback(planUri, true);
+    assert.strictEqual(result, undefined);
+  });
 
-	test("navigation returns undefined for empty feedback", () => {
-		const result = service.getNextFeedback(planUri, true);
-		assert.strictEqual(result, undefined);
-	});
+  test("setNavigationAnchor updates the anchor", () => {
+    const id = service.addFeedback(planUri, 10, 1, "line 10");
+    service.addFeedback(planUri, 20, 1, "line 20");
 
-	test("setNavigationAnchor updates the anchor", () => {
-		const id = service.addFeedback(planUri, 10, 1, "line 10");
-		service.addFeedback(planUri, 20, 1, "line 20");
-
-		service.setNavigationAnchor(planUri, id);
-		const bearing = service.getNavigationBearing(planUri);
-		assert.strictEqual(bearing.activeIdx, 0);
-	});
+    service.setNavigationAnchor(planUri, id);
+    const bearing = service.getNavigationBearing(planUri);
+    assert.strictEqual(bearing.activeIdx, 0);
+  });
 });
 
 suite("PlanReviewFeedbackService - Registration", () => {
@@ -228,7 +232,7 @@ suite("PlanReviewFeedbackService - Registration", () => {
 
   test("isActivePlanReview returns false after dispose", () => {
     const planUri = URI.parse("file:///plan.md");
-    const registration = service.registerPlanReview(planUri, () => { });
+    const registration = service.registerPlanReview(planUri, () => {});
     assert.strictEqual(service.isActivePlanReview(planUri), true);
     registration.dispose();
     assert.strictEqual(service.isActivePlanReview(planUri), false);
@@ -243,7 +247,7 @@ suite("PlanReviewFeedbackService - Registration", () => {
 
   test("dispose clears feedback items", () => {
     const planUri = URI.parse("file:///plan.md");
-    const registration = service.registerPlanReview(planUri, () => { });
+    const registration = service.registerPlanReview(planUri, () => {});
     service.addFeedback(planUri, 1, 1, "text");
     assert.strictEqual(service.getFeedback(planUri).length, 1);
     registration.dispose();
@@ -255,7 +259,7 @@ suite("PlanReviewFeedbackService - Registration", () => {
     let fireCount = 0;
     store.add(service.onDidChangeRegistrations(() => fireCount++));
 
-    const registration = service.registerPlanReview(planUri, () => { });
+    const registration = service.registerPlanReview(planUri, () => {});
     assert.strictEqual(fireCount, 1);
 
     registration.dispose();
@@ -278,77 +282,95 @@ suite("PlanReviewFeedbackService - Registration", () => {
 });
 
 suite("PlanReviewFeedbackService - Submit", () => {
+  const store = new DisposableStore();
+  let service: IPlanReviewFeedbackService;
 
-	const store = new DisposableStore();
-	let service: IPlanReviewFeedbackService;
+  setup(() => {
+    service = store.add(new PlanReviewFeedbackService());
+  });
 
-	setup(() => {
-		service = store.add(new PlanReviewFeedbackService());
-	});
+  teardown(() => {
+    store.clear();
+  });
 
-	teardown(() => {
-		store.clear();
-	});
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-	ensureNoDisposablesAreLeakedInTestSuite();
+  test("submitAllFeedback calls onSubmit with formatted feedback", () => {
+    const planUri = URI.parse("file:///plan.md");
+    let submittedResult: { rejected: boolean; feedback?: string } | undefined;
+    store.add(
+      service.registerPlanReview(planUri, (result) => {
+        submittedResult = result;
+      }),
+    );
 
-	test("submitAllFeedback calls onSubmit with formatted feedback", () => {
-		const planUri = URI.parse("file:///plan.md");
-		let submittedResult: { rejected: boolean; feedback?: string } | undefined;
-		store.add(service.registerPlanReview(planUri, (result) => { submittedResult = result; }));
+    service.addFeedback(planUri, 1, 1, "fix this");
+    service.addFeedback(planUri, 45, 45, "change that");
 
-		service.addFeedback(planUri, 1, 1, "fix this");
-		service.addFeedback(planUri, 45, 45, "change that");
+    service.submitAllFeedback(planUri);
 
-		service.submitAllFeedback(planUri);
+    assert.ok(submittedResult);
+    assert.strictEqual(submittedResult!.rejected, false);
+    assert.strictEqual(
+      submittedResult!.feedback,
+      [
+        "Here's the feedback:",
+        "Line 1: fix this",
+        "Line 45: Column 45: change that",
+      ].join("\n"),
+    );
+  });
 
-		assert.ok(submittedResult);
-		assert.strictEqual(submittedResult!.rejected, false);
-		assert.strictEqual(submittedResult!.feedback, [
-			"Here's the feedback:",
-			"Line 1: fix this",
-			"Line 45: Column 45: change that",
-		].join("\n"));
-	});
+  test("submitAllFeedback does nothing when no items", () => {
+    const planUri = URI.parse("file:///plan.md");
+    let called = false;
+    store.add(
+      service.registerPlanReview(planUri, () => {
+        called = true;
+      }),
+    );
 
-	test("submitAllFeedback does nothing when no items", () => {
-		const planUri = URI.parse("file:///plan.md");
-		let called = false;
-		store.add(service.registerPlanReview(planUri, () => { called = true; }));
+    service.submitAllFeedback(planUri);
+    assert.strictEqual(called, false);
+  });
 
-		service.submitAllFeedback(planUri);
-		assert.strictEqual(called, false);
-	});
+  test("feedback at column 1 omits column", () => {
+    const planUri = URI.parse("file:///plan.md");
+    let submittedResult: { feedback?: string } | undefined;
+    store.add(
+      service.registerPlanReview(planUri, (result) => {
+        submittedResult = result;
+      }),
+    );
 
-	test("feedback at column 1 omits column", () => {
-		const planUri = URI.parse("file:///plan.md");
-		let submittedResult: { feedback?: string } | undefined;
-		store.add(service.registerPlanReview(planUri, (result) => { submittedResult = result; }));
+    service.addFeedback(planUri, 10, 1, "at start");
 
-		service.addFeedback(planUri, 10, 1, "at start");
+    service.submitAllFeedback(planUri);
 
-		service.submitAllFeedback(planUri);
+    assert.ok(submittedResult);
+    assert.strictEqual(
+      submittedResult!.feedback,
+      ["Here's the feedback:", "Line 10: at start"].join("\n"),
+    );
+  });
 
-		assert.ok(submittedResult);
-		assert.strictEqual(submittedResult!.feedback, [
-			"Here's the feedback:",
-			"Line 10: at start",
-		].join("\n"));
-	});
+  test("feedback at column > 1 includes column", () => {
+    const planUri = URI.parse("file:///plan.md");
+    let submittedResult: { feedback?: string } | undefined;
+    store.add(
+      service.registerPlanReview(planUri, (result) => {
+        submittedResult = result;
+      }),
+    );
 
-	test("feedback at column > 1 includes column", () => {
-		const planUri = URI.parse("file:///plan.md");
-		let submittedResult: { feedback?: string } | undefined;
-		store.add(service.registerPlanReview(planUri, (result) => { submittedResult = result; }));
+    service.addFeedback(planUri, 10, 15, "mid line");
 
-		service.addFeedback(planUri, 10, 15, "mid line");
+    service.submitAllFeedback(planUri);
 
-		service.submitAllFeedback(planUri);
-
-		assert.ok(submittedResult);
-		assert.strictEqual(submittedResult!.feedback, [
-			"Here's the feedback:",
-			"Line 10: Column 15: mid line",
-		].join("\n"));
-	});
+    assert.ok(submittedResult);
+    assert.strictEqual(
+      submittedResult!.feedback,
+      ["Here's the feedback:", "Line 10: Column 15: mid line"].join("\n"),
+    );
+  });
 });

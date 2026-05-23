@@ -12,71 +12,97 @@ import {
   IUpdateRequest,
   Storage,
 } from "../../../../base/parts/storage/common/storage.js";
-import { AbstractUserDataProfileStorageService, IUserDataProfileStorageService } from "../../common/userDataProfileStorageService.js";
-import { InMemoryStorageService, loadKeyTargets, StorageTarget, TARGET_KEY } from "../../../storage/common/storage.js";
-import { IUserDataProfile, toUserDataProfile } from "../../common/userDataProfile.js";
+import {
+  AbstractUserDataProfileStorageService,
+  IUserDataProfileStorageService,
+} from "../../common/userDataProfileStorageService.js";
+import {
+  InMemoryStorageService,
+  loadKeyTargets,
+  StorageTarget,
+  TARGET_KEY,
+} from "../../../storage/common/storage.js";
+import {
+  IUserDataProfile,
+  toUserDataProfile,
+} from "../../common/userDataProfile.js";
 import { runWithFakedTimers } from "../../../../base/test/common/timeTravelScheduler.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
 
 class TestStorageDatabase extends InMemoryStorageDatabase {
+  private readonly _onDidChangeItemsExternal =
+    new Emitter<IStorageItemsChangeEvent>();
+  override readonly onDidChangeItemsExternal =
+    this._onDidChangeItemsExternal.event;
 
-	private readonly _onDidChangeItemsExternal = new Emitter<IStorageItemsChangeEvent>();
-	override readonly onDidChangeItemsExternal = this._onDidChangeItemsExternal.event;
-
-	override async updateItems(request: IUpdateRequest): Promise<void> {
-		await super.updateItems(request);
-		if (request.insert || request.delete) {
-			this._onDidChangeItemsExternal.fire({
+  override async updateItems(request: IUpdateRequest): Promise<void> {
+    await super.updateItems(request);
+    if (request.insert || request.delete) {
+      this._onDidChangeItemsExternal.fire({
         changed: request.insert,
         deleted: request.delete,
       });
-		}
-	}
+    }
+  }
 }
 
-export class TestUserDataProfileStorageService extends AbstractUserDataProfileStorageService implements IUserDataProfileStorageService {
+export class TestUserDataProfileStorageService
+  extends AbstractUserDataProfileStorageService
+  implements IUserDataProfileStorageService
+{
+  readonly onDidChange = Event.None;
+  private databases = new Map<string, InMemoryStorageDatabase>();
 
-	readonly onDidChange = Event.None;
-	private databases = new Map<string, InMemoryStorageDatabase>();
+  protected async createStorageDatabase(
+    profile: IUserDataProfile,
+  ): Promise<InMemoryStorageDatabase> {
+    let database = this.databases.get(profile.id);
+    if (!database) {
+      this.databases.set(profile.id, (database = new TestStorageDatabase()));
+    }
+    return database;
+  }
 
-	protected async createStorageDatabase(profile: IUserDataProfile): Promise<InMemoryStorageDatabase> {
-		let database = this.databases.get(profile.id);
-		if (!database) {
-			this.databases.set(profile.id, database = new TestStorageDatabase());
-		}
-		return database;
-	}
-
-	setupStorageDatabase(profile: IUserDataProfile): Promise<InMemoryStorageDatabase> {
-		return this.createStorageDatabase(profile);
-	}
-
+  setupStorageDatabase(
+    profile: IUserDataProfile,
+  ): Promise<InMemoryStorageDatabase> {
+    return this.createStorageDatabase(profile);
+  }
 }
 
 suite("ProfileStorageService", () => {
   const disposables = ensureNoDisposablesAreLeakedInTestSuite();
-  const profile = toUserDataProfile("test", "test", URI.file("foo"), URI.file("cache"));
+  const profile = toUserDataProfile(
+    "test",
+    "test",
+    URI.file("foo"),
+    URI.file("cache"),
+  );
   let testObject: TestUserDataProfileStorageService;
   let storage: Storage;
 
   setup(async () => {
-    testObject = disposables.add(new TestUserDataProfileStorageService(false, disposables.add(new InMemoryStorageService())));
-    storage = disposables.add(new Storage(await testObject.setupStorageDatabase(profile)));
+    testObject = disposables.add(
+      new TestUserDataProfileStorageService(
+        false,
+        disposables.add(new InMemoryStorageService()),
+      ),
+    );
+    storage = disposables.add(
+      new Storage(await testObject.setupStorageDatabase(profile)),
+    );
     await storage.init();
   });
 
-  test(
-    "read empty storage",
-    () => runWithFakedTimers<void>({ useFakeTimers: true }, async () => {
+  test("read empty storage", () =>
+    runWithFakedTimers<void>({ useFakeTimers: true }, async () => {
       const actual = await testObject.readStorageData(profile);
 
       assert.strictEqual(actual.size, 0);
-    }),
-  );
+    }));
 
-  test(
-    "read storage with data",
-    () => runWithFakedTimers<void>({ useFakeTimers: true }, async () => {
+  test("read storage with data", () =>
+    runWithFakedTimers<void>({ useFakeTimers: true }, async () => {
       storage.set("foo", "bar");
       storage.set(TARGET_KEY, JSON.stringify({ foo: StorageTarget.USER }));
       await storage.flush();
@@ -85,16 +111,14 @@ suite("ProfileStorageService", () => {
 
       assert.strictEqual(actual.size, 1);
       assert.deepStrictEqual(actual.get("foo"), {
-        "value": "bar",
-        "target": StorageTarget.USER,
-        "scope": 0,
+        value: "bar",
+        target: StorageTarget.USER,
+        scope: 0,
       });
-    }),
-  );
+    }));
 
-  test(
-    "write in empty storage",
-    () => runWithFakedTimers<void>({ useFakeTimers: true }, async () => {
+  test("write in empty storage", () =>
+    runWithFakedTimers<void>({ useFakeTimers: true }, async () => {
       const data = new Map<string, string>();
       data.set("foo", "bar");
       await testObject.updateStorageData(profile, data, StorageTarget.USER);
@@ -104,12 +128,10 @@ suite("ProfileStorageService", () => {
         foo: StorageTarget.USER,
       });
       assert.strictEqual(storage.get("foo"), "bar");
-    }),
-  );
+    }));
 
-  test(
-    "write in storage with data",
-    () => runWithFakedTimers<void>({ useFakeTimers: true }, async () => {
+  test("write in storage with data", () =>
+    runWithFakedTimers<void>({ useFakeTimers: true }, async () => {
       storage.set("foo", "bar");
       storage.set(TARGET_KEY, JSON.stringify({ foo: StorageTarget.USER }));
       await storage.flush();
@@ -125,12 +147,10 @@ suite("ProfileStorageService", () => {
       });
       assert.strictEqual(storage.get("foo"), "bar");
       assert.strictEqual(storage.get("abc"), "xyz");
-    }),
-  );
+    }));
 
-  test(
-    "write in storage with data (insert, update, remove)",
-    () => runWithFakedTimers<void>({ useFakeTimers: true }, async () => {
+  test("write in storage with data (insert, update, remove)", () =>
+    runWithFakedTimers<void>({ useFakeTimers: true }, async () => {
       storage.set("foo", "bar");
       storage.set("abc", "xyz");
       storage.set(
@@ -152,6 +172,5 @@ suite("ProfileStorageService", () => {
       });
       assert.strictEqual(storage.get("abc"), "def");
       assert.strictEqual(storage.get("var"), "const");
-    }),
-  );
+    }));
 });

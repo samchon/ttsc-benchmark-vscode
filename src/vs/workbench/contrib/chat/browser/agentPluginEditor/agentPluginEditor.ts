@@ -17,8 +17,14 @@ import { IActionViewItemOptions } from "../../../../../base/browser/ui/actionbar
 import { Action, IAction } from "../../../../../base/common/actions.js";
 import * as arrays from "../../../../../base/common/arrays.js";
 import { Cache, CacheResult } from "../../../../../base/common/cache.js";
-import { CancellationToken, CancellationTokenSource } from "../../../../../base/common/cancellation.js";
-import { DisposableStore, toDisposable } from "../../../../../base/common/lifecycle.js";
+import {
+  CancellationToken,
+  CancellationTokenSource,
+} from "../../../../../base/common/cancellation.js";
+import {
+  DisposableStore,
+  toDisposable,
+} from "../../../../../base/common/lifecycle.js";
 import { Schemas, matchesScheme } from "../../../../../base/common/network.js";
 import { autorun, derived } from "../../../../../base/common/observable.js";
 import { dirname, joinPath } from "../../../../../base/common/resources.js";
@@ -33,7 +39,10 @@ import { IInstantiationService } from "../../../../../platform/instantiation/com
 import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
 import { ILabelService } from "../../../../../platform/label/common/label.js";
 import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
-import { IRequestService, asText } from "../../../../../platform/request/common/request.js";
+import {
+  IRequestService,
+  asText,
+} from "../../../../../platform/request/common/request.js";
 import { IStorageService } from "../../../../../platform/storage/common/storage.js";
 import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
 import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
@@ -41,15 +50,32 @@ import { EditorPane } from "../../../../browser/parts/editor/editorPane.js";
 import { IEditorOpenContext } from "../../../../common/editor.js";
 import { IEditorGroup } from "../../../../services/editor/common/editorGroupsService.js";
 import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
-import { DEFAULT_MARKDOWN_STYLES, renderMarkdownDocument } from "../../../markdown/browser/markdownDocumentRenderer.js";
+import {
+  DEFAULT_MARKDOWN_STYLES,
+  renderMarkdownDocument,
+} from "../../../markdown/browser/markdownDocumentRenderer.js";
 import { IWebview, IWebviewService } from "../../../webview/browser/webview.js";
-import { IAgentPlugin, IAgentPluginService } from "../../common/plugins/agentPluginService.js";
+import {
+  IAgentPlugin,
+  IAgentPluginService,
+} from "../../common/plugins/agentPluginService.js";
 import { IPluginInstallService } from "../../common/plugins/pluginInstallService.js";
-import { hasSourceChanged, IMarketplacePlugin, IPluginMarketplaceService } from "../../common/plugins/pluginMarketplaceService.js";
+import {
+  hasSourceChanged,
+  IMarketplacePlugin,
+  IPluginMarketplaceService,
+} from "../../common/plugins/pluginMarketplaceService.js";
 import { AgentPluginEditorInput } from "./agentPluginEditorInput.js";
-import { AgentPluginItemKind, IAgentPluginItem, IInstalledPluginItem } from "./agentPluginItems.js";
+import {
+  AgentPluginItemKind,
+  IAgentPluginItem,
+  IInstalledPluginItem,
+} from "./agentPluginItems.js";
 import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
-import { EnablementStatusWidget, pluginEnablementLabels } from "../enablementStatusWidget.js";
+import {
+  EnablementStatusWidget,
+  pluginEnablementLabels,
+} from "../enablementStatusWidget.js";
 import {
   InstallPluginAction,
   UninstallPluginAction,
@@ -61,127 +87,136 @@ import {
 import "./media/agentPluginEditor.css";
 
 interface IAgentPluginEditorTemplate {
-	name: HTMLElement;
-	description: HTMLElement;
-	marketplace: HTMLElement;
-	actionBar: ActionBar;
-	statusContainer: HTMLElement;
-	content: HTMLElement;
-	header: HTMLElement;
+  name: HTMLElement;
+  description: HTMLElement;
+  marketplace: HTMLElement;
+  actionBar: ActionBar;
+  statusContainer: HTMLElement;
+  content: HTMLElement;
+  header: HTMLElement;
 }
 
 interface ILayoutParticipant {
-	layout(): void;
+  layout(): void;
 }
 
 interface IActiveElement {
-	focus(): void;
+  focus(): void;
 }
 
 const enum WebviewIndex {
-	Readme,
+  Readme,
 }
 
 export class AgentPluginEditor extends EditorPane {
+  static readonly ID: string = "workbench.editor.agentPlugin";
 
-	static readonly ID: string = "workbench.editor.agentPlugin";
+  private template: IAgentPluginEditorTemplate | undefined;
 
-	private template: IAgentPluginEditorTemplate | undefined;
+  private pluginReadme: Cache<string> | null = null;
 
-	private pluginReadme: Cache<string> | null = null;
+  private initialScrollProgress: Map<WebviewIndex, number> = new Map();
+  private currentIdentifier: string = "";
 
-	private initialScrollProgress: Map<WebviewIndex, number> = new Map();
-	private currentIdentifier: string = "";
+  private layoutParticipants: ILayoutParticipant[] = [];
+  private readonly contentDisposables = this._register(new DisposableStore());
+  private readonly transientDisposables = this._register(new DisposableStore());
+  private activeElement: IActiveElement | null = null;
+  private dimension: Dimension | undefined;
 
-	private layoutParticipants: ILayoutParticipant[] = [];
-	private readonly contentDisposables = this._register(new DisposableStore());
-	private readonly transientDisposables = this._register(new DisposableStore());
-	private activeElement: IActiveElement | null = null;
-	private dimension: Dimension | undefined;
-
-	constructor(
-		group: IEditorGroup,
-		@ITelemetryService telemetryService: ITelemetryService,
-		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@IThemeService themeService: IThemeService,
-		@IOpenerService private readonly openerService: IOpenerService,
-		@IStorageService storageService: IStorageService,
-		@IExtensionService private readonly extensionService: IExtensionService,
-		@IWebviewService private readonly webviewService: IWebviewService,
-		@ILanguageService private readonly languageService: ILanguageService,
-		@IFileService private readonly fileService: IFileService,
-		@IRequestService private readonly requestService: IRequestService,
-		@IAgentPluginService private readonly agentPluginService: IAgentPluginService,
-		@IPluginInstallService private readonly pluginInstallService: IPluginInstallService,
-		@IPluginMarketplaceService private readonly pluginMarketplaceService: IPluginMarketplaceService,
-		@ILabelService private readonly labelService: ILabelService,
-		@IContextMenuService private readonly contextMenuService: IContextMenuService,
-	) {
-		super(
+  constructor(
+    group: IEditorGroup,
+    @ITelemetryService telemetryService: ITelemetryService,
+    @IInstantiationService
+    private readonly instantiationService: IInstantiationService,
+    @IThemeService themeService: IThemeService,
+    @IOpenerService private readonly openerService: IOpenerService,
+    @IStorageService storageService: IStorageService,
+    @IExtensionService private readonly extensionService: IExtensionService,
+    @IWebviewService private readonly webviewService: IWebviewService,
+    @ILanguageService private readonly languageService: ILanguageService,
+    @IFileService private readonly fileService: IFileService,
+    @IRequestService private readonly requestService: IRequestService,
+    @IAgentPluginService
+    private readonly agentPluginService: IAgentPluginService,
+    @IPluginInstallService
+    private readonly pluginInstallService: IPluginInstallService,
+    @IPluginMarketplaceService
+    private readonly pluginMarketplaceService: IPluginMarketplaceService,
+    @ILabelService private readonly labelService: ILabelService,
+    @IContextMenuService
+    private readonly contextMenuService: IContextMenuService,
+  ) {
+    super(
       AgentPluginEditor.ID,
       group,
       telemetryService,
       themeService,
       storageService,
     );
-	}
+  }
 
-	protected createEditor(parent: HTMLElement): void {
-		const root = append(parent, $(".extension-editor.agent-plugin-editor"));
+  protected createEditor(parent: HTMLElement): void {
+    const root = append(parent, $(".extension-editor.agent-plugin-editor"));
 
-		root.tabIndex = 0;
-		root.style.outline = "none";
-		root.setAttribute("role", "document");
-		const header = append(root, $(".header"));
+    root.tabIndex = 0;
+    root.style.outline = "none";
+    root.setAttribute("role", "document");
+    const header = append(root, $(".header"));
 
-		const iconContainer = append(header, $(".icon-container"));
-		const icon = append(iconContainer, $("span.codicon.codicon-extensions"));
-		icon.style.fontSize = "64px";
+    const iconContainer = append(header, $(".icon-container"));
+    const icon = append(iconContainer, $("span.codicon.codicon-extensions"));
+    icon.style.fontSize = "64px";
 
-		const details = append(header, $(".details"));
-		const title = append(details, $(".title"));
-		const name = append(
+    const details = append(header, $(".details"));
+    const title = append(details, $(".title"));
+    const name = append(
       title,
       $("span.name", { role: "heading", tabIndex: 0 }),
     );
 
-		const description = append(details, $(".description"));
+    const description = append(details, $(".description"));
 
-		const subtitle = append(details, $(".subtitle"));
-		const marketplace = append(subtitle, $("span.subtitle-entry"));
+    const subtitle = append(details, $(".subtitle"));
+    const marketplace = append(subtitle, $("span.subtitle-entry"));
 
-		const actionsAndStatusContainer = append(
+    const actionsAndStatusContainer = append(
       details,
       $(".actions-status-container"),
     );
-		const actionBar = this._register(new ActionBar(actionsAndStatusContainer, {
-			actionViewItemProvider: (action: IAction, options: IActionViewItemOptions) => {
-				if (action instanceof EnablementDropDownAction) {
-					return new EnablementDropdownActionViewItem(
-						action,
-						{
-							...options,
-							icon: true,
-							label: true,
-							menuActionsOrProvider: { getActions: () => action.menuActions },
-							menuActionClassNames: action.menuActionClassNames,
-						},
-						this.contextMenuService,
-					);
-				}
-				return undefined;
-			},
-			focusOnlyEnabledItems: true,
-		}));
-		actionBar.setFocusable(true);
+    const actionBar = this._register(
+      new ActionBar(actionsAndStatusContainer, {
+        actionViewItemProvider: (
+          action: IAction,
+          options: IActionViewItemOptions,
+        ) => {
+          if (action instanceof EnablementDropDownAction) {
+            return new EnablementDropdownActionViewItem(
+              action,
+              {
+                ...options,
+                icon: true,
+                label: true,
+                menuActionsOrProvider: { getActions: () => action.menuActions },
+                menuActionClassNames: action.menuActionClassNames,
+              },
+              this.contextMenuService,
+            );
+          }
+          return undefined;
+        },
+        focusOnlyEnabledItems: true,
+      }),
+    );
+    actionBar.setFocusable(true);
 
-		const statusContainer = append(actionsAndStatusContainer, $(".status"));
+    const statusContainer = append(actionsAndStatusContainer, $(".status"));
 
-		const body = append(root, $(".body"));
-		const content = append(body, $(".content"));
-		content.id = generateUuid();
+    const body = append(root, $(".body"));
+    const content = append(body, $(".content"));
+    content.id = generateUuid();
 
-		this.template = {
+    this.template = {
       content,
       description,
       header,
@@ -190,257 +225,292 @@ export class AgentPluginEditor extends EditorPane {
       actionBar,
       statusContainer,
     };
-	}
+  }
 
-	override async setInput(input: AgentPluginEditorInput, options: undefined, context: IEditorOpenContext, token: CancellationToken): Promise<void> {
-		await super.setInput(input, options, context, token);
-		if (this.template) {
-			await this.render(input.item, this.template);
-		}
-	}
+  override async setInput(
+    input: AgentPluginEditorInput,
+    options: undefined,
+    context: IEditorOpenContext,
+    token: CancellationToken,
+  ): Promise<void> {
+    await super.setInput(input, options, context, token);
+    if (this.template) {
+      await this.render(input.item, this.template);
+    }
+  }
 
-	private async render(item: IAgentPluginItem, template: IAgentPluginEditorTemplate): Promise<void> {
-		this.activeElement = null;
-		this.transientDisposables.clear();
-		this.contentDisposables.clear();
-		template.content.innerText = "";
+  private async render(
+    item: IAgentPluginItem,
+    template: IAgentPluginEditorTemplate,
+  ): Promise<void> {
+    this.activeElement = null;
+    this.transientDisposables.clear();
+    this.contentDisposables.clear();
+    template.content.innerText = "";
 
-		const cts = new CancellationTokenSource();
-		this.transientDisposables.add(toDisposable(() => cts.dispose(true)));
-		const token = cts.token;
+    const cts = new CancellationTokenSource();
+    this.transientDisposables.add(toDisposable(() => cts.dispose(true)));
+    const token = cts.token;
 
-		const itemId = item.kind === AgentPluginItemKind.Installed ? item.plugin.uri.toString() : `${item.marketplaceReference.canonicalId}/${item.source}`;
+    const itemId =
+      item.kind === AgentPluginItemKind.Installed
+        ? item.plugin.uri.toString()
+        : `${item.marketplaceReference.canonicalId}/${item.source}`;
 
-		if (this.currentIdentifier !== itemId) {
-			this.initialScrollProgress.clear();
-			this.currentIdentifier = itemId;
-		}
+    if (this.currentIdentifier !== itemId) {
+      this.initialScrollProgress.clear();
+      this.currentIdentifier = itemId;
+    }
 
-		this.pluginReadme = new Cache(() => this.fetchReadme(item, token));
+    this.pluginReadme = new Cache(() => this.fetchReadme(item, token));
 
-		template.name.textContent = item.name;
-		template.description.textContent = item.description;
+    template.name.textContent = item.name;
+    template.description.textContent = item.description;
 
-		// Set up marketplace link
-		const marketplaceLabel = item.marketplace ?? "";
-		const githubRepo = item.kind === AgentPluginItemKind.Marketplace
-			? item.marketplaceReference.githubRepo
-			: item.plugin.fromMarketplace?.marketplaceReference.githubRepo;
-		if (marketplaceLabel && githubRepo) {
-			const url = `https://github.com/${githubRepo}`;
-			const link = $("a.marketplace-link", { href: url }, marketplaceLabel);
-			this.transientDisposables.add(
+    // Set up marketplace link
+    const marketplaceLabel = item.marketplace ?? "";
+    const githubRepo =
+      item.kind === AgentPluginItemKind.Marketplace
+        ? item.marketplaceReference.githubRepo
+        : item.plugin.fromMarketplace?.marketplaceReference.githubRepo;
+    if (marketplaceLabel && githubRepo) {
+      const url = `https://github.com/${githubRepo}`;
+      const link = $("a.marketplace-link", { href: url }, marketplaceLabel);
+      this.transientDisposables.add(
         addDisposableListener(link, EventType.CLICK, (e) => {
           e.preventDefault();
           e.stopPropagation();
           this.openerService.open(URI.parse(url));
         }),
       );
-			reset(template.marketplace, link);
-		} else {
-			reset(template.marketplace, marketplaceLabel);
-		}
+      reset(template.marketplace, link);
+    } else {
+      reset(template.marketplace, marketplaceLabel);
+    }
 
-		const currentItem = derived(reader => {
-			// Read observables to subscribe to changes
-			const allPlugins = this.agentPluginService.plugins.read(reader);
+    const currentItem = derived((reader) => {
+      // Read observables to subscribe to changes
+      const allPlugins = this.agentPluginService.plugins.read(reader);
 
-			let currentItem = item;
+      let currentItem = item;
 
-			// If this was a marketplace item, check if it got installed
-			if (item.kind === AgentPluginItemKind.Marketplace) {
-				const expectedUri = this.pluginInstallService.getPluginInstallUri({
-					name: item.name,
-					description: item.description,
-					version: "",
-					source: item.source,
-					sourceDescriptor: item.sourceDescriptor,
-					marketplace: item.marketplace,
-					marketplaceReference: item.marketplaceReference,
-					marketplaceType: item.marketplaceType,
-				});
-				const installedPlugin = allPlugins.find(p => p.uri.toString() === expectedUri.toString());
-				if (installedPlugin) {
-					currentItem = this.installedPluginToItem(installedPlugin);
-				}
-			} else {
-				// If this was an installed item, check if it got uninstalled
-				const stillInstalled = allPlugins.find(p => p.uri.toString() === item.plugin.uri.toString());
-				if (!stillInstalled) {
-					// Plugin was uninstalled — show as marketplace if we have the info
-					if (item.plugin.fromMarketplace) {
-						const mp = item.plugin.fromMarketplace;
-						currentItem = {
-							kind: AgentPluginItemKind.Marketplace,
-							name: item.name,
-							description: mp.description,
-							source: mp.source,
-							sourceDescriptor: mp.sourceDescriptor,
-							marketplace: mp.marketplace,
-							marketplaceReference: mp.marketplaceReference,
-							marketplaceType: mp.marketplaceType,
-							readmeUri: mp.readmeUri,
-						};
-					} else {
-						// Non-marketplace plugin was uninstalled — no actions to show
-						return;
-					}
-				} else {
-					// Read enablement state for reactivity
-					stillInstalled.enablement.read(reader);
-					currentItem = this.installedPluginToItem(stillInstalled);
-				}
-			}
+      // If this was a marketplace item, check if it got installed
+      if (item.kind === AgentPluginItemKind.Marketplace) {
+        const expectedUri = this.pluginInstallService.getPluginInstallUri({
+          name: item.name,
+          description: item.description,
+          version: "",
+          source: item.source,
+          sourceDescriptor: item.sourceDescriptor,
+          marketplace: item.marketplace,
+          marketplaceReference: item.marketplaceReference,
+          marketplaceType: item.marketplaceType,
+        });
+        const installedPlugin = allPlugins.find(
+          (p) => p.uri.toString() === expectedUri.toString(),
+        );
+        if (installedPlugin) {
+          currentItem = this.installedPluginToItem(installedPlugin);
+        }
+      } else {
+        // If this was an installed item, check if it got uninstalled
+        const stillInstalled = allPlugins.find(
+          (p) => p.uri.toString() === item.plugin.uri.toString(),
+        );
+        if (!stillInstalled) {
+          // Plugin was uninstalled — show as marketplace if we have the info
+          if (item.plugin.fromMarketplace) {
+            const mp = item.plugin.fromMarketplace;
+            currentItem = {
+              kind: AgentPluginItemKind.Marketplace,
+              name: item.name,
+              description: mp.description,
+              source: mp.source,
+              sourceDescriptor: mp.sourceDescriptor,
+              marketplace: mp.marketplace,
+              marketplaceReference: mp.marketplaceReference,
+              marketplaceType: mp.marketplaceType,
+              readmeUri: mp.readmeUri,
+            };
+          } else {
+            // Non-marketplace plugin was uninstalled — no actions to show
+            return;
+          }
+        } else {
+          // Read enablement state for reactivity
+          stillInstalled.enablement.read(reader);
+          currentItem = this.installedPluginToItem(stillInstalled);
+        }
+      }
 
-			return currentItem;
-		});
+      return currentItem;
+    });
 
-		const storedPlugin = currentItem.map((item, r) => {
-			if (!item || item.kind === AgentPluginItemKind.Marketplace) {
-				return undefined;
-			}
+    const storedPlugin = currentItem.map((item, r) => {
+      if (!item || item.kind === AgentPluginItemKind.Marketplace) {
+        return undefined;
+      }
 
-			return this.pluginMarketplaceService.installedPlugins.read(r)
-				.find(e => e.pluginUri.toString() === item.plugin.uri.toString())?.plugin
-				?? item.plugin.fromMarketplace;
-		});
+      return (
+        this.pluginMarketplaceService.installedPlugins
+          .read(r)
+          .find((e) => e.pluginUri.toString() === item.plugin.uri.toString())
+          ?.plugin ?? item.plugin.fromMarketplace
+      );
+    });
 
-		// Set up actions reactively
-		const actionDisposables = this.transientDisposables.add(
+    // Set up actions reactively
+    const actionDisposables = this.transientDisposables.add(
       new DisposableStore(),
     );
-		this.transientDisposables.add(autorun(reader => {
-			actionDisposables.clear();
-			template.actionBar.clear();
+    this.transientDisposables.add(
+      autorun((reader) => {
+        actionDisposables.clear();
+        template.actionBar.clear();
 
-			const current = currentItem.read(reader);
-			if (!current) {
-				return;
-			}
+        const current = currentItem.read(reader);
+        if (!current) {
+          return;
+        }
 
-			this.pluginMarketplaceService.lastFetchedPlugins.read(reader);
+        this.pluginMarketplaceService.lastFetchedPlugins.read(reader);
 
-			const actions = this.getItemActions(current, storedPlugin.read(reader));
-			if (actions.length > 0) {
-				template.actionBar.push(actions, { icon: true, label: true });
-			}
-			for (const action of actions) {
-				actionDisposables.add(action);
-			}
+        const actions = this.getItemActions(current, storedPlugin.read(reader));
+        if (actions.length > 0) {
+          template.actionBar.push(actions, { icon: true, label: true });
+        }
+        for (const action of actions) {
+          actionDisposables.add(action);
+        }
 
-			// Update enablement status widget
-			if (current.kind === AgentPluginItemKind.Installed) {
-				actionDisposables.add(this.instantiationService.createInstance(
-					EnablementStatusWidget,
-					template.statusContainer,
-					current.plugin.enablement,
-					pluginEnablementLabels,
-				));
-			}
-		}));
+        // Update enablement status widget
+        if (current.kind === AgentPluginItemKind.Installed) {
+          actionDisposables.add(
+            this.instantiationService.createInstance(
+              EnablementStatusWidget,
+              template.statusContainer,
+              current.plugin.enablement,
+              pluginEnablementLabels,
+            ),
+          );
+        }
+      }),
+    );
 
-		// Open readme
-		this.activeElement = await this.openDetails(item, template, token);
-	}
+    // Open readme
+    this.activeElement = await this.openDetails(item, template, token);
+  }
 
-	private getItemActions(item: IAgentPluginItem, storedPlugin: IMarketplacePlugin | undefined): Action[] {
-		if (item.kind === AgentPluginItemKind.Marketplace) {
-			return [
+  private getItemActions(
+    item: IAgentPluginItem,
+    storedPlugin: IMarketplacePlugin | undefined,
+  ): Action[] {
+    if (item.kind === AgentPluginItemKind.Marketplace) {
+      return [
         this.instantiationService.createInstance(InstallPluginAction, item),
       ];
-		}
+    }
 
-		const workspaceService = this.instantiationService.invokeFunction(
-      a => a.get(IWorkspaceContextService),
+    const workspaceService = this.instantiationService.invokeFunction((a) =>
+      a.get(IWorkspaceContextService),
     );
-		const actions: Action[] = [];
+    const actions: Action[] = [];
 
-		if (storedPlugin) {
-			const cachedMarketplace = this.pluginMarketplaceService.lastFetchedPlugins.get();
-			const key = `${storedPlugin.marketplaceReference.canonicalId}::${storedPlugin.name}`;
-			const livePlugin = cachedMarketplace.find(mp =>
-				`${mp.marketplaceReference.canonicalId}::${mp.name}` === key,
-			);
-			if (livePlugin && hasSourceChanged(
-        storedPlugin.sourceDescriptor,
-        livePlugin.sourceDescriptor,
-      )) {
-				actions.push(
+    if (storedPlugin) {
+      const cachedMarketplace =
+        this.pluginMarketplaceService.lastFetchedPlugins.get();
+      const key = `${storedPlugin.marketplaceReference.canonicalId}::${storedPlugin.name}`;
+      const livePlugin = cachedMarketplace.find(
+        (mp) => `${mp.marketplaceReference.canonicalId}::${mp.name}` === key,
+      );
+      if (
+        livePlugin &&
+        hasSourceChanged(
+          storedPlugin.sourceDescriptor,
+          livePlugin.sourceDescriptor,
+        )
+      ) {
+        actions.push(
           this.instantiationService.createInstance(
             UpdatePluginEditorAction,
             item.plugin,
             livePlugin,
           ),
         );
-			}
-		}
+      }
+    }
 
-		actions.push(
+    actions.push(
       createEnablePluginDropDown(
         item.plugin,
         this.agentPluginService.enablementModel,
         workspaceService,
       ),
     );
-		actions.push(
+    actions.push(
       createDisablePluginDropDown(
         item.plugin,
         this.agentPluginService.enablementModel,
         workspaceService,
       ),
     );
-		actions.push(new UninstallPluginAction(item.plugin));
-		return actions;
-	}
+    actions.push(new UninstallPluginAction(item.plugin));
+    return actions;
+  }
 
-	private installedPluginToItem(plugin: IAgentPlugin): IInstalledPluginItem {
-		const name = plugin.label;
-		const description = plugin.fromMarketplace?.description ?? this.labelService.getUriLabel(
-      dirname(plugin.uri),
-      { relative: true },
-    );
-		const marketplace = plugin.fromMarketplace?.marketplace;
-		return {
+  private installedPluginToItem(plugin: IAgentPlugin): IInstalledPluginItem {
+    const name = plugin.label;
+    const description =
+      plugin.fromMarketplace?.description ??
+      this.labelService.getUriLabel(dirname(plugin.uri), { relative: true });
+    const marketplace = plugin.fromMarketplace?.marketplace;
+    return {
       kind: AgentPluginItemKind.Installed,
       name,
       description,
       marketplace,
       plugin,
     };
-	}
+  }
 
-	private async fetchReadme(item: IAgentPluginItem, token: CancellationToken): Promise<string> {
-		let readmeUri: URI | undefined;
-		if (item.kind === AgentPluginItemKind.Installed) {
-			readmeUri = joinPath(item.plugin.uri, "README.md");
-		} else {
-			readmeUri = item.readmeUri;
-		}
+  private async fetchReadme(
+    item: IAgentPluginItem,
+    token: CancellationToken,
+  ): Promise<string> {
+    let readmeUri: URI | undefined;
+    if (item.kind === AgentPluginItemKind.Installed) {
+      readmeUri = joinPath(item.plugin.uri, "README.md");
+    } else {
+      readmeUri = item.readmeUri;
+    }
 
-		if (!readmeUri) {
-			return "";
-		}
+    if (!readmeUri) {
+      return "";
+    }
 
-		if (readmeUri.scheme === Schemas.file || readmeUri.scheme === Schemas.vscodeRemote) {
-			try {
-				const content = await this.fileService.readFile(readmeUri);
-				return content.value.toString();
-			} catch {
-				return "";
-			}
-		}
+    if (
+      readmeUri.scheme === Schemas.file ||
+      readmeUri.scheme === Schemas.vscodeRemote
+    ) {
+      try {
+        const content = await this.fileService.readFile(readmeUri);
+        return content.value.toString();
+      } catch {
+        return "";
+      }
+    }
 
-		// For https GitHub URLs, convert blob URL to raw URL
-		if (readmeUri.scheme === Schemas.https) {
-			let rawUrl = readmeUri.toString();
-			const githubBlobMatch = rawUrl.match(
+    // For https GitHub URLs, convert blob URL to raw URL
+    if (readmeUri.scheme === Schemas.https) {
+      let rawUrl = readmeUri.toString();
+      const githubBlobMatch = rawUrl.match(
         /^https:\/\/github\.com\/(?<owner>[^/]+)\/(?<repo>[^/]+)\/blob\/(?<rest>.+)$/,
       );
-			if (githubBlobMatch?.groups) {
-				rawUrl = `https://raw.githubusercontent.com/${githubBlobMatch.groups["owner"]}/${githubBlobMatch.groups["repo"]}/${githubBlobMatch.groups["rest"]}`;
-			}
-			try {
-				const context = await this.requestService.request(
+      if (githubBlobMatch?.groups) {
+        rawUrl = `https://raw.githubusercontent.com/${githubBlobMatch.groups["owner"]}/${githubBlobMatch.groups["repo"]}/${githubBlobMatch.groups["rest"]}`;
+      }
+      try {
+        const context = await this.requestService.request(
           {
             type: "GET",
             url: rawUrl,
@@ -448,30 +518,35 @@ export class AgentPluginEditor extends EditorPane {
           },
           token,
         );
-				const text = await asText(context);
-				return text ?? "";
-			} catch {
-				return "";
-			}
-		}
+        const text = await asText(context);
+        return text ?? "";
+      } catch {
+        return "";
+      }
+    }
 
-		return "";
-	}
+    return "";
+  }
 
-	private async openDetails(item: IAgentPluginItem, template: IAgentPluginEditorTemplate, token: CancellationToken): Promise<IActiveElement | null> {
-		const details = append(template.content, $(".details"));
-		const readmeContainer = append(details, $(".content-container"));
+  private async openDetails(
+    item: IAgentPluginItem,
+    template: IAgentPluginEditorTemplate,
+    token: CancellationToken,
+  ): Promise<IActiveElement | null> {
+    const details = append(template.content, $(".details"));
+    const readmeContainer = append(details, $(".content-container"));
 
-		const layout = () => details.classList.toggle(
-      "narrow",
-      this.dimension !== undefined && this.dimension.width < 500,
-    );
-		layout();
-		this.contentDisposables.add(
+    const layout = () =>
+      details.classList.toggle(
+        "narrow",
+        this.dimension !== undefined && this.dimension.width < 500,
+      );
+    layout();
+    this.contentDisposables.add(
       toDisposable(arrays.insert(this.layoutParticipants, { layout })),
     );
 
-		return this.openMarkdown(
+    return this.openMarkdown(
       this.pluginReadme!.get(),
       localize("noReadme", "No README available."),
       readmeContainer,
@@ -479,109 +554,133 @@ export class AgentPluginEditor extends EditorPane {
       localize("Readme title", "Readme"),
       token,
     );
-	}
+  }
 
-	private async openMarkdown(cacheResult: CacheResult<string>, noContentCopy: string, container: HTMLElement, webviewIndex: WebviewIndex, title: string, token: CancellationToken): Promise<IActiveElement | null> {
-		try {
-			const body = await this.renderMarkdown(cacheResult, container, token);
-			if (token.isCancellationRequested) {
-				return null;
-			}
+  private async openMarkdown(
+    cacheResult: CacheResult<string>,
+    noContentCopy: string,
+    container: HTMLElement,
+    webviewIndex: WebviewIndex,
+    title: string,
+    token: CancellationToken,
+  ): Promise<IActiveElement | null> {
+    try {
+      const body = await this.renderMarkdown(cacheResult, container, token);
+      if (token.isCancellationRequested) {
+        return null;
+      }
 
-			const webview = this.contentDisposables.add(this.webviewService.createWebviewOverlay({
-				title,
-				options: {
-					enableFindWidget: true,
-					tryRestoreScrollPosition: true,
-					disableServiceWorker: true,
-				},
-				contentOptions: {},
-				extension: undefined,
-			}));
+      const webview = this.contentDisposables.add(
+        this.webviewService.createWebviewOverlay({
+          title,
+          options: {
+            enableFindWidget: true,
+            tryRestoreScrollPosition: true,
+            disableServiceWorker: true,
+          },
+          contentOptions: {},
+          extension: undefined,
+        }),
+      );
 
-			webview.initialScrollProgress = this.initialScrollProgress.get(
-        webviewIndex,
-      ) || 0;
+      webview.initialScrollProgress =
+        this.initialScrollProgress.get(webviewIndex) || 0;
 
-			webview.claim(this, this.window, undefined);
-			setParentFlowTo(webview.container, container);
-			webview.setAnchorElement(container);
+      webview.claim(this, this.window, undefined);
+      setParentFlowTo(webview.container, container);
+      webview.setAnchorElement(container);
 
-			webview.setHtml(body);
-			webview.claim(this, this.window, undefined);
+      webview.setHtml(body);
+      webview.claim(this, this.window, undefined);
 
-			this.contentDisposables.add(
+      this.contentDisposables.add(
         webview.onDidFocus(() => this._onDidFocus?.fire()),
       );
 
-			this.contentDisposables.add(
-        webview.onDidScroll(
-          () => this.initialScrollProgress.set(
+      this.contentDisposables.add(
+        webview.onDidScroll(() =>
+          this.initialScrollProgress.set(
             webviewIndex,
             webview.initialScrollProgress,
           ),
         ),
       );
 
-			const removeLayoutParticipant = arrays.insert(this.layoutParticipants, {
-				layout: () => {
-					webview.setAnchorElement(container);
-				},
-			});
-			this.contentDisposables.add(toDisposable(removeLayoutParticipant));
+      const removeLayoutParticipant = arrays.insert(this.layoutParticipants, {
+        layout: () => {
+          webview.setAnchorElement(container);
+        },
+      });
+      this.contentDisposables.add(toDisposable(removeLayoutParticipant));
 
-			let isDisposed = false;
-			this.contentDisposables.add(toDisposable(() => { isDisposed = true; }));
+      let isDisposed = false;
+      this.contentDisposables.add(
+        toDisposable(() => {
+          isDisposed = true;
+        }),
+      );
 
-			this.contentDisposables.add(this.themeService.onDidColorThemeChange(async () => {
-				const body = await this.renderMarkdown(cacheResult, container);
-				if (!isDisposed) {
-					webview.setHtml(body);
-				}
-			}));
+      this.contentDisposables.add(
+        this.themeService.onDidColorThemeChange(async () => {
+          const body = await this.renderMarkdown(cacheResult, container);
+          if (!isDisposed) {
+            webview.setHtml(body);
+          }
+        }),
+      );
 
-			this.contentDisposables.add(webview.onDidClickLink(link => {
-				if (!link) {
-					return;
-				}
-				if (matchesScheme(link, Schemas.http) || matchesScheme(link, Schemas.https) || matchesScheme(link, Schemas.mailto)) {
-					this.openerService.open(link);
-				}
-			}));
+      this.contentDisposables.add(
+        webview.onDidClickLink((link) => {
+          if (!link) {
+            return;
+          }
+          if (
+            matchesScheme(link, Schemas.http) ||
+            matchesScheme(link, Schemas.https) ||
+            matchesScheme(link, Schemas.mailto)
+          ) {
+            this.openerService.open(link);
+          }
+        }),
+      );
 
-			return webview;
-		} catch (e) {
-			const p = append(container, $("p.nocontent"));
-			p.textContent = noContentCopy;
-			return p;
-		}
-	}
+      return webview;
+    } catch (e) {
+      const p = append(container, $("p.nocontent"));
+      p.textContent = noContentCopy;
+      return p;
+    }
+  }
 
-	private async renderMarkdown(cacheResult: CacheResult<string>, container: HTMLElement, token?: CancellationToken): Promise<string> {
-		const contents = await this.loadContents(() => cacheResult, container);
-		if (token?.isCancellationRequested) {
-			return "";
-		}
+  private async renderMarkdown(
+    cacheResult: CacheResult<string>,
+    container: HTMLElement,
+    token?: CancellationToken,
+  ): Promise<string> {
+    const contents = await this.loadContents(() => cacheResult, container);
+    if (token?.isCancellationRequested) {
+      return "";
+    }
 
-		const content = await renderMarkdownDocument(
+    const content = await renderMarkdownDocument(
       contents,
       this.extensionService,
       this.languageService,
       {},
       token,
     );
-		if (token?.isCancellationRequested) {
-			return "";
-		}
+    if (token?.isCancellationRequested) {
+      return "";
+    }
 
-		return this.renderBody(content);
-	}
+    return this.renderBody(content);
+  }
 
-	private renderBody(body: TrustedHTML): string {
-		const nonce = generateUuid();
-		const colorMap = TokenizationRegistry.getColorMap();
-		const css = colorMap ? generateTokensCSSForColorMap(colorMap) : "";
-		return `<!DOCTYPE html>
+  private renderBody(body: TrustedHTML): string {
+    const nonce = generateUuid();
+    const colorMap = TokenizationRegistry.getColorMap();
+    const css = colorMap ? generateTokensCSSForColorMap(colorMap) : "";
+    return `<!DOCTYPE html>
 		<html>
 			<head>
 				<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
@@ -637,68 +736,76 @@ export class AgentPluginEditor extends EditorPane {
 				${body}
 			</body>
 		</html>`;
-	}
+  }
 
-	private loadContents<T>(loadingTask: () => CacheResult<T>, container: HTMLElement): Promise<T> {
-		container.classList.add("loading");
+  private loadContents<T>(
+    loadingTask: () => CacheResult<T>,
+    container: HTMLElement,
+  ): Promise<T> {
+    container.classList.add("loading");
 
-		const result = this.contentDisposables.add(loadingTask());
-		const onDone = () => container.classList.remove("loading");
-		result.promise.then(onDone, onDone);
+    const result = this.contentDisposables.add(loadingTask());
+    const onDone = () => container.classList.remove("loading");
+    result.promise.then(onDone, onDone);
 
-		return result.promise;
-	}
+    return result.promise;
+  }
 
-	override clearInput(): void {
-		this.contentDisposables.clear();
-		this.transientDisposables.clear();
-		super.clearInput();
-	}
+  override clearInput(): void {
+    this.contentDisposables.clear();
+    this.transientDisposables.clear();
+    super.clearInput();
+  }
 
-	override focus(): void {
-		super.focus();
-		this.activeElement?.focus();
-	}
+  override focus(): void {
+    super.focus();
+    this.activeElement?.focus();
+  }
 
-	public get activeWebview(): IWebview | undefined {
-		if (!this.activeElement || !(this.activeElement as IWebview).runFindAction) {
-			return undefined;
-		}
-		return this.activeElement as IWebview;
-	}
+  public get activeWebview(): IWebview | undefined {
+    if (
+      !this.activeElement ||
+      !(this.activeElement as IWebview).runFindAction
+    ) {
+      return undefined;
+    }
+    return this.activeElement as IWebview;
+  }
 
-	layout(dimension: Dimension): void {
-		this.dimension = dimension;
-		this.layoutParticipants.forEach(p => p.layout());
-	}
+  layout(dimension: Dimension): void {
+    this.dimension = dimension;
+    this.layoutParticipants.forEach((p) => p.layout());
+  }
 }
 
 class UpdatePluginEditorAction extends Action {
-	static readonly ID = "agentPlugin.editor.update";
+  static readonly ID = "agentPlugin.editor.update";
 
-	constructor(
-		private readonly plugin: IAgentPlugin,
-		private readonly liveMarketplacePlugin: IMarketplacePlugin,
-		@IPluginInstallService private readonly pluginInstallService: IPluginInstallService,
-		@IPluginMarketplaceService private readonly pluginMarketplaceService: IPluginMarketplaceService,
-	) {
-		super(
+  constructor(
+    private readonly plugin: IAgentPlugin,
+    private readonly liveMarketplacePlugin: IMarketplacePlugin,
+    @IPluginInstallService
+    private readonly pluginInstallService: IPluginInstallService,
+    @IPluginMarketplaceService
+    private readonly pluginMarketplaceService: IPluginMarketplaceService,
+  ) {
+    super(
       UpdatePluginEditorAction.ID,
       localize("update", "Update"),
       "extension-action label prominent install",
     );
-	}
+  }
 
-	override async run(): Promise<void> {
-		if (await this.pluginInstallService.updatePlugin(
-      this.liveMarketplacePlugin,
-    )) {
-			this.pluginMarketplaceService.addInstalledPlugin(
+  override async run(): Promise<void> {
+    if (
+      await this.pluginInstallService.updatePlugin(this.liveMarketplacePlugin)
+    ) {
+      this.pluginMarketplaceService.addInstalledPlugin(
         this.plugin.uri,
         this.liveMarketplacePlugin,
       );
-		}
-	}
+    }
+  }
 }
 
 //#endregion

@@ -9,36 +9,54 @@ import { IListAccessibilityProvider } from "../../../../base/browser/ui/list/lis
 import { Event, IValueWithChangeEvent } from "../../../../base/common/event.js";
 import { getCodiconAriaLabel } from "../../../../base/common/iconLabels.js";
 import { localize } from "../../../../nls.js";
-import { IQuickTreeCheckboxEvent, IQuickTreeItem } from "../../common/quickInput.js";
+import {
+  IQuickTreeCheckboxEvent,
+  IQuickTreeItem,
+} from "../../common/quickInput.js";
 /**
  * Accessibility provider for QuickTree.
  */
-export class QuickTreeAccessibilityProvider<T extends IQuickTreeItem> implements IListAccessibilityProvider<T> {
-	constructor(private readonly onCheckedEvent: Event<IQuickTreeCheckboxEvent<T>>) { }
+export class QuickTreeAccessibilityProvider<
+  T extends IQuickTreeItem,
+> implements IListAccessibilityProvider<T> {
+  constructor(
+    private readonly onCheckedEvent: Event<IQuickTreeCheckboxEvent<T>>,
+  ) {}
 
-	getWidgetAriaLabel(): string {
-		return localize("quickTree", "Quick Tree");
-	}
+  getWidgetAriaLabel(): string {
+    return localize("quickTree", "Quick Tree");
+  }
 
-	getAriaLabel(element: T): string {
-		return element.ariaLabel || [element.label, element.description]
-			.map(s => getCodiconAriaLabel(s))
-			.filter(s => !!s)
-			.join(", ");
-	}
+  getAriaLabel(element: T): string {
+    return (
+      element.ariaLabel ||
+      [element.label, element.description]
+        .map((s) => getCodiconAriaLabel(s))
+        .filter((s) => !!s)
+        .join(", ")
+    );
+  }
 
-	getWidgetRole(): AriaRole {
-		return "tree";
-	}
+  getWidgetRole(): AriaRole {
+    return "tree";
+  }
 
-	getRole(_element: T): AriaRole {
-		return "checkbox";
-	}
+  getRole(_element: T): AriaRole {
+    return "checkbox";
+  }
 
-	isChecked(element: T): IValueWithChangeEvent<CheckBoxAccessibleState> | undefined {
-		return {
-      get value() { return element.checked === "mixed" ? "mixed" : !!element.checked; },
-      onDidChange: e => Event.filter(this.onCheckedEvent, e => e.item === element)(_ => e()),
+  isChecked(
+    element: T,
+  ): IValueWithChangeEvent<CheckBoxAccessibleState> | undefined {
+    return {
+      get value() {
+        return element.checked === "mixed" ? "mixed" : !!element.checked;
+      },
+      onDidChange: (e) =>
+        Event.filter(
+          this.onCheckedEvent,
+          (e) => e.item === element,
+        )((_) => e()),
     };
-	}
+  }
 }

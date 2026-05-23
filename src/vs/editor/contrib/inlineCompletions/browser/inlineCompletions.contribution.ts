@@ -29,7 +29,10 @@ import {
 import { InlineCompletionsController } from "./controller/inlineCompletionsController.js";
 import { InlineCompletionsHoverParticipant } from "./hintsWidget/hoverParticipant.js";
 import { InlineCompletionsAccessibleView } from "./inlineCompletionsAccessibleView.js";
-import { CancelSnoozeInlineCompletion, SnoozeInlineCompletion } from "../../../browser/services/inlineCompletionsService.js";
+import {
+  CancelSnoozeInlineCompletion,
+  SnoozeInlineCompletion,
+} from "../../../browser/services/inlineCompletionsService.js";
 
 registerEditorContribution(
   InlineCompletionsController.ID,

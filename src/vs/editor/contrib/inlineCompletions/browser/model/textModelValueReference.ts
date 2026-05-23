@@ -18,77 +18,77 @@ import { ITextModel } from "../../../../common/model.js";
  * the version at construction time.
  */
 export class TextModelValueReference extends AbstractText {
-	private readonly _version: number;
+  private readonly _version: number;
 
-	static snapshot(textModel: ITextModel): TextModelValueReference {
-		return new TextModelValueReference(textModel);
-	}
+  static snapshot(textModel: ITextModel): TextModelValueReference {
+    return new TextModelValueReference(textModel);
+  }
 
-	private constructor(private readonly _textModel: ITextModel) {
-		super();
-		this._version = _textModel.getVersionId();
-	}
+  private constructor(private readonly _textModel: ITextModel) {
+    super();
+    this._version = _textModel.getVersionId();
+  }
 
-	get uri(): URI {
-		return this._textModel.uri;
-	}
+  get uri(): URI {
+    return this._textModel.uri;
+  }
 
-	get version(): number {
-		return this._version;
-	}
+  get version(): number {
+    return this._version;
+  }
 
-	private _assertValid(): void {
-		if (this._textModel.getVersionId() !== this._version) {
-			onUnexpectedError(
+  private _assertValid(): void {
+    if (this._textModel.getVersionId() !== this._version) {
+      onUnexpectedError(
         new Error(
           `TextModel has changed: expected version ${this._version}, got ${this._textModel.getVersionId()}`,
         ),
       );
-			// TODO: throw here!
-		}
-	}
+      // TODO: throw here!
+    }
+  }
 
-	targets(textModel: ITextModel): boolean {
-		return this._textModel.uri.toString() === textModel.uri.toString();
-	}
+  targets(textModel: ITextModel): boolean {
+    return this._textModel.uri.toString() === textModel.uri.toString();
+  }
 
-	override getValueOfRange(range: Range): string {
-		this._assertValid();
-		return this._textModel.getValueInRange(range);
-	}
+  override getValueOfRange(range: Range): string {
+    this._assertValid();
+    return this._textModel.getValueInRange(range);
+  }
 
-	override getLineLength(lineNumber: number): number {
-		this._assertValid();
-		return this._textModel.getLineLength(lineNumber);
-	}
+  override getLineLength(lineNumber: number): number {
+    this._assertValid();
+    return this._textModel.getLineLength(lineNumber);
+  }
 
-	get length(): TextLength {
-		this._assertValid();
-		const lastLineNumber = this._textModel.getLineCount();
-		const lastLineLen = this._textModel.getLineLength(lastLineNumber);
-		return new TextLength(lastLineNumber - 1, lastLineLen);
-	}
+  get length(): TextLength {
+    this._assertValid();
+    const lastLineNumber = this._textModel.getLineCount();
+    const lastLineLen = this._textModel.getLineLength(lastLineNumber);
+    return new TextLength(lastLineNumber - 1, lastLineLen);
+  }
 
-	getEOL(): string {
-		this._assertValid();
-		return this._textModel.getEOL();
-	}
+  getEOL(): string {
+    this._assertValid();
+    return this._textModel.getEOL();
+  }
 
-	getPositionAt(offset: number): Position {
-		this._assertValid();
-		return this._textModel.getPositionAt(offset);
-	}
+  getPositionAt(offset: number): Position {
+    this._assertValid();
+    return this._textModel.getPositionAt(offset);
+  }
 
-	getValueInRange(range: Range): string {
-		this._assertValid();
-		return this._textModel.getValueInRange(range);
-	}
+  getValueInRange(range: Range): string {
+    this._assertValid();
+    return this._textModel.getValueInRange(range);
+  }
 
-	getVersionId(): number {
-		return this._version;
-	}
+  getVersionId(): number {
+    return this._version;
+  }
 
-	dangerouslyGetUnderlyingModel(): ITextModel {
-		return this._textModel;
-	}
+  dangerouslyGetUnderlyingModel(): ITextModel {
+    return this._textModel;
+  }
 }

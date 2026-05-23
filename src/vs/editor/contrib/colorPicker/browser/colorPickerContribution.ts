@@ -58,26 +58,54 @@ registerEditorFeature(DefaultDocumentColorProviderFeature);
 
 HoverParticipantRegistry.register(HoverColorPickerParticipant);
 
-CommandsRegistry.registerCommand("_executeDocumentColorProvider", function (accessor, ...args) {
-	const [resource] = args;
-	if (!(resource instanceof URI)) {
-		throw illegalArgument();
-	}
-	const { model, colorProviderRegistry, defaultColorDecoratorsEnablement } = _setupColorCommand(accessor, resource);
-	return _findColorData<IExtColorData>(new ExtColorDataCollector(), colorProviderRegistry, model, CancellationToken.None, defaultColorDecoratorsEnablement);
-});
+CommandsRegistry.registerCommand(
+  "_executeDocumentColorProvider",
+  function (accessor, ...args) {
+    const [resource] = args;
+    if (!(resource instanceof URI)) {
+      throw illegalArgument();
+    }
+    const { model, colorProviderRegistry, defaultColorDecoratorsEnablement } =
+      _setupColorCommand(accessor, resource);
+    return _findColorData<IExtColorData>(
+      new ExtColorDataCollector(),
+      colorProviderRegistry,
+      model,
+      CancellationToken.None,
+      defaultColorDecoratorsEnablement,
+    );
+  },
+);
 
-CommandsRegistry.registerCommand("_executeColorPresentationProvider", function (accessor, ...args) {
-	const [color, context] = args;
-	if (!context) {
-		return;
-	}
+CommandsRegistry.registerCommand(
+  "_executeColorPresentationProvider",
+  function (accessor, ...args) {
+    const [color, context] = args;
+    if (!context) {
+      return;
+    }
 
-	const { uri, range } = context as { uri?: unknown; range?: unknown };
-	if (!(uri instanceof URI) || !Array.isArray(color) || color.length !== 4 || !Range.isIRange(range)) {
-		throw illegalArgument();
-	}
-	const { model, colorProviderRegistry, defaultColorDecoratorsEnablement } = _setupColorCommand(accessor, uri);
-	const [red, green, blue, alpha] = color;
-	return _findColorData<IColorPresentation>(new ColorPresentationsCollector({ range: range, color: { red, green, blue, alpha } }), colorProviderRegistry, model, CancellationToken.None, defaultColorDecoratorsEnablement);
-});
+    const { uri, range } = context as { uri?: unknown; range?: unknown };
+    if (
+      !(uri instanceof URI) ||
+      !Array.isArray(color) ||
+      color.length !== 4 ||
+      !Range.isIRange(range)
+    ) {
+      throw illegalArgument();
+    }
+    const { model, colorProviderRegistry, defaultColorDecoratorsEnablement } =
+      _setupColorCommand(accessor, uri);
+    const [red, green, blue, alpha] = color;
+    return _findColorData<IColorPresentation>(
+      new ColorPresentationsCollector({
+        range,
+        color: { red, green, blue, alpha },
+      }),
+      colorProviderRegistry,
+      model,
+      CancellationToken.None,
+      defaultColorDecoratorsEnablement,
+    );
+  },
+);

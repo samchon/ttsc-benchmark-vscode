@@ -19,68 +19,90 @@ import {
   type IToolResult,
   type ToolProgress,
 } from "../../../chat/common/tools/languageModelToolsService.js";
-import { createBrowserPageLink, errorResult, getSessionId } from "./browserToolHelpers.js";
+import {
+  createBrowserPageLink,
+  errorResult,
+  getSessionId,
+} from "./browserToolHelpers.js";
 import { BrowserChatToolReferenceName } from "../../common/browserChatToolReferenceNames.js";
 import { OpenPageToolId } from "./openBrowserTool.js";
 
 export const ReadBrowserToolData: IToolData = {
-	id: "read_page",
-	toolReferenceName: BrowserChatToolReferenceName.ReadPage,
-	displayName: localize("readBrowserTool.displayName", "Read Page"),
-	userDescription: localize("readBrowserTool.userDescription", "Read the content of a browser page"),
-	modelDescription: "Get a snapshot of the current browser page state. This is better than screenshot.",
-	icon: Codicon.fileText,
-	source: ToolDataSource.Internal,
-	inputSchema: {
-		type: "object",
-		properties: {
-			pageId: {
-				type: "string",
-				description: `The browser page ID to read, acquired from context or the open tool.`,
-			},
-		},
-		required: ["pageId"],
-	},
+  id: "read_page",
+  toolReferenceName: BrowserChatToolReferenceName.ReadPage,
+  displayName: localize("readBrowserTool.displayName", "Read Page"),
+  userDescription: localize(
+    "readBrowserTool.userDescription",
+    "Read the content of a browser page",
+  ),
+  modelDescription:
+    "Get a snapshot of the current browser page state. This is better than screenshot.",
+  icon: Codicon.fileText,
+  source: ToolDataSource.Internal,
+  inputSchema: {
+    type: "object",
+    properties: {
+      pageId: {
+        type: "string",
+        description: `The browser page ID to read, acquired from context or the open tool.`,
+      },
+    },
+    required: ["pageId"],
+  },
 };
 
 interface IReadBrowserToolParams {
-	pageId: string;
+  pageId: string;
 }
 
 export class ReadBrowserTool implements IToolImpl {
-	constructor(
-		@IPlaywrightService private readonly playwrightService: IPlaywrightService,
-	) { }
+  constructor(
+    @IPlaywrightService private readonly playwrightService: IPlaywrightService,
+  ) {}
 
-	async prepareToolInvocation(_context: IToolInvocationPreparationContext, _token: CancellationToken): Promise<IPreparedToolInvocation | undefined> {
-		const link = createBrowserPageLink(_context.parameters.pageId);
-		return {
-      invocationMessage: new MarkdownString(localize("browser.read.invocation", "Reading {0}", link)),
-      pastTenseMessage: new MarkdownString(localize("browser.read.past", "Read {0}", link)),
+  async prepareToolInvocation(
+    _context: IToolInvocationPreparationContext,
+    _token: CancellationToken,
+  ): Promise<IPreparedToolInvocation | undefined> {
+    const link = createBrowserPageLink(_context.parameters.pageId);
+    return {
+      invocationMessage: new MarkdownString(
+        localize("browser.read.invocation", "Reading {0}", link),
+      ),
+      pastTenseMessage: new MarkdownString(
+        localize("browser.read.past", "Read {0}", link),
+      ),
     };
-	}
+  }
 
-	async invoke(invocation: IToolInvocation, _countTokens: CountTokensCallback, _progress: ToolProgress, _token: CancellationToken): Promise<IToolResult> {
-		const params = invocation.parameters as IReadBrowserToolParams;
-		const sessionId = getSessionId(invocation);
+  async invoke(
+    invocation: IToolInvocation,
+    _countTokens: CountTokensCallback,
+    _progress: ToolProgress,
+    _token: CancellationToken,
+  ): Promise<IToolResult> {
+    const params = invocation.parameters as IReadBrowserToolParams;
+    const sessionId = getSessionId(invocation);
 
-		if (!params.pageId) {
-			return errorResult(`No page ID provided. Use '${OpenPageToolId}' first.`);
-		}
+    if (!params.pageId) {
+      return errorResult(`No page ID provided. Use '${OpenPageToolId}' first.`);
+    }
 
-		const summary = await this.playwrightService.getSummary(
+    const summary = await this.playwrightService.getSummary(
       sessionId,
       params.pageId,
     );
-		if (!summary) {
-			return errorResult("No page summary available.");
-		}
+    if (!summary) {
+      return errorResult("No page summary available.");
+    }
 
-		return {
-			content: [{
-				kind: "text",
-				value: summary,
-			}],
-		};
-	}
+    return {
+      content: [
+        {
+          kind: "text",
+          value: summary,
+        },
+      ],
+    };
+  }
 }

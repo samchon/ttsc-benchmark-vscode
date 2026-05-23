@@ -19,7 +19,10 @@ import { LanguageFeaturesService } from "../../../../../../editor/common/service
 import { IModelService } from "../../../../../../editor/common/services/model.js";
 import { ITextModelService } from "../../../../../../editor/common/services/resolverService.js";
 import { createTextModel } from "../../../../../../editor/test/common/testTextModel.js";
-import { IWorkspaceContextService, IWorkspaceFolder } from "../../../../../../platform/workspace/common/workspace.js";
+import {
+  IWorkspaceContextService,
+  IWorkspaceFolder,
+} from "../../../../../../platform/workspace/common/workspace.js";
 import {
   FileMatch,
   ISearchComplete,
@@ -29,316 +32,535 @@ import {
   TextSearchMatch,
 } from "../../../../../services/search/common/search.js";
 import { UsagesTool } from "../../../browser/tools/usagesTool.js";
-import { IToolInvocation, IToolResult, IToolResultTextPart, ToolProgress } from "../../../common/tools/languageModelToolsService.js";
+import {
+  IToolInvocation,
+  IToolResult,
+  IToolResultTextPart,
+  ToolProgress,
+} from "../../../common/tools/languageModelToolsService.js";
 import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
 
 function getTextContent(result: IToolResult): string {
-	const part = result.content.find(
+  const part = result.content.find(
     (p): p is IToolResultTextPart => p.kind === "text",
   );
-	return part?.value ?? "";
+  return part?.value ?? "";
 }
 
 suite("UsagesTool", () => {
+  const disposables = new DisposableStore();
+  let langFeatures: LanguageFeaturesService;
 
-	const disposables = new DisposableStore();
-	let langFeatures: LanguageFeaturesService;
+  const testUri = URI.parse("file:///test/file.ts");
+  const testContent = [
+    'import { MyClass } from "./myClass";',
+    "",
+    "function doSomething() {",
+    "\tconst instance = new MyClass();",
+    "\tinstance.run();",
+    "}",
+  ].join("\n");
 
-	const testUri = URI.parse("file:///test/file.ts");
-	const testContent = [
-		'import { MyClass } from "./myClass";',
-		"",
-		"function doSomething() {",
-		"\tconst instance = new MyClass();",
-		"\tinstance.run();",
-		"}",
-	].join("\n");
+  function createMockModelService(models?: ITextModel[]): IModelService {
+    return {
+      _serviceBrand: undefined,
+      getModel: (uri: URI) =>
+        models?.find((m) => m.uri.toString() === uri.toString()) ?? null,
+    } as unknown as IModelService;
+  }
 
-	function createMockModelService(models?: ITextModel[]): IModelService {
-		return {
-			_serviceBrand: undefined,
-			getModel: (uri: URI) => models?.find(m => m.uri.toString() === uri.toString()) ?? null,
-		} as unknown as IModelService;
-	}
+  function createMockSearchService(
+    searchImpl?: (query: ITextQuery) => ISearchComplete,
+  ): ISearchService {
+    return {
+      _serviceBrand: undefined,
+      textSearch: async (query: ITextQuery) =>
+        searchImpl?.(query) ?? { results: [], messages: [] },
+    } as unknown as ISearchService;
+  }
 
-	function createMockSearchService(searchImpl?: (query: ITextQuery) => ISearchComplete): ISearchService {
-		return {
-			_serviceBrand: undefined,
-			textSearch: async (query: ITextQuery) => searchImpl?.(query) ?? { results: [], messages: [] },
-		} as unknown as ISearchService;
-	}
+  function createMockTextModelService(model: ITextModel): ITextModelService {
+    return {
+      _serviceBrand: undefined,
+      createModelReference: async () => ({
+        object: { textEditorModel: model },
+        dispose: () => {},
+      }),
+      registerTextModelContentProvider: () => ({ dispose: () => {} }),
+      canHandleResource: () => false,
+    } as unknown as ITextModelService;
+  }
 
-	function createMockTextModelService(model: ITextModel): ITextModelService {
-		return {
-			_serviceBrand: undefined,
-			createModelReference: async () => ({
-				object: { textEditorModel: model },
-				dispose: () => { },
-			}),
-			registerTextModelContentProvider: () => ({ dispose: () => { } }),
-			canHandleResource: () => false,
-		} as unknown as ITextModelService;
-	}
+  function createMockWorkspaceService(): IWorkspaceContextService {
+    const folderUri = URI.parse("file:///test");
+    const folder = {
+      uri: folderUri,
+      toResource: (relativePath: string) =>
+        URI.parse(`file:///test/${relativePath}`),
+    } as unknown as IWorkspaceFolder;
+    return {
+      _serviceBrand: undefined,
+      getWorkspace: () => ({ folders: [folder] }),
+      getWorkspaceFolder: (uri: URI) => {
+        if (uri.toString().startsWith(folderUri.toString())) {
+          return folder;
+        }
+        return null;
+      },
+    } as unknown as IWorkspaceContextService;
+  }
 
-	function createMockWorkspaceService(): IWorkspaceContextService {
-		const folderUri = URI.parse("file:///test");
-		const folder = {
-			uri: folderUri,
-			toResource: (relativePath: string) => URI.parse(`file:///test/${relativePath}`),
-		} as unknown as IWorkspaceFolder;
-		return {
-			_serviceBrand: undefined,
-			getWorkspace: () => ({ folders: [folder] }),
-			getWorkspaceFolder: (uri: URI) => {
-				if (uri.toString().startsWith(folderUri.toString())) {
-					return folder;
-				}
-				return null;
-			},
-		} as unknown as IWorkspaceContextService;
-	}
+  function createInvocation(
+    parameters: Record<string, unknown>,
+  ): IToolInvocation {
+    return { parameters } as unknown as IToolInvocation;
+  }
 
-	function createInvocation(parameters: Record<string, unknown>): IToolInvocation {
-		return { parameters } as unknown as IToolInvocation;
-	}
+  const noopCountTokens = async () => 0;
+  const noopProgress: ToolProgress = { report() {} };
 
-	const noopCountTokens = async () => 0;
-	const noopProgress: ToolProgress = { report() { } };
+  function createTool(
+    textModelService: ITextModelService,
+    workspaceService: IWorkspaceContextService,
+    options?: { modelService?: IModelService; searchService?: ISearchService },
+  ): UsagesTool {
+    return new UsagesTool(
+      langFeatures,
+      options?.modelService ?? createMockModelService(),
+      options?.searchService ?? createMockSearchService(),
+      textModelService,
+      workspaceService,
+    );
+  }
 
-	function createTool(textModelService: ITextModelService, workspaceService: IWorkspaceContextService, options?: { modelService?: IModelService; searchService?: ISearchService }): UsagesTool {
-		return new UsagesTool(langFeatures, options?.modelService ?? createMockModelService(), options?.searchService ?? createMockSearchService(), textModelService, workspaceService);
-	}
+  setup(() => {
+    langFeatures = new LanguageFeaturesService();
+  });
 
-	setup(() => {
-		langFeatures = new LanguageFeaturesService();
-	});
+  teardown(() => {
+    disposables.clear();
+  });
 
-	teardown(() => {
-		disposables.clear();
-	});
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-	ensureNoDisposablesAreLeakedInTestSuite();
+  suite("getToolData", () => {
+    test("returns tool data when no providers are registered", () => {
+      const tool = disposables.add(
+        createTool(
+          createMockTextModelService(null!),
+          createMockWorkspaceService(),
+        ),
+      );
+      assert.ok(tool.getToolData());
+    });
 
-	suite("getToolData", () => {
+    test("description does not include a per-language list", () => {
+      const model = disposables.add(
+        createTextModel("", "typescript", undefined, testUri),
+      );
+      const tool = disposables.add(
+        createTool(
+          createMockTextModelService(model),
+          createMockWorkspaceService(),
+        ),
+      );
+      disposables.add(
+        langFeatures.referenceProvider.register("typescript", {
+          provideReferences: () => [],
+        }),
+      );
+      const data = tool.getToolData();
+      assert.ok(
+        !data.modelDescription.includes("Currently supported for"),
+        `expected modelDescription to not list languages, got: ${data.modelDescription}`,
+      );
+      assert.ok(
+        !data.modelDescription.includes("typescript"),
+        "expected modelDescription to not include any specific language id",
+      );
+      assert.ok(
+        !data.modelDescription.includes("all languages"),
+        'expected modelDescription to not mention "all languages"',
+      );
+    });
 
-		test("returns tool data when no providers are registered", () => {
-			const tool = disposables.add(createTool(createMockTextModelService(null!), createMockWorkspaceService()));
-			assert.ok(tool.getToolData());
-		});
+    test("description is identical regardless of which providers are registered", () => {
+      const tool1 = disposables.add(
+        createTool(
+          createMockTextModelService(null!),
+          createMockWorkspaceService(),
+        ),
+      );
+      const data1 = tool1.getToolData();
 
-		test("description does not include a per-language list", () => {
-			const model = disposables.add(createTextModel("", "typescript", undefined, testUri));
-			const tool = disposables.add(createTool(createMockTextModelService(model), createMockWorkspaceService()));
-			disposables.add(langFeatures.referenceProvider.register("typescript", { provideReferences: () => [] }));
-			const data = tool.getToolData();
-			assert.ok(!data.modelDescription.includes("Currently supported for"),
-				`expected modelDescription to not list languages, got: ${data.modelDescription}`);
-			assert.ok(!data.modelDescription.includes("typescript"),
-				"expected modelDescription to not include any specific language id");
-			assert.ok(!data.modelDescription.includes("all languages"),
-				'expected modelDescription to not mention "all languages"');
-		});
+      const model = disposables.add(
+        createTextModel("", "typescript", undefined, testUri),
+      );
+      const tool2 = disposables.add(
+        createTool(
+          createMockTextModelService(model),
+          createMockWorkspaceService(),
+        ),
+      );
+      disposables.add(
+        langFeatures.referenceProvider.register("typescript", {
+          provideReferences: () => [],
+        }),
+      );
+      disposables.add(
+        langFeatures.referenceProvider.register("python", {
+          provideReferences: () => [],
+        }),
+      );
+      const data2 = tool2.getToolData();
 
-		test("description is identical regardless of which providers are registered", () => {
-			const tool1 = disposables.add(createTool(createMockTextModelService(null!), createMockWorkspaceService()));
-			const data1 = tool1.getToolData();
+      assert.strictEqual(
+        data1.modelDescription,
+        data2.modelDescription,
+        "expected modelDescription to be byte-stable across provider registrations",
+      );
+    });
+  });
 
-			const model = disposables.add(createTextModel("", "typescript", undefined, testUri));
-			const tool2 = disposables.add(createTool(createMockTextModelService(model), createMockWorkspaceService()));
-			disposables.add(langFeatures.referenceProvider.register("typescript", { provideReferences: () => [] }));
-			disposables.add(langFeatures.referenceProvider.register("python", { provideReferences: () => [] }));
-			const data2 = tool2.getToolData();
+  suite("invoke", () => {
+    test("returns error when no uri or filePath provided", async () => {
+      const tool = disposables.add(
+        createTool(
+          createMockTextModelService(null!),
+          createMockWorkspaceService(),
+        ),
+      );
+      const result = await tool.invoke(
+        createInvocation({ symbol: "MyClass", lineContent: "MyClass" }),
+        noopCountTokens,
+        noopProgress,
+        CancellationToken.None,
+      );
+      assert.ok(getTextContent(result).includes("Provide either"));
+    });
 
-			assert.strictEqual(data1.modelDescription, data2.modelDescription,
-				"expected modelDescription to be byte-stable across provider registrations");
-		});
-	});
+    test("returns error when line content not found", async () => {
+      const model = disposables.add(
+        createTextModel(testContent, "typescript", undefined, testUri),
+      );
+      disposables.add(
+        langFeatures.referenceProvider.register("typescript", {
+          provideReferences: () => [],
+        }),
+      );
+      const tool = disposables.add(
+        createTool(
+          createMockTextModelService(model),
+          createMockWorkspaceService(),
+        ),
+      );
+      const result = await tool.invoke(
+        createInvocation({
+          symbol: "MyClass",
+          uri: testUri.toString(),
+          lineContent: "nonexistent line",
+        }),
+        noopCountTokens,
+        noopProgress,
+        CancellationToken.None,
+      );
+      assert.ok(getTextContent(result).includes("Could not find line content"));
+    });
 
-	suite("invoke", () => {
+    test("returns error when symbol not found in line", async () => {
+      const model = disposables.add(
+        createTextModel(testContent, "typescript", undefined, testUri),
+      );
+      disposables.add(
+        langFeatures.referenceProvider.register("typescript", {
+          provideReferences: () => [],
+        }),
+      );
+      const tool = disposables.add(
+        createTool(
+          createMockTextModelService(model),
+          createMockWorkspaceService(),
+        ),
+      );
+      const result = await tool.invoke(
+        createInvocation({
+          symbol: "NotHere",
+          uri: testUri.toString(),
+          lineContent: "function doSomething",
+        }),
+        noopCountTokens,
+        noopProgress,
+        CancellationToken.None,
+      );
+      assert.ok(getTextContent(result).includes("Could not find symbol"));
+    });
 
-		test("returns error when no uri or filePath provided", async () => {
-			const tool = disposables.add(createTool(createMockTextModelService(null!), createMockWorkspaceService()));
-			const result = await tool.invoke(
-				createInvocation({ symbol: "MyClass", lineContent: "MyClass" }),
-				noopCountTokens, noopProgress, CancellationToken.None,
-			);
-			assert.ok(getTextContent(result).includes("Provide either"));
-		});
+    test("finds references and classifies them with usage tags", async () => {
+      const model = disposables.add(
+        createTextModel(testContent, "typescript", undefined, testUri),
+      );
+      const otherUri = URI.parse("file:///test/other.ts");
 
-		test("returns error when line content not found", async () => {
-			const model = disposables.add(createTextModel(testContent, "typescript", undefined, testUri));
-			disposables.add(langFeatures.referenceProvider.register("typescript", { provideReferences: () => [] }));
-			const tool = disposables.add(createTool(createMockTextModelService(model), createMockWorkspaceService()));
-			const result = await tool.invoke(
-				createInvocation({ symbol: "MyClass", uri: testUri.toString(), lineContent: "nonexistent line" }),
-				noopCountTokens, noopProgress, CancellationToken.None,
-			);
-			assert.ok(getTextContent(result).includes("Could not find line content"));
-		});
+      const refProvider: ReferenceProvider = {
+        provideReferences: (_model: ITextModel): Location[] => [
+          { uri: testUri, range: new Range(1, 10, 1, 17) },
+          { uri: testUri, range: new Range(4, 23, 4, 30) },
+          { uri: otherUri, range: new Range(5, 1, 5, 8) },
+        ],
+      };
+      const defProvider: DefinitionProvider = {
+        provideDefinition: () => [
+          { uri: testUri, range: new Range(1, 10, 1, 17) },
+        ],
+      };
+      const implProvider: ImplementationProvider = {
+        provideImplementation: () => [
+          { uri: otherUri, range: new Range(5, 1, 5, 8) },
+        ],
+      };
 
-		test("returns error when symbol not found in line", async () => {
-			const model = disposables.add(createTextModel(testContent, "typescript", undefined, testUri));
-			disposables.add(langFeatures.referenceProvider.register("typescript", { provideReferences: () => [] }));
-			const tool = disposables.add(createTool(createMockTextModelService(model), createMockWorkspaceService()));
-			const result = await tool.invoke(
-				createInvocation({ symbol: "NotHere", uri: testUri.toString(), lineContent: "function doSomething" }),
-				noopCountTokens, noopProgress, CancellationToken.None,
-			);
-			assert.ok(getTextContent(result).includes("Could not find symbol"));
-		});
+      disposables.add(
+        langFeatures.referenceProvider.register("typescript", refProvider),
+      );
+      disposables.add(
+        langFeatures.definitionProvider.register("typescript", defProvider),
+      );
+      disposables.add(
+        langFeatures.implementationProvider.register(
+          "typescript",
+          implProvider,
+        ),
+      );
 
-		test("finds references and classifies them with usage tags", async () => {
-			const model = disposables.add(createTextModel(testContent, "typescript", undefined, testUri));
-			const otherUri = URI.parse("file:///test/other.ts");
+      // Model is open for testUri so IModelService returns it; otherUri needs search
+      const searchCalled: ITextQuery[] = [];
+      const searchService = createMockSearchService((query) => {
+        searchCalled.push(query);
+        const fileMatch = new FileMatch(otherUri);
+        fileMatch.results = [
+          new TextSearchMatch(
+            "export class MyClass implements IMyClass {",
+            new OneLineRange(4, 0, 7), // 0-based line 4 = 1-based line 5
+          ),
+        ];
+        return { results: [fileMatch], messages: [] };
+      });
+      const modelService = createMockModelService([model]);
 
-			const refProvider: ReferenceProvider = {
-				provideReferences: (_model: ITextModel): Location[] => [
-					{ uri: testUri, range: new Range(1, 10, 1, 17) },
-					{ uri: testUri, range: new Range(4, 23, 4, 30) },
-					{ uri: otherUri, range: new Range(5, 1, 5, 8) },
-				],
-			};
-			const defProvider: DefinitionProvider = {
-				provideDefinition: () => [{ uri: testUri, range: new Range(1, 10, 1, 17) }],
-			};
-			const implProvider: ImplementationProvider = {
-				provideImplementation: () => [{ uri: otherUri, range: new Range(5, 1, 5, 8) }],
-			};
+      const tool = disposables.add(
+        createTool(
+          createMockTextModelService(model),
+          createMockWorkspaceService(),
+          { modelService, searchService },
+        ),
+      );
+      const result = await tool.invoke(
+        createInvocation({
+          symbol: "MyClass",
+          uri: testUri.toString(),
+          lineContent: "import { MyClass }",
+        }),
+        noopCountTokens,
+        noopProgress,
+        CancellationToken.None,
+      );
 
-			disposables.add(langFeatures.referenceProvider.register("typescript", refProvider));
-			disposables.add(langFeatures.definitionProvider.register("typescript", defProvider));
-			disposables.add(langFeatures.implementationProvider.register("typescript", implProvider));
+      const text = getTextContent(result);
 
-			// Model is open for testUri so IModelService returns it; otherUri needs search
-			const searchCalled: ITextQuery[] = [];
-			const searchService = createMockSearchService(query => {
-				searchCalled.push(query);
-				const fileMatch = new FileMatch(otherUri);
-				fileMatch.results = [new TextSearchMatch(
-					"export class MyClass implements IMyClass {",
-					new OneLineRange(4, 0, 7), // 0-based line 4 = 1-based line 5
-				)];
-				return { results: [fileMatch], messages: [] };
-			});
-			const modelService = createMockModelService([model]);
+      // Check overall structure
+      assert.ok(text.includes("3 usages of `MyClass`"));
 
-			const tool = disposables.add(createTool(createMockTextModelService(model), createMockWorkspaceService(), { modelService, searchService }));
-			const result = await tool.invoke(
-				createInvocation({ symbol: "MyClass", uri: testUri.toString(), lineContent: "import { MyClass }" }),
-				noopCountTokens, noopProgress, CancellationToken.None,
-			);
+      // Check usage tag format
+      assert.ok(
+        text.includes(
+          `<usage type="definition" uri="${testUri.toString()}" line="1">`,
+        ),
+      );
+      assert.ok(
+        text.includes(
+          `<usage type="reference" uri="${testUri.toString()}" line="4">`,
+        ),
+      );
+      assert.ok(
+        text.includes(
+          `<usage type="implementation" uri="${otherUri.toString()}" line="5">`,
+        ),
+      );
 
-			const text = getTextContent(result);
+      // Check that previews from open model are included (testUri lines)
+      assert.ok(text.includes('import { MyClass } from "./myClass"'));
+      assert.ok(text.includes("const instance = new MyClass()"));
 
-			// Check overall structure
-			assert.ok(text.includes("3 usages of `MyClass`"));
+      // Check that preview from search service is included (otherUri)
+      assert.ok(text.includes("export class MyClass implements IMyClass {"));
 
-			// Check usage tag format
-			assert.ok(text.includes(`<usage type="definition" uri="${testUri.toString()}" line="1">`));
-			assert.ok(text.includes(`<usage type="reference" uri="${testUri.toString()}" line="4">`));
-			assert.ok(text.includes(`<usage type="implementation" uri="${otherUri.toString()}" line="5">`));
+      // Check closing tags
+      assert.ok(text.includes("</usage>"));
 
-			// Check that previews from open model are included (testUri lines)
-			assert.ok(text.includes('import { MyClass } from "./myClass"'));
-			assert.ok(text.includes("const instance = new MyClass()"));
+      // Verify search service was called for the non-open file
+      assert.strictEqual(searchCalled.length, 1);
+      assert.ok(searchCalled[0].contentPattern.pattern.includes("MyClass"));
+      assert.ok(searchCalled[0].contentPattern.isWordMatch);
+    });
 
-			// Check that preview from search service is included (otherUri)
-			assert.ok(text.includes("export class MyClass implements IMyClass {"));
+    test("uses self-closing tag when no preview available", async () => {
+      const model = disposables.add(
+        createTextModel(testContent, "typescript", undefined, testUri),
+      );
+      const otherUri = URI.parse("file:///test/other.ts");
 
-			// Check closing tags
-			assert.ok(text.includes("</usage>"));
+      disposables.add(
+        langFeatures.referenceProvider.register("typescript", {
+          provideReferences: (): Location[] => [
+            { uri: otherUri, range: new Range(10, 5, 10, 12) },
+          ],
+        }),
+      );
 
-			// Verify search service was called for the non-open file
-			assert.strictEqual(searchCalled.length, 1);
-			assert.ok(searchCalled[0].contentPattern.pattern.includes("MyClass"));
-			assert.ok(searchCalled[0].contentPattern.isWordMatch);
-		});
+      // Search returns no results for this file (symbol renamed/aliased)
+      const searchService = createMockSearchService(() => ({
+        results: [],
+        messages: [],
+      }));
 
-		test("uses self-closing tag when no preview available", async () => {
-			const model = disposables.add(createTextModel(testContent, "typescript", undefined, testUri));
-			const otherUri = URI.parse("file:///test/other.ts");
+      const tool = disposables.add(
+        createTool(
+          createMockTextModelService(model),
+          createMockWorkspaceService(),
+          { searchService },
+        ),
+      );
+      const result = await tool.invoke(
+        createInvocation({
+          symbol: "MyClass",
+          uri: testUri.toString(),
+          lineContent: "import { MyClass }",
+        }),
+        noopCountTokens,
+        noopProgress,
+        CancellationToken.None,
+      );
 
-			disposables.add(langFeatures.referenceProvider.register("typescript", {
-				provideReferences: (): Location[] => [
-					{ uri: otherUri, range: new Range(10, 5, 10, 12) },
-				],
-			}));
+      const text = getTextContent(result);
+      assert.ok(
+        text.includes(
+          `<usage type="reference" uri="${otherUri.toString()}" line="10" />`,
+        ),
+      );
+    });
 
-			// Search returns no results for this file (symbol renamed/aliased)
-			const searchService = createMockSearchService(() => ({ results: [], messages: [] }));
+    test("does not call search service for files already open in model service", async () => {
+      const model = disposables.add(
+        createTextModel(testContent, "typescript", undefined, testUri),
+      );
 
-			const tool = disposables.add(createTool(createMockTextModelService(model), createMockWorkspaceService(), { searchService }));
-			const result = await tool.invoke(
-				createInvocation({ symbol: "MyClass", uri: testUri.toString(), lineContent: "import { MyClass }" }),
-				noopCountTokens, noopProgress, CancellationToken.None,
-			);
+      disposables.add(
+        langFeatures.referenceProvider.register("typescript", {
+          provideReferences: (): Location[] => [
+            { uri: testUri, range: new Range(1, 10, 1, 17) },
+          ],
+        }),
+      );
 
-			const text = getTextContent(result);
-			assert.ok(text.includes(`<usage type="reference" uri="${otherUri.toString()}" line="10" />`));
-		});
+      let searchCalled = false;
+      const searchService = createMockSearchService(() => {
+        searchCalled = true;
+        return { results: [], messages: [] };
+      });
+      const modelService = createMockModelService([model]);
 
-		test("does not call search service for files already open in model service", async () => {
-			const model = disposables.add(createTextModel(testContent, "typescript", undefined, testUri));
+      const tool = disposables.add(
+        createTool(
+          createMockTextModelService(model),
+          createMockWorkspaceService(),
+          { modelService, searchService },
+        ),
+      );
+      const result = await tool.invoke(
+        createInvocation({
+          symbol: "MyClass",
+          uri: testUri.toString(),
+          lineContent: "import { MyClass }",
+        }),
+        noopCountTokens,
+        noopProgress,
+        CancellationToken.None,
+      );
 
-			disposables.add(langFeatures.referenceProvider.register("typescript", {
-				provideReferences: (): Location[] => [
-					{ uri: testUri, range: new Range(1, 10, 1, 17) },
-				],
-			}));
+      assert.ok(getTextContent(result).includes("1 usages"));
+      assert.strictEqual(
+        searchCalled,
+        false,
+        "search service should not be called when all files are open",
+      );
+    });
 
-			let searchCalled = false;
-			const searchService = createMockSearchService(() => {
-				searchCalled = true;
-				return { results: [], messages: [] };
-			});
-			const modelService = createMockModelService([model]);
+    test("handles whitespace normalization in lineContent", async () => {
+      const content = "function   doSomething(x:  number) {}";
+      const model = disposables.add(
+        createTextModel(content, "typescript", undefined, testUri),
+      );
 
-			const tool = disposables.add(createTool(createMockTextModelService(model), createMockWorkspaceService(), { modelService, searchService }));
-			const result = await tool.invoke(
-				createInvocation({ symbol: "MyClass", uri: testUri.toString(), lineContent: "import { MyClass }" }),
-				noopCountTokens, noopProgress, CancellationToken.None,
-			);
+      disposables.add(
+        langFeatures.referenceProvider.register("typescript", {
+          provideReferences: (): Location[] => [
+            { uri: testUri, range: new Range(1, 12, 1, 23) },
+          ],
+        }),
+      );
 
-			assert.ok(getTextContent(result).includes("1 usages"));
-			assert.strictEqual(searchCalled, false, "search service should not be called when all files are open");
-		});
+      const tool = disposables.add(
+        createTool(
+          createMockTextModelService(model),
+          createMockWorkspaceService(),
+        ),
+      );
+      const result = await tool.invoke(
+        createInvocation({
+          symbol: "doSomething",
+          uri: testUri.toString(),
+          lineContent: "function doSomething(x: number)",
+        }),
+        noopCountTokens,
+        noopProgress,
+        CancellationToken.None,
+      );
 
-		test("handles whitespace normalization in lineContent", async () => {
-			const content = "function   doSomething(x:  number) {}";
-			const model = disposables.add(createTextModel(content, "typescript", undefined, testUri));
+      assert.ok(getTextContent(result).includes("1 usages"));
+    });
 
-			disposables.add(langFeatures.referenceProvider.register("typescript", {
-				provideReferences: (): Location[] => [
-					{ uri: testUri, range: new Range(1, 12, 1, 23) },
-				],
-			}));
+    test("resolves filePath via workspace folders", async () => {
+      const fileUri = URI.parse("file:///test/src/file.ts");
+      const model = disposables.add(
+        createTextModel(testContent, "typescript", undefined, fileUri),
+      );
 
-			const tool = disposables.add(createTool(createMockTextModelService(model), createMockWorkspaceService()));
-			const result = await tool.invoke(
-				createInvocation({ symbol: "doSomething", uri: testUri.toString(), lineContent: "function doSomething(x: number)" }),
-				noopCountTokens, noopProgress, CancellationToken.None,
-			);
+      disposables.add(
+        langFeatures.referenceProvider.register("typescript", {
+          provideReferences: (): Location[] => [
+            { uri: fileUri, range: new Range(1, 10, 1, 17) },
+          ],
+        }),
+      );
 
-			assert.ok(getTextContent(result).includes("1 usages"));
-		});
+      const tool = disposables.add(
+        createTool(
+          createMockTextModelService(model),
+          createMockWorkspaceService(),
+        ),
+      );
+      const result = await tool.invoke(
+        createInvocation({
+          symbol: "MyClass",
+          filePath: "src/file.ts",
+          lineContent: "import { MyClass }",
+        }),
+        noopCountTokens,
+        noopProgress,
+        CancellationToken.None,
+      );
 
-		test("resolves filePath via workspace folders", async () => {
-			const fileUri = URI.parse("file:///test/src/file.ts");
-			const model = disposables.add(createTextModel(testContent, "typescript", undefined, fileUri));
-
-			disposables.add(langFeatures.referenceProvider.register("typescript", {
-				provideReferences: (): Location[] => [
-					{ uri: fileUri, range: new Range(1, 10, 1, 17) },
-				],
-			}));
-
-			const tool = disposables.add(createTool(createMockTextModelService(model), createMockWorkspaceService()));
-			const result = await tool.invoke(
-				createInvocation({ symbol: "MyClass", filePath: "src/file.ts", lineContent: "import { MyClass }" }),
-				noopCountTokens, noopProgress, CancellationToken.None,
-			);
-
-			assert.ok(getTextContent(result).includes("1 usages"));
-		});
-	});
+      assert.ok(getTextContent(result).includes("1 usages"));
+    });
+  });
 });

@@ -3,8 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { EditorConfiguration, IEnvConfiguration } from "../../../browser/config/editorConfiguration.js";
-import { EditorFontLigatures, EditorFontVariations } from "../../../common/config/editorOptions.js";
+import {
+  EditorConfiguration,
+  IEnvConfiguration,
+} from "../../../browser/config/editorConfiguration.js";
+import {
+  EditorFontLigatures,
+  EditorFontVariations,
+} from "../../../common/config/editorOptions.js";
 import { BareFontInfo, FontInfo } from "../../../common/config/fontInfo.js";
 import { TestCodeEditorCreationOptions } from "../testCodeEditor.js";
 import { AccessibilitySupport } from "../../../../platform/accessibility/common/accessibility.js";
@@ -12,32 +18,33 @@ import { TestAccessibilityService } from "../../../../platform/accessibility/tes
 import { MenuId } from "../../../../platform/actions/common/actions.js";
 
 export class TestConfiguration extends EditorConfiguration {
-
-	constructor(opts: Readonly<TestCodeEditorCreationOptions>) {
-		super(
+  constructor(opts: Readonly<TestCodeEditorCreationOptions>) {
+    super(
       false,
       MenuId.EditorContext,
       opts,
       null,
       new TestAccessibilityService(),
     );
-	}
+  }
 
-	protected override _readEnvConfiguration(): IEnvConfiguration {
-		const envConfig = (this.getRawOptions() as TestCodeEditorCreationOptions).envConfig;
-		return {
+  protected override _readEnvConfiguration(): IEnvConfiguration {
+    const envConfig = (this.getRawOptions() as TestCodeEditorCreationOptions)
+      .envConfig;
+    return {
       extraEditorClassName: envConfig?.extraEditorClassName ?? "",
       outerWidth: envConfig?.outerWidth ?? 100,
       outerHeight: envConfig?.outerHeight ?? 100,
       emptySelectionClipboard: envConfig?.emptySelectionClipboard ?? true,
       pixelRatio: envConfig?.pixelRatio ?? 1,
-      accessibilitySupport: envConfig?.accessibilitySupport ?? AccessibilitySupport.Unknown,
+      accessibilitySupport:
+        envConfig?.accessibilitySupport ?? AccessibilitySupport.Unknown,
       editContextSupported: true,
     };
-	}
+  }
 
-	protected override _readFontInfo(styling: BareFontInfo): FontInfo {
-		return new FontInfo(
+  protected override _readFontInfo(styling: BareFontInfo): FontInfo {
+    return new FontInfo(
       {
         pixelRatio: 1,
         fontFamily: "mockFont",
@@ -58,5 +65,5 @@ export class TestConfiguration extends EditorConfiguration {
       },
       true,
     );
-	}
+  }
 }

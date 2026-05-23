@@ -11,14 +11,14 @@ import { IMcpService } from "../common/mcpTypes.js";
 import { McpGatewayToolBrokerChannel } from "../common/mcpGatewayToolBrokerChannel.js";
 
 export class McpGatewayToolBrokerContribution implements IWorkbenchContribution {
-	constructor(
-		@IMainProcessService mainProcessService: IMainProcessService,
-		@IMcpService mcpService: IMcpService,
-		@ILogService logService: ILogService,
-	) {
-		mainProcessService.registerChannel(
+  constructor(
+    @IMainProcessService mainProcessService: IMainProcessService,
+    @IMcpService mcpService: IMcpService,
+    @ILogService logService: ILogService,
+  ) {
+    mainProcessService.registerChannel(
       McpGatewayToolBrokerChannelName,
       new McpGatewayToolBrokerChannel(mcpService, logService),
     );
-	}
+  }
 }

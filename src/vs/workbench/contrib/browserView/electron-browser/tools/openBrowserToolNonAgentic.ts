@@ -20,7 +20,10 @@ import {
   type IToolResult,
   type ToolProgress,
 } from "../../../chat/common/tools/languageModelToolsService.js";
-import { IOpenBrowserToolParams, OpenBrowserToolData } from "./openBrowserTool.js";
+import {
+  IOpenBrowserToolParams,
+  OpenBrowserToolData,
+} from "./openBrowserTool.js";
 import { MarkdownString } from "../../../../../base/common/htmlContent.js";
 import {
   createBrowserPageLink,
@@ -30,76 +33,113 @@ import {
 import { IBrowserViewWorkbenchService } from "../../common/browserView.js";
 
 export const OpenBrowserToolNonAgenticData: IToolData = {
-	...OpenBrowserToolData,
-	modelDescription: "Open a new browser page in the integrated browser at the given URL.",
-	inputSchema: {
-		...OpenBrowserToolData.inputSchema,
-		required: ["url"],
-		$comment: undefined,
-	},
+  ...OpenBrowserToolData,
+  modelDescription:
+    "Open a new browser page in the integrated browser at the given URL.",
+  inputSchema: {
+    ...OpenBrowserToolData.inputSchema,
+    required: ["url"],
+    $comment: undefined,
+  },
 };
 
 export class OpenBrowserToolNonAgentic implements IToolImpl {
-	constructor(
-		@ITelemetryService private readonly telemetryService: ITelemetryService,
-		@IEditorService private readonly editorService: IEditorService,
-		@IBrowserViewWorkbenchService private readonly browserViewService: IBrowserViewWorkbenchService,
-	) { }
+  constructor(
+    @ITelemetryService private readonly telemetryService: ITelemetryService,
+    @IEditorService private readonly editorService: IEditorService,
+    @IBrowserViewWorkbenchService
+    private readonly browserViewService: IBrowserViewWorkbenchService,
+  ) {}
 
-	async prepareToolInvocation(context: IToolInvocationPreparationContext, _token: CancellationToken): Promise<IPreparedToolInvocation | undefined> {
-		const params = context.parameters as IOpenBrowserToolParams;
+  async prepareToolInvocation(
+    context: IToolInvocationPreparationContext,
+    _token: CancellationToken,
+  ): Promise<IPreparedToolInvocation | undefined> {
+    const params = context.parameters as IOpenBrowserToolParams;
 
-		if (!params.url) {
-			throw new Error('The "url" parameter is required.');
-		}
-		const parsed = URL.parse(params.url);
-		if (!parsed) {
-			throw new Error("You must provide a complete, valid URL.");
-		}
+    if (!params.url) {
+      throw new Error('The "url" parameter is required.');
+    }
+    const parsed = URL.parse(params.url);
+    if (!parsed) {
+      throw new Error("You must provide a complete, valid URL.");
+    }
 
-		return {
-			invocationMessage: localize("browser.open.nonAgentic.invocation", "Opening browser page at {0}", parsed.href),
-			pastTenseMessage: localize("browser.open.nonAgentic.past", "Opened browser page at {0}", parsed.href),
-			confirmationMessages: {
-				title: localize("browser.open.nonAgentic.confirmTitle", "Open Browser Page?"),
-				message: localize("browser.open.nonAgentic.confirmMessage", "This will open {0} in the integrated browser. The agent will not be able to read its contents.", parsed.href),
-				allowAutoConfirm: true,
-			},
-		};
-	}
+    return {
+      invocationMessage: localize(
+        "browser.open.nonAgentic.invocation",
+        "Opening browser page at {0}",
+        parsed.href,
+      ),
+      pastTenseMessage: localize(
+        "browser.open.nonAgentic.past",
+        "Opened browser page at {0}",
+        parsed.href,
+      ),
+      confirmationMessages: {
+        title: localize(
+          "browser.open.nonAgentic.confirmTitle",
+          "Open Browser Page?",
+        ),
+        message: localize(
+          "browser.open.nonAgentic.confirmMessage",
+          "This will open {0} in the integrated browser. The agent will not be able to read its contents.",
+          parsed.href,
+        ),
+        allowAutoConfirm: true,
+      },
+    };
+  }
 
-	async invoke(invocation: IToolInvocation, _countTokens: CountTokensCallback, _progress: ToolProgress, _token: CancellationToken): Promise<IToolResult> {
-		const params = invocation.parameters as IOpenBrowserToolParams;
+  async invoke(
+    invocation: IToolInvocation,
+    _countTokens: CountTokensCallback,
+    _progress: ToolProgress,
+    _token: CancellationToken,
+  ): Promise<IToolResult> {
+    const params = invocation.parameters as IOpenBrowserToolParams;
 
-		if (!params.forceNew) {
-			const existingPages = findExistingPagesByHost(
+    if (!params.forceNew) {
+      const existingPages = findExistingPagesByHost(
         this.browserViewService,
         params.url!,
       );
-			const existingResult = await getExistingPagesResult(
+      const existingResult = await getExistingPagesResult(
         this.editorService,
         existingPages,
         { excludeIds: true },
       );
-			if (existingResult) {
-				return existingResult;
-			}
-		}
+      if (existingResult) {
+        return existingResult;
+      }
+    }
 
-		logBrowserOpen(this.telemetryService, "chatTool");
+    logBrowserOpen(this.telemetryService, "chatTool");
 
-		const browserUri = BrowserViewUri.forId(generateUuid());
-		await this.editorService.openEditor({
+    const browserUri = BrowserViewUri.forId(generateUuid());
+    await this.editorService.openEditor({
       resource: browserUri,
-      options: { pinned: true, preserveFocus: true, viewState: { url: params.url } },
+      options: {
+        pinned: true,
+        preserveFocus: true,
+        viewState: { url: params.url },
+      },
     });
 
-		return {
-			content: [{
-				kind: "text",
-				value: `Page opened successfully. Note that you do not have access to the page contents unless the user enables agentic tools via the \`workbench.browser.enableChatTools\` setting.`,
-			}],
-			toolResultMessage: new MarkdownString(localize("browser.open.nonAgentic.result", "Opened {0}", createBrowserPageLink(browserUri))),
-		};
-	}
+    return {
+      content: [
+        {
+          kind: "text",
+          value: `Page opened successfully. Note that you do not have access to the page contents unless the user enables agentic tools via the \`workbench.browser.enableChatTools\` setting.`,
+        },
+      ],
+      toolResultMessage: new MarkdownString(
+        localize(
+          "browser.open.nonAgentic.result",
+          "Opened {0}",
+          createBrowserPageLink(browserUri),
+        ),
+      ),
+    };
+  }
 }

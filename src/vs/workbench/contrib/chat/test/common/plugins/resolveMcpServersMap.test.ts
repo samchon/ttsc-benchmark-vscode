@@ -31,7 +31,10 @@ suite("resolveMcpServersMap", () => {
   });
 
   test("returns the object directly when mcpServers is absent", () => {
-    const servers = { myServer: { command: "node" }, otherServer: { url: "http://localhost" } };
+    const servers = {
+      myServer: { command: "node" },
+      otherServer: { url: "http://localhost" },
+    };
     const result = resolveMcpServersMap(servers);
     assert.deepStrictEqual(result, servers);
   });
@@ -46,7 +49,10 @@ suite("resolveMcpServersMap", () => {
 
   test("prefers mcpServers property over other top-level keys", () => {
     const inner = { realServer: { command: "python" } };
-    const result = resolveMcpServersMap({ mcpServers: inner, someOtherKey: "ignored" });
+    const result = resolveMcpServersMap({
+      mcpServers: inner,
+      someOtherKey: "ignored",
+    });
     assert.deepStrictEqual(result, inner);
   });
 });

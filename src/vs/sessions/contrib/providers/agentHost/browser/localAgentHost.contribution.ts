@@ -3,7 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap } from "../../../../../base/common/lifecycle.js";
+import {
+  Disposable,
+  DisposableMap,
+} from "../../../../../base/common/lifecycle.js";
 import { AgentHostEnabledSettingId } from "../../../../../platform/agentHost/common/agentService.js";
 import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
@@ -29,60 +32,71 @@ import { LocalAgentHostSessionsProvider } from "./localAgentHostSessionsProvider
  * listing and lifecycle to the {@link ISessionsProvidersService} layer used by
  * the Sessions app's UI.
  */
-class LocalAgentHostContribution extends Disposable implements IWorkbenchContribution {
+class LocalAgentHostContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "sessions.contrib.localAgentHostContribution";
 
-	static readonly ID = "sessions.contrib.localAgentHostContribution";
+  constructor(
+    @IConfigurationService configurationService: IConfigurationService,
+    @IInstantiationService instantiationService: IInstantiationService,
+    @ISessionsProvidersService
+    sessionsProvidersService: ISessionsProvidersService,
+    @IAgentHostSessionWorkingDirectoryResolver
+    workingDirectoryResolver: IAgentHostSessionWorkingDirectoryResolver,
+  ) {
+    super();
 
-	constructor(
-		@IConfigurationService configurationService: IConfigurationService,
-		@IInstantiationService instantiationService: IInstantiationService,
-		@ISessionsProvidersService sessionsProvidersService: ISessionsProvidersService,
-		@IAgentHostSessionWorkingDirectoryResolver workingDirectoryResolver: IAgentHostSessionWorkingDirectoryResolver,
-	) {
-		super();
+    if (!configurationService.getValue<boolean>(AgentHostEnabledSettingId)) {
+      return;
+    }
 
-		if (!configurationService.getValue<boolean>(AgentHostEnabledSettingId)) {
-			return;
-		}
-
-		const provider = this._register(
+    const provider = this._register(
       instantiationService.createInstance(LocalAgentHostSessionsProvider),
     );
-		this._register(sessionsProvidersService.registerProvider(provider));
+    this._register(sessionsProvidersService.registerProvider(provider));
 
-		const resolverRegistrations = this._register(new DisposableMap<string>());
-		const registerResolvers = () => {
-			const sessionTypeIds = new Set(
-        provider.sessionTypes.map(sessionType => `agent-host-${sessionType.id}`),
+    const resolverRegistrations = this._register(new DisposableMap<string>());
+    const registerResolvers = () => {
+      const sessionTypeIds = new Set(
+        provider.sessionTypes.map(
+          (sessionType) => `agent-host-${sessionType.id}`,
+        ),
       );
-			for (const [sessionTypeId] of resolverRegistrations) {
-				if (!sessionTypeIds.has(sessionTypeId)) {
-					resolverRegistrations.deleteAndDispose(sessionTypeId);
-				}
-			}
+      for (const [sessionTypeId] of resolverRegistrations) {
+        if (!sessionTypeIds.has(sessionTypeId)) {
+          resolverRegistrations.deleteAndDispose(sessionTypeId);
+        }
+      }
 
-			for (const sessionType of provider.sessionTypes) {
-				const resourceScheme = `agent-host-${sessionType.id}`;
-				if (resolverRegistrations.has(resourceScheme)) {
-					continue;
-				}
-				resolverRegistrations.set(
+      for (const sessionType of provider.sessionTypes) {
+        const resourceScheme = `agent-host-${sessionType.id}`;
+        if (resolverRegistrations.has(resourceScheme)) {
+          continue;
+        }
+        resolverRegistrations.set(
           resourceScheme,
           workingDirectoryResolver.registerResolver(
             resourceScheme,
-            sessionResource => {
-              return provider.getSessionByResource(sessionResource)?.workspace.get()?.folders[0]?.workingDirectory;
+            (sessionResource) => {
+              return provider
+                .getSessionByResource(sessionResource)
+                ?.workspace.get()?.folders[0]?.workingDirectory;
             },
-            sessionResource => {
-              return provider.getSessionByResource(sessionResource)?.status.get() === SessionStatus.Untitled;
+            (sessionResource) => {
+              return (
+                provider.getSessionByResource(sessionResource)?.status.get() ===
+                SessionStatus.Untitled
+              );
             },
           ),
         );
-			}
-		};
-		registerResolvers();
-		this._register(provider.onDidChangeSessionTypes(registerResolvers));
-	}
+      }
+    };
+    registerResolvers();
+    this._register(provider.onDidChangeSessionTypes(registerResolvers));
+  }
 }
 
 registerWorkbenchContribution2(

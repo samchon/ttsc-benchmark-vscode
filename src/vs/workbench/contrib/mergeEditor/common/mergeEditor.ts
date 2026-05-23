@@ -21,7 +21,10 @@ export const ctxIsMergeResultEditor = new RawContextKey<boolean>(
   false,
   {
     type: "boolean",
-    description: localize("isr", "The editor is a the result editor of a merge editor."),
+    description: localize(
+      "isr",
+      "The editor is a the result editor of a merge editor.",
+    ),
   },
 );
 export const ctxMergeEditorLayout = new RawContextKey<MergeEditorLayoutKind>(
@@ -37,7 +40,10 @@ export const ctxMergeEditorShowBase = new RawContextKey<boolean>(
   false,
   {
     type: "boolean",
-    description: localize("showBase", "If the merge editor shows the base version"),
+    description: localize(
+      "showBase",
+      "If the merge editor shows the base version",
+    ),
   },
 );
 export const ctxMergeEditorShowBaseAtTop = new RawContextKey<boolean>(
@@ -45,17 +51,20 @@ export const ctxMergeEditorShowBaseAtTop = new RawContextKey<boolean>(
   false,
   {
     type: "boolean",
-    description: localize("showBaseAtTop", "If base should be shown at the top"),
+    description: localize(
+      "showBaseAtTop",
+      "If base should be shown at the top",
+    ),
   },
 );
-export const ctxMergeEditorShowNonConflictingChanges = new RawContextKey<boolean>(
-  "mergeEditorShowNonConflictingChanges",
-  false,
-  {
+export const ctxMergeEditorShowNonConflictingChanges =
+  new RawContextKey<boolean>("mergeEditorShowNonConflictingChanges", false, {
     type: "boolean",
-    description: localize("showNonConflictingChanges", "If the merge editor shows non-conflicting changes"),
-  },
-);
+    description: localize(
+      "showNonConflictingChanges",
+      "If the merge editor shows non-conflicting changes",
+    ),
+  });
 
 export const ctxMergeBaseUri = new RawContextKey<string>(
   "mergeEditorBaseUri",
@@ -70,17 +79,20 @@ export const ctxMergeResultUri = new RawContextKey<string>(
   "",
   {
     type: "string",
-    description: localize("resultUri", "The uri of the result of a merge editor"),
+    description: localize(
+      "resultUri",
+      "The uri of the result of a merge editor",
+    ),
   },
 );
 
 export interface MergeEditorContents {
-	languageId: string;
-	base: string;
-	input1: string;
-	input2: string;
-	result: string;
-	initialResult?: string;
+  languageId: string;
+  base: string;
+  input1: string;
+  input2: string;
+  result: string;
+  initialResult?: string;
 }
 
 export const StorageCloseWithConflicts = "mergeEditorCloseWithConflicts";

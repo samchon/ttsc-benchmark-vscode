@@ -13,10 +13,10 @@ import { createToolSimpleTextResult } from "../../common/tools/builtinTools/tool
 import { WorkingDirectory } from "../../common/workingDirectory.js";
 
 export interface ISymbolToolInput {
-	symbol: string;
-	uri?: string;
-	filePath?: string;
-	lineContent: string;
+  symbol: string;
+  uri?: string;
+  filePath?: string;
+  lineContent: string;
 }
 
 /**
@@ -24,18 +24,22 @@ export interface ISymbolToolInput {
  * workspace-relative file path. When a {@link workingDirectory} is provided
  * (agents window), relative paths are resolved against it first.
  */
-export function resolveToolUri(input: ISymbolToolInput, workspaceContextService: IWorkspaceContextService, workingDirectory?: URI): URI | undefined {
-	if (input.uri) {
-		return URI.parse(input.uri);
-	}
-	if (input.filePath) {
-		const workingDir = new WorkingDirectory(
+export function resolveToolUri(
+  input: ISymbolToolInput,
+  workspaceContextService: IWorkspaceContextService,
+  workingDirectory?: URI,
+): URI | undefined {
+  if (input.uri) {
+    return URI.parse(input.uri);
+  }
+  if (input.filePath) {
+    const workingDir = new WorkingDirectory(
       workspaceContextService,
       workingDirectory,
     );
-		return workingDir.resolveRelativePath(input.filePath);
-	}
-	return undefined;
+    return workingDir.resolveRelativePath(input.filePath);
+  }
+  return undefined;
 }
 
 /**
@@ -44,10 +48,13 @@ export function resolveToolUri(input: ISymbolToolInput, workspaceContextService:
  *
  * @returns The 1-based line number, or `undefined` if not found.
  */
-export function findLineNumber(model: ITextModel, lineContent: string): number | undefined {
-	const parts = lineContent.trim().split(/\s+/);
-	const pattern = parts.map(escapeRegExpCharacters).join("\\s+");
-	const matches = model.findMatches(
+export function findLineNumber(
+  model: ITextModel,
+  lineContent: string,
+): number | undefined {
+  const parts = lineContent.trim().split(/\s+/);
+  const pattern = parts.map(escapeRegExpCharacters).join("\\s+");
+  const matches = model.findMatches(
     pattern,
     false,
     true,
@@ -56,10 +63,10 @@ export function findLineNumber(model: ITextModel, lineContent: string): number |
     false,
     1,
   );
-	if (matches.length === 0) {
-		return undefined;
-	}
-	return matches[0].range.startLineNumber;
+  if (matches.length === 0) {
+    return undefined;
+  }
+  return matches[0].range.startLineNumber;
 }
 
 /**
@@ -68,13 +75,16 @@ export function findLineNumber(model: ITextModel, lineContent: string): number |
  *
  * @returns The 1-based column, or `undefined` if not found.
  */
-export function findSymbolColumn(lineText: string, symbol: string): number | undefined {
-	const pattern = new RegExp(`\\b${escapeRegExpCharacters(symbol)}\\b`);
-	const match = pattern.exec(lineText);
-	if (match) {
-		return match.index + 1; // 1-based column
-	}
-	return undefined;
+export function findSymbolColumn(
+  lineText: string,
+  symbol: string,
+): number | undefined {
+  const pattern = new RegExp(`\\b${escapeRegExpCharacters(symbol)}\\b`);
+  const match = pattern.exec(lineText);
+  if (match) {
+    return match.index + 1; // 1-based column
+  }
+  return undefined;
 }
 
 /**
@@ -82,7 +92,7 @@ export function findSymbolColumn(lineText: string, symbol: string): number | und
  * and the tool result message.
  */
 export function errorResult(message: string): IToolResult {
-	const result = createToolSimpleTextResult(message);
-	result.toolResultMessage = new MarkdownString(message);
-	return result;
+  const result = createToolSimpleTextResult(message);
+  result.toolResultMessage = new MarkdownString(message);
+  return result;
 }

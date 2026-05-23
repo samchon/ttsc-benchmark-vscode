@@ -13,7 +13,12 @@ import {
   defineThemedFixtureGroup,
   registerWorkbenchServices,
 } from "../fixtureUtils.js";
-import { ActionList, ActionListItemKind, IActionListDelegate, IActionListItem } from "../../../../../platform/actionWidget/browser/actionList.js";
+import {
+  ActionList,
+  ActionListItemKind,
+  IActionListDelegate,
+  IActionListItem,
+} from "../../../../../platform/actionWidget/browser/actionList.js";
 import { ILayoutService } from "../../../../../platform/layout/browser/layoutService.js";
 
 import "../../../../../platform/actionWidget/browser/actionWidget.css";
@@ -21,45 +26,62 @@ import "../../../../../base/browser/ui/codicons/codiconStyles.js";
 import "../../../../../editor/contrib/symbolIcons/browser/symbolIcons.js";
 
 interface CodeActionFixtureOptions extends ComponentFixtureContext {
-	items: IActionListItem<string>[];
-	width?: string;
+  items: IActionListItem<string>[];
+  width?: string;
 }
 
 function renderCodeActionList(options: CodeActionFixtureOptions): void {
-	const { container, disposableStore, theme } = options;
-	container.style.width = options.width ?? "300px";
+  const { container, disposableStore, theme } = options;
+  container.style.width = options.width ?? "300px";
 
-	const instantiationService = createEditorServices(disposableStore, {
-		colorTheme: theme,
-		additionalServices: (reg) => {
-			registerWorkbenchServices(reg);
-			reg.defineInstance(ILayoutService, new class extends mock<ILayoutService>() {
-				declare readonly _serviceBrand: undefined;
-				override get mainContainer() { return container; }
-				override get activeContainer() { return container; }
-				override get mainContainerDimension() { return { width: 300, height: 600 }; }
-				override get activeContainerDimension() { return { width: 300, height: 600 }; }
-				override readonly mainContainerOffset = { top: 0, quickPickTop: 0 };
-				override readonly onDidLayoutMainContainer = Event.None;
-				override readonly onDidLayoutActiveContainer = Event.None;
-				override readonly onDidLayoutContainer = Event.None;
-				override readonly onDidChangeActiveContainer = Event.None;
-				override readonly onDidAddContainer = Event.None;
-				override get containers() { return [container]; }
-				override getContainer() { return container; }
-				override whenContainerStylesLoaded() { return undefined; }
-			});
-		},
-	});
+  const instantiationService = createEditorServices(disposableStore, {
+    colorTheme: theme,
+    additionalServices: (reg) => {
+      registerWorkbenchServices(reg);
+      reg.defineInstance(
+        ILayoutService,
+        new (class extends mock<ILayoutService>() {
+          declare readonly _serviceBrand: undefined;
+          override get mainContainer() {
+            return container;
+          }
+          override get activeContainer() {
+            return container;
+          }
+          override get mainContainerDimension() {
+            return { width: 300, height: 600 };
+          }
+          override get activeContainerDimension() {
+            return { width: 300, height: 600 };
+          }
+          override readonly mainContainerOffset = { top: 0, quickPickTop: 0 };
+          override readonly onDidLayoutMainContainer = Event.None;
+          override readonly onDidLayoutActiveContainer = Event.None;
+          override readonly onDidLayoutContainer = Event.None;
+          override readonly onDidChangeActiveContainer = Event.None;
+          override readonly onDidAddContainer = Event.None;
+          override get containers() {
+            return [container];
+          }
+          override getContainer() {
+            return container;
+          }
+          override whenContainerStylesLoaded() {
+            return undefined;
+          }
+        })(),
+      );
+    },
+  });
 
-	const delegate: IActionListDelegate<string> = {
-    onHide: () => { },
-    onSelect: () => { },
+  const delegate: IActionListDelegate<string> = {
+    onHide: () => {},
+    onSelect: () => {},
   };
 
-	const anchor = container;
+  const anchor = container;
 
-	const list = disposableStore.add(
+  const list = disposableStore.add(
     instantiationService.createInstance(
       ActionList,
       "codeActionWidget",
@@ -72,14 +94,14 @@ function renderCodeActionList(options: CodeActionFixtureOptions): void {
     ),
   );
 
-	// Render the list directly into the container instead of using context view
-	const wrapper = document.createElement("div");
-	wrapper.classList.add("action-widget");
-	wrapper.appendChild(list.domNode);
-	container.appendChild(wrapper);
+  // Render the list directly into the container instead of using context view
+  const wrapper = document.createElement("div");
+  wrapper.classList.add("action-widget");
+  wrapper.appendChild(list.domNode);
+  container.appendChild(wrapper);
 
-	list.layout(0);
-	list.focus();
+  list.layout(0);
+  list.focus();
 }
 
 const quickFixItems: IActionListItem<string>[] = [
@@ -151,13 +173,18 @@ const simpleFixes: IActionListItem<string>[] = [
   },
 ];
 
-export default defineThemedFixtureGroup({ path: "editor/" }, {
-	GroupedCodeActions: defineComponentFixture({
-		labels: { kind: "animated" },
-		render: (context) => renderCodeActionList({ ...context, items: quickFixItems }),
-	}),
-	SimpleQuickFixes: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: (context) => renderCodeActionList({ ...context, items: simpleFixes }),
-	}),
-});
+export default defineThemedFixtureGroup(
+  { path: "editor/" },
+  {
+    GroupedCodeActions: defineComponentFixture({
+      labels: { kind: "animated" },
+      render: (context) =>
+        renderCodeActionList({ ...context, items: quickFixItems }),
+    }),
+    SimpleQuickFixes: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderCodeActionList({ ...context, items: simpleFixes }),
+    }),
+  },
+);

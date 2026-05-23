@@ -13,59 +13,65 @@ import type { INpmScriptAutoApproveResult } from "./autoApprove/npmScriptAutoApp
 import type { TreeSitterCommandParserLanguage } from "../../treeSitterCommandParser.js";
 
 export interface IAutoApproveRule {
-	regex: RegExp;
-	regexCaseInsensitive: RegExp;
-	sourceText: string;
-	sourceTarget: ConfigurationTarget | "session";
-	isDefaultRule: boolean;
+  regex: RegExp;
+  regexCaseInsensitive: RegExp;
+  sourceText: string;
+  sourceTarget: ConfigurationTarget | "session";
+  isDefaultRule: boolean;
 }
 
 export interface INpmScriptAutoApproveRule {
-	type: "npmScript";
-	npmScriptResult: INpmScriptAutoApproveResult;
+  type: "npmScript";
+  npmScriptResult: INpmScriptAutoApproveResult;
 }
 
-export function isAutoApproveRule(rule: IAutoApproveRule | INpmScriptAutoApproveRule | undefined): rule is IAutoApproveRule {
-	return !!rule && "sourceText" in rule;
+export function isAutoApproveRule(
+  rule: IAutoApproveRule | INpmScriptAutoApproveRule | undefined,
+): rule is IAutoApproveRule {
+  return !!rule && "sourceText" in rule;
 }
 
-export function isNpmScriptAutoApproveRule(rule: IAutoApproveRule | INpmScriptAutoApproveRule | undefined): rule is INpmScriptAutoApproveRule {
-	return !!rule && "type" in rule && rule.type === "npmScript";
+export function isNpmScriptAutoApproveRule(
+  rule: IAutoApproveRule | INpmScriptAutoApproveRule | undefined,
+): rule is INpmScriptAutoApproveRule {
+  return !!rule && "type" in rule && rule.type === "npmScript";
 }
 
 export interface ICommandLineAnalyzer extends IDisposable {
-	analyze(options: ICommandLineAnalyzerOptions): Promise<ICommandLineAnalyzerResult>;
+  analyze(
+    options: ICommandLineAnalyzerOptions,
+  ): Promise<ICommandLineAnalyzerResult>;
 }
 
 export interface ICommandLineAnalyzerOptions {
-	commandLine: string;
-	cwd: URI | undefined;
-	shell: string;
-	os: OperatingSystem;
-	treeSitterLanguage: TreeSitterCommandParserLanguage;
-	terminalToolSessionId: string;
-	chatSessionResource: URI | undefined;
-	requiresUnsandboxConfirmation?: boolean;
-	// User has opted into "Allow All Commands in this Session"
-	hasSessionAutoApproval?: boolean;
+  commandLine: string;
+  cwd: URI | undefined;
+  shell: string;
+  os: OperatingSystem;
+  treeSitterLanguage: TreeSitterCommandParserLanguage;
+  terminalToolSessionId: string;
+  chatSessionResource: URI | undefined;
+  requiresUnsandboxConfirmation?: boolean;
+  // User has opted into "Allow All Commands in this Session"
+  hasSessionAutoApproval?: boolean;
 }
 
 export interface ICommandLineAnalyzerResult {
-	/**
-	 * Whether auto approval is allowed based on the analysis, when false this
-	 * will block auto approval.
-	*/
-	readonly isAutoApproveAllowed: boolean;
-	/**
-	 * Whether the command line was explicitly auto approved by this analyzer.
-	 * - `true`: This analyzer explicitly approves auto-execution
-	 * - `false`: This analyzer explicitly denies auto-execution
-	 * - `undefined`: This analyzer does not make an approval/denial decision
-	 */
-	readonly isAutoApproved?: boolean;
-	readonly disclaimers?: readonly (string | IMarkdownString)[];
-	readonly autoApproveInfo?: IMarkdownString;
-	readonly customActions?: ToolConfirmationAction[];
-	// Indicates that auto approval should be forced (e.g. sandboxed commands).
-	readonly forceAutoApproval?: boolean;
+  /**
+   * Whether auto approval is allowed based on the analysis, when false this
+   * will block auto approval.
+   */
+  readonly isAutoApproveAllowed: boolean;
+  /**
+   * Whether the command line was explicitly auto approved by this analyzer.
+   * - `true`: This analyzer explicitly approves auto-execution
+   * - `false`: This analyzer explicitly denies auto-execution
+   * - `undefined`: This analyzer does not make an approval/denial decision
+   */
+  readonly isAutoApproved?: boolean;
+  readonly disclaimers?: readonly (string | IMarkdownString)[];
+  readonly autoApproveInfo?: IMarkdownString;
+  readonly customActions?: ToolConfirmationAction[];
+  // Indicates that auto approval should be forced (e.g. sandboxed commands).
+  readonly forceAutoApproval?: boolean;
 }

@@ -3,89 +3,96 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { importAMDNodeModule, resolveAmdNodeModulePath } from "../../../../amdX.js";
+import {
+  importAMDNodeModule,
+  resolveAmdNodeModulePath,
+} from "../../../../amdX.js";
 import * as domSanitize from "../../../../base/browser/domSanitize.js";
 import { MarkdownSanitizerConfig } from "../../../../base/browser/markdownRenderer.js";
 import { CodeWindow } from "../../../../base/browser/window.js";
 import { Lazy } from "../../../../base/common/lazy.js";
 import type * as marked from "../../../../base/common/marked/marked.js";
-import { katexContainerLatexAttributeName, MarkedKatexExtension } from "../common/markedKatexExtension.js";
+import {
+  katexContainerLatexAttributeName,
+  MarkedKatexExtension,
+} from "../common/markedKatexExtension.js";
 
 export class MarkedKatexSupport {
+  public static getSanitizerOptions(baseConfig: {
+    readonly allowedTags: readonly string[];
+    readonly allowedAttributes: ReadonlyArray<
+      string | domSanitize.SanitizeAttributeRule
+    >;
+  }): MarkdownSanitizerConfig {
+    return {
+      allowedTags: {
+        override: [...baseConfig.allowedTags, ...trustedMathMlTags],
+      },
+      allowedAttributes: {
+        override: [
+          ...baseConfig.allowedAttributes,
 
-	public static getSanitizerOptions(baseConfig: {
-		readonly allowedTags: readonly string[];
-		readonly allowedAttributes: ReadonlyArray<string | domSanitize.SanitizeAttributeRule>;
-	}): MarkdownSanitizerConfig {
-		return {
-			allowedTags: {
-				override: [
-					...baseConfig.allowedTags,
-					...trustedMathMlTags,
-				],
-			},
-			allowedAttributes: {
-				override: [
-					...baseConfig.allowedAttributes,
+          // Math
+          "stretchy",
+          "encoding",
+          "accent",
+          katexContainerLatexAttributeName,
 
-					// Math
-					"stretchy",
-					"encoding",
-					"accent",
-					katexContainerLatexAttributeName,
+          // SVG
+          "d",
+          "viewBox",
+          "preserveAspectRatio",
 
-					// SVG
-					"d",
-					"viewBox",
-					"preserveAspectRatio",
+          // Allow all classes since we don't have a list of allowed katex classes
+          "class",
 
-					// Allow all classes since we don't have a list of allowed katex classes
-					"class",
+          // Sanitize allowed styles for katex
+          {
+            attributeName: "style",
+            shouldKeep: (_el, data) => this.sanitizeKatexStyles(data.attrValue),
+          },
+        ],
+      },
+    };
+  }
 
-					// Sanitize allowed styles for katex
-					{
-						attributeName: "style",
-						shouldKeep: (_el, data) => this.sanitizeKatexStyles(data.attrValue),
-					},
-				],
-			},
-		};
-	}
+  private static tempSanitizerRule = new Lazy(() => {
+    // Create a CSSStyleDeclaration object via a style sheet rule
+    const styleSheet = new CSSStyleSheet();
+    styleSheet.insertRule(`.temp{}`);
+    const rule = styleSheet.cssRules[0];
+    if (!(rule instanceof CSSStyleRule)) {
+      throw new Error("Invalid CSS rule");
+    }
+    return rule.style;
+  });
 
-	private static tempSanitizerRule = new Lazy(() => {
-		// Create a CSSStyleDeclaration object via a style sheet rule
-		const styleSheet = new CSSStyleSheet();
-		styleSheet.insertRule(`.temp{}`);
-		const rule = styleSheet.cssRules[0];
-		if (!(rule instanceof CSSStyleRule)) {
-			throw new Error("Invalid CSS rule");
-		}
-		return rule.style;
-	});
+  private static sanitizeStyles(
+    styleString: string,
+    allowedProperties: readonly string[],
+  ): string {
+    const style = this.tempSanitizerRule.value;
+    style.cssText = styleString;
 
-	private static sanitizeStyles(styleString: string, allowedProperties: readonly string[]): string {
-		const style = this.tempSanitizerRule.value;
-		style.cssText = styleString;
+    const sanitizedProps = [];
 
-		const sanitizedProps = [];
+    for (let i = 0; i < style.length; i++) {
+      const prop = style[i];
+      if (allowedProperties.includes(prop)) {
+        const value = style.getPropertyValue(prop);
+        // Allow through lists of numbers with units or bare words like 'block'
+        // Main goal is to block things like 'url()'.
+        if (/^(([\d\.\-]+\w*\s?)+|\w+)$/.test(value)) {
+          sanitizedProps.push(`${prop}: ${value}`);
+        }
+      }
+    }
 
-		for (let i = 0; i < style.length; i++) {
-			const prop = style[i];
-			if (allowedProperties.includes(prop)) {
-				const value = style.getPropertyValue(prop);
-				// Allow through lists of numbers with units or bare words like 'block'
-				// Main goal is to block things like 'url()'.
-				if (/^(([\d\.\-]+\w*\s?)+|\w+)$/.test(value)) {
-					sanitizedProps.push(`${prop}: ${value}`);
-				}
-			}
-		}
+    return sanitizedProps.join("; ");
+  }
 
-		return sanitizedProps.join("; ");
-	}
-
-	private static sanitizeKatexStyles(styleString: string): string {
-		const allowedProperties = [
+  private static sanitizeKatexStyles(styleString: string): string {
+    const allowedProperties = [
       "display",
       "position",
       "font-family",
@@ -126,41 +133,50 @@ export class MarkedKatexSupport {
       "float",
       "clear",
     ];
-		return this.sanitizeStyles(styleString, allowedProperties);
-	}
+    return this.sanitizeStyles(styleString, allowedProperties);
+  }
 
-	private static _katex?: typeof import("katex").default;
-	private static _katexPromise = new Lazy(async () => {
-    this._katex = await importAMDNodeModule<typeof import("katex").default>("katex", "dist/katex.min.js");
+  private static _katex?: typeof import("katex").default;
+  private static _katexPromise = new Lazy(async () => {
+    this._katex = await importAMDNodeModule<typeof import("katex").default>(
+      "katex",
+      "dist/katex.min.js",
+    );
     return this._katex;
   });
 
-	public static getExtension(window: CodeWindow, options: MarkedKatexExtension.MarkedKatexOptions = {}): marked.MarkedExtension | undefined {
-		if (!this._katex) {
-			return undefined;
-		}
+  public static getExtension(
+    window: CodeWindow,
+    options: MarkedKatexExtension.MarkedKatexOptions = {},
+  ): marked.MarkedExtension | undefined {
+    if (!this._katex) {
+      return undefined;
+    }
 
-		this.ensureKatexStyles(window);
-		return MarkedKatexExtension.extension(this._katex, options);
-	}
+    this.ensureKatexStyles(window);
+    return MarkedKatexExtension.extension(this._katex, options);
+  }
 
-	public static async loadExtension(window: CodeWindow, options: MarkedKatexExtension.MarkedKatexOptions = {}): Promise<marked.MarkedExtension> {
-		const katex = await this._katexPromise.value;
-		this.ensureKatexStyles(window);
-		return MarkedKatexExtension.extension(katex, options);
-	}
+  public static async loadExtension(
+    window: CodeWindow,
+    options: MarkedKatexExtension.MarkedKatexOptions = {},
+  ): Promise<marked.MarkedExtension> {
+    const katex = await this._katexPromise.value;
+    this.ensureKatexStyles(window);
+    return MarkedKatexExtension.extension(katex, options);
+  }
 
-	public static ensureKatexStyles(window: CodeWindow) {
-		const doc = window.document;
-		// eslint-disable-next-line no-restricted-syntax
-		if (!doc.querySelector("link.katex")) {
-			const katexStyle = document.createElement("link");
-			katexStyle.classList.add("katex");
-			katexStyle.rel = "stylesheet";
-			katexStyle.href = resolveAmdNodeModulePath("katex", "dist/katex.min.css");
-			doc.head.appendChild(katexStyle);
-		}
-	}
+  public static ensureKatexStyles(window: CodeWindow) {
+    const doc = window.document;
+    // eslint-disable-next-line no-restricted-syntax
+    if (!doc.querySelector("link.katex")) {
+      const katexStyle = document.createElement("link");
+      katexStyle.classList.add("katex");
+      katexStyle.rel = "stylesheet";
+      katexStyle.href = resolveAmdNodeModulePath("katex", "dist/katex.min.css");
+      doc.head.appendChild(katexStyle);
+    }
+  }
 }
 
 const trustedMathMlTags = Object.freeze([
@@ -196,6 +212,8 @@ const trustedMathMlTags = Object.freeze([
   "munder",
   "munderover",
   "mprescripts",
+
+  // svg tags
   "svg",
   "altglyph",
   "altglyphdef",
@@ -235,4 +253,3 @@ const trustedMathMlTags = Object.freeze([
   "view",
   "vkern",
 ]);
-

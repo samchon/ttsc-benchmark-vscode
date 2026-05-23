@@ -11,8 +11,10 @@ import {
   defineComponentFixture,
   createTextModel,
 } from "../fixtureUtils.js";
-import { ICodeEditorWidgetOptions, CodeEditorWidget } from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
-
+import {
+  ICodeEditorWidgetOptions,
+  CodeEditorWidget,
+} from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
 
 const SAMPLE_CODE = `// Welcome to VS Code
 function greet(name: string): string {
@@ -37,16 +39,20 @@ console.log(greet('World'));
 console.log(\`Count: \${counter.count}\`);
 `;
 
-function renderCodeEditor({ container, disposableStore, theme }: ComponentFixtureContext): void {
-	container.style.width = "600px";
-	container.style.height = "400px";
-	container.style.border = "1px solid var(--vscode-editorWidget-border)";
+function renderCodeEditor({
+  container,
+  disposableStore,
+  theme,
+}: ComponentFixtureContext): void {
+  container.style.width = "600px";
+  container.style.height = "400px";
+  container.style.border = "1px solid var(--vscode-editorWidget-border)";
 
-	const instantiationService = createEditorServices(disposableStore, {
+  const instantiationService = createEditorServices(disposableStore, {
     colorTheme: theme,
   });
 
-	const model = disposableStore.add(
+  const model = disposableStore.add(
     createTextModel(
       instantiationService,
       SAMPLE_CODE,
@@ -55,11 +61,11 @@ function renderCodeEditor({ container, disposableStore, theme }: ComponentFixtur
     ),
   );
 
-	const editorOptions: ICodeEditorWidgetOptions = {
+  const editorOptions: ICodeEditorWidgetOptions = {
     contributions: [],
   };
 
-	const editor = disposableStore.add(
+  const editor = disposableStore.add(
     instantiationService.createInstance(
       CodeEditorWidget,
       container,
@@ -77,12 +83,15 @@ function renderCodeEditor({ container, disposableStore, theme }: ComponentFixtur
     ),
   );
 
-	editor.setModel(model);
+  editor.setModel(model);
 }
 
-export default defineThemedFixtureGroup({ path: "editor/" }, {
-	CodeEditor: defineComponentFixture({
-		labels: { kind: "screenshot", blocksCi: true },
-		render: (context) => renderCodeEditor(context),
-	}),
-});
+export default defineThemedFixtureGroup(
+  { path: "editor/" },
+  {
+    CodeEditor: defineComponentFixture({
+      labels: { kind: "screenshot", blocksCi: true },
+      render: (context) => renderCodeEditor(context),
+    }),
+  },
+);

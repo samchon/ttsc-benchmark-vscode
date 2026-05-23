@@ -6,22 +6,33 @@
 import { Range } from "../core/range.js";
 import { Position } from "../core/position.js";
 import { Selection } from "../core/selection.js";
-import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from "../editorCommon.js";
+import {
+  ICommand,
+  ICursorStateComputerData,
+  IEditOperationBuilder,
+} from "../editorCommon.js";
 import { ITextModel } from "../model.js";
 
 export class SurroundSelectionCommand implements ICommand {
-	private readonly _range: Selection;
-	private readonly _charBeforeSelection: string;
-	private readonly _charAfterSelection: string;
+  private readonly _range: Selection;
+  private readonly _charBeforeSelection: string;
+  private readonly _charAfterSelection: string;
 
-	constructor(range: Selection, charBeforeSelection: string, charAfterSelection: string) {
-		this._range = range;
-		this._charBeforeSelection = charBeforeSelection;
-		this._charAfterSelection = charAfterSelection;
-	}
+  constructor(
+    range: Selection,
+    charBeforeSelection: string,
+    charAfterSelection: string,
+  ) {
+    this._range = range;
+    this._charBeforeSelection = charBeforeSelection;
+    this._charAfterSelection = charAfterSelection;
+  }
 
-	public getEditOperations(model: ITextModel, builder: IEditOperationBuilder): void {
-		builder.addTrackedEditOperation(
+  public getEditOperations(
+    model: ITextModel,
+    builder: IEditOperationBuilder,
+  ): void {
+    builder.addTrackedEditOperation(
       new Range(
         this._range.startLineNumber,
         this._range.startColumn,
@@ -31,7 +42,7 @@ export class SurroundSelectionCommand implements ICommand {
       this._charBeforeSelection,
     );
 
-		builder.addTrackedEditOperation(
+    builder.addTrackedEditOperation(
       new Range(
         this._range.endLineNumber,
         this._range.endColumn,
@@ -40,35 +51,40 @@ export class SurroundSelectionCommand implements ICommand {
       ),
       this._charAfterSelection || null,
     ); // addTrackedEditOperation() ignores us if the text == ''. Causing a chain of errors in computeCursorState()
-	}
+  }
 
-	public computeCursorState(model: ITextModel, helper: ICursorStateComputerData): Selection {
-		const inverseEditOperations = helper.getInverseEditOperations();
-		const firstOperationRange = inverseEditOperations[0].range;
-		const secondOperationRange = inverseEditOperations[1].range;
+  public computeCursorState(
+    model: ITextModel,
+    helper: ICursorStateComputerData,
+  ): Selection {
+    const inverseEditOperations = helper.getInverseEditOperations();
+    const firstOperationRange = inverseEditOperations[0].range;
+    const secondOperationRange = inverseEditOperations[1].range;
 
-		return new Selection(
+    return new Selection(
       firstOperationRange.endLineNumber,
       firstOperationRange.endColumn,
       secondOperationRange.endLineNumber,
       secondOperationRange.endColumn - this._charAfterSelection.length,
     );
-	}
+  }
 }
 
 /**
  * A surround selection command that runs after composition finished.
  */
 export class CompositionSurroundSelectionCommand implements ICommand {
+  constructor(
+    private readonly _position: Position,
+    private readonly _text: string,
+    private readonly _charAfter: string,
+  ) {}
 
-	constructor(
-		private readonly _position: Position,
-		private readonly _text: string,
-		private readonly _charAfter: string,
-	) { }
-
-	public getEditOperations(model: ITextModel, builder: IEditOperationBuilder): void {
-		builder.addTrackedEditOperation(
+  public getEditOperations(
+    model: ITextModel,
+    builder: IEditOperationBuilder,
+  ): void {
+    builder.addTrackedEditOperation(
       new Range(
         this._position.lineNumber,
         this._position.column,
@@ -77,17 +93,20 @@ export class CompositionSurroundSelectionCommand implements ICommand {
       ),
       this._text + this._charAfter,
     );
-	}
+  }
 
-	public computeCursorState(model: ITextModel, helper: ICursorStateComputerData): Selection {
-		const inverseEditOperations = helper.getInverseEditOperations();
-		const opRange = inverseEditOperations[0].range;
+  public computeCursorState(
+    model: ITextModel,
+    helper: ICursorStateComputerData,
+  ): Selection {
+    const inverseEditOperations = helper.getInverseEditOperations();
+    const opRange = inverseEditOperations[0].range;
 
-		return new Selection(
+    return new Selection(
       opRange.endLineNumber,
       opRange.startColumn,
       opRange.endLineNumber,
       opRange.endColumn - this._charAfter.length,
     );
-	}
+  }
 }

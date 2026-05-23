@@ -17,44 +17,48 @@ import { isPhoneLayout } from "./mobileLayout.js";
  * working.
  */
 export class MobileAuxiliaryBarPart extends AuxiliaryBarPart {
+  override updateStyles(): void {
+    // Always run the desktop implementation first so inline card styles
+    // are set on tablet/desktop transitions. In phone mode we then
+    // clear them so CSS can take over (inline styles have the highest
+    // specificity).
+    super.updateStyles();
 
-	override updateStyles(): void {
-		// Always run the desktop implementation first so inline card styles
-		// are set on tablet/desktop transitions. In phone mode we then
-		// clear them so CSS can take over (inline styles have the highest
-		// specificity).
-		super.updateStyles();
+    if (!isPhoneLayout(this.layoutService)) {
+      return;
+    }
 
-		if (!isPhoneLayout(this.layoutService)) {
-			return;
-		}
+    const container = this.getContainer();
+    if (container) {
+      container.style.backgroundColor = "";
+      container.style.removeProperty("--part-background");
+      container.style.removeProperty("--part-border-color");
+    }
+  }
 
-		const container = this.getContainer();
-		if (container) {
-			container.style.backgroundColor = "";
-			container.style.removeProperty("--part-background");
-			container.style.removeProperty("--part-border-color");
-		}
-	}
+  override layout(
+    width: number,
+    height: number,
+    top: number,
+    left: number,
+  ): void {
+    if (!isPhoneLayout(this.layoutService)) {
+      super.layout(width, height, top, left);
+      return;
+    }
 
-	override layout(width: number, height: number, top: number, left: number): void {
-		if (!isPhoneLayout(this.layoutService)) {
-			super.layout(width, height, top, left);
-			return;
-		}
+    if (!this.layoutService.isVisible(Parts.AUXILIARYBAR_PART)) {
+      return;
+    }
 
-		if (!this.layoutService.isVisible(Parts.AUXILIARYBAR_PART)) {
-			return;
-		}
-
-		// Full dimensions — no card margins or border subtraction.
-		// AbstractPaneCompositePart.layout internally calls Part.layout.
-		AbstractPaneCompositePart.prototype.layout.call(
+    // Full dimensions — no card margins or border subtraction.
+    // AbstractPaneCompositePart.layout internally calls Part.layout.
+    AbstractPaneCompositePart.prototype.layout.call(
       this,
       width,
       height,
       top,
       left,
     );
-	}
+  }
 }

@@ -71,12 +71,18 @@ export const settingsSashBorder = registerColor(
 export const settingsSelectBackground = registerColor(
   `settings.dropdownBackground`,
   selectBackground,
-  localize("settingsDropdownBackground", "Settings editor dropdown background."),
+  localize(
+    "settingsDropdownBackground",
+    "Settings editor dropdown background.",
+  ),
 );
 export const settingsSelectForeground = registerColor(
   "settings.dropdownForeground",
   selectForeground,
-  localize("settingsDropdownForeground", "Settings editor dropdown foreground."),
+  localize(
+    "settingsDropdownForeground",
+    "Settings editor dropdown foreground.",
+  ),
 );
 export const settingsSelectBorder = registerColor(
   "settings.dropdownBorder",
@@ -96,12 +102,18 @@ export const settingsSelectListBorder = registerColor(
 export const settingsCheckboxBackground = registerColor(
   "settings.checkboxBackground",
   checkboxBackground,
-  localize("settingsCheckboxBackground", "Settings editor checkbox background."),
+  localize(
+    "settingsCheckboxBackground",
+    "Settings editor checkbox background.",
+  ),
 );
 export const settingsCheckboxForeground = registerColor(
   "settings.checkboxForeground",
   checkboxForeground,
-  localize("settingsCheckboxForeground", "Settings editor checkbox foreground."),
+  localize(
+    "settingsCheckboxForeground",
+    "Settings editor checkbox foreground.",
+  ),
 );
 export const settingsCheckboxBorder = registerColor(
   "settings.checkboxBorder",
@@ -158,8 +170,8 @@ export const settingsNumberInputBorder = registerColor(
 export const focusedRowBackground = registerColor(
   "settings.focusedRowBackground",
   {
-    dark: transparent(listHoverBackground, .6),
-    light: transparent(listHoverBackground, .6),
+    dark: transparent(listHoverBackground, 0.6),
+    light: transparent(listHoverBackground, 0.6),
     hcDark: null,
     hcLight: null,
   },
@@ -172,8 +184,8 @@ export const focusedRowBackground = registerColor(
 export const rowHoverBackground = registerColor(
   "settings.rowHoverBackground",
   {
-    dark: transparent(listHoverBackground, .3),
-    light: transparent(listHoverBackground, .3),
+    dark: transparent(listHoverBackground, 0.3),
+    light: transparent(listHoverBackground, 0.3),
     hcDark: null,
     hcLight: null,
   },

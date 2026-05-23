@@ -27,69 +27,77 @@ import {
 import { NotSupportedError } from "../../../../base/common/errors.js";
 
 export class EditSessionsFileSystemProvider implements IFileSystemProviderWithFileReadWriteCapability {
+  static readonly SCHEMA = EDIT_SESSIONS_SCHEME;
 
-	static readonly SCHEMA = EDIT_SESSIONS_SCHEME;
+  constructor(
+    @IEditSessionsStorageService
+    private editSessionsStorageService: IEditSessionsStorageService,
+  ) {}
 
-	constructor(
-		@IEditSessionsStorageService private editSessionsStorageService: IEditSessionsStorageService,
-	) { }
+  readonly capabilities: FileSystemProviderCapabilities =
+    FileSystemProviderCapabilities.Readonly +
+    FileSystemProviderCapabilities.FileReadWrite;
 
-	readonly capabilities: FileSystemProviderCapabilities = FileSystemProviderCapabilities.Readonly + FileSystemProviderCapabilities.FileReadWrite;
-
-	async readFile(resource: URI): Promise<Uint8Array> {
-		const match = /(?<ref>[^/]+)\/(?<folderName>[^/]+)\/(?<filePath>.*)/.exec(
+  async readFile(resource: URI): Promise<Uint8Array> {
+    const match = /(?<ref>[^/]+)\/(?<folderName>[^/]+)\/(?<filePath>.*)/.exec(
       resource.path.substring(1),
     );
-		if (!match?.groups) {
-			throw FileSystemProviderErrorCode.FileNotFound;
-		}
-		const { ref, folderName, filePath } = match.groups;
-		const data = await this.editSessionsStorageService.read(
+    if (!match?.groups) {
+      throw FileSystemProviderErrorCode.FileNotFound;
+    }
+    const { ref, folderName, filePath } = match.groups;
+    const data = await this.editSessionsStorageService.read(
       "editSessions",
       ref,
     );
-		if (!data) {
-			throw FileSystemProviderErrorCode.FileNotFound;
-		}
-		const content: EditSession = JSON.parse(data.content);
-		const change = content.folders.find((f) => f.name === folderName)?.workingChanges.find(
-      (change) => change.relativeFilePath === filePath,
-    );
-		if (!change || change.type === ChangeType.Deletion) {
-			throw FileSystemProviderErrorCode.FileNotFound;
-		}
-		return decodeEditSessionFileContent(
-      content.version,
-      change.contents,
-    ).buffer;
-	}
+    if (!data) {
+      throw FileSystemProviderErrorCode.FileNotFound;
+    }
+    const content: EditSession = JSON.parse(data.content);
+    const change = content.folders
+      .find((f) => f.name === folderName)
+      ?.workingChanges.find((change) => change.relativeFilePath === filePath);
+    if (!change || change.type === ChangeType.Deletion) {
+      throw FileSystemProviderErrorCode.FileNotFound;
+    }
+    return decodeEditSessionFileContent(content.version, change.contents)
+      .buffer;
+  }
 
-	async stat(resource: URI): Promise<IStat> {
-		const content = await this.readFile(resource);
-		const currentTime = Date.now();
-		return {
+  async stat(resource: URI): Promise<IStat> {
+    const content = await this.readFile(resource);
+    const currentTime = Date.now();
+    return {
       type: FileType.File,
       permissions: FilePermission.Readonly,
       mtime: currentTime,
       ctime: currentTime,
       size: content.byteLength,
     };
-	}
+  }
 
-	//#region Unsupported file operations
-	readonly onDidChangeCapabilities = Event.None;
-	readonly onDidChangeFile = Event.None;
+  //#region Unsupported file operations
+  readonly onDidChangeCapabilities = Event.None;
+  readonly onDidChangeFile = Event.None;
 
-	watch(resource: URI, opts: IWatchOptions): IDisposable { return Disposable.None; }
+  watch(resource: URI, opts: IWatchOptions): IDisposable {
+    return Disposable.None;
+  }
 
-	async mkdir(resource: URI): Promise<void> { }
-	async readdir(resource: URI): Promise<[string, FileType][]> { return []; }
+  async mkdir(resource: URI): Promise<void> {}
+  async readdir(resource: URI): Promise<[string, FileType][]> {
+    return [];
+  }
 
-	async rename(from: URI, to: URI, opts: IFileOverwriteOptions): Promise<void> { }
-	async delete(resource: URI, opts: IFileDeleteOptions): Promise<void> { }
+  async rename(
+    from: URI,
+    to: URI,
+    opts: IFileOverwriteOptions,
+  ): Promise<void> {}
+  async delete(resource: URI, opts: IFileDeleteOptions): Promise<void> {}
 
-	async writeFile() {
-		throw new NotSupportedError();
-	}
-	//#endregion
+  async writeFile() {
+    throw new NotSupportedError();
+  }
+  //#endregion
 }

@@ -10,35 +10,38 @@ import { MainThreadWebviewPanels } from "./mainThreadWebviewPanels.js";
 import { MainThreadWebviews } from "./mainThreadWebviews.js";
 import { MainThreadWebviewsViews } from "./mainThreadWebviewViews.js";
 import * as extHostProtocol from "../common/extHost.protocol.js";
-import { extHostCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import {
+  extHostCustomer,
+  IExtHostContext,
+} from "../../services/extensions/common/extHostCustomers.js";
 import { MainThreadChatOutputRenderer } from "./mainThreadChatOutputRenderer.js";
 
 @extHostCustomer
 export class MainThreadWebviewManager extends Disposable {
-	constructor(
-		context: IExtHostContext,
-		@IInstantiationService instantiationService: IInstantiationService,
-	) {
-		super();
+  constructor(
+    context: IExtHostContext,
+    @IInstantiationService instantiationService: IInstantiationService,
+  ) {
+    super();
 
-		const webviews = this._register(
+    const webviews = this._register(
       instantiationService.createInstance(MainThreadWebviews, context),
     );
-		context.set(extHostProtocol.MainContext.MainThreadWebviews, webviews);
+    context.set(extHostProtocol.MainContext.MainThreadWebviews, webviews);
 
-		const webviewPanels = this._register(
+    const webviewPanels = this._register(
       instantiationService.createInstance(
         MainThreadWebviewPanels,
         context,
         webviews,
       ),
     );
-		context.set(
+    context.set(
       extHostProtocol.MainContext.MainThreadWebviewPanels,
       webviewPanels,
     );
 
-		const customEditors = this._register(
+    const customEditors = this._register(
       instantiationService.createInstance(
         MainThreadCustomEditors,
         context,
@@ -46,33 +49,33 @@ export class MainThreadWebviewManager extends Disposable {
         webviewPanels,
       ),
     );
-		context.set(
+    context.set(
       extHostProtocol.MainContext.MainThreadCustomEditors,
       customEditors,
     );
 
-		const webviewViews = this._register(
+    const webviewViews = this._register(
       instantiationService.createInstance(
         MainThreadWebviewsViews,
         context,
         webviews,
       ),
     );
-		context.set(
+    context.set(
       extHostProtocol.MainContext.MainThreadWebviewViews,
       webviewViews,
     );
 
-		const chatOutputRenderers = this._register(
+    const chatOutputRenderers = this._register(
       instantiationService.createInstance(
         MainThreadChatOutputRenderer,
         context,
         webviews,
       ),
     );
-		context.set(
+    context.set(
       extHostProtocol.MainContext.MainThreadChatOutputRenderer,
       chatOutputRenderers,
     );
-	}
+  }
 }

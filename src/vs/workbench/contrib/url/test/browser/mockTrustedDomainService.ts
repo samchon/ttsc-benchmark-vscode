@@ -9,18 +9,17 @@ import { ITrustedDomainService } from "../../common/trustedDomainService.js";
 import { isURLDomainTrusted } from "../../../../../platform/url/common/trustedDomains.js";
 
 export class MockTrustedDomainService implements ITrustedDomainService {
-	_serviceBrand: undefined;
+  _serviceBrand: undefined;
 
-	constructor(private readonly _trustedDomains: string[] = []) {
-	}
+  constructor(private readonly _trustedDomains: string[] = []) {}
 
-	readonly onDidChangeTrustedDomains: Event<void> = Event.None;
+  readonly onDidChangeTrustedDomains: Event<void> = Event.None;
 
-	get trustedDomains(): string[] {
-		return this._trustedDomains;
-	}
+  get trustedDomains(): string[] {
+    return this._trustedDomains;
+  }
 
-	isValid(resource: URI): boolean {
-		return isURLDomainTrusted(resource, this._trustedDomains);
-	}
+  isValid(resource: URI): boolean {
+    return isURLDomainTrusted(resource, this._trustedDomains);
+  }
 }

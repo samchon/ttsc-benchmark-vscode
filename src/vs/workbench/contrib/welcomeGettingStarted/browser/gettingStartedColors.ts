@@ -37,8 +37,8 @@ export const welcomePageTileBackground = registerColor(
 export const welcomePageTileHoverBackground = registerColor(
   "welcomePage.tileHoverBackground",
   {
-    dark: lighten(editorWidgetBackground, .2),
-    light: darken(editorWidgetBackground, .1),
+    dark: lighten(editorWidgetBackground, 0.2),
+    light: darken(editorWidgetBackground, 0.1),
     hcDark: null,
     hcLight: null,
   },
@@ -60,7 +60,6 @@ export const welcomePageTileBorder = registerColor(
     "Border color for the tiles on the Welcome page.",
   ),
 );
-
 
 export const welcomePageProgressBackground = registerColor(
   "welcomePage.progress.background",

@@ -5,8 +5,15 @@
 
 import * as nls from "../../../../nls.js";
 import { Color } from "../../../../base/common/color.js";
-import { ContentWidgetPositionPreference, ICodeEditor, IContentWidgetPosition } from "../../../../editor/browser/editorBrowser.js";
-import { IModelDecorationOptions, OverviewRulerLane } from "../../../../editor/common/model.js";
+import {
+  ContentWidgetPositionPreference,
+  ICodeEditor,
+  IContentWidgetPosition,
+} from "../../../../editor/browser/editorBrowser.js";
+import {
+  IModelDecorationOptions,
+  OverviewRulerLane,
+} from "../../../../editor/common/model.js";
 import { ModelDecorationOptions } from "../../../../editor/common/model/textModel.js";
 import {
   darken,
@@ -26,7 +33,10 @@ export const overviewRulerCommentingRangeForeground = registerColor(
   "editorGutter.commentRangeForeground",
   {
     dark: opaque(listInactiveSelectionBackground, editorBackground),
-    light: darken(opaque(listInactiveSelectionBackground, editorBackground), .05),
+    light: darken(
+      opaque(listInactiveSelectionBackground, editorBackground),
+      0.05,
+    ),
     hcDark: Color.white,
     hcLight: Color.black,
   },
@@ -91,97 +101,115 @@ registerColor(
 );
 
 export class CommentGlyphWidget extends Disposable {
-	public static description = "comment-glyph-widget";
-	private _lineNumber!: number;
-	private _editor: ICodeEditor;
-	private _threadState: CommentThreadState | undefined;
-	private _threadHasDraft: boolean = false;
-	private readonly _commentsDecorations: IEditorDecorationsCollection;
-	private _commentsOptions: ModelDecorationOptions;
+  public static description = "comment-glyph-widget";
+  private _lineNumber!: number;
+  private _editor: ICodeEditor;
+  private _threadState: CommentThreadState | undefined;
+  private _threadHasDraft: boolean = false;
+  private readonly _commentsDecorations: IEditorDecorationsCollection;
+  private _commentsOptions: ModelDecorationOptions;
 
-	private readonly _onDidChangeLineNumber = this._register(
+  private readonly _onDidChangeLineNumber = this._register(
     new Emitter<number>(),
   );
-	public readonly onDidChangeLineNumber = this._onDidChangeLineNumber.event;
+  public readonly onDidChangeLineNumber = this._onDidChangeLineNumber.event;
 
-	constructor(editor: ICodeEditor, lineNumber: number) {
-		super();
-		this._commentsOptions = this.createDecorationOptions();
-		this._editor = editor;
-		this._commentsDecorations = this._editor.createDecorationsCollection();
-		this._register(this._commentsDecorations.onDidChange(e => {
-			const range = (this._commentsDecorations.length > 0 ? this._commentsDecorations.getRange(0) : null);
-			if (range && range.endLineNumber !== this._lineNumber) {
-				this._lineNumber = range.endLineNumber;
-				this._onDidChangeLineNumber.fire(this._lineNumber);
-			}
-		}));
-		this._register(toDisposable(() => this._commentsDecorations.clear()));
-		this.setLineNumber(lineNumber);
-	}
+  constructor(editor: ICodeEditor, lineNumber: number) {
+    super();
+    this._commentsOptions = this.createDecorationOptions();
+    this._editor = editor;
+    this._commentsDecorations = this._editor.createDecorationsCollection();
+    this._register(
+      this._commentsDecorations.onDidChange((e) => {
+        const range =
+          this._commentsDecorations.length > 0
+            ? this._commentsDecorations.getRange(0)
+            : null;
+        if (range && range.endLineNumber !== this._lineNumber) {
+          this._lineNumber = range.endLineNumber;
+          this._onDidChangeLineNumber.fire(this._lineNumber);
+        }
+      }),
+    );
+    this._register(toDisposable(() => this._commentsDecorations.clear()));
+    this.setLineNumber(lineNumber);
+  }
 
-	private createDecorationOptions(): ModelDecorationOptions {
-		// Priority: draft > unresolved > resolved
-		let className: string;
-		if (this._threadHasDraft) {
-			className = "comment-range-glyph comment-thread-draft";
-		} else {
-			const unresolved = this._threadState === CommentThreadState.Unresolved;
-			className = `comment-range-glyph comment-thread${unresolved ? "-unresolved" : ""}`;
-		}
+  private createDecorationOptions(): ModelDecorationOptions {
+    // Priority: draft > unresolved > resolved
+    let className: string;
+    if (this._threadHasDraft) {
+      className = "comment-range-glyph comment-thread-draft";
+    } else {
+      const unresolved = this._threadState === CommentThreadState.Unresolved;
+      className = `comment-range-glyph comment-thread${unresolved ? "-unresolved" : ""}`;
+    }
 
-		const decorationOptions: IModelDecorationOptions = {
-			description: CommentGlyphWidget.description,
-			isWholeLine: true,
-			overviewRuler: {
-				color: themeColorFromId(this._threadHasDraft ? overviewRulerCommentDraftForeground :
-					(this._threadState === CommentThreadState.Unresolved ? overviewRulerCommentUnresolvedForeground : overviewRulerCommentForeground)),
-				position: OverviewRulerLane.Center,
-			},
-			collapseOnReplaceEdit: true,
-			linesDecorationsClassName: className,
-		};
+    const decorationOptions: IModelDecorationOptions = {
+      description: CommentGlyphWidget.description,
+      isWholeLine: true,
+      overviewRuler: {
+        color: themeColorFromId(
+          this._threadHasDraft
+            ? overviewRulerCommentDraftForeground
+            : this._threadState === CommentThreadState.Unresolved
+              ? overviewRulerCommentUnresolvedForeground
+              : overviewRulerCommentForeground,
+        ),
+        position: OverviewRulerLane.Center,
+      },
+      collapseOnReplaceEdit: true,
+      linesDecorationsClassName: className,
+    };
 
-		return ModelDecorationOptions.createDynamic(decorationOptions);
-	}
+    return ModelDecorationOptions.createDynamic(decorationOptions);
+  }
 
-	setThreadState(state: CommentThreadState | undefined, hasDraft: boolean = false): void {
-		if (this._threadState !== state || this._threadHasDraft !== hasDraft) {
-			this._threadState = state;
-			this._threadHasDraft = hasDraft;
-			this._commentsOptions = this.createDecorationOptions();
-			this._updateDecorations();
-		}
-	}
+  setThreadState(
+    state: CommentThreadState | undefined,
+    hasDraft: boolean = false,
+  ): void {
+    if (this._threadState !== state || this._threadHasDraft !== hasDraft) {
+      this._threadState = state;
+      this._threadHasDraft = hasDraft;
+      this._commentsOptions = this.createDecorationOptions();
+      this._updateDecorations();
+    }
+  }
 
-	private _updateDecorations(): void {
-		const commentsDecorations = [{
-			range: {
-				startLineNumber: this._lineNumber, startColumn: 1,
-				endLineNumber: this._lineNumber, endColumn: 1,
-			},
-			options: this._commentsOptions,
-		}];
+  private _updateDecorations(): void {
+    const commentsDecorations = [
+      {
+        range: {
+          startLineNumber: this._lineNumber,
+          startColumn: 1,
+          endLineNumber: this._lineNumber,
+          endColumn: 1,
+        },
+        options: this._commentsOptions,
+      },
+    ];
 
-		this._commentsDecorations.set(commentsDecorations);
-	}
+    this._commentsDecorations.set(commentsDecorations);
+  }
 
-	setLineNumber(lineNumber: number): void {
-		this._lineNumber = lineNumber;
-		this._updateDecorations();
-	}
+  setLineNumber(lineNumber: number): void {
+    this._lineNumber = lineNumber;
+    this._updateDecorations();
+  }
 
-	getPosition(): IContentWidgetPosition {
-		const range = (this._commentsDecorations.length > 0 ? this._commentsDecorations.getRange(
-      0,
-    ) : null);
+  getPosition(): IContentWidgetPosition {
+    const range =
+      this._commentsDecorations.length > 0
+        ? this._commentsDecorations.getRange(0)
+        : null;
 
-		return {
-			position: {
-				lineNumber: range ? range.endLineNumber : this._lineNumber,
-				column: 1,
-			},
-			preference: [ContentWidgetPositionPreference.EXACT],
-		};
-	}
+    return {
+      position: {
+        lineNumber: range ? range.endLineNumber : this._lineNumber,
+        column: 1,
+      },
+      preference: [ContentWidgetPositionPreference.EXACT],
+    };
+  }
 }

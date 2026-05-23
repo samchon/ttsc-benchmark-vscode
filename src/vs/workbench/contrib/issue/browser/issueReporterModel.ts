@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { mainWindow } from "../../../../base/browser/window.js";
-import { isRemoteDiagnosticError, SystemInfo } from "../../../../platform/diagnostics/common/diagnostics.js";
+import {
+  isRemoteDiagnosticError,
+  SystemInfo,
+} from "../../../../platform/diagnostics/common/diagnostics.js";
 import {
   ISettingSearchResult,
   IssueReporterExtensionData,
@@ -13,52 +16,52 @@ import {
 } from "../common/issue.js";
 
 interface VersionInfo {
-	vscodeVersion: string;
-	os: string;
+  vscodeVersion: string;
+  os: string;
 }
 
 export interface IssueReporterData {
-	issueType: IssueType;
-	issueSource?: IssueSource;
-	issueDescription?: string;
-	issueTitle?: string;
-	extensionData?: string;
+  issueType: IssueType;
+  issueSource?: IssueSource;
+  issueDescription?: string;
+  issueTitle?: string;
+  extensionData?: string;
 
-	versionInfo?: VersionInfo;
-	systemInfo?: SystemInfo;
-	systemInfoWeb?: string;
-	processInfo?: string;
-	workspaceInfo?: string;
+  versionInfo?: VersionInfo;
+  systemInfo?: SystemInfo;
+  systemInfoWeb?: string;
+  processInfo?: string;
+  workspaceInfo?: string;
 
-	includeSystemInfo: boolean;
-	includeWorkspaceInfo: boolean;
-	includeProcessInfo: boolean;
-	includeExtensions: boolean;
-	includeExperiments: boolean;
-	includeExtensionData: boolean;
+  includeSystemInfo: boolean;
+  includeWorkspaceInfo: boolean;
+  includeProcessInfo: boolean;
+  includeExtensions: boolean;
+  includeExperiments: boolean;
+  includeExtensionData: boolean;
 
-	numberOfThemeExtesions?: number;
-	allExtensions: IssueReporterExtensionData[];
-	enabledNonThemeExtesions?: IssueReporterExtensionData[];
-	extensionsDisabled?: boolean;
-	fileOnExtension?: boolean;
-	fileOnMarketplace?: boolean;
-	fileOnProduct?: boolean;
-	selectedExtension?: IssueReporterExtensionData;
-	actualSearchResults?: ISettingSearchResult[];
-	query?: string;
-	filterResultCount?: number;
-	experimentInfo?: string;
-	restrictedMode?: boolean;
-	isInstallationPure?: boolean;
-	isSessionsWindow?: boolean;
+  numberOfThemeExtesions?: number;
+  allExtensions: IssueReporterExtensionData[];
+  enabledNonThemeExtesions?: IssueReporterExtensionData[];
+  extensionsDisabled?: boolean;
+  fileOnExtension?: boolean;
+  fileOnMarketplace?: boolean;
+  fileOnProduct?: boolean;
+  selectedExtension?: IssueReporterExtensionData;
+  actualSearchResults?: ISettingSearchResult[];
+  query?: string;
+  filterResultCount?: number;
+  experimentInfo?: string;
+  restrictedMode?: boolean;
+  isInstallationPure?: boolean;
+  isSessionsWindow?: boolean;
 }
 
 export class IssueReporterModel {
-	private readonly _data: IssueReporterData;
+  private readonly _data: IssueReporterData;
 
-	constructor(initialData?: Partial<IssueReporterData>) {
-		const defaultData = {
+  constructor(initialData?: Partial<IssueReporterData>) {
+    const defaultData = {
       issueType: IssueType.Bug,
       includeSystemInfo: true,
       includeWorkspaceInfo: true,
@@ -69,38 +72,43 @@ export class IssueReporterModel {
       allExtensions: [],
     };
 
-		this._data = initialData ? Object.assign(
-      defaultData,
-      initialData,
-    ) : defaultData;
+    this._data = initialData
+      ? Object.assign(defaultData, initialData)
+      : defaultData;
 
-		mainWindow.addEventListener("message", async (event) => {
-			if (event.data && event.data.sendChannel === "vscode:triggerIssueData") {
-				mainWindow.postMessage({
-					data: { issueBody: this._data.issueDescription, issueTitle: this._data.issueTitle },
-					replyChannel: "vscode:triggerIssueDataResponse",
-				}, "*");
-			}
-		});
-	}
+    mainWindow.addEventListener("message", async (event) => {
+      if (event.data && event.data.sendChannel === "vscode:triggerIssueData") {
+        mainWindow.postMessage(
+          {
+            data: {
+              issueBody: this._data.issueDescription,
+              issueTitle: this._data.issueTitle,
+            },
+            replyChannel: "vscode:triggerIssueDataResponse",
+          },
+          "*",
+        );
+      }
+    });
+  }
 
-	getData(): IssueReporterData {
-		return this._data;
-	}
+  getData(): IssueReporterData {
+    return this._data;
+  }
 
-	update(newData: Partial<IssueReporterData>): void {
-		Object.assign(this._data, newData);
-	}
+  update(newData: Partial<IssueReporterData>): void {
+    Object.assign(this._data, newData);
+  }
 
-	serialize(): string {
-		const modes = [];
-		if (this._data.restrictedMode) {
-			modes.push("Restricted");
-		}
-		if (this._data.isInstallationPure === false) {
-			modes.push("Unsupported");
-		}
-		return `
+  serialize(): string {
+    const modes = [];
+    if (this._data.restrictedMode) {
+      modes.push("Restricted");
+    }
+    if (this._data.isInstallationPure === false) {
+      modes.push("Unsupported");
+    }
+    return `
 Type: <b>${this.getIssueTypeTitle()}</b>
 ${this._data.isSessionsWindow ? "\nWindow: Agents\n" : ""}
 ${this._data.issueDescription}
@@ -111,117 +119,126 @@ Modes:${modes.length ? " " + modes.join(", ") : ""}
 ${this.getRemoteOSes()}
 ${this.getInfos()}
 <!-- generated by issue reporter -->`;
-	}
+  }
 
-	private getRemoteOSes(): string {
-		if (this._data.systemInfo && this._data.systemInfo.remoteData.length) {
-			return this._data.systemInfo.remoteData
-				.map(remote => isRemoteDiagnosticError(remote) ? remote.errorMessage : `Remote OS version: ${remote.machineInfo.os}`).join("\n") + "\n";
-		}
+  private getRemoteOSes(): string {
+    if (this._data.systemInfo && this._data.systemInfo.remoteData.length) {
+      return (
+        this._data.systemInfo.remoteData
+          .map((remote) =>
+            isRemoteDiagnosticError(remote)
+              ? remote.errorMessage
+              : `Remote OS version: ${remote.machineInfo.os}`,
+          )
+          .join("\n") + "\n"
+      );
+    }
 
-		return "";
-	}
+    return "";
+  }
 
-	fileOnExtension(): boolean | undefined {
-		const fileOnExtensionSupported = this._data.issueType === IssueType.Bug
-			|| this._data.issueType === IssueType.PerformanceIssue
-			|| this._data.issueType === IssueType.FeatureRequest;
+  fileOnExtension(): boolean | undefined {
+    const fileOnExtensionSupported =
+      this._data.issueType === IssueType.Bug ||
+      this._data.issueType === IssueType.PerformanceIssue ||
+      this._data.issueType === IssueType.FeatureRequest;
 
-		return fileOnExtensionSupported && this._data.fileOnExtension;
-	}
+    return fileOnExtensionSupported && this._data.fileOnExtension;
+  }
 
-	private getExtensionVersion(): string {
-		if (this.fileOnExtension() && this._data.selectedExtension) {
-			return `\nExtension version: ${this._data.selectedExtension.version}`;
-		} else {
-			return "";
-		}
-	}
+  private getExtensionVersion(): string {
+    if (this.fileOnExtension() && this._data.selectedExtension) {
+      return `\nExtension version: ${this._data.selectedExtension.version}`;
+    } else {
+      return "";
+    }
+  }
 
-	private getIssueTypeTitle(): string {
-		if (this._data.issueType === IssueType.Bug) {
-			return "Bug";
-		} else if (this._data.issueType === IssueType.PerformanceIssue) {
-			return "Performance Issue";
-		} else {
-			return "Feature Request";
-		}
-	}
+  private getIssueTypeTitle(): string {
+    if (this._data.issueType === IssueType.Bug) {
+      return "Bug";
+    } else if (this._data.issueType === IssueType.PerformanceIssue) {
+      return "Performance Issue";
+    } else {
+      return "Feature Request";
+    }
+  }
 
-	private getInfos(): string {
-		let info = "";
+  private getInfos(): string {
+    let info = "";
 
-		if (this._data.fileOnMarketplace) {
-			return info;
-		}
+    if (this._data.fileOnMarketplace) {
+      return info;
+    }
 
-		if (this._data.includeExtensionData && this._data.extensionData) {
-			info += this.getExtensionData();
-		}
+    if (this._data.includeExtensionData && this._data.extensionData) {
+      info += this.getExtensionData();
+    }
 
-		if (this._data.includeSystemInfo && this._data.systemInfo) {
-			info += this.generateSystemInfoMd();
-		}
+    if (this._data.includeSystemInfo && this._data.systemInfo) {
+      info += this.generateSystemInfoMd();
+    }
 
-		if (this._data.issueType === IssueType.PerformanceIssue) {
-			if (this._data.includeProcessInfo) {
-				info += this.generateProcessInfoMd();
-			}
+    if (this._data.issueType === IssueType.PerformanceIssue) {
+      if (this._data.includeProcessInfo) {
+        info += this.generateProcessInfoMd();
+      }
 
-			if (this._data.includeWorkspaceInfo) {
-				info += this.generateWorkspaceInfoMd();
-			}
-		}
+      if (this._data.includeWorkspaceInfo) {
+        info += this.generateWorkspaceInfoMd();
+      }
+    }
 
-		if (!this._data.fileOnExtension && this._data.includeExtensions) {
-			info += this.generateExtensionsMd();
-		}
+    if (!this._data.fileOnExtension && this._data.includeExtensions) {
+      info += this.generateExtensionsMd();
+    }
 
-		if (this._data.includeExperiments && this._data.experimentInfo) {
-			info += this.generateExperimentsInfoMd();
-		}
+    if (this._data.includeExperiments && this._data.experimentInfo) {
+      info += this.generateExperimentsInfoMd();
+    }
 
-		return info;
-	}
+    return info;
+  }
 
-	private getExtensionData(): string {
-		return this._data.extensionData ?? "";
-	}
+  private getExtensionData(): string {
+    return this._data.extensionData ?? "";
+  }
 
-	private generateSystemInfoMd(): string {
-		let md = `<details>
+  private generateSystemInfoMd(): string {
+    let md = `<details>
 <summary>System Info</summary>
 
 |Item|Value|
 |---|---|
 `;
 
-		if (this._data.systemInfo) {
-
-			md += `|CPUs|${this._data.systemInfo.cpus}|
-|GPU Status|${Object.keys(this._data.systemInfo.gpuStatus).map(key => `${key}: ${this._data.systemInfo!.gpuStatus[key]}`).join("<br>")}|
+    if (this._data.systemInfo) {
+      md += `|CPUs|${this._data.systemInfo.cpus}|
+|GPU Status|${Object.keys(this._data.systemInfo.gpuStatus)
+        .map((key) => `${key}: ${this._data.systemInfo!.gpuStatus[key]}`)
+        .join("<br>")}|
 |Load (avg)|${this._data.systemInfo.load}|
 |Memory (System)|${this._data.systemInfo.memory}|
 |Process Argv|${this._data.systemInfo.processArgs.replace(/\\/g, "\\\\")}|
 |Screen Reader|${this._data.systemInfo.screenReader}|
 |VM|${this._data.systemInfo.vmHint}|`;
 
-			if (this._data.systemInfoWeb) {
-				md += `\n|User Agent|${this._data.systemInfoWeb}|`;
-			}
+      if (this._data.systemInfoWeb) {
+        md += `\n|User Agent|${this._data.systemInfoWeb}|`;
+      }
 
-			if (this._data.systemInfo.linuxEnv) {
-				md += `\n|DESKTOP_SESSION|${this._data.systemInfo.linuxEnv.desktopSession}|
+      if (this._data.systemInfo.linuxEnv) {
+        md += `\n|DESKTOP_SESSION|${this._data.systemInfo.linuxEnv.desktopSession}|
 |XDG_CURRENT_DESKTOP|${this._data.systemInfo.linuxEnv.xdgCurrentDesktop}|
 |XDG_SESSION_DESKTOP|${this._data.systemInfo.linuxEnv.xdgSessionDesktop}|
 |XDG_SESSION_TYPE|${this._data.systemInfo.linuxEnv.xdgSessionType}|`;
-			}
+      }
 
-			this._data.systemInfo.remoteData.forEach(remote => {
-				if (isRemoteDiagnosticError(remote)) {
-					md += `\n\n${remote.errorMessage}`;
-				} else {
-					md += `
+      this._data.systemInfo.remoteData.forEach((remote) => {
+        if (isRemoteDiagnosticError(remote)) {
+          md += `\n\n${remote.errorMessage}`;
+        } else {
+          md += `
 
 |Item|Value|
 |---|---|
@@ -230,17 +247,17 @@ ${this.getInfos()}
 |CPUs|${remote.machineInfo.cpus}|
 |Memory (System)|${remote.machineInfo.memory}|
 |VM|${remote.machineInfo.vmHint}|`;
-				}
-			});
-		}
+        }
+      });
+    }
 
-		md += "\n</details>";
+    md += "\n</details>";
 
-		return md;
-	}
+    return md;
+  }
 
-	private generateProcessInfoMd(): string {
-		return `<details>
+  private generateProcessInfoMd(): string {
+    return `<details>
 <summary>Process Info</summary>
 
 \`\`\`
@@ -249,10 +266,10 @@ ${this._data.processInfo}
 
 </details>
 `;
-	}
+  }
 
-	private generateWorkspaceInfoMd(): string {
-		return `<details>
+  private generateWorkspaceInfoMd(): string {
+    return `<details>
 <summary>Workspace Info</summary>
 
 \`\`\`
@@ -261,10 +278,10 @@ ${this._data.workspaceInfo};
 
 </details>
 `;
-	}
+  }
 
-	private generateExperimentsInfoMd(): string {
-		return `<details>
+  private generateExperimentsInfoMd(): string {
+    return `<details>
 <summary>A/B Experiments</summary>
 
 \`\`\`
@@ -273,36 +290,44 @@ ${this._data.experimentInfo}
 
 </details>
 `;
-	}
+  }
 
-	private generateExtensionsMd(): string {
-		if (this._data.extensionsDisabled) {
-			return "Extensions disabled";
-		}
+  private generateExtensionsMd(): string {
+    if (this._data.extensionsDisabled) {
+      return "Extensions disabled";
+    }
 
-		if (!this._data.enabledNonThemeExtesions || this._data.enabledNonThemeExtesions.length === 0) {
-			if (!this._data.numberOfThemeExtesions) {
-				return "Extensions: none";
-			}
-		}
+    if (
+      !this._data.enabledNonThemeExtesions ||
+      this._data.enabledNonThemeExtesions.length === 0
+    ) {
+      if (!this._data.numberOfThemeExtesions) {
+        return "Extensions: none";
+      }
+    }
 
-		let md = "";
-		const tableHeader = `Name|Identifier|Author|Version
+    let md = "";
+    const tableHeader = `Name|Identifier|Author|Version
 ---|---|---|---`;
 
-		if (this._data.enabledNonThemeExtesions && this._data.enabledNonThemeExtesions.length > 0) {
-			const table = this._data.enabledNonThemeExtesions.map(e => {
-				return `${e.displayName || e.name}|${e.id}|${e.publisher ?? "N/A"}|${e.version}`;
-			}).join("\n");
+    if (
+      this._data.enabledNonThemeExtesions &&
+      this._data.enabledNonThemeExtesions.length > 0
+    ) {
+      const table = this._data.enabledNonThemeExtesions
+        .map((e) => {
+          return `${e.displayName || e.name}|${e.id}|${e.publisher ?? "N/A"}|${e.version}`;
+        })
+        .join("\n");
 
-			md += `<details><summary>Extensions (${this._data.enabledNonThemeExtesions.length})</summary>
+      md += `<details><summary>Extensions (${this._data.enabledNonThemeExtesions.length})</summary>
 
 ${tableHeader}
 ${table}
 
 </details>`;
-		}
+    }
 
-		return md;
-	}
+    return md;
+  }
 }

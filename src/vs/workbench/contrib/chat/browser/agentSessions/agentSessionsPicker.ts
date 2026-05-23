@@ -17,7 +17,10 @@ import {
   IQuickPickSeparator,
 } from "../../../../../platform/quickinput/common/quickInput.js";
 import { ISessionOpenOptions, openSession } from "./agentSessionsOpener.js";
-import { IAgentSession, isLocalAgentSessionItem } from "./agentSessionsModel.js";
+import {
+  IAgentSession,
+  isLocalAgentSessionItem,
+} from "./agentSessionsModel.js";
 import { IAgentSessionsService } from "./agentSessionsService.js";
 import {
   AgentSessionsSorter,
@@ -25,11 +28,14 @@ import {
   type IAgentSessionsFilter,
   sessionDateFromNow,
 } from "./agentSessionsViewer.js";
-import { AGENT_SESSION_DELETE_ACTION_ID, AGENT_SESSION_RENAME_ACTION_ID } from "./agentSessions.js";
+import {
+  AGENT_SESSION_DELETE_ACTION_ID,
+  AGENT_SESSION_RENAME_ACTION_ID,
+} from "./agentSessions.js";
 import { AgentSessionsFilter } from "./agentSessionsFilter.js";
 
 interface ISessionPickItem extends IQuickPickItem {
-	readonly session: IAgentSession;
+  readonly session: IAgentSession;
 }
 
 export const archiveButton: IQuickInputButton = {
@@ -53,141 +59,171 @@ export const deleteButton: IQuickInputButton = {
 };
 
 export function getSessionDescription(session: IAgentSession): string {
-	const descriptionText = typeof session.description === "string" ? session.description : session.description ? renderAsPlaintext(
-    session.description,
-  ) : undefined;
-	const timeAgo = sessionDateFromNow(session.timing.created);
-	const descriptionParts = [descriptionText, session.providerLabel, timeAgo].filter(
-    part => !!part,
-  );
+  const descriptionText =
+    typeof session.description === "string"
+      ? session.description
+      : session.description
+        ? renderAsPlaintext(session.description)
+        : undefined;
+  const timeAgo = sessionDateFromNow(session.timing.created);
+  const descriptionParts = [
+    descriptionText,
+    session.providerLabel,
+    timeAgo,
+  ].filter((part) => !!part);
 
-	return descriptionParts.join(" • ");
+  return descriptionParts.join(" • ");
 }
 
 export function getSessionButtons(session: IAgentSession): IQuickInputButton[] {
-	const buttons: IQuickInputButton[] = [];
+  const buttons: IQuickInputButton[] = [];
 
-	if (isLocalAgentSessionItem(session)) {
-		buttons.push(renameButton);
-		buttons.push(deleteButton);
-	}
-	buttons.push(session.isArchived() ? unarchiveButton : archiveButton);
+  if (isLocalAgentSessionItem(session)) {
+    buttons.push(renameButton);
+    buttons.push(deleteButton);
+  }
+  buttons.push(session.isArchived() ? unarchiveButton : archiveButton);
 
-	return buttons;
+  return buttons;
 }
 
-export function shouldShowSessionInPicker(session: IAgentSession, filter: IAgentSessionsFilter): boolean {
-	return !session.isArchived() && !filter.exclude(session);
+export function shouldShowSessionInPicker(
+  session: IAgentSession,
+  filter: IAgentSessionsFilter,
+): boolean {
+  return !session.isArchived() && !filter.exclude(session);
 }
 
 export interface IAgentSessionsPickerOptions {
-	overrideSessionOpen?(session: IAgentSession, openOptions?: ISessionOpenOptions): Promise<void>;
+  overrideSessionOpen?(
+    session: IAgentSession,
+    openOptions?: ISessionOpenOptions,
+  ): Promise<void>;
 }
 
 export class AgentSessionsPicker {
+  private readonly sorter = new AgentSessionsSorter();
 
-	private readonly sorter = new AgentSessionsSorter();
+  constructor(
+    private readonly anchor: HTMLElement | undefined,
+    private readonly options: IAgentSessionsPickerOptions | undefined,
+    @IAgentSessionsService
+    private readonly agentSessionsService: IAgentSessionsService,
+    @IQuickInputService private readonly quickInputService: IQuickInputService,
+    @IInstantiationService
+    private readonly instantiationService: IInstantiationService,
+    @ICommandService private readonly commandService: ICommandService,
+  ) {}
 
-	constructor(
-		private readonly anchor: HTMLElement | undefined,
-		private readonly options: IAgentSessionsPickerOptions | undefined,
-		@IAgentSessionsService private readonly agentSessionsService: IAgentSessionsService,
-		@IQuickInputService private readonly quickInputService: IQuickInputService,
-		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@ICommandService private readonly commandService: ICommandService,
-	) { }
-
-	async pickAgentSession(): Promise<void> {
-		const disposables = new DisposableStore();
-		const picker = disposables.add(
+  async pickAgentSession(): Promise<void> {
+    const disposables = new DisposableStore();
+    const picker = disposables.add(
       this.quickInputService.createQuickPick<ISessionPickItem>({
         useSeparators: true,
       }),
     );
-		const filter = disposables.add(
+    const filter = disposables.add(
       this.instantiationService.createInstance(AgentSessionsFilter, {}),
     );
 
-		picker.anchor = this.anchor;
-		picker.items = this.createPickerItems(filter);
-		picker.canAcceptInBackground = true;
-		picker.placeholder = localize(
+    picker.anchor = this.anchor;
+    picker.items = this.createPickerItems(filter);
+    picker.canAcceptInBackground = true;
+    picker.placeholder = localize(
       "chatAgentPickerPlaceholder",
       "Search agent sessions by name",
     );
 
-		disposables.add(picker.onDidAccept(e => {
-			const pick = picker.selectedItems[0];
-			if (pick) {
-				const openOptions: ISessionOpenOptions = {
-					sideBySide: e.inBackground,
-					editorOptions: {
-						preserveFocus: e.inBackground,
-						pinned: e.inBackground,
-					},
-				};
+    disposables.add(
+      picker.onDidAccept((e) => {
+        const pick = picker.selectedItems[0];
+        if (pick) {
+          const openOptions: ISessionOpenOptions = {
+            sideBySide: e.inBackground,
+            editorOptions: {
+              preserveFocus: e.inBackground,
+              pinned: e.inBackground,
+            },
+          };
 
-				if (this.options?.overrideSessionOpen) {
-					this.options.overrideSessionOpen(pick.session, openOptions);
-				} else {
-					this.instantiationService.invokeFunction(openSession, pick.session, openOptions);
-				}
-			}
+          if (this.options?.overrideSessionOpen) {
+            this.options.overrideSessionOpen(pick.session, openOptions);
+          } else {
+            this.instantiationService.invokeFunction(
+              openSession,
+              pick.session,
+              openOptions,
+            );
+          }
+        }
 
-			if (!e.inBackground) {
-				picker.hide();
-			}
-		}));
+        if (!e.inBackground) {
+          picker.hide();
+        }
+      }),
+    );
 
-		disposables.add(picker.onDidTriggerItemButton(async e => {
-			const session = e.item.session;
+    disposables.add(
+      picker.onDidTriggerItemButton(async (e) => {
+        const session = e.item.session;
 
-			let reopenResolved: boolean = false;
-			if (e.button === renameButton) {
-				reopenResolved = true;
-				await this.commandService.executeCommand(AGENT_SESSION_RENAME_ACTION_ID, session);
-			} else if (e.button === deleteButton) {
-				reopenResolved = true;
-				await this.commandService.executeCommand(AGENT_SESSION_DELETE_ACTION_ID, session);
-			} else {
-				const newArchivedState = !session.isArchived();
-				session.setArchived(newArchivedState);
-			}
+        let reopenResolved: boolean = false;
+        if (e.button === renameButton) {
+          reopenResolved = true;
+          await this.commandService.executeCommand(
+            AGENT_SESSION_RENAME_ACTION_ID,
+            session,
+          );
+        } else if (e.button === deleteButton) {
+          reopenResolved = true;
+          await this.commandService.executeCommand(
+            AGENT_SESSION_DELETE_ACTION_ID,
+            session,
+          );
+        } else {
+          const newArchivedState = !session.isArchived();
+          session.setArchived(newArchivedState);
+        }
 
-			if (reopenResolved) {
-				await this.agentSessionsService.model.resolve(session.providerType);
-				this.pickAgentSession();
-			} else {
-				picker.items = this.createPickerItems(filter);
-			}
-		}));
+        if (reopenResolved) {
+          await this.agentSessionsService.model.resolve(session.providerType);
+          this.pickAgentSession();
+        } else {
+          picker.items = this.createPickerItems(filter);
+        }
+      }),
+    );
 
-		disposables.add(picker.onDidHide(() => disposables.dispose()));
-		picker.show();
-	}
+    disposables.add(picker.onDidHide(() => disposables.dispose()));
+    picker.show();
+  }
 
-	private createPickerItems(filter: AgentSessionsFilter): (ISessionPickItem | IQuickPickSeparator)[] {
-		const sessions = this.agentSessionsService.model.sessions
-			.filter(session => shouldShowSessionInPicker(session, filter))
-			.sort(this.sorter.compare.bind(this.sorter));
-		const items: (ISessionPickItem | IQuickPickSeparator)[] = [];
+  private createPickerItems(
+    filter: AgentSessionsFilter,
+  ): (ISessionPickItem | IQuickPickSeparator)[] {
+    const sessions = this.agentSessionsService.model.sessions
+      .filter((session) => shouldShowSessionInPicker(session, filter))
+      .sort(this.sorter.compare.bind(this.sorter));
+    const items: (ISessionPickItem | IQuickPickSeparator)[] = [];
 
-		const groupedSessions = groupAgentSessionsByDate(sessions);
-		for (const group of groupedSessions.values()) {
-			if (group.sessions.length > 0) {
-				items.push({ type: "separator", label: group.label });
-				items.push(...group.sessions.map(session => this.toPickItem(session)));
-			}
-		}
+    const groupedSessions = groupAgentSessionsByDate(sessions);
+    for (const group of groupedSessions.values()) {
+      if (group.sessions.length > 0) {
+        items.push({ type: "separator", label: group.label });
+        items.push(
+          ...group.sessions.map((session) => this.toPickItem(session)),
+        );
+      }
+    }
 
-		return items;
-	}
+    return items;
+  }
 
-	private toPickItem(session: IAgentSession): ISessionPickItem {
-		const description = getSessionDescription(session);
-		const buttons = getSessionButtons(session);
+  private toPickItem(session: IAgentSession): ISessionPickItem {
+    const description = getSessionDescription(session);
+    const buttons = getSessionButtons(session);
 
-		return {
+    return {
       id: session.resource.toString(),
       label: session.label,
       tooltip: session.tooltip,
@@ -196,5 +232,5 @@ export class AgentSessionsPicker {
       buttons,
       session,
     };
-	}
+  }
 }

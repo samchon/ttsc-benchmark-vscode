@@ -155,14 +155,15 @@ export const TERMINAL_SYMBOL_ICON_SYMBOLIC_LINK_FILE_FOREGROUND = registerColor(
     "The foreground color for a symbolic link file icon. These icons will appear in the terminal suggest widget.",
   ),
 );
-export const TERMINAL_SYMBOL_ICON_SYMBOLIC_LINK_FOLDER_FOREGROUND = registerColor(
-  "terminalSymbolIcon.symbolicLinkFolderForeground",
-  SYMBOL_ICON_FOLDER_FOREGROUND,
-  localize(
+export const TERMINAL_SYMBOL_ICON_SYMBOLIC_LINK_FOLDER_FOREGROUND =
+  registerColor(
     "terminalSymbolIcon.symbolicLinkFolderForeground",
-    "The foreground color for a symbolic link folder icon. These icons will appear in the terminal suggest widget.",
-  ),
-);
+    SYMBOL_ICON_FOLDER_FOREGROUND,
+    localize(
+      "terminalSymbolIcon.symbolicLinkFolderForeground",
+      "The foreground color for a symbolic link folder icon. These icons will appear in the terminal suggest widget.",
+    ),
+  );
 
 export const TERMINAL_SYMBOL_ICON_SYMBOL_TEXT_FOREGROUND = registerColor(
   "terminalSymbolIcon.symbolText",

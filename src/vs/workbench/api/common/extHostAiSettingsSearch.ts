@@ -18,48 +18,57 @@ import { Progress } from "../../../platform/progress/common/progress.js";
 import { AiSettingsSearch } from "./extHostTypeConverters.js";
 
 export class ExtHostAiSettingsSearch implements ExtHostAiSettingsSearchShape {
-	private _settingsSearchProviders: Map<number, SettingsSearchProvider> = new Map();
-	private _nextHandle = 0;
+  private _settingsSearchProviders: Map<number, SettingsSearchProvider> =
+    new Map();
+  private _nextHandle = 0;
 
-	private readonly _proxy: MainThreadAiSettingsSearchShape;
+  private readonly _proxy: MainThreadAiSettingsSearchShape;
 
-	constructor(mainContext: IMainContext) {
-		this._proxy = mainContext.getProxy(MainContext.MainThreadAiSettingsSearch);
-	}
+  constructor(mainContext: IMainContext) {
+    this._proxy = mainContext.getProxy(MainContext.MainThreadAiSettingsSearch);
+  }
 
-	async $startSearch(handle: number, query: string, option: AiSettingsSearchProviderOptions, token: CancellationToken): Promise<void> {
-		if (this._settingsSearchProviders.size === 0) {
-			throw new Error("No related information providers registered");
-		}
+  async $startSearch(
+    handle: number,
+    query: string,
+    option: AiSettingsSearchProviderOptions,
+    token: CancellationToken,
+  ): Promise<void> {
+    if (this._settingsSearchProviders.size === 0) {
+      throw new Error("No related information providers registered");
+    }
 
-		const provider = this._settingsSearchProviders.get(handle);
-		if (!provider) {
-			throw new Error("Settings search provider not found");
-		}
+    const provider = this._settingsSearchProviders.get(handle);
+    if (!provider) {
+      throw new Error("Settings search provider not found");
+    }
 
-		const progressReporter = new Progress<SettingsSearchResult>((data) => {
+    const progressReporter = new Progress<SettingsSearchResult>((data) => {
       this._proxy.$handleSearchResult(
         handle,
         AiSettingsSearch.fromSettingsSearchResult(data),
       );
     });
 
-		return provider.provideSettingsSearchResults(
+    return provider.provideSettingsSearchResults(
       query,
       option,
       progressReporter,
       token,
     );
-	}
+  }
 
-	registerSettingsSearchProvider(extension: IExtensionDescription, provider: SettingsSearchProvider): Disposable {
-		const handle = this._nextHandle;
-		this._nextHandle++;
-		this._settingsSearchProviders.set(handle, provider);
-		this._proxy.$registerAiSettingsSearchProvider(handle);
-		return new Disposable(() => {
+  registerSettingsSearchProvider(
+    extension: IExtensionDescription,
+    provider: SettingsSearchProvider,
+  ): Disposable {
+    const handle = this._nextHandle;
+    this._nextHandle++;
+    this._settingsSearchProviders.set(handle, provider);
+    this._proxy.$registerAiSettingsSearchProvider(handle);
+    return new Disposable(() => {
       this._proxy.$unregisterAiSettingsSearchProvider(handle);
       this._settingsSearchProviders.delete(handle);
     });
-	}
+  }
 }

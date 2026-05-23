@@ -6,18 +6,33 @@
 import { localize } from "../../../../nls.js";
 import { registerAction2 } from "../../../../platform/actions/common/actions.js";
 import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import * as jsonContributionRegistry from "../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
-import { mcpAccessConfig, McpAccessValue } from "../../../../platform/mcp/common/mcpManagement.js";
-import { IQuickAccessRegistry, Extensions as QuickAccessExtensions } from "../../../../platform/quickinput/common/quickAccess.js";
+import {
+  mcpAccessConfig,
+  McpAccessValue,
+} from "../../../../platform/mcp/common/mcpManagement.js";
+import {
+  IQuickAccessRegistry,
+  Extensions as QuickAccessExtensions,
+} from "../../../../platform/quickinput/common/quickAccess.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
-import { EditorPaneDescriptor, IEditorPaneRegistry } from "../../../browser/editor.js";
+import {
+  EditorPaneDescriptor,
+  IEditorPaneRegistry,
+} from "../../../browser/editor.js";
 import {
   IConfigurationMigrationRegistry,
   Extensions as ConfigurationMigrationExtensions,
   ConfigurationKeyValuePairs,
 } from "../../../common/configuration.js";
-import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../common/contributions.js";
+import {
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../common/contributions.js";
 import { EditorExtensions } from "../../../common/editor.js";
 import { mcpSchemaId } from "../../../services/configuration/common/configuration.js";
 import { ChatContextKeys } from "../../chat/common/actions/chatContextKeys.js";
@@ -31,11 +46,17 @@ import { WorkspaceDotMcpDiscovery } from "../common/discovery/workspaceDotMcpDis
 import { McpCommandIds } from "../common/mcpCommandIds.js";
 import { mcpServerSchema } from "../common/mcpConfiguration.js";
 import { McpContextKeysController } from "../common/mcpContextKeys.js";
-import { IMcpDevModeDebugging, McpDevModeDebugging } from "../common/mcpDevMode.js";
+import {
+  IMcpDevModeDebugging,
+  McpDevModeDebugging,
+} from "../common/mcpDevMode.js";
 import { McpLanguageModelToolContribution } from "../common/mcpLanguageModelToolContribution.js";
 import { McpRegistry } from "../common/mcpRegistry.js";
 import { IMcpRegistry } from "../common/mcpRegistryTypes.js";
-import { IMcpSandboxService, McpSandboxService } from "../common/mcpSandboxService.js";
+import {
+  IMcpSandboxService,
+  McpSandboxService,
+} from "../common/mcpSandboxService.js";
 import { McpResourceFilesystem } from "../common/mcpResourceFilesystem.js";
 import { McpSamplingService } from "../common/mcpSamplingService.js";
 import { McpService } from "../common/mcpService.js";
@@ -83,7 +104,10 @@ import { McpConfigMigrationContribution } from "./mcpMigration.js";
 import { McpResourceQuickAccess } from "./mcpResourceQuickAccess.js";
 import { McpServerEditor } from "./mcpServerEditor.js";
 import { McpServerEditorInput } from "./mcpServerEditorInput.js";
-import { MCPContextsInitialisation, McpWorkbenchService } from "./mcpWorkbenchService.js";
+import {
+  MCPContextsInitialisation,
+  McpWorkbenchService,
+} from "./mcpWorkbenchService.js";
 
 registerSingleton(IMcpRegistry, McpRegistry, InstantiationType.Delayed);
 registerSingleton(
@@ -204,12 +228,14 @@ registerWorkbenchContribution2(
   WorkbenchPhase.Eventually,
 );
 
-const jsonRegistry = <jsonContributionRegistry.IJSONContributionRegistry>Registry.as(
-  jsonContributionRegistry.Extensions.JSONContribution,
+const jsonRegistry = <jsonContributionRegistry.IJSONContributionRegistry>(
+  Registry.as(jsonContributionRegistry.Extensions.JSONContribution)
 );
 jsonRegistry.registerSchema(mcpSchemaId, mcpServerSchema);
 
-Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane(
+Registry.as<IEditorPaneRegistry>(
+  EditorExtensions.EditorPane,
+).registerEditorPane(
   EditorPaneDescriptor.create(
     McpServerEditor,
     McpServerEditor.ID,
@@ -218,29 +244,40 @@ Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane
   [new SyncDescriptor(McpServerEditorInput)],
 );
 
-Registry.as<IQuickAccessRegistry>(QuickAccessExtensions.Quickaccess).registerQuickAccessProvider({
-	ctor: McpResourceQuickAccess,
-	prefix: McpResourceQuickAccess.PREFIX,
-	when: ChatContextKeys.enabled,
-	placeholder: localize("mcp.quickaccess.placeholder", "Filter to an MCP resource"),
-	helpEntries: [{
-		description: localize("mcp.quickaccess.add", "MCP Server Resources"),
-		commandId: McpCommandIds.AddConfiguration,
-	}],
+Registry.as<IQuickAccessRegistry>(
+  QuickAccessExtensions.Quickaccess,
+).registerQuickAccessProvider({
+  ctor: McpResourceQuickAccess,
+  prefix: McpResourceQuickAccess.PREFIX,
+  when: ChatContextKeys.enabled,
+  placeholder: localize(
+    "mcp.quickaccess.placeholder",
+    "Filter to an MCP resource",
+  ),
+  helpEntries: [
+    {
+      description: localize("mcp.quickaccess.add", "MCP Server Resources"),
+      commandId: McpCommandIds.AddConfiguration,
+    },
+  ],
 });
 
-
-Registry.as<IConfigurationMigrationRegistry>(ConfigurationMigrationExtensions.ConfigurationMigration)
-	.registerConfigurationMigrations([{
-		key: "chat.mcp.enabled",
-		migrateFn: (value, accessor) => {
-			const result: ConfigurationKeyValuePairs = [["chat.mcp.enabled", { value: undefined }]];
-			if (value === true) {
-				result.push([mcpAccessConfig, { value: McpAccessValue.All }]);
-			}
-			if (value === false) {
-				result.push([mcpAccessConfig, { value: McpAccessValue.None }]);
-			}
-			return result;
-		},
-	}]);
+Registry.as<IConfigurationMigrationRegistry>(
+  ConfigurationMigrationExtensions.ConfigurationMigration,
+).registerConfigurationMigrations([
+  {
+    key: "chat.mcp.enabled",
+    migrateFn: (value, accessor) => {
+      const result: ConfigurationKeyValuePairs = [
+        ["chat.mcp.enabled", { value: undefined }],
+      ];
+      if (value === true) {
+        result.push([mcpAccessConfig, { value: McpAccessValue.All }]);
+      }
+      if (value === false) {
+        result.push([mcpAccessConfig, { value: McpAccessValue.None }]);
+      }
+      return result;
+    },
+  },
+]);

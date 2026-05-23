@@ -15,8 +15,8 @@ import type * as http from "http";
  * the agent host always issues full `nonce.sessionId` tokens.
  */
 export interface ProxyBearerAuth {
-	readonly valid: boolean;
-	readonly sessionId: string | undefined;
+  readonly valid: boolean;
+  readonly sessionId: string | undefined;
 }
 
 const INVALID: ProxyBearerAuth = Object.freeze({
@@ -38,24 +38,27 @@ const INVALID: ProxyBearerAuth = Object.freeze({
  * - `Bearer <nonce>.` (empty sessionId)
  * - `Bearer <wrong-nonce>.<sessionId>`
  */
-export function parseProxyBearer(headers: http.IncomingHttpHeaders, expectedNonce: string): ProxyBearerAuth {
-	const authHeader = headers["authorization"];
-	if (typeof authHeader !== "string" || !authHeader.startsWith("Bearer ")) {
-		return INVALID;
-	}
+export function parseProxyBearer(
+  headers: http.IncomingHttpHeaders,
+  expectedNonce: string,
+): ProxyBearerAuth {
+  const authHeader = headers["authorization"];
+  if (typeof authHeader !== "string" || !authHeader.startsWith("Bearer ")) {
+    return INVALID;
+  }
 
-	const token = authHeader.slice("Bearer ".length);
-	const dotIndex = token.indexOf(".");
-	if (dotIndex === -1) {
-		// Phase 2 explicitly rejects the legacy nonce-only format.
-		return INVALID;
-	}
+  const token = authHeader.slice("Bearer ".length);
+  const dotIndex = token.indexOf(".");
+  if (dotIndex === -1) {
+    // Phase 2 explicitly rejects the legacy nonce-only format.
+    return INVALID;
+  }
 
-	const nonce = token.slice(0, dotIndex);
-	const sessionId = token.slice(dotIndex + 1);
-	if (nonce !== expectedNonce || sessionId.length === 0) {
-		return INVALID;
-	}
+  const nonce = token.slice(0, dotIndex);
+  const sessionId = token.slice(dotIndex + 1);
+  if (nonce !== expectedNonce || sessionId.length === 0) {
+    return INVALID;
+  }
 
-	return { valid: true, sessionId };
+  return { valid: true, sessionId };
 }

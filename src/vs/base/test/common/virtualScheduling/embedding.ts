@@ -41,8 +41,8 @@ import { VirtualEvent } from "./virtualClock.js";
  * `api.requestAnimationFrame`, …) at exactly one site in this file.
  */
 export type Embedding = (
-	nextEvent: VirtualEvent,
-	then: () => void,
+  nextEvent: VirtualEvent,
+  then: () => void,
 ) => "continueSync" | "cbScheduled";
 
 /**
@@ -63,14 +63,14 @@ export const syncEmbedding: Embedding = () => "continueSync";
  * This is the embedding to use for almost all integration-style tests.
  */
 export function drainMicrotasksEmbedding(realApi: TimeApi): Embedding {
-	return (next, then) => {
-		if (next.preferRealAnimationFrame && realApi.requestAnimationFrame) {
-			realApi.requestAnimationFrame(() => then());
-		} else {
-			nextMacrotask(realApi, then);
-		}
-		return "cbScheduled";
-	};
+  return (next, then) => {
+    if (next.preferRealAnimationFrame && realApi.requestAnimationFrame) {
+      realApi.requestAnimationFrame(() => then());
+    } else {
+      nextMacrotask(realApi, then);
+    }
+    return "cbScheduled";
+  };
 }
 
 /**
@@ -83,7 +83,13 @@ export function drainMicrotasksEmbedding(realApi: TimeApi): Embedding {
  * one available on the host.
  */
 export function nextMacrotask(api: TimeApi, cb: () => void): void {
-	if (setTimeout0IsFaster) { setTimeout0(cb); return; }
-	if (api.setImmediate) { api.setImmediate(cb); return; }
-	api.setTimeout(cb, 0);
+  if (setTimeout0IsFaster) {
+    setTimeout0(cb);
+    return;
+  }
+  if (api.setImmediate) {
+    api.setImmediate(cb);
+    return;
+  }
+  api.setTimeout(cb, 0);
 }

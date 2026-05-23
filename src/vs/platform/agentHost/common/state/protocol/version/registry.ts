@@ -28,11 +28,11 @@ export const PROTOCOL_VERSION = "0.2.0";
  * Throws if `version` is not a well-formed `MAJOR.MINOR.PATCH` string.
  */
 function parseSemver(version: string): readonly [number, number, number] {
-	const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
-	if (!match) {
-		throw new Error(`Invalid protocol version: ${version}`);
-	}
-	return [Number(match[1]), Number(match[2]), Number(match[3])] as const;
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
+  if (!match) {
+    throw new Error(`Invalid protocol version: ${version}`);
+  }
+  return [Number(match[1]), Number(match[2]), Number(match[3])] as const;
 }
 
 /**
@@ -42,9 +42,9 @@ function parseSemver(version: string): readonly [number, number, number] {
  * number if `a > b`.
  */
 export function compareProtocolVersions(a: string, b: string): number {
-	const [aMajor, aMinor, aPatch] = parseSemver(a);
-	const [bMajor, bMinor, bPatch] = parseSemver(b);
-	return (aMajor - bMajor) || (aMinor - bMinor) || (aPatch - bPatch);
+  const [aMajor, aMinor, aPatch] = parseSemver(a);
+  const [bMajor, bMinor, bPatch] = parseSemver(b);
+  return aMajor - bMajor || aMinor - bMinor || aPatch - bPatch;
 }
 
 // ─── Exhaustive Action → Version Map ─────────────────────────────────────────
@@ -55,7 +55,9 @@ export function compareProtocolVersions(a: string, b: string): number {
  *
  * Versions are SemVer `MAJOR.MINOR.PATCH` strings (see `PROTOCOL_VERSION`).
  */
-export const ACTION_INTRODUCED_IN: { readonly [K in StateAction["type"]]: string } = {
+export const ACTION_INTRODUCED_IN: {
+  readonly [K in StateAction["type"]]: string;
+} = {
   [ActionType.RootAgentsChanged]: "0.1.0",
   [ActionType.RootActiveSessionsChanged]: "0.1.0",
   [ActionType.SessionReady]: "0.1.0",
@@ -120,11 +122,14 @@ export const ACTION_INTRODUCED_IN: { readonly [K in StateAction["type"]]: string
 /**
  * Returns whether the given action type is known to the specified protocol version.
  */
-export function isActionKnownToVersion(action: StateAction, clientVersion: string): boolean {
-	return compareProtocolVersions(
-    ACTION_INTRODUCED_IN[action.type],
-    clientVersion,
-  ) <= 0;
+export function isActionKnownToVersion(
+  action: StateAction,
+  clientVersion: string,
+): boolean {
+  return (
+    compareProtocolVersions(ACTION_INTRODUCED_IN[action.type], clientVersion) <=
+    0
+  );
 }
 
 // ─── Exhaustive Notification Method → Version Map ──────────────────────────
@@ -135,7 +140,10 @@ export function isActionKnownToVersion(action: StateAction, clientVersion: strin
  * keys that excludes `action` (the action envelope) since action versions
  * are tracked via {@link ACTION_INTRODUCED_IN}.
  */
-export type ProtocolNotificationMethod = Exclude<keyof ServerNotificationMap, "action">;
+export type ProtocolNotificationMethod = Exclude<
+  keyof ServerNotificationMap,
+  "action"
+>;
 
 /**
  * Maps every server → client protocol notification method to the protocol
@@ -144,7 +152,9 @@ export type ProtocolNotificationMethod = Exclude<keyof ServerNotificationMap, "a
  *
  * Versions are SemVer `MAJOR.MINOR.PATCH` strings (see `PROTOCOL_VERSION`).
  */
-export const NOTIFICATION_INTRODUCED_IN: { readonly [K in ProtocolNotificationMethod]: string } = {
+export const NOTIFICATION_INTRODUCED_IN: {
+  readonly [K in ProtocolNotificationMethod]: string;
+} = {
   "root/sessionAdded": "0.1.0",
   "root/sessionRemoved": "0.1.0",
   "root/sessionSummaryChanged": "0.1.0",
@@ -158,9 +168,14 @@ export const NOTIFICATION_INTRODUCED_IN: { readonly [K in ProtocolNotificationMe
  * Returns whether the given notification method is known to the specified
  * protocol version.
  */
-export function isNotificationKnownToVersion(method: ProtocolNotificationMethod, clientVersion: string): boolean {
-	return compareProtocolVersions(
-    NOTIFICATION_INTRODUCED_IN[method],
-    clientVersion,
-  ) <= 0;
+export function isNotificationKnownToVersion(
+  method: ProtocolNotificationMethod,
+  clientVersion: string,
+): boolean {
+  return (
+    compareProtocolVersions(
+      NOTIFICATION_INTRODUCED_IN[method],
+      clientVersion,
+    ) <= 0
+  );
 }

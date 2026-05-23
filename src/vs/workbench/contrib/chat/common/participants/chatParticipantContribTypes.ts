@@ -6,30 +6,40 @@
 import { ChatModeKind, RawChatParticipantLocation } from "../constants.js";
 
 export interface IRawChatCommandContribution {
-	name: string;
-	description: string;
-	sampleRequest?: string;
-	isSticky?: boolean;
-	when?: string;
-	disambiguation?: { category: string; categoryName?: string /** Deprecated */; description: string; examples: string[] }[];
+  name: string;
+  description: string;
+  sampleRequest?: string;
+  isSticky?: boolean;
+  when?: string;
+  disambiguation?: {
+    category: string;
+    categoryName?: string /** Deprecated */;
+    description: string;
+    examples: string[];
+  }[];
 }
 
 export interface IRawChatParticipantContribution {
-	id: string;
-	name: string;
-	fullName: string;
-	when?: string;
-	description?: string;
-	isDefault?: boolean;
-	isSticky?: boolean;
-	sampleRequest?: string;
-	commands?: IRawChatCommandContribution[];
-	locations?: RawChatParticipantLocation[];
-	/**
-	 * Valid for default participants in 'panel' location
-	 */
-	modes?: ChatModeKind[];
-	disambiguation?: { category: string; categoryName?: string /** Deprecated */; description: string; examples: string[] }[];
+  id: string;
+  name: string;
+  fullName: string;
+  when?: string;
+  description?: string;
+  isDefault?: boolean;
+  isSticky?: boolean;
+  sampleRequest?: string;
+  commands?: IRawChatCommandContribution[];
+  locations?: RawChatParticipantLocation[];
+  /**
+   * Valid for default participants in 'panel' location
+   */
+  modes?: ChatModeKind[];
+  disambiguation?: {
+    category: string;
+    categoryName?: string /** Deprecated */;
+    description: string;
+    examples: string[];
+  }[];
 }
 
 /**

@@ -19,31 +19,39 @@
  * `allowedTools` / `disallowedTools` natively.
  */
 export const enum ClaudeSessionConfigKey {
-	/** `'permissionMode'` — Claude SDK approval mode. */
-	PermissionMode = "permissionMode",
+  /** `'permissionMode'` — Claude SDK approval mode. */
+  PermissionMode = "permissionMode",
 }
 
 /**
  * Permission-mode values advertised in the Claude session-config schema.
  * Mirror of the SDK's `PermissionMode` union for protocol-stable strings.
  */
-export type ClaudePermissionMode = "default" | "acceptEdits" | "bypassPermissions" | "plan" | "dontAsk" | "auto";
+export type ClaudePermissionMode =
+  | "default"
+  | "acceptEdits"
+  | "bypassPermissions"
+  | "plan"
+  | "dontAsk"
+  | "auto";
 
 /**
  * Single source of truth for narrowing an arbitrary runtime value to the
  * closed {@link ClaudePermissionMode} union. Returns `undefined` for
  * non-strings or unmatched strings; callers apply their own fallback.
  */
-export function narrowClaudePermissionMode(raw: unknown): ClaudePermissionMode | undefined {
-	switch (raw) {
-		case "default":
-		case "acceptEdits":
-		case "bypassPermissions":
-		case "plan":
-		case "dontAsk":
-		case "auto":
-			return raw;
-		default:
-			return undefined;
-	}
+export function narrowClaudePermissionMode(
+  raw: unknown,
+): ClaudePermissionMode | undefined {
+  switch (raw) {
+    case "default":
+    case "acceptEdits":
+    case "bypassPermissions":
+    case "plan":
+    case "dontAsk":
+    case "auto":
+      return raw;
+    default:
+      return undefined;
+  }
 }

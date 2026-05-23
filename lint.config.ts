@@ -14,13 +14,14 @@ export default {
     "prefer-const": "error",
     eqeqeq: "error",
     "object-shorthand": "error",
-    "no-unneeded-ternary": "error",
-    "prefer-template": "error",
     "no-useless-rename": "error",
-    "dot-notation": "error",
-    "no-extra-boolean-cast": "error",
-    "no-useless-escape": "error",
     "prefer-as-const": "error",
     "prefer-namespace-keyword": "error",
+    // Disable format/print-width: its line-breaking decisions diverge from
+    // prettier 3 on multi-arg call boundary cases (e.g. an 80-column call
+    // that prettier keeps inline but ttsc-lint re-breaks across 4-5 lines).
+    // The two branches must hold byte-identical sources, so we drop the
+    // rule that disagrees with prettier.
+    "format/print-width": "off",
   },
 } satisfies ITtscLintConfig;

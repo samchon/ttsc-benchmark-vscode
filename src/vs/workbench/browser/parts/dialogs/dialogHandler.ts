@@ -21,19 +21,24 @@ import {
 import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
 import { ILogService } from "../../../../platform/log/common/log.js";
 import Severity from "../../../../base/common/severity.js";
-import { Dialog, IDialogResult } from "../../../../base/browser/ui/dialog/dialog.js";
+import {
+  Dialog,
+  IDialogResult,
+} from "../../../../base/browser/ui/dialog/dialog.js";
 import { DisposableStore } from "../../../../base/common/lifecycle.js";
 import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
 import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
 import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
-import { IMarkdownRendererService, openLinkFromMarkdown } from "../../../../platform/markdown/browser/markdownRenderer.js";
+import {
+  IMarkdownRendererService,
+  openLinkFromMarkdown,
+} from "../../../../platform/markdown/browser/markdownRenderer.js";
 import { IOpenerService } from "../../../../platform/opener/common/opener.js";
 import { createWorkbenchDialogOptions } from "./dialog.js";
 import { IHostService } from "../../../services/host/browser/host.js";
 
 export class BrowserDialogHandler extends AbstractDialogHandler {
-
-	private static readonly ALLOWABLE_COMMANDS = new Set([
+  private static readonly ALLOWABLE_COMMANDS = new Set([
     "copy",
     "cut",
     "editor.action.selectAll",
@@ -42,35 +47,46 @@ export class BrowserDialogHandler extends AbstractDialogHandler {
     "editor.action.clipboardPasteAction",
   ]);
 
-	constructor(
-		@ILogService private readonly logService: ILogService,
-		@ILayoutService private readonly layoutService: ILayoutService,
-		@IKeybindingService private readonly keybindingService: IKeybindingService,
-		@IInstantiationService instantiationService: IInstantiationService,
-		@IClipboardService private readonly clipboardService: IClipboardService,
-		@IOpenerService private readonly openerService: IOpenerService,
-		@IMarkdownRendererService private readonly markdownRendererService: IMarkdownRendererService,
-		@IHostService private readonly hostService: IHostService,
-	) {
-		super();
-	}
+  constructor(
+    @ILogService private readonly logService: ILogService,
+    @ILayoutService private readonly layoutService: ILayoutService,
+    @IKeybindingService private readonly keybindingService: IKeybindingService,
+    @IInstantiationService instantiationService: IInstantiationService,
+    @IClipboardService private readonly clipboardService: IClipboardService,
+    @IOpenerService private readonly openerService: IOpenerService,
+    @IMarkdownRendererService
+    private readonly markdownRendererService: IMarkdownRendererService,
+    @IHostService private readonly hostService: IHostService,
+  ) {
+    super();
+  }
 
-	async prompt<T>(prompt: IPrompt<T>): Promise<IAsyncPromptResult<T>> {
-		this.logService.trace("DialogService#prompt", prompt.message);
+  async prompt<T>(prompt: IPrompt<T>): Promise<IAsyncPromptResult<T>> {
+    this.logService.trace("DialogService#prompt", prompt.message);
 
-		const buttons = this.getPromptButtons(prompt);
+    const buttons = this.getPromptButtons(prompt);
 
-		const { button, checkboxChecked } = await this.doShow(prompt.type, prompt.message, buttons, prompt.detail, prompt.cancelButton ? buttons.length - 1 : -1 /* Disabled */, prompt.checkbox, undefined, typeof prompt?.custom === "object" ? prompt.custom : undefined, prompt.token);
+    const { button, checkboxChecked } = await this.doShow(
+      prompt.type,
+      prompt.message,
+      buttons,
+      prompt.detail,
+      prompt.cancelButton ? buttons.length - 1 : -1 /* Disabled */,
+      prompt.checkbox,
+      undefined,
+      typeof prompt?.custom === "object" ? prompt.custom : undefined,
+      prompt.token,
+    );
 
-		return this.getPromptResult(prompt, button, checkboxChecked);
-	}
+    return this.getPromptResult(prompt, button, checkboxChecked);
+  }
 
-	async confirm(confirmation: IConfirmation): Promise<IConfirmationResult> {
-		this.logService.trace("DialogService#confirm", confirmation.message);
+  async confirm(confirmation: IConfirmation): Promise<IConfirmationResult> {
+    this.logService.trace("DialogService#confirm", confirmation.message);
 
-		const buttons = this.getConfirmationButtons(confirmation);
+    const buttons = this.getConfirmationButtons(confirmation);
 
-		const { button, checkboxChecked } = await this.doShow(
+    const { button, checkboxChecked } = await this.doShow(
       confirmation.type ?? "question",
       confirmation.message,
       buttons,
@@ -78,19 +94,21 @@ export class BrowserDialogHandler extends AbstractDialogHandler {
       buttons.length - 1,
       confirmation.checkbox,
       undefined,
-      typeof confirmation?.custom === "object" ? confirmation.custom : undefined,
+      typeof confirmation?.custom === "object"
+        ? confirmation.custom
+        : undefined,
       confirmation.token,
     );
 
-		return { confirmed: button === 0, checkboxChecked };
-	}
+    return { confirmed: button === 0, checkboxChecked };
+  }
 
-	async input(input: IInput): Promise<IInputResult> {
-		this.logService.trace("DialogService#input", input.message);
+  async input(input: IInput): Promise<IInputResult> {
+    this.logService.trace("DialogService#input", input.message);
 
-		const buttons = this.getInputButtons(input);
+    const buttons = this.getInputButtons(input);
 
-		const { button, checkboxChecked, values } = await this.doShow(
+    const { button, checkboxChecked, values } = await this.doShow(
       input.type ?? "question",
       input.message,
       buttons,
@@ -102,12 +120,15 @@ export class BrowserDialogHandler extends AbstractDialogHandler {
       input.token,
     );
 
-		return { confirmed: button === 0, checkboxChecked, values };
-	}
+    return { confirmed: button === 0, checkboxChecked, values };
+  }
 
-	async about(title: string, details: string, detailsToCopy: string): Promise<void> {
-
-		const { button } = await this.doShow(
+  async about(
+    title: string,
+    details: string,
+    detailsToCopy: string,
+  ): Promise<void> {
+    const { button } = await this.doShow(
       Severity.Info,
       title,
       [
@@ -118,28 +139,49 @@ export class BrowserDialogHandler extends AbstractDialogHandler {
       1,
     );
 
-		if (button === 0) {
-			this.clipboardService.writeText(detailsToCopy);
-		}
-	}
+    if (button === 0) {
+      this.clipboardService.writeText(detailsToCopy);
+    }
+  }
 
-	private async doShow(type: Severity | DialogType | undefined, message: string, buttons?: string[], detail?: string, cancelId?: number, checkbox?: ICheckbox, inputs?: IInputElement[], customOptions?: ICustomDialogOptions, token?: CancellationToken): Promise<IDialogResult> {
-		const dialogDisposables = new DisposableStore();
+  private async doShow(
+    type: Severity | DialogType | undefined,
+    message: string,
+    buttons?: string[],
+    detail?: string,
+    cancelId?: number,
+    checkbox?: ICheckbox,
+    inputs?: IInputElement[],
+    customOptions?: ICustomDialogOptions,
+    token?: CancellationToken,
+  ): Promise<IDialogResult> {
+    const dialogDisposables = new DisposableStore();
 
-		const renderBody = customOptions ? (parent: HTMLElement) => {
-			parent.classList.add(...(customOptions.classes || []));
-			customOptions.markdownDetails?.forEach(markdownDetail => {
-				const result = dialogDisposables.add(this.markdownRendererService.render(markdownDetail.markdown, {
-					actionHandler: markdownDetail.actionHandler || ((link, mdStr) => {
-						return openLinkFromMarkdown(this.openerService, link, mdStr.isTrusted, true /* skip URL validation to prevent another dialog from showing which is unsupported */);
-					}),
-				}));
-				parent.appendChild(result.element);
-				result.element.classList.add(...(markdownDetail.classes || []));
-			});
-		} : undefined;
+    const renderBody = customOptions
+      ? (parent: HTMLElement) => {
+          parent.classList.add(...(customOptions.classes || []));
+          customOptions.markdownDetails?.forEach((markdownDetail) => {
+            const result = dialogDisposables.add(
+              this.markdownRendererService.render(markdownDetail.markdown, {
+                actionHandler:
+                  markdownDetail.actionHandler ||
+                  ((link, mdStr) => {
+                    return openLinkFromMarkdown(
+                      this.openerService,
+                      link,
+                      mdStr.isTrusted,
+                      true /* skip URL validation to prevent another dialog from showing which is unsupported */,
+                    );
+                  }),
+              }),
+            );
+            parent.appendChild(result.element);
+            result.element.classList.add(...(markdownDetail.classes || []));
+          });
+        }
+      : undefined;
 
-		const dialog = new Dialog(
+    const dialog = new Dialog(
       this.layoutService.activeContainer,
       message,
       buttons,
@@ -151,7 +193,9 @@ export class BrowserDialogHandler extends AbstractDialogHandler {
           renderBody,
           icon: customOptions?.icon,
           disableCloseAction: customOptions?.disableCloseAction,
-          buttonOptions: customOptions?.buttonDetails?.map(detail => ({ sublabel: detail })),
+          buttonOptions: customOptions?.buttonDetails?.map((detail) => ({
+            sublabel: detail,
+          })),
           checkboxLabel: checkbox?.label,
           checkboxChecked: checkbox?.checked,
           inputs,
@@ -163,17 +207,17 @@ export class BrowserDialogHandler extends AbstractDialogHandler {
       ),
     );
 
-		dialogDisposables.add(dialog);
+    dialogDisposables.add(dialog);
 
-		if (token) {
-			dialogDisposables.add(
+    if (token) {
+      dialogDisposables.add(
         token.onCancellationRequested(() => dialogDisposables.dispose()),
       );
-		}
+    }
 
-		const result = await dialog.show();
-		dialogDisposables.dispose();
+    const result = await dialog.show();
+    dialogDisposables.dispose();
 
-		return result;
-	}
+    return result;
+  }
 }

@@ -6,13 +6,22 @@
 import { Event } from "../../../../../base/common/event.js";
 import { Color } from "../../../../../base/common/color.js";
 import { DisposableStore } from "../../../../../base/common/lifecycle.js";
-import { IMarkdownRendererService, MarkdownRendererService } from "../../../../../platform/markdown/browser/markdownRenderer.js";
+import {
+  IMarkdownRendererService,
+  MarkdownRendererService,
+} from "../../../../../platform/markdown/browser/markdownRenderer.js";
 import { URI } from "../../../../../base/common/uri.js";
 import { mock } from "../../../../../base/test/common/mock.js";
-import { CodeEditorWidget, ICodeEditorWidgetOptions } from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import {
+  CodeEditorWidget,
+  ICodeEditorWidgetOptions,
+} from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
 import { IRange } from "../../../../../editor/common/core/range.js";
 import { TokenizationRegistry } from "../../../../../editor/common/languages.js";
-import { IAgentFeedback, IAgentFeedbackService } from "../../browser/agentFeedbackService.js";
+import {
+  IAgentFeedback,
+  IAgentFeedbackService,
+} from "../../browser/agentFeedbackService.js";
 import { AgentFeedbackEditorWidget } from "../../browser/agentFeedbackEditorWidgetContribution.js";
 import {
   ComponentFixtureContext,
@@ -21,40 +30,49 @@ import {
   defineComponentFixture,
   defineThemedFixtureGroup,
 } from "../../../../../workbench/test/browser/componentFixtures/fixtureUtils.js";
-import { ICodeReviewService, ICodeReviewSuggestion } from "../../../codeReview/browser/codeReviewService.js";
+import {
+  ICodeReviewService,
+  ICodeReviewSuggestion,
+} from "../../../codeReview/browser/codeReviewService.js";
 import { createMockCodeReviewService } from "../../../../../workbench/test/browser/componentFixtures/sessions/mockCodeReviewService.js";
-import { ISessionEditorComment, SessionEditorCommentSource } from "../../browser/sessionEditorComments.js";
+import {
+  ISessionEditorComment,
+  SessionEditorCommentSource,
+} from "../../browser/sessionEditorComments.js";
 
 const sessionResource = URI.parse("vscode-agent-session://fixture/session-1");
 const fileResource = URI.parse("inmemory://model/agent-feedback-widget.ts");
 
 const sampleCode = [
-	"function alpha() {",
-	"\tconst first = 1;",
-	"\treturn first;",
-	"}",
-	"",
-	"function beta() {",
-	"\tconst second = 2;",
-	"\tconst third = second + 1;",
-	"\treturn third;",
-	"}",
-	"",
-	"function gamma() {",
-	"\tconst done = true;",
-	"\treturn done;",
-	"}",
+  "function alpha() {",
+  "\tconst first = 1;",
+  "\treturn first;",
+  "}",
+  "",
+  "function beta() {",
+  "\tconst second = 2;",
+  "\tconst third = second + 1;",
+  "\treturn third;",
+  "}",
+  "",
+  "function gamma() {",
+  "\tconst done = true;",
+  "\treturn done;",
+  "}",
 ].join("\n");
 
 interface IFixtureOptions {
-	readonly expanded?: boolean;
-	readonly focusedCommentId?: string;
-	readonly hidden?: boolean;
-	readonly commentItems: readonly ISessionEditorComment[];
+  readonly expanded?: boolean;
+  readonly focusedCommentId?: string;
+  readonly hidden?: boolean;
+  readonly commentItems: readonly ISessionEditorComment[];
 }
 
-function createRange(startLineNumber: number, endLineNumber: number = startLineNumber): IRange {
-	return {
+function createRange(
+  startLineNumber: number,
+  endLineNumber: number = startLineNumber,
+): IRange {
+  return {
     startLineNumber,
     startColumn: 1,
     endLineNumber,
@@ -62,8 +80,14 @@ function createRange(startLineNumber: number, endLineNumber: number = startLineN
   };
 }
 
-function createFeedbackComment(id: string, text: string, startLineNumber: number, endLineNumber: number = startLineNumber, suggestion?: ICodeReviewSuggestion): ISessionEditorComment {
-	return {
+function createFeedbackComment(
+  id: string,
+  text: string,
+  startLineNumber: number,
+  endLineNumber: number = startLineNumber,
+  suggestion?: ICodeReviewSuggestion,
+): ISessionEditorComment {
+  return {
     id: `agentFeedback:${id}`,
     sourceId: id,
     source: SessionEditorCommentSource.AgentFeedback,
@@ -76,15 +100,21 @@ function createFeedbackComment(id: string, text: string, startLineNumber: number
   };
 }
 
-function createReviewComment(id: string, text: string, startLineNumber: number, endLineNumber: number = startLineNumber, suggestion?: ICodeReviewSuggestion): ISessionEditorComment {
-	const range: IRange = {
+function createReviewComment(
+  id: string,
+  text: string,
+  startLineNumber: number,
+  endLineNumber: number = startLineNumber,
+  suggestion?: ICodeReviewSuggestion,
+): ISessionEditorComment {
+  const range: IRange = {
     startLineNumber,
     startColumn: 1,
     endLineNumber,
     endColumn: 1,
   };
 
-	return {
+  return {
     id: `codeReview:${id}`,
     sourceId: id,
     source: SessionEditorCommentSource.CodeReview,
@@ -98,8 +128,13 @@ function createReviewComment(id: string, text: string, startLineNumber: number, 
   };
 }
 
-function createPRReviewComment(id: string, text: string, startLineNumber: number, endLineNumber: number = startLineNumber): ISessionEditorComment {
-	return {
+function createPRReviewComment(
+  id: string,
+  text: string,
+  startLineNumber: number,
+  endLineNumber: number = startLineNumber,
+): ISessionEditorComment {
+  return {
     id: `prReview:${id}`,
     sourceId: id,
     source: SessionEditorCommentSource.PRReview,
@@ -112,52 +147,52 @@ function createPRReviewComment(id: string, text: string, startLineNumber: number
 }
 
 function createMockAgentFeedbackService(): IAgentFeedbackService {
-	return new class extends mock<IAgentFeedbackService>() {
-		override readonly onDidChangeFeedback = Event.None;
-		override readonly onDidChangeNavigation = Event.None;
+  return new (class extends mock<IAgentFeedbackService>() {
+    override readonly onDidChangeFeedback = Event.None;
+    override readonly onDidChangeNavigation = Event.None;
 
-		override addFeedback(): IAgentFeedback {
-			throw new Error("Not implemented for fixture");
-		}
+    override addFeedback(): IAgentFeedback {
+      throw new Error("Not implemented for fixture");
+    }
 
-		override removeFeedback(): void { }
+    override removeFeedback(): void {}
 
-		override getFeedback(): readonly IAgentFeedback[] {
-			return [];
-		}
+    override getFeedback(): readonly IAgentFeedback[] {
+      return [];
+    }
 
-		override getMostRecentSessionForResource(): URI | undefined {
-			return undefined;
-		}
+    override getMostRecentSessionForResource(): URI | undefined {
+      return undefined;
+    }
 
-		override async revealFeedback(): Promise<void> { }
+    override async revealFeedback(): Promise<void> {}
 
-		override getNextFeedback(): IAgentFeedback | undefined {
-			return undefined;
-		}
+    override getNextFeedback(): IAgentFeedback | undefined {
+      return undefined;
+    }
 
-		override getNavigationBearing() {
-			return { activeIdx: -1, totalCount: 0 };
-		}
+    override getNavigationBearing() {
+      return { activeIdx: -1, totalCount: 0 };
+    }
 
-		override getNextNavigableItem() {
-			return undefined;
-		}
+    override getNextNavigableItem() {
+      return undefined;
+    }
 
-		override setNavigationAnchor(): void { }
+    override setNavigationAnchor(): void {}
 
-		override clearFeedback(): void { }
+    override clearFeedback(): void {}
 
-		override async addFeedbackAndSubmit(): Promise<void> { }
-	}();
+    override async addFeedbackAndSubmit(): Promise<void> {}
+  })();
 }
 
 function ensureTokenColorMap(): void {
-	if (TokenizationRegistry.getColorMap()?.length) {
-		return;
-	}
+  if (TokenizationRegistry.getColorMap()?.length) {
+    return;
+  }
 
-	const colorMap = [
+  const colorMap = [
     Color.fromHex("#000000"),
     Color.fromHex("#d4d4d4"),
     Color.fromHex("#9cdcfe"),
@@ -170,29 +205,33 @@ function ensureTokenColorMap(): void {
     Color.fromHex("#f44747"),
   ];
 
-	TokenizationRegistry.setColorMap(colorMap);
+  TokenizationRegistry.setColorMap(colorMap);
 }
 
-function renderWidget(context: ComponentFixtureContext, options: IFixtureOptions): void {
-	const scopedDisposables = context.disposableStore.add(new DisposableStore());
-	context.container.style.width = "760px";
-	context.container.style.height = "420px";
-	context.container.style.border = "1px solid var(--vscode-editorWidget-border)";
-	context.container.style.background = "var(--vscode-editor-background)";
+function renderWidget(
+  context: ComponentFixtureContext,
+  options: IFixtureOptions,
+): void {
+  const scopedDisposables = context.disposableStore.add(new DisposableStore());
+  context.container.style.width = "760px";
+  context.container.style.height = "420px";
+  context.container.style.border =
+    "1px solid var(--vscode-editorWidget-border)";
+  context.container.style.background = "var(--vscode-editor-background)";
 
-	ensureTokenColorMap();
+  ensureTokenColorMap();
 
-	const agentFeedbackService = createMockAgentFeedbackService();
-	const codeReviewService = createMockCodeReviewService();
-	const instantiationService = createEditorServices(scopedDisposables, {
-		colorTheme: context.theme,
-		additionalServices: reg => {
-			reg.defineInstance(IAgentFeedbackService, agentFeedbackService);
-			reg.defineInstance(ICodeReviewService, codeReviewService);
-			reg.define(IMarkdownRendererService, MarkdownRendererService);
-		},
-	});
-	const model = scopedDisposables.add(
+  const agentFeedbackService = createMockAgentFeedbackService();
+  const codeReviewService = createMockCodeReviewService();
+  const instantiationService = createEditorServices(scopedDisposables, {
+    colorTheme: context.theme,
+    additionalServices: (reg) => {
+      reg.defineInstance(IAgentFeedbackService, agentFeedbackService);
+      reg.defineInstance(ICodeReviewService, codeReviewService);
+      reg.define(IMarkdownRendererService, MarkdownRendererService);
+    },
+  });
+  const model = scopedDisposables.add(
     createTextModel(
       instantiationService,
       sampleCode,
@@ -201,11 +240,11 @@ function renderWidget(context: ComponentFixtureContext, options: IFixtureOptions
     ),
   );
 
-	const editorOptions: ICodeEditorWidgetOptions = {
+  const editorOptions: ICodeEditorWidgetOptions = {
     contributions: [],
   };
 
-	const editor = scopedDisposables.add(
+  const editor = scopedDisposables.add(
     instantiationService.createInstance(
       CodeEditorWidget,
       context.container,
@@ -221,9 +260,9 @@ function renderWidget(context: ComponentFixtureContext, options: IFixtureOptions
     ),
   );
 
-	editor.setModel(model);
+  editor.setModel(model);
 
-	const widget = scopedDisposables.add(
+  const widget = scopedDisposables.add(
     instantiationService.createInstance(
       AgentFeedbackEditorWidget,
       editor,
@@ -232,22 +271,22 @@ function renderWidget(context: ComponentFixtureContext, options: IFixtureOptions
     ),
   );
 
-	widget.layout(options.commentItems[0].range.startLineNumber);
+  widget.layout(options.commentItems[0].range.startLineNumber);
 
-	if (options.expanded) {
-		widget.expand();
-	}
+  if (options.expanded) {
+    widget.expand();
+  }
 
-	if (options.focusedCommentId) {
-		widget.focusFeedback(options.focusedCommentId);
-	}
+  if (options.focusedCommentId) {
+    widget.focusFeedback(options.focusedCommentId);
+  }
 
-	if (options.hidden) {
-		const domNode = widget.getDomNode();
-		domNode.style.transition = "none";
-		domNode.style.animation = "none";
-		widget.toggle(false);
-	}
+  if (options.hidden) {
+    const domNode = widget.getDomNode();
+    domNode.style.transition = "none";
+    domNode.style.animation = "none";
+    widget.toggle(false);
+  }
 }
 
 const singleFeedback = [
@@ -289,9 +328,13 @@ const mixedComments = [
 ];
 
 const reviewSuggestion: ICodeReviewSuggestion = {
-	edits: [
-		{ range: createRange(8), oldText: "\tconst third = second + 1;", newText: "\tconst third = second + computeOffset();" },
-	],
+  edits: [
+    {
+      range: createRange(8),
+      oldText: "\tconst third = second + 1;",
+      newText: "\tconst third = second + computeOffset();",
+    },
+  ],
 };
 
 const suggestionMix = [
@@ -343,109 +386,125 @@ const allSourcesMixed = [
   ),
 ];
 
-export default defineThemedFixtureGroup({ path: "sessions/agentFeedback/" }, {
-	CollapsedSingleComment: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: singleFeedback,
-		}),
-	}),
+export default defineThemedFixtureGroup(
+  { path: "sessions/agentFeedback/" },
+  {
+    CollapsedSingleComment: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: singleFeedback,
+        }),
+    }),
 
-	ExpandedSingleComment: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: singleFeedback,
-			expanded: true,
-		}),
-	}),
+    ExpandedSingleComment: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: singleFeedback,
+          expanded: true,
+        }),
+    }),
 
-	CollapsedMultiComment: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: groupedFeedback,
-		}),
-	}),
+    CollapsedMultiComment: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: groupedFeedback,
+        }),
+    }),
 
-	ExpandedMultiComment: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: groupedFeedback,
-			expanded: true,
-		}),
-	}),
+    ExpandedMultiComment: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: groupedFeedback,
+          expanded: true,
+        }),
+    }),
 
-	ExpandedFocusedFeedback: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: groupedFeedback,
-			expanded: true,
-			focusedCommentId: "agentFeedback:f-2",
-		}),
-	}),
+    ExpandedFocusedFeedback: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: groupedFeedback,
+          expanded: true,
+          focusedCommentId: "agentFeedback:f-2",
+        }),
+    }),
 
-	ExpandedReviewOnly: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: reviewOnly,
-			expanded: true,
-		}),
-	}),
+    ExpandedReviewOnly: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: reviewOnly,
+          expanded: true,
+        }),
+    }),
 
-	ExpandedMixedComments: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: mixedComments,
-			expanded: true,
-		}),
-	}),
+    ExpandedMixedComments: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: mixedComments,
+          expanded: true,
+        }),
+    }),
 
-	ExpandedFocusedReviewComment: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: mixedComments,
-			expanded: true,
-			focusedCommentId: "codeReview:r-1",
-		}),
-	}),
+    ExpandedFocusedReviewComment: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: mixedComments,
+          expanded: true,
+          focusedCommentId: "codeReview:r-1",
+        }),
+    }),
 
-	ExpandedReviewSuggestion: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: suggestionMix,
-			expanded: true,
-		}),
-	}),
+    ExpandedReviewSuggestion: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: suggestionMix,
+          expanded: true,
+        }),
+    }),
 
-	ExpandedPRReviewOnly: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: prReviewOnly,
-			expanded: true,
-		}),
-	}),
+    ExpandedPRReviewOnly: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: prReviewOnly,
+          expanded: true,
+        }),
+    }),
 
-	ExpandedAllSourcesMixed: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: allSourcesMixed,
-			expanded: true,
-		}),
-	}),
+    ExpandedAllSourcesMixed: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: allSourcesMixed,
+          expanded: true,
+        }),
+    }),
 
-	ExpandedFocusedPRReview: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: allSourcesMixed,
-			expanded: true,
-			focusedCommentId: "prReview:pr-2",
-		}),
-	}),
+    ExpandedFocusedPRReview: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: allSourcesMixed,
+          expanded: true,
+          focusedCommentId: "prReview:pr-2",
+        }),
+    }),
 
-	HiddenWidget: defineComponentFixture({
-		labels: { kind: "screenshot" },
-		render: context => renderWidget(context, {
-			commentItems: mixedComments,
-			hidden: true,
-		}),
-	}),
-});
+    HiddenWidget: defineComponentFixture({
+      labels: { kind: "screenshot" },
+      render: (context) =>
+        renderWidget(context, {
+          commentItems: mixedComments,
+          hidden: true,
+        }),
+    }),
+  },
+);

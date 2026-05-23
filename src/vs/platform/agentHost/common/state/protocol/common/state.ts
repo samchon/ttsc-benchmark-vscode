@@ -32,40 +32,40 @@ export type StringOrMarkdown = string | { markdown: string };
  * @category Common Types
  */
 export interface Icon {
-	/**
-	 * A standard URI pointing to an icon resource. May be an HTTP/HTTPS URL or a
-	 * `data:` URI with Base64-encoded image data.
-	 *
-	 * Consumers SHOULD take steps to ensure URLs serving icons are from the
-	 * same domain as the client/server or a trusted domain.
-	 *
-	 * Consumers SHOULD take appropriate precautions when consuming SVGs as they can contain
-	 * executable JavaScript.
-	 */
-	src: URI;
+  /**
+   * A standard URI pointing to an icon resource. May be an HTTP/HTTPS URL or a
+   * `data:` URI with Base64-encoded image data.
+   *
+   * Consumers SHOULD take steps to ensure URLs serving icons are from the
+   * same domain as the client/server or a trusted domain.
+   *
+   * Consumers SHOULD take appropriate precautions when consuming SVGs as they can contain
+   * executable JavaScript.
+   */
+  src: URI;
 
-	/**
-	 * Optional MIME type override if the source MIME type is missing or generic.
-	 * For example: `"image/png"`, `"image/jpeg"`, or `"image/svg+xml"`.
-	 */
-	contentType?: string;
+  /**
+   * Optional MIME type override if the source MIME type is missing or generic.
+   * For example: `"image/png"`, `"image/jpeg"`, or `"image/svg+xml"`.
+   */
+  contentType?: string;
 
-	/**
-	 * Optional array of strings that specify sizes at which the icon can be used.
-	 * Each string should be in WxH format (e.g., `"48x48"`, `"96x96"`) or `"any"` for scalable formats like SVG.
-	 *
-	 * If not provided, the client should assume that the icon can be used at any size.
-	 */
-	sizes?: string[];
+  /**
+   * Optional array of strings that specify sizes at which the icon can be used.
+   * Each string should be in WxH format (e.g., `"48x48"`, `"96x96"`) or `"any"` for scalable formats like SVG.
+   *
+   * If not provided, the client should assume that the icon can be used at any size.
+   */
+  sizes?: string[];
 
-	/**
-	 * Optional specifier for the theme this icon is designed for. `"light"` indicates
-	 * the icon is designed to be used with a light background, and `"dark"` indicates
-	 * the icon is designed to be used with a dark background.
-	 *
-	 * If not provided, the client should assume the icon can be used with any theme.
-	 */
-	theme?: "light" | "dark";
+  /**
+   * Optional specifier for the theme this icon is designed for. `"light"` indicates
+   * the icon is designed to be used with a light background, and `"dark"` indicates
+   * the icon is designed to be used with a dark background.
+   *
+   * If not provided, the client should assume the icon can be used with any theme.
+   */
+  theme?: "light" | "dark";
 }
 
 // ─── Protected Resource Metadata (RFC 9728) ─────────────────────────────────
@@ -81,57 +81,57 @@ export interface Icon {
  * @see {@link https://datatracker.ietf.org/doc/html/rfc9728 | RFC 9728}
  */
 export interface ProtectedResourceMetadata {
-	/**
-	 * REQUIRED. The protected resource's resource identifier, a URL using the
-	 * `https` scheme with no fragment component (e.g. `"https://api.github.com"`).
-	 */
-	resource: string;
+  /**
+   * REQUIRED. The protected resource's resource identifier, a URL using the
+   * `https` scheme with no fragment component (e.g. `"https://api.github.com"`).
+   */
+  resource: string;
 
-	/** OPTIONAL. Human-readable name of the protected resource. */
-	resource_name?: string;
+  /** OPTIONAL. Human-readable name of the protected resource. */
+  resource_name?: string;
 
-	/** OPTIONAL. JSON array of OAuth authorization server identifier URLs. */
-	authorization_servers?: string[];
+  /** OPTIONAL. JSON array of OAuth authorization server identifier URLs. */
+  authorization_servers?: string[];
 
-	/** OPTIONAL. URL of the protected resource's JWK Set document. */
-	jwks_uri?: string;
+  /** OPTIONAL. URL of the protected resource's JWK Set document. */
+  jwks_uri?: string;
 
-	/** RECOMMENDED. JSON array of OAuth 2.0 scope values used in authorization requests. */
-	scopes_supported?: string[];
+  /** RECOMMENDED. JSON array of OAuth 2.0 scope values used in authorization requests. */
+  scopes_supported?: string[];
 
-	/** OPTIONAL. JSON array of Bearer Token presentation methods supported. */
-	bearer_methods_supported?: string[];
+  /** OPTIONAL. JSON array of Bearer Token presentation methods supported. */
+  bearer_methods_supported?: string[];
 
-	/** OPTIONAL. JSON array of JWS signing algorithms supported. */
-	resource_signing_alg_values_supported?: string[];
+  /** OPTIONAL. JSON array of JWS signing algorithms supported. */
+  resource_signing_alg_values_supported?: string[];
 
-	/** OPTIONAL. JSON array of JWE encryption algorithms (alg) supported. */
-	resource_encryption_alg_values_supported?: string[];
+  /** OPTIONAL. JSON array of JWE encryption algorithms (alg) supported. */
+  resource_encryption_alg_values_supported?: string[];
 
-	/** OPTIONAL. JSON array of JWE encryption algorithms (enc) supported. */
-	resource_encryption_enc_values_supported?: string[];
+  /** OPTIONAL. JSON array of JWE encryption algorithms (enc) supported. */
+  resource_encryption_enc_values_supported?: string[];
 
-	/** OPTIONAL. URL of human-readable documentation for the resource. */
-	resource_documentation?: string;
+  /** OPTIONAL. URL of human-readable documentation for the resource. */
+  resource_documentation?: string;
 
-	/** OPTIONAL. URL of the resource's data-usage policy. */
-	resource_policy_uri?: string;
+  /** OPTIONAL. URL of the resource's data-usage policy. */
+  resource_policy_uri?: string;
 
-	/** OPTIONAL. URL of the resource's terms of service. */
-	resource_tos_uri?: string;
+  /** OPTIONAL. URL of the resource's terms of service. */
+  resource_tos_uri?: string;
 
-	/**
-	 * AHP extension. Whether authentication is required for this resource.
-	 *
-	 * - `true` (default) — the agent cannot be used without a valid token.
-	 *   The server SHOULD return `AuthRequired` (`-32007`) if the client
-	 *   attempts to use the agent without authenticating.
-	 * - `false` — the agent works without authentication but MAY offer
-	 *   enhanced capabilities when a token is provided.
-	 *
-	 * Clients SHOULD treat an absent field the same as `true`.
-	 */
-	required?: boolean;
+  /**
+   * AHP extension. Whether authentication is required for this resource.
+   *
+   * - `true` (default) — the agent cannot be used without a valid token.
+   *   The server SHOULD return `AuthRequired` (`-32007`) if the client
+   *   attempts to use the agent without authenticating.
+   * - `false` — the agent works without authentication but MAY offer
+   *   enhanced capabilities when a token is provided.
+   *
+   * Clients SHOULD treat an absent field the same as `true`.
+   */
+  required?: boolean;
 }
 
 // ─── Config Schema Types ─────────────────────────────────────────────────────
@@ -150,28 +150,28 @@ export interface ProtectedResourceMetadata {
  * @category Config Schema Types
  */
 export interface ConfigPropertySchema {
-	/** JSON Schema: property type */
-	type: "string" | "number" | "boolean" | "array" | "object";
-	/** JSON Schema: human-readable label for the property */
-	title: string;
-	/** JSON Schema: description / tooltip */
-	description?: string;
-	/** JSON Schema: default value */
-	default?: unknown;
-	/** JSON Schema: allowed values (typically used with `string` type) */
-	enum?: string[];
-	/** Display extension: human-readable label per enum value (parallel array) */
-	enumLabels?: string[];
-	/** Display extension: description per enum value (parallel array) */
-	enumDescriptions?: string[];
-	/** JSON Schema: when `true`, the property is displayed but cannot be modified by the user */
-	readOnly?: boolean;
-	/** JSON Schema: schema for array items (used when `type` is `'array'`) */
-	items?: ConfigPropertySchema;
-	/** JSON Schema: property descriptors for object properties (used when `type` is `'object'`) */
-	properties?: Record<string, ConfigPropertySchema>;
-	/** JSON Schema: list of required property ids (used when `type` is `'object'`) */
-	required?: string[];
+  /** JSON Schema: property type */
+  type: "string" | "number" | "boolean" | "array" | "object";
+  /** JSON Schema: human-readable label for the property */
+  title: string;
+  /** JSON Schema: description / tooltip */
+  description?: string;
+  /** JSON Schema: default value */
+  default?: unknown;
+  /** JSON Schema: allowed values (typically used with `string` type) */
+  enum?: string[];
+  /** Display extension: human-readable label per enum value (parallel array) */
+  enumLabels?: string[];
+  /** Display extension: description per enum value (parallel array) */
+  enumDescriptions?: string[];
+  /** JSON Schema: when `true`, the property is displayed but cannot be modified by the user */
+  readOnly?: boolean;
+  /** JSON Schema: schema for array items (used when `type` is `'array'`) */
+  items?: ConfigPropertySchema;
+  /** JSON Schema: property descriptors for object properties (used when `type` is `'object'`) */
+  properties?: Record<string, ConfigPropertySchema>;
+  /** JSON Schema: list of required property ids (used when `type` is `'object'`) */
+  required?: string[];
 }
 
 /**
@@ -183,12 +183,12 @@ export interface ConfigPropertySchema {
  * @category Config Schema Types
  */
 export interface ConfigSchema {
-	/** JSON Schema: always `'object'` */
-	type: "object";
-	/** JSON Schema: property descriptors keyed by property id */
-	properties: Record<string, ConfigPropertySchema>;
-	/** JSON Schema: list of required property ids */
-	required?: string[];
+  /** JSON Schema: always `'object'` */
+  type: "object";
+  /** JSON Schema: property descriptors keyed by property id */
+  properties: Record<string, ConfigPropertySchema>;
+  /** JSON Schema: list of required property ids */
+  required?: string[];
 }
 
 // ─── Text Position / Range / Selection ───────────────────────────────────────
@@ -199,10 +199,10 @@ export interface ConfigSchema {
  * @category Turn Types
  */
 export interface TextPosition {
-	/** Zero-based line number. */
-	line: number;
-	/** Zero-based character offset within the line. */
-	character: number;
+  /** Zero-based line number. */
+  line: number;
+  /** Zero-based character offset within the line. */
+  character: number;
 }
 
 /**
@@ -211,10 +211,10 @@ export interface TextPosition {
  * @category Turn Types
  */
 export interface TextRange {
-	/** Start position of the range. */
-	start: TextPosition;
-	/** End position of the range. */
-	end: TextPosition;
+  /** Start position of the range. */
+  start: TextPosition;
+  /** End position of the range. */
+  end: TextPosition;
 }
 
 /**
@@ -227,8 +227,8 @@ export interface TextRange {
  * @category Turn Types
  */
 export interface TextSelection {
-	/** The range covered by the selection. */
-	range: TextRange;
+  /** The range covered by the selection. */
+  range: TextRange;
 }
 
 // ─── Content Ref ─────────────────────────────────────────────────────────────
@@ -237,12 +237,12 @@ export interface TextSelection {
  * A reference to large content stored outside the state tree.
  */
 export interface ContentRef {
-	/** Content URI */
-	uri: URI;
-	/** Approximate size in bytes */
-	sizeHint?: number;
-	/** Content MIME type */
-	contentType?: string;
+  /** Content URI */
+  uri: URI;
+  /** Approximate size in bytes */
+  sizeHint?: number;
+  /** Content MIME type */
+  contentType?: string;
 }
 
 // ─── File Edit ───────────────────────────────────────────────────────────────
@@ -256,27 +256,27 @@ export interface ContentRef {
  * @category Tool Result Content
  */
 export interface FileEdit {
-	/** The file state before the edit. Absent for file creations or for in-place file edits. */
-	before?: {
-		/** URI of the file before the edit */
-		uri: URI;
-		/** Reference to the file content before the edit */
-		content: ContentRef;
-	};
-	/** The file state after the edit. Absent for file deletions. */
-	after?: {
-		/** URI of the file after the edit */
-		uri: URI;
-		/** Reference to the file content after the edit */
-		content: ContentRef;
-	};
-	/** Optional diff display metadata */
-	diff?: {
-		/** Number of items added (e.g., lines for text files, cells for notebooks) */
-		added?: number;
-		/** Number of items removed (e.g., lines for text files, cells for notebooks) */
-		removed?: number;
-	};
+  /** The file state before the edit. Absent for file creations or for in-place file edits. */
+  before?: {
+    /** URI of the file before the edit */
+    uri: URI;
+    /** Reference to the file content before the edit */
+    content: ContentRef;
+  };
+  /** The file state after the edit. Absent for file deletions. */
+  after?: {
+    /** URI of the file after the edit */
+    uri: URI;
+    /** Reference to the file content after the edit */
+    content: ContentRef;
+  };
+  /** Optional diff display metadata */
+  diff?: {
+    /** Number of items added (e.g., lines for text files, cells for notebooks) */
+    added?: number;
+    /** Number of items removed (e.g., lines for text files, cells for notebooks) */
+    removed?: number;
+  };
 }
 
 // ─── Common Types ────────────────────────────────────────────────────────────
@@ -285,31 +285,31 @@ export interface FileEdit {
  * @category Common Types
  */
 export interface UsageInfo {
-	/** Input tokens consumed */
-	inputTokens?: number;
-	/** Output tokens generated */
-	outputTokens?: number;
-	/** Model used */
-	model?: string;
-	/** Tokens read from cache */
-	cacheReadTokens?: number;
-	/**
-	 * Additional provider-specific metadata for this usage report.
-	 * Clients MAY look for well-known optional keys here to provide enhanced UI.
-	 */
-	_meta?: Record<string, unknown>;
+  /** Input tokens consumed */
+  inputTokens?: number;
+  /** Output tokens generated */
+  outputTokens?: number;
+  /** Model used */
+  model?: string;
+  /** Tokens read from cache */
+  cacheReadTokens?: number;
+  /**
+   * Additional provider-specific metadata for this usage report.
+   * Clients MAY look for well-known optional keys here to provide enhanced UI.
+   */
+  _meta?: Record<string, unknown>;
 }
 
 /**
  * @category Common Types
  */
 export interface ErrorInfo {
-	/** Error type identifier */
-	errorType: string;
-	/** Human-readable error message */
-	message: string;
-	/** Stack trace */
-	stack?: string;
+  /** Error type identifier */
+  errorType: string;
+  /** Human-readable error message */
+  message: string;
+  /** Stack trace */
+  stack?: string;
 }
 
 /**
@@ -319,10 +319,10 @@ export interface ErrorInfo {
  * @category Common Types
  */
 export interface Snapshot {
-	/** The subscribed channel URI (e.g. `ahp-root://` or `ahp-session:/<uuid>`) */
-	resource: URI;
-	/** The current state of the resource */
-	state: RootState | SessionState | TerminalState | ChangesetState;
-	/** The `serverSeq` at which this snapshot was taken. Subsequent actions will have `serverSeq > fromSeq`. */
-	fromSeq: number;
+  /** The subscribed channel URI (e.g. `ahp-root://` or `ahp-session:/<uuid>`) */
+  resource: URI;
+  /** The current state of the resource */
+  state: RootState | SessionState | TerminalState | ChangesetState;
+  /** The `serverSeq` at which this snapshot was taken. Subsequent actions will have `serverSeq > fromSeq`. */
+  fromSeq: number;
 }

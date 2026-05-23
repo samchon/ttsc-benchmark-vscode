@@ -8,8 +8,13 @@ import { Selection } from "../../../../common/core/selection.js";
 import { SortLinesCommand } from "../../browser/sortLinesCommand.js";
 import { testCommand } from "../../../../test/browser/testCommand.js";
 
-function testSortLinesAscendingCommand(lines: string[], selection: Selection, expectedLines: string[], expectedSelection: Selection): void {
-	testCommand(
+function testSortLinesAscendingCommand(
+  lines: string[],
+  selection: Selection,
+  expectedLines: string[],
+  expectedSelection: Selection,
+): void {
+  testCommand(
     lines,
     null,
     selection,
@@ -19,8 +24,13 @@ function testSortLinesAscendingCommand(lines: string[], selection: Selection, ex
   );
 }
 
-function testSortLinesDescendingCommand(lines: string[], selection: Selection, expectedLines: string[], expectedSelection: Selection): void {
-	testCommand(
+function testSortLinesDescendingCommand(
+  lines: string[],
+  selection: Selection,
+  expectedLines: string[],
+  expectedSelection: Selection,
+): void {
+  testCommand(
     lines,
     null,
     selection,

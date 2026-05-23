@@ -14,8 +14,13 @@ import { WordBuffer } from "./wordBuffer.js";
  */
 export const BUFFER_MODES = {
   off: (_domNode: HTMLElement): IIncrementalRenderingBuffer => new OffBuffer(),
-  word: (_domNode: HTMLElement): IIncrementalRenderingBuffer => new WordBuffer(),
-  paragraph: (_domNode: HTMLElement): IIncrementalRenderingBuffer => new ParagraphBuffer(),
-} as const satisfies Record<string, (domNode: HTMLElement) => IIncrementalRenderingBuffer>;
+  word: (_domNode: HTMLElement): IIncrementalRenderingBuffer =>
+    new WordBuffer(),
+  paragraph: (_domNode: HTMLElement): IIncrementalRenderingBuffer =>
+    new ParagraphBuffer(),
+} as const satisfies Record<
+  string,
+  (domNode: HTMLElement) => IIncrementalRenderingBuffer
+>;
 
 export type BufferModeName = keyof typeof BUFFER_MODES;

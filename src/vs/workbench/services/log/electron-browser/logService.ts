@@ -16,12 +16,13 @@ import { windowLogGroup, windowLogId } from "../common/logConstants.js";
 import { LogService } from "../../../../platform/log/common/logService.js";
 
 export class NativeLogService extends LogService {
+  constructor(
+    loggerService: LoggerChannelClient,
+    environmentService: INativeWorkbenchEnvironmentService,
+  ) {
+    const disposables = new DisposableStore();
 
-	constructor(loggerService: LoggerChannelClient, environmentService: INativeWorkbenchEnvironmentService) {
-
-		const disposables = new DisposableStore();
-
-		const fileLogger = disposables.add(
+    const fileLogger = disposables.add(
       loggerService.createLogger(environmentService.logFile, {
         id: windowLogId,
         name: windowLogGroup.name,
@@ -29,21 +30,24 @@ export class NativeLogService extends LogService {
       }),
     );
 
-		let consoleLogger: ILogger;
-		if (environmentService.isExtensionDevelopment && !!environmentService.extensionTestsLocationURI) {
-			// Extension development test CLI: forward everything to main side
-			consoleLogger = loggerService.createConsoleMainLogger();
-		} else {
-			// Normal mode: Log to console
-			consoleLogger = new ConsoleLogger(fileLogger.getLevel());
-		}
+    let consoleLogger: ILogger;
+    if (
+      environmentService.isExtensionDevelopment &&
+      !!environmentService.extensionTestsLocationURI
+    ) {
+      // Extension development test CLI: forward everything to main side
+      consoleLogger = loggerService.createConsoleMainLogger();
+    } else {
+      // Normal mode: Log to console
+      consoleLogger = new ConsoleLogger(fileLogger.getLevel());
+    }
 
-		super(fileLogger, [consoleLogger]);
+    super(fileLogger, [consoleLogger]);
 
-		if (!environmentService.isBuilt && isDevConsoleLogForwardingEnabled) {
-			this._register(registerDevConsoleLogForwarder(this));
-		}
+    if (!environmentService.isBuilt && isDevConsoleLogForwardingEnabled) {
+      this._register(registerDevConsoleLogForwarder(this));
+    }
 
-		this._register(disposables);
-	}
+    this._register(disposables);
+  }
 }

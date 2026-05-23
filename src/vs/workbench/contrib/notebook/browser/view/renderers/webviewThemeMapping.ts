@@ -13,7 +13,10 @@ const mapping: ReadonlyMap<string, string> = new Map([
   ["theme-code-font-weight", "vscode-editor-font-weight"],
   ["theme-code-font-size", "vscode-editor-font-size"],
   ["theme-scrollbar-background", "vscode-scrollbarSlider-background"],
-  ["theme-scrollbar-hover-background", "vscode-scrollbarSlider-hoverBackground"],
+  [
+    "theme-scrollbar-hover-background",
+    "vscode-scrollbarSlider-hoverBackground",
+  ],
   [
     "theme-scrollbar-active-background",
     "vscode-scrollbarSlider-activeBackground",
@@ -22,11 +25,13 @@ const mapping: ReadonlyMap<string, string> = new Map([
   ["theme-quote-border", "vscode-textBlockQuote-border"],
   ["theme-code-foreground", "vscode-textPreformat-foreground"],
   ["theme-code-background", "vscode-textPreformat-background"],
+  // Editor
   ["theme-background", "vscode-editor-background"],
   ["theme-foreground", "vscode-editor-foreground"],
   ["theme-ui-foreground", "vscode-foreground"],
   ["theme-link", "vscode-textLink-foreground"],
   ["theme-link-active", "vscode-textLink-activeForeground"],
+  // Buttons
   ["theme-button-background", "vscode-button-background"],
   ["theme-button-hover-background", "vscode-button-hoverBackground"],
   ["theme-button-foreground", "vscode-button-foreground"],
@@ -46,27 +51,34 @@ const mapping: ReadonlyMap<string, string> = new Map([
     "theme-button-secondary-focus-foreground",
     "vscode-button-secondaryForeground",
   ],
+  // Inputs
   ["theme-input-background", "vscode-input-background"],
   ["theme-input-foreground", "vscode-input-foreground"],
   ["theme-input-placeholder-foreground", "vscode-input-placeholderForeground"],
   ["theme-input-focus-border-color", "vscode-focusBorder"],
+  // Menus
   ["theme-menu-background", "vscode-menu-background"],
   ["theme-menu-foreground", "vscode-menu-foreground"],
   ["theme-menu-hover-background", "vscode-menu-selectionBackground"],
   ["theme-menu-focus-background", "vscode-menu-selectionBackground"],
   ["theme-menu-hover-foreground", "vscode-menu-selectionForeground"],
   ["theme-menu-focus-foreground", "vscode-menu-selectionForeground"],
+  // Errors
   ["theme-error-background", "vscode-inputValidation-errorBackground"],
   ["theme-error-foreground", "vscode-foreground"],
   ["theme-warning-background", "vscode-inputValidation-warningBackground"],
   ["theme-warning-foreground", "vscode-foreground"],
   ["theme-info-background", "vscode-inputValidation-infoBackground"],
   ["theme-info-foreground", "vscode-foreground"],
+  // Notebook:
   [
     "theme-notebook-output-background",
     "vscode-notebook-outputContainerBackgroundColor",
   ],
-  ["theme-notebook-output-border", "vscode-notebook-outputContainerBorderColor"],
+  [
+    "theme-notebook-output-border",
+    "vscode-notebook-outputContainerBorderColor",
+  ],
   [
     "theme-notebook-cell-selected-background",
     "vscode-notebook-selectedCellBackground",
@@ -98,11 +110,13 @@ const constants: Readonly<WebviewStyles> = {
  * @see https://github.com/microsoft/vscode/issues/107985 for context
  * @deprecated
  */
-export const transformWebviewThemeVars = (s: Readonly<WebviewStyles>): WebviewStyles => {
-	const result = { ...s, ...constants };
-	for (const [target, src] of mapping) {
-		result[target] = s[src];
-	}
+export const transformWebviewThemeVars = (
+  s: Readonly<WebviewStyles>,
+): WebviewStyles => {
+  const result = { ...s, ...constants };
+  for (const [target, src] of mapping) {
+    result[target] = s[src];
+  }
 
-	return result;
+  return result;
 };

@@ -10,17 +10,22 @@ import {
 } from "./searchExtTypes.js";
 
 interface RipgrepSearchOptionsCommon {
-	numThreads?: number;
+  numThreads?: number;
 }
 
-export type TextSearchProviderOptionsRipgrep = Omit<Partial<TextSearchProviderOptions>, "folderOptions"> & {
-	folderOptions: TextSearchProviderFolderOptions;
+export type TextSearchProviderOptionsRipgrep = Omit<
+  Partial<TextSearchProviderOptions>,
+  "folderOptions"
+> & {
+  folderOptions: TextSearchProviderFolderOptions;
 };
 
-export type FileSearchProviderOptionsRipgrep = & {
-	folderOptions: FileSearchProviderFolderOptions;
+export type FileSearchProviderOptionsRipgrep = {
+  folderOptions: FileSearchProviderFolderOptions;
 } & FileSearchProviderOptions;
 
-export interface RipgrepTextSearchOptions extends TextSearchProviderOptionsRipgrep, RipgrepSearchOptionsCommon { }
+export interface RipgrepTextSearchOptions
+  extends TextSearchProviderOptionsRipgrep, RipgrepSearchOptionsCommon {}
 
-export interface RipgrepFileSearchOptions extends FileSearchProviderOptionsRipgrep, RipgrepSearchOptionsCommon { }
+export interface RipgrepFileSearchOptions
+  extends FileSearchProviderOptionsRipgrep, RipgrepSearchOptionsCommon {}

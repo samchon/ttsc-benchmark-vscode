@@ -14,15 +14,27 @@ import {
   IDraggedResourceEditorInput,
 } from "../../../../platform/dnd/browser/dnd.js";
 import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
 import { ITerminalLogService } from "../../../../platform/terminal/common/terminal.js";
 import { TerminalLogService } from "../../../../platform/terminal/common/terminalLogService.js";
 import { registerTerminalPlatformConfiguration } from "../../../../platform/terminal/common/terminalPlatformConfiguration.js";
-import { EditorPaneDescriptor, IEditorPaneRegistry } from "../../../browser/editor.js";
+import {
+  EditorPaneDescriptor,
+  IEditorPaneRegistry,
+} from "../../../browser/editor.js";
 import { ViewPaneContainer } from "../../../browser/parts/views/viewPaneContainer.js";
-import { WorkbenchPhase, registerWorkbenchContribution2 } from "../../../common/contributions.js";
-import { EditorExtensions, IEditorFactoryRegistry } from "../../../common/editor.js";
+import {
+  WorkbenchPhase,
+  registerWorkbenchContribution2,
+} from "../../../common/contributions.js";
+import {
+  EditorExtensions,
+  IEditorFactoryRegistry,
+} from "../../../common/editor.js";
 import {
   IViewContainersRegistry,
   IViewsRegistry,
@@ -30,7 +42,11 @@ import {
   ViewContainerLocation,
   WindowEnablement,
 } from "../../../common/views.js";
-import { ITerminalProfileService, TERMINAL_VIEW_ID, TerminalCommandId } from "../common/terminal.js";
+import {
+  ITerminalProfileService,
+  TERMINAL_VIEW_ID,
+  TerminalCommandId,
+} from "../common/terminal.js";
 import { TerminalEditingService } from "./terminalEditingService.js";
 import { registerColors } from "../common/terminalColorRegistry.js";
 import { registerTerminalConfiguration } from "../common/terminalConfiguration.js";
@@ -66,7 +82,10 @@ import { TerminalProfileService } from "./terminalProfileService.js";
 import { TerminalService } from "./terminalService.js";
 import { TerminalTelemetryContribution } from "./terminalTelemetry.js";
 import { TerminalViewPane } from "./terminalView.js";
-import { AgentHostTerminalService, IAgentHostTerminalService } from "./agentHostTerminalService.js";
+import {
+  AgentHostTerminalService,
+  IAgentHostTerminalService,
+} from "./agentHostTerminalService.js";
 
 // Register services
 registerSingleton(
@@ -134,11 +153,12 @@ registerTerminalPlatformConfiguration();
 registerTerminalConfiguration(getFontSnippets);
 
 // Register editor/dnd contributions
-Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory).registerEditorSerializer(
-  TerminalEditorInput.ID,
-  TerminalInputSerializer,
-);
-Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane(
+Registry.as<IEditorFactoryRegistry>(
+  EditorExtensions.EditorFactory,
+).registerEditorSerializer(TerminalEditorInput.ID, TerminalInputSerializer);
+Registry.as<IEditorPaneRegistry>(
+  EditorExtensions.EditorPane,
+).registerEditorPane(
   EditorPaneDescriptor.create(
     TerminalEditor,
     terminalEditorId,
@@ -146,35 +166,49 @@ Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane
   ),
   [new SyncDescriptor(TerminalEditorInput)],
 );
-Registry.as<IDragAndDropContributionRegistry>(DragAndDropExtensions.DragAndDropContribution).register({
-	dataFormatKey: TerminalDataTransfers.Terminals,
-	getEditorInputs(data) {
-		const editors: IDraggedResourceEditorInput[] = [];
-		try {
-			const terminalEditors: string[] = JSON.parse(data);
-			for (const terminalEditor of terminalEditors) {
-				editors.push({ resource: URI.parse(terminalEditor) });
-			}
-		} catch (error) {
-			// Invalid transfer
-		}
-		return editors;
-	},
-	setData(resources, event) {
-		const terminalResources = resources.filter(({ resource }) => resource.scheme === Schemas.vscodeTerminal);
-		if (terminalResources.length) {
-			event.dataTransfer?.setData(TerminalDataTransfers.Terminals, JSON.stringify(terminalResources.map(({ resource }) => resource.toString())));
-		}
-	},
+Registry.as<IDragAndDropContributionRegistry>(
+  DragAndDropExtensions.DragAndDropContribution,
+).register({
+  dataFormatKey: TerminalDataTransfers.Terminals,
+  getEditorInputs(data) {
+    const editors: IDraggedResourceEditorInput[] = [];
+    try {
+      const terminalEditors: string[] = JSON.parse(data);
+      for (const terminalEditor of terminalEditors) {
+        editors.push({ resource: URI.parse(terminalEditor) });
+      }
+    } catch (error) {
+      // Invalid transfer
+    }
+    return editors;
+  },
+  setData(resources, event) {
+    const terminalResources = resources.filter(
+      ({ resource }) => resource.scheme === Schemas.vscodeTerminal,
+    );
+    if (terminalResources.length) {
+      event.dataTransfer?.setData(
+        TerminalDataTransfers.Terminals,
+        JSON.stringify(
+          terminalResources.map(({ resource }) => resource.toString()),
+        ),
+      );
+    }
+  },
 });
 
 // Register views
-const VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(ViewContainerExtensions.ViewContainersRegistry).registerViewContainer(
+const VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(
+  ViewContainerExtensions.ViewContainersRegistry,
+).registerViewContainer(
   {
     id: TERMINAL_VIEW_ID,
     title: nls.localize2("terminal", "Terminal"),
     icon: terminalViewIcon,
-    ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [TERMINAL_VIEW_ID, { mergeViewWithContainerWhenSingleView: true }]),
+    ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [
+      TERMINAL_VIEW_ID,
+      { mergeViewWithContainerWhenSingleView: true },
+    ]),
     storageId: TERMINAL_VIEW_ID,
     hideIfEmpty: true,
     order: 3,
@@ -183,24 +217,37 @@ const VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(ViewContainerExtensi
   ViewContainerLocation.Panel,
   { doNotRegisterOpenCommand: true, isDefault: true },
 );
-Registry.as<IViewsRegistry>(ViewContainerExtensions.ViewsRegistry).registerViews([{
-	id: TERMINAL_VIEW_ID,
-	name: nls.localize2("terminal", "Terminal"),
-	containerIcon: terminalViewIcon,
-	canToggleVisibility: true,
-	canMoveView: true,
-	ctorDescriptor: new SyncDescriptor(TerminalViewPane),
-	windowEnablement: WindowEnablement.Both,
-	openCommandActionDescriptor: {
-		id: TerminalCommandId.Toggle,
-		mnemonicTitle: nls.localize({ key: "miToggleIntegratedTerminal", comment: ["&& denotes a mnemonic"] }, "&&Terminal"),
-		keybindings: {
-			primary: KeyMod.CtrlCmd | KeyCode.Backquote,
-			mac: { primary: KeyMod.WinCtrl | KeyCode.Backquote },
-		},
-		order: 3,
-	},
-}], VIEW_CONTAINER);
+Registry.as<IViewsRegistry>(
+  ViewContainerExtensions.ViewsRegistry,
+).registerViews(
+  [
+    {
+      id: TERMINAL_VIEW_ID,
+      name: nls.localize2("terminal", "Terminal"),
+      containerIcon: terminalViewIcon,
+      canToggleVisibility: true,
+      canMoveView: true,
+      ctorDescriptor: new SyncDescriptor(TerminalViewPane),
+      windowEnablement: WindowEnablement.Both,
+      openCommandActionDescriptor: {
+        id: TerminalCommandId.Toggle,
+        mnemonicTitle: nls.localize(
+          {
+            key: "miToggleIntegratedTerminal",
+            comment: ["&& denotes a mnemonic"],
+          },
+          "&&Terminal",
+        ),
+        keybindings: {
+          primary: KeyMod.CtrlCmd | KeyCode.Backquote,
+          mac: { primary: KeyMod.WinCtrl | KeyCode.Backquote },
+        },
+        order: 3,
+      },
+    },
+  ],
+  VIEW_CONTAINER,
+);
 
 registerTerminalActions();
 

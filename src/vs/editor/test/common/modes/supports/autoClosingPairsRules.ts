@@ -3,7 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAutoClosingPair, IAutoClosingPairConditional } from "../../../../common/languages/languageConfiguration.js";
+import {
+  IAutoClosingPair,
+  IAutoClosingPairConditional,
+} from "../../../../common/languages/languageConfiguration.js";
 
 export const javascriptAutoClosingPairsRules: IAutoClosingPairConditional[] = [
   { open: "{", close: "}" },

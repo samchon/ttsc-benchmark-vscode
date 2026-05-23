@@ -103,4 +103,3 @@ export const latexBracketRules: CharacterPair[] = [
   ["\\Biggl\\lVert", "\\Biggr\\rVert"],
   ["\\Biggl\\Vert", "\\Biggr\\Vert"],
 ];
-

@@ -22,8 +22,12 @@ export const PENDING_EDIT_CONTENT_SCHEME = "pending-edit-content";
  * content for a write permission request. The authority is a hex-encoded
  * session URI so multiple concurrent sessions don't collide.
  */
-export function buildPendingEditContentUri(sessionUri: string, toolCallId: string, filePath: string): URI {
-	return URI.from({
+export function buildPendingEditContentUri(
+  sessionUri: string,
+  toolCallId: string,
+  filePath: string,
+): URI {
+  return URI.from({
     scheme: PENDING_EDIT_CONTENT_SCHEME,
     authority: encodeHex(VSBuffer.fromString(sessionUri)).toString(),
     path: `/${encodeURIComponent(toolCallId)}/${encodeHex(VSBuffer.fromString(filePath))}`,
@@ -35,17 +39,18 @@ export function buildPendingEditContentUri(sessionUri: string, toolCallId: strin
  * `pending-edit-content:` scheme on the given file service. Callers use the
  * returned disposable to unregister the provider.
  */
-export function registerPendingEditContentProvider(fileService: IFileService): IDisposable {
-	const provider = new InMemoryFileSystemProvider();
-	const registration = fileService.registerProvider(
+export function registerPendingEditContentProvider(
+  fileService: IFileService,
+): IDisposable {
+  const provider = new InMemoryFileSystemProvider();
+  const registration = fileService.registerProvider(
     PENDING_EDIT_CONTENT_SCHEME,
     provider,
   );
-	return {
-		dispose() {
-			registration.dispose();
-			provider.dispose();
-		},
-	};
+  return {
+    dispose() {
+      registration.dispose();
+      provider.dispose();
+    },
+  };
 }
-

@@ -30,145 +30,171 @@ import {
 export const ExtensionEditToolId = "vscode_editFile";
 export const InternalEditToolId = "vscode_editFile_internal";
 export const EditToolData: IToolData = {
-	id: InternalEditToolId,
-	displayName: "", // not used
-	modelDescription: "", // Not used
-	source: ToolDataSource.Internal,
+  id: InternalEditToolId,
+  displayName: "", // not used
+  modelDescription: "", // Not used
+  source: ToolDataSource.Internal,
 };
 
 export interface EditToolParams {
-	uri: UriComponents;
-	explanation: string;
-	code: string;
+  uri: UriComponents;
+  explanation: string;
+  code: string;
 }
 
 export class EditTool implements IToolImpl {
+  constructor(
+    @IChatService private readonly chatService: IChatService,
+    @ICodeMapperService private readonly codeMapperService: ICodeMapperService,
+    @INotebookService private readonly notebookService: INotebookService,
+  ) {}
 
-	constructor(
-		@IChatService private readonly chatService: IChatService,
-		@ICodeMapperService private readonly codeMapperService: ICodeMapperService,
-		@INotebookService private readonly notebookService: INotebookService,
-	) { }
+  async invoke(
+    invocation: IToolInvocation,
+    countTokens: CountTokensCallback,
+    _progress: ToolProgress,
+    token: CancellationToken,
+  ): Promise<IToolResult> {
+    if (!invocation.context) {
+      throw new Error("toolInvocationToken is required for this tool");
+    }
 
-	async invoke(invocation: IToolInvocation, countTokens: CountTokensCallback, _progress: ToolProgress, token: CancellationToken): Promise<IToolResult> {
-		if (!invocation.context) {
-			throw new Error("toolInvocationToken is required for this tool");
-		}
+    const parameters = invocation.parameters as EditToolParams;
+    const fileUri = URI.revive(parameters.uri);
+    const uri = CellUri.parse(fileUri)?.notebook || fileUri;
 
-		const parameters = invocation.parameters as EditToolParams;
-		const fileUri = URI.revive(parameters.uri);
-		const uri = CellUri.parse(fileUri)?.notebook || fileUri;
-
-		const model = this.chatService.getSession(
+    const model = this.chatService.getSession(
       invocation.context.sessionResource,
     ) as ChatModel;
-		const request = model.getRequests().at(-1)!;
+    const request = model.getRequests().at(-1)!;
 
-		model.acceptResponseProgress(request, {
+    model.acceptResponseProgress(request, {
       kind: "markdownContent",
       content: new MarkdownString("\n````\n"),
     });
-		model.acceptResponseProgress(request, {
+    model.acceptResponseProgress(request, {
       kind: "codeblockUri",
       uri,
       isEdit: true,
     });
-		model.acceptResponseProgress(request, {
+    model.acceptResponseProgress(request, {
       kind: "markdownContent",
       content: new MarkdownString("\n````\n"),
     });
-		// Signal start.
-		if (this.notebookService.hasSupportedNotebooks(
-      uri,
-    ) && (this.notebookService.getNotebookTextModel(uri))) {
-			model.acceptResponseProgress(request, {
+    // Signal start.
+    if (
+      this.notebookService.hasSupportedNotebooks(uri) &&
+      this.notebookService.getNotebookTextModel(uri)
+    ) {
+      model.acceptResponseProgress(request, {
         kind: "notebookEdit",
         edits: [],
         uri,
       });
-		} else {
-			model.acceptResponseProgress(request, {
+    } else {
+      model.acceptResponseProgress(request, {
         kind: "textEdit",
         edits: [],
         uri,
       });
-		}
+    }
 
-		const editSession = model.editingSession;
-		if (!editSession) {
-			throw new Error(
+    const editSession = model.editingSession;
+    if (!editSession) {
+      throw new Error(
         "This tool must be called from within an editing session",
       );
-		}
+    }
 
-		const result = await this.codeMapperService.mapCode({
-			codeBlocks: [{ code: parameters.code, resource: uri, markdownBeforeBlock: parameters.explanation }],
-			location: "tool",
-			chatRequestId: invocation.chatRequestId,
-			chatRequestModel: invocation.modelId,
-			chatSessionResource: invocation.context.sessionResource,
-		}, {
-			textEdit: (target, edits) => {
-				model.acceptResponseProgress(request, { kind: "textEdit", uri: target, edits });
-			},
-			notebookEdit(target, edits) {
-				model.acceptResponseProgress(request, { kind: "notebookEdit", uri: target, edits });
-			},
-		}, token);
+    const result = await this.codeMapperService.mapCode(
+      {
+        codeBlocks: [
+          {
+            code: parameters.code,
+            resource: uri,
+            markdownBeforeBlock: parameters.explanation,
+          },
+        ],
+        location: "tool",
+        chatRequestId: invocation.chatRequestId,
+        chatRequestModel: invocation.modelId,
+        chatSessionResource: invocation.context.sessionResource,
+      },
+      {
+        textEdit: (target, edits) => {
+          model.acceptResponseProgress(request, {
+            kind: "textEdit",
+            uri: target,
+            edits,
+          });
+        },
+        notebookEdit(target, edits) {
+          model.acceptResponseProgress(request, {
+            kind: "notebookEdit",
+            uri: target,
+            edits,
+          });
+        },
+      },
+      token,
+    );
 
-		// Signal end.
-		if (this.notebookService.hasSupportedNotebooks(
-      uri,
-    ) && (this.notebookService.getNotebookTextModel(uri))) {
-			model.acceptResponseProgress(request, {
+    // Signal end.
+    if (
+      this.notebookService.hasSupportedNotebooks(uri) &&
+      this.notebookService.getNotebookTextModel(uri)
+    ) {
+      model.acceptResponseProgress(request, {
         kind: "notebookEdit",
         uri,
         edits: [],
         done: true,
       });
-		} else {
-			model.acceptResponseProgress(request, {
+    } else {
+      model.acceptResponseProgress(request, {
         kind: "textEdit",
         uri,
         edits: [],
         done: true,
       });
-		}
+    }
 
-		if (result?.errorMessage) {
-			throw new Error(result.errorMessage);
-		}
+    if (result?.errorMessage) {
+      throw new Error(result.errorMessage);
+    }
 
-		let dispose: IDisposable;
-		await new Promise((resolve) => {
-			// The file will not be modified until the first edits start streaming in,
-			// so wait until we see that it _was_ modified before waiting for it to be done.
-			let wasFileBeingModified = false;
+    let dispose: IDisposable;
+    await new Promise((resolve) => {
+      // The file will not be modified until the first edits start streaming in,
+      // so wait until we see that it _was_ modified before waiting for it to be done.
+      let wasFileBeingModified = false;
 
-			dispose = autorun((r) => {
+      dispose = autorun((r) => {
+        const entries = editSession.entries.read(r);
+        const currentFile = entries?.find((e) => isEqual(e.modifiedURI, uri));
+        if (currentFile) {
+          if (currentFile.isCurrentlyBeingModifiedBy.read(r)) {
+            wasFileBeingModified = true;
+          } else if (wasFileBeingModified) {
+            resolve(true);
+          }
+        }
+      });
+    }).finally(() => {
+      dispose.dispose();
+    });
 
-				const entries = editSession.entries.read(r);
-				const currentFile = entries?.find((e) => isEqual(e.modifiedURI, uri));
-				if (currentFile) {
-					if (currentFile.isCurrentlyBeingModifiedBy.read(r)) {
-						wasFileBeingModified = true;
-					} else if (wasFileBeingModified) {
-						resolve(true);
-					}
-				}
-			});
-		}).finally(() => {
-			dispose.dispose();
-		});
-
-		return {
+    return {
       content: [{ kind: "text", value: "The file was edited successfully" }],
     };
-	}
+  }
 
-	async prepareToolInvocation(context: IToolInvocationPreparationContext, token: CancellationToken): Promise<IPreparedToolInvocation | undefined> {
-		return {
+  async prepareToolInvocation(
+    context: IToolInvocationPreparationContext,
+    token: CancellationToken,
+  ): Promise<IPreparedToolInvocation | undefined> {
+    return {
       presentation: ToolInvocationPresentation.Hidden,
     };
-	}
+  }
 }

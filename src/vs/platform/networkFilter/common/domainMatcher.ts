@@ -84,68 +84,80 @@ const wellKnownDomainSuffixes = new Set([
  * @param fromUrl Whether the value was extracted from a URL context (skips file-extension filtering).
  * @returns The normalized domain string, or `undefined` if the input is invalid.
  */
-export function normalizeDomain(value: string | undefined, fromUrl: boolean = false): string | undefined {
-	if (!value) {
-		return undefined;
-	}
+export function normalizeDomain(
+  value: string | undefined,
+  fromUrl: boolean = false,
+): string | undefined {
+  if (!value) {
+    return undefined;
+  }
 
-	const normalized = value.trim().toLowerCase().replace(/^[^@]+@/, "").replace(/:\d+$/, "").replace(
-    /\.+$/,
-    "",
-  );
-	if (!normalized || normalized.includes(
-    "/",
-  ) || normalized === "." || normalized === "..") {
-		return undefined;
-	}
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/^[^@]+@/, "")
+    .replace(/:\d+$/, "")
+    .replace(/\.+$/, "");
+  if (
+    !normalized ||
+    normalized.includes("/") ||
+    normalized === "." ||
+    normalized === ".."
+  ) {
+    return undefined;
+  }
 
-	// Allow a bare wildcard pattern early, before hostname validation.
-	if (normalized === "*") {
-		return "*";
-	}
+  // Allow a bare wildcard pattern early, before hostname validation.
+  if (normalized === "*") {
+    return "*";
+  }
 
-	if (!/^\*?\.?[a-z0-9.;,)!?:-]+$/.test(normalized)) {
-		return undefined;
-	}
+  if (!/^\*?\.?[a-z0-9.;,)!?:-]+$/.test(normalized)) {
+    return undefined;
+  }
 
-	// Strip common trailing punctuation that may follow a domain in text, e.g. "example.com,".
-	const stripped = normalized.replace(/[),;:!?]+$/, "");
-	if (!stripped) {
-		return undefined;
-	}
+  // Strip common trailing punctuation that may follow a domain in text, e.g. "example.com,".
+  const stripped = normalized.replace(/[),;:!?]+$/, "");
+  if (!stripped) {
+    return undefined;
+  }
 
-	const domainToValidate = stripped.startsWith('*.') ? stripped.slice(2) : stripped;
-	if (!/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)(?:\.(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?))*$/.test(
-    domainToValidate,
-  )) {
-		return undefined;
-	}
+  const domainToValidate = stripped.startsWith("*.")
+    ? stripped.slice(2)
+    : stripped;
+  if (
+    !/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)(?:\.(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?))*$/.test(
+      domainToValidate,
+    )
+  ) {
+    return undefined;
+  }
 
-	// Support wildcard domain patterns like "*.example.com".
-	const hasWildcardPrefix = stripped.startsWith("*.");
-	const host = hasWildcardPrefix ? stripped.slice(2) : stripped;
-	if (!host) {
-		return undefined;
-	}
+  // Support wildcard domain patterns like "*.example.com".
+  const hasWildcardPrefix = stripped.startsWith("*.");
+  const host = hasWildcardPrefix ? stripped.slice(2) : stripped;
+  if (!host) {
+    return undefined;
+  }
 
-	// Validate that the host part only contains valid hostname characters.
-	if (!/^[a-z0-9.-]+$/.test(host)) {
-		return undefined;
-	}
+  // Validate that the host part only contains valid hostname characters.
+  if (!/^[a-z0-9.-]+$/.test(host)) {
+    return undefined;
+  }
 
-	// Disallow patterns that look like file names with common extensions, as these are unlikely
-	// to be intended as network domains and may be false positives from the regex.
-	if (!fromUrl) {
-		const lastLabel = host.slice(host.lastIndexOf(".") + 1);
-		if (fileExtensionSuffixes.has(lastLabel)) {
-			return undefined;
-		}
-		if (!wellKnownDomainSuffixes.has(lastLabel)) {
-			return undefined;
-		}
-	}
+  // Disallow patterns that look like file names with common extensions, as these are unlikely
+  // to be intended as network domains and may be false positives from the regex.
+  if (!fromUrl) {
+    const lastLabel = host.slice(host.lastIndexOf(".") + 1);
+    if (fileExtensionSuffixes.has(lastLabel)) {
+      return undefined;
+    }
+    if (!wellKnownDomainSuffixes.has(lastLabel)) {
+      return undefined;
+    }
+  }
 
-	return hasWildcardPrefix ? `*.${host}` : host;
+  return hasWildcardPrefix ? `*.${host}` : host;
 }
 
 /**
@@ -154,18 +166,18 @@ export function normalizeDomain(value: string | undefined, fromUrl: boolean = fa
  * Otherwise, the trimmed pattern is returned as-is.
  */
 export function extractDomainPattern(pattern: string): string {
-	const trimmed = pattern.trim();
-	if (trimmed === "*") {
-		return trimmed;
-	}
-	if (!trimmed.includes("://")) {
-		return trimmed;
-	}
-	try {
-		return URI.parse(trimmed).authority;
-	} catch {
-		return trimmed;
-	}
+  const trimmed = pattern.trim();
+  if (trimmed === "*") {
+    return trimmed;
+  }
+  if (!trimmed.includes("://")) {
+    return trimmed;
+  }
+  try {
+    return URI.parse(trimmed).authority;
+  } catch {
+    return trimmed;
+  }
 }
 
 /**
@@ -177,21 +189,21 @@ export function extractDomainPattern(pattern: string): string {
  * @returns `true` if the domain matches the pattern.
  */
 export function matchesDomainPattern(domain: string, pattern: string): boolean {
-	const normalizedPattern = normalizeDomain(
+  const normalizedPattern = normalizeDomain(
     extractDomainPattern(pattern),
     pattern.includes("://"),
   );
-	if (!normalizedPattern) {
-		return false;
-	}
-	if (normalizedPattern === "*") {
-		return true;
-	}
-	if (normalizedPattern.startsWith("*.")) {
-		const suffix = normalizedPattern.slice(2);
-		return domain === suffix || domain.endsWith(`.${suffix}`);
-	}
-	return domain === normalizedPattern;
+  if (!normalizedPattern) {
+    return false;
+  }
+  if (normalizedPattern === "*") {
+    return true;
+  }
+  if (normalizedPattern.startsWith("*.")) {
+    const suffix = normalizedPattern.slice(2);
+    return domain === suffix || domain.endsWith(`.${suffix}`);
+  }
+  return domain === normalizedPattern;
 }
 
 /**
@@ -202,7 +214,7 @@ export function matchesDomainPattern(domain: string, pattern: string): boolean {
  * @returns The normalized domain, or `undefined` if no valid domain could be extracted.
  */
 export function extractDomainFromUri(uri: URI): string | undefined {
-	return normalizeDomain(uri.authority, true);
+  return normalizeDomain(uri.authority, true);
 }
 
 /**
@@ -219,22 +231,28 @@ export function extractDomainFromUri(uri: URI): string | undefined {
  * @param deniedPatterns Array of denied domain patterns.
  * @returns `true` if the domain is allowed, `false` if it is blocked.
  */
-export function isDomainAllowed(domain: string, allowedPatterns: string[], deniedPatterns: string[]): boolean {
-	// Restrictive default: deny all when both lists are empty.
-	if (allowedPatterns.length === 0 && deniedPatterns.length === 0) {
-		return false;
-	}
+export function isDomainAllowed(
+  domain: string,
+  allowedPatterns: string[],
+  deniedPatterns: string[],
+): boolean {
+  // Restrictive default: deny all when both lists are empty.
+  if (allowedPatterns.length === 0 && deniedPatterns.length === 0) {
+    return false;
+  }
 
-	// Denied patterns take precedence.
-	if (deniedPatterns.some(pattern => matchesDomainPattern(domain, pattern))) {
-		return false;
-	}
+  // Denied patterns take precedence.
+  if (deniedPatterns.some((pattern) => matchesDomainPattern(domain, pattern))) {
+    return false;
+  }
 
-	// If no allowed patterns are configured, allow anything not denied.
-	if (allowedPatterns.length === 0) {
-		return true;
-	}
+  // If no allowed patterns are configured, allow anything not denied.
+  if (allowedPatterns.length === 0) {
+    return true;
+  }
 
-	// The domain must match at least one allowed pattern.
-	return allowedPatterns.some(pattern => matchesDomainPattern(domain, pattern));
+  // The domain must match at least one allowed pattern.
+  return allowedPatterns.some((pattern) =>
+    matchesDomainPattern(domain, pattern),
+  );
 }

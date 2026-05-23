@@ -10,9 +10,9 @@ import { IIncrementalRenderingBuffer } from "./buffer.js";
  * Content is still rAF-coalesced by the orchestrator.
  */
 export class OffBuffer implements IIncrementalRenderingBuffer {
-	readonly handlesFlush = false;
+  readonly handlesFlush = false;
 
-	getRenderable(fullMarkdown: string, _lastRendered: string): string {
-		return fullMarkdown;
-	}
+  getRenderable(fullMarkdown: string, _lastRendered: string): string {
+    return fullMarkdown;
+  }
 }

@@ -10,9 +10,15 @@ import {
 } from "../terminalContrib/accessibility/common/terminal.accessibility.js";
 import { terminalAccessibilityConfiguration } from "../terminalContrib/accessibility/common/terminalAccessibilityConfiguration.js";
 import { terminalAutoRepliesConfiguration } from "../terminalContrib/autoReplies/common/terminalAutoRepliesConfiguration.js";
-import { TerminalChatCommandId, TerminalChatContextKeyStrings } from "../terminalContrib/chat/browser/terminalChat.js";
+import {
+  TerminalChatCommandId,
+  TerminalChatContextKeyStrings,
+} from "../terminalContrib/chat/browser/terminalChat.js";
 import { terminalInitialHintConfiguration } from "../terminalContrib/inlineHint/common/terminalInitialHintConfiguration.js";
-import { terminalChatAgentToolsConfiguration, TerminalChatAgentToolsSettingId } from "../terminalContrib/chatAgentTools/common/terminalChatAgentToolsConfiguration.js";
+import {
+  terminalChatAgentToolsConfiguration,
+  TerminalChatAgentToolsSettingId,
+} from "../terminalContrib/chatAgentTools/common/terminalChatAgentToolsConfiguration.js";
 import { AgentSandboxSettingId } from "../../../platform/sandbox/common/settings.js";
 import { terminalCommandGuideConfiguration } from "../terminalContrib/commandGuide/common/terminalCommandGuideConfiguration.js";
 import { TerminalDeveloperCommandId } from "../terminalContrib/developer/common/terminal.developer.js";
@@ -22,9 +28,15 @@ import {
   terminalHistoryConfiguration,
 } from "../terminalContrib/history/common/terminal.history.js";
 import { terminalOscNotificationsConfiguration } from "../terminalContrib/notification/common/terminalNotificationConfiguration.js";
-import { TerminalStickyScrollSettingId, terminalStickyScrollConfiguration } from "../terminalContrib/stickyScroll/common/terminalStickyScrollConfiguration.js";
+import {
+  TerminalStickyScrollSettingId,
+  terminalStickyScrollConfiguration,
+} from "../terminalContrib/stickyScroll/common/terminalStickyScrollConfiguration.js";
 import { defaultTerminalSuggestCommandsToSkipShell } from "../terminalContrib/suggest/common/terminal.suggest.js";
-import { TerminalSuggestSettingId, terminalSuggestConfiguration } from "../terminalContrib/suggest/common/terminalSuggestConfiguration.js";
+import {
+  TerminalSuggestSettingId,
+  terminalSuggestConfiguration,
+} from "../terminalContrib/suggest/common/terminalSuggestConfiguration.js";
 import { terminalTypeAheadConfiguration } from "../terminalContrib/typeAhead/common/terminalTypeAheadConfiguration.js";
 import { terminalZoomConfiguration } from "../terminalContrib/zoom/common/terminal.zoom.js";
 
@@ -32,38 +44,38 @@ import { terminalZoomConfiguration } from "../terminalContrib/zoom/common/termin
 // soft layer breakers between `terminal/` and `terminalContrib/` but there are difficulties in
 // removing the dependency. These are explicitly defined here to avoid an eslint line override.
 export const enum TerminalContribCommandId {
-	A11yFocusAccessibleBuffer = TerminalAccessibilityCommandId.FocusAccessibleBuffer,
-	DeveloperRestartPtyHost = TerminalDeveloperCommandId.RestartPtyHost,
-	OpenTerminalSettingsLink = TerminalChatCommandId.OpenTerminalSettingsLink,
-	DisableSessionAutoApproval = TerminalChatCommandId.DisableSessionAutoApproval,
-	FocusMostRecentChatTerminalOutput = TerminalChatCommandId.FocusMostRecentChatTerminalOutput,
-	FocusMostRecentChatTerminal = TerminalChatCommandId.FocusMostRecentChatTerminal,
-	ToggleChatTerminalOutput = TerminalChatCommandId.ToggleChatTerminalOutput,
-	FocusChatInstanceAction = TerminalChatCommandId.FocusChatInstanceAction,
-	ContinueInBackground = TerminalChatCommandId.ContinueInBackground,
+  A11yFocusAccessibleBuffer = TerminalAccessibilityCommandId.FocusAccessibleBuffer,
+  DeveloperRestartPtyHost = TerminalDeveloperCommandId.RestartPtyHost,
+  OpenTerminalSettingsLink = TerminalChatCommandId.OpenTerminalSettingsLink,
+  DisableSessionAutoApproval = TerminalChatCommandId.DisableSessionAutoApproval,
+  FocusMostRecentChatTerminalOutput = TerminalChatCommandId.FocusMostRecentChatTerminalOutput,
+  FocusMostRecentChatTerminal = TerminalChatCommandId.FocusMostRecentChatTerminal,
+  ToggleChatTerminalOutput = TerminalChatCommandId.ToggleChatTerminalOutput,
+  FocusChatInstanceAction = TerminalChatCommandId.FocusChatInstanceAction,
+  ContinueInBackground = TerminalChatCommandId.ContinueInBackground,
 }
 
 // HACK: Export some settings from `terminalContrib/` that are depended upon elsewhere. These are
 // soft layer breakers between `terminal/` and `terminalContrib/` but there are difficulties in
 // removing the dependency. These are explicitly defined here to avoid an eslint line override.
 export const enum TerminalContribSettingId {
-	StickyScrollEnabled = TerminalStickyScrollSettingId.Enabled,
-	SuggestEnabled = TerminalSuggestSettingId.Enabled,
-	AutoApprove = TerminalChatAgentToolsSettingId.AutoApprove,
-	EnableAutoApprove = TerminalChatAgentToolsSettingId.EnableAutoApprove,
-	ShellIntegrationTimeout = TerminalChatAgentToolsSettingId.ShellIntegrationTimeout,
-	OutputLocation = TerminalChatAgentToolsSettingId.OutputLocation,
-	AgentSandboxEnabled = AgentSandboxSettingId.AgentSandboxEnabled,
-	AgentSandboxWindowsEnabled = AgentSandboxSettingId.AgentSandboxWindowsEnabled,
-	AgentSandboxAllowUnsandboxedCommands = AgentSandboxSettingId.AgentSandboxAllowUnsandboxedCommands,
-	AgentSandboxAutoApproveUnsandboxedCommands = AgentSandboxSettingId.AgentSandboxAutoApproveUnsandboxedCommands,
-	AgentSandboxAllowAutoApprove = AgentSandboxSettingId.AgentSandboxAllowAutoApprove,
-	DeprecatedAgentSandboxEnabled = AgentSandboxSettingId.DeprecatedAgentSandboxEnabled,
-	DeprecatedAgentSandboxLinuxFileSystem = TerminalChatAgentToolsSettingId.DeprecatedAgentSandboxLinuxFileSystem,
-	DeprecatedAgentSandboxMacFileSystem = TerminalChatAgentToolsSettingId.DeprecatedAgentSandboxMacFileSystem,
-	AgentSandboxLinuxFileSystem = TerminalChatAgentToolsSettingId.AgentSandboxLinuxFileSystem,
-	AgentSandboxMacFileSystem = TerminalChatAgentToolsSettingId.AgentSandboxMacFileSystem,
-	AgentSandboxWindowsFileSystem = TerminalChatAgentToolsSettingId.AgentSandboxWindowsFileSystem,
+  StickyScrollEnabled = TerminalStickyScrollSettingId.Enabled,
+  SuggestEnabled = TerminalSuggestSettingId.Enabled,
+  AutoApprove = TerminalChatAgentToolsSettingId.AutoApprove,
+  EnableAutoApprove = TerminalChatAgentToolsSettingId.EnableAutoApprove,
+  ShellIntegrationTimeout = TerminalChatAgentToolsSettingId.ShellIntegrationTimeout,
+  OutputLocation = TerminalChatAgentToolsSettingId.OutputLocation,
+  AgentSandboxEnabled = AgentSandboxSettingId.AgentSandboxEnabled,
+  AgentSandboxWindowsEnabled = AgentSandboxSettingId.AgentSandboxWindowsEnabled,
+  AgentSandboxAllowUnsandboxedCommands = AgentSandboxSettingId.AgentSandboxAllowUnsandboxedCommands,
+  AgentSandboxAutoApproveUnsandboxedCommands = AgentSandboxSettingId.AgentSandboxAutoApproveUnsandboxedCommands,
+  AgentSandboxAllowAutoApprove = AgentSandboxSettingId.AgentSandboxAllowAutoApprove,
+  DeprecatedAgentSandboxEnabled = AgentSandboxSettingId.DeprecatedAgentSandboxEnabled,
+  DeprecatedAgentSandboxLinuxFileSystem = TerminalChatAgentToolsSettingId.DeprecatedAgentSandboxLinuxFileSystem,
+  DeprecatedAgentSandboxMacFileSystem = TerminalChatAgentToolsSettingId.DeprecatedAgentSandboxMacFileSystem,
+  AgentSandboxLinuxFileSystem = TerminalChatAgentToolsSettingId.AgentSandboxLinuxFileSystem,
+  AgentSandboxMacFileSystem = TerminalChatAgentToolsSettingId.AgentSandboxMacFileSystem,
+  AgentSandboxWindowsFileSystem = TerminalChatAgentToolsSettingId.AgentSandboxWindowsFileSystem,
 }
 
 // HACK: Export some context key strings from `terminalContrib/` that are depended upon elsewhere.
@@ -71,8 +83,8 @@ export const enum TerminalContribSettingId {
 // difficulties in removing the dependency. These are explicitly defined here to avoid an eslint
 // line override.
 export const enum TerminalContribContextKeyStrings {
-	ChatHasTerminals = TerminalChatContextKeyStrings.ChatHasTerminals,
-	ChatHasHiddenTerminals = TerminalChatContextKeyStrings.ChatHasHiddenTerminals,
+  ChatHasTerminals = TerminalChatContextKeyStrings.ChatHasTerminals,
+  ChatHasHiddenTerminals = TerminalChatContextKeyStrings.ChatHasHiddenTerminals,
 }
 
 // Export configuration schemes from terminalContrib - this is an exception to the eslint rule since

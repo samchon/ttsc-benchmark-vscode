@@ -5,7 +5,10 @@
 
 import { toDisposable } from "../../../base/common/lifecycle.js";
 import { IConfigurationService } from "../../configuration/common/configuration.js";
-import { InstantiationType, registerSingleton } from "../../instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../instantiation/common/extensions.js";
 import {
   AbstractMeteredConnectionService,
   getIsBrowserConnectionMetered,
@@ -18,20 +21,21 @@ import {
  * This implementation monitors navigator.connection for changes.
  */
 export class MeteredConnectionService extends AbstractMeteredConnectionService {
-	constructor(@IConfigurationService configurationService: IConfigurationService) {
-		super(configurationService, getIsBrowserConnectionMetered());
+  constructor(
+    @IConfigurationService configurationService: IConfigurationService,
+  ) {
+    super(configurationService, getIsBrowserConnectionMetered());
 
-		const connection = (navigator as NavigatorWithConnection).connection;
-		if (connection) {
-			const onChange = () => this.setIsBrowserConnectionMetered(
-        getIsBrowserConnectionMetered(),
-      );
-			connection.addEventListener("change", onChange);
-			this._register(
+    const connection = (navigator as NavigatorWithConnection).connection;
+    if (connection) {
+      const onChange = () =>
+        this.setIsBrowserConnectionMetered(getIsBrowserConnectionMetered());
+      connection.addEventListener("change", onChange);
+      this._register(
         toDisposable(() => connection.removeEventListener("change", onChange)),
       );
-		}
-	}
+    }
+  }
 }
 
 registerSingleton(

@@ -10,41 +10,39 @@ import { localize } from "../../../../../nls.js";
 import { MenuId } from "../../../../../platform/actions/common/actions.js";
 
 // Re-export for convenience — consumers import from this file
-export {
-  AICustomizationManagementSection,
-} from "../../common/aiCustomizationWorkspaceService.js";
-export type {
-  AICustomizationSource,
-} from "../../common/aiCustomizationWorkspaceService.js";
-export {
-  BUILTIN_STORAGE,
-} from "../../common/aiCustomizationWorkspaceService.js";
+export { AICustomizationManagementSection } from "../../common/aiCustomizationWorkspaceService.js";
+export type { AICustomizationSource } from "../../common/aiCustomizationWorkspaceService.js";
+export { BUILTIN_STORAGE } from "../../common/aiCustomizationWorkspaceService.js";
 
-export function sectionToPromptType(section: AICustomizationManagementSection): PromptsType {
-	switch (section) {
-		case AICustomizationManagementSection.Agents:
-			return PromptsType.agent;
-		case AICustomizationManagementSection.Skills:
-			return PromptsType.skill;
-		case AICustomizationManagementSection.Instructions:
-			return PromptsType.instructions;
-		case AICustomizationManagementSection.Hooks:
-			return PromptsType.hook;
-		case AICustomizationManagementSection.Prompts:
-		default:
-			return PromptsType.prompt;
-	}
+export function sectionToPromptType(
+  section: AICustomizationManagementSection,
+): PromptsType {
+  switch (section) {
+    case AICustomizationManagementSection.Agents:
+      return PromptsType.agent;
+    case AICustomizationManagementSection.Skills:
+      return PromptsType.skill;
+    case AICustomizationManagementSection.Instructions:
+      return PromptsType.instructions;
+    case AICustomizationManagementSection.Hooks:
+      return PromptsType.hook;
+    case AICustomizationManagementSection.Prompts:
+    default:
+      return PromptsType.prompt;
+  }
 }
 
 /**
  * Editor pane ID for the AI Customizations Management Editor.
  */
-export const AI_CUSTOMIZATION_MANAGEMENT_EDITOR_ID = "workbench.editor.aiCustomizationManagement";
+export const AI_CUSTOMIZATION_MANAGEMENT_EDITOR_ID =
+  "workbench.editor.aiCustomizationManagement";
 
 /**
  * Editor input type ID for serialization.
  */
-export const AI_CUSTOMIZATION_MANAGEMENT_EDITOR_INPUT_ID = "workbench.input.aiCustomizationManagement";
+export const AI_CUSTOMIZATION_MANAGEMENT_EDITOR_INPUT_ID =
+  "workbench.input.aiCustomizationManagement";
 
 /**
  * Command IDs for the AI Customizations Management Editor.
@@ -62,39 +60,42 @@ export const AICustomizationManagementCommands = {
 /**
  * Context key indicating the AI Customization Management Editor is focused.
  */
-export const CONTEXT_AI_CUSTOMIZATION_MANAGEMENT_EDITOR = new RawContextKey<boolean>(
-  "aiCustomizationManagementEditorFocused",
-  false,
-  localize(
+export const CONTEXT_AI_CUSTOMIZATION_MANAGEMENT_EDITOR =
+  new RawContextKey<boolean>(
     "aiCustomizationManagementEditorFocused",
-    "Whether the Agent Customizations editor is focused",
-  ),
-);
+    false,
+    localize(
+      "aiCustomizationManagementEditorFocused",
+      "Whether the Agent Customizations editor is focused",
+    ),
+  );
 
 /**
  * Context key for the currently selected section.
  */
-export const CONTEXT_AI_CUSTOMIZATION_MANAGEMENT_SECTION = new RawContextKey<string>(
-  "chatCustomizationSection",
-  AICustomizationManagementSection.Agents,
-  localize(
+export const CONTEXT_AI_CUSTOMIZATION_MANAGEMENT_SECTION =
+  new RawContextKey<string>(
     "chatCustomizationSection",
-    "The currently selected section in the Agent Customizations editor",
-  ),
-);
+    AICustomizationManagementSection.Agents,
+    localize(
+      "chatCustomizationSection",
+      "The currently selected section in the Agent Customizations editor",
+    ),
+  );
 
 /**
  * Context key for the active harness (session type) in the customizations editor.
  * Extensions use this in when-clauses to scope create actions to their harness.
  */
-export const CONTEXT_AI_CUSTOMIZATION_MANAGEMENT_HARNESS = new RawContextKey<string>(
-  "chatCustomizationSessionType",
-  "",
-  localize(
+export const CONTEXT_AI_CUSTOMIZATION_MANAGEMENT_HARNESS =
+  new RawContextKey<string>(
     "chatCustomizationSessionType",
-    "The active harness (session type) in the Agent Customizations editor",
-  ),
-);
+    "",
+    localize(
+      "chatCustomizationSessionType",
+      "The active harness (session type) in the Agent Customizations editor",
+    ),
+  );
 
 /**
  * Menu ID for the AI Customization Management Editor title bar actions.
@@ -122,12 +123,14 @@ export const AICustomizationManagementCreateMenuId = MenuId.for(
 /**
  * Context key for the item prompt type (e.g. 'prompt', 'agent') used in when-clause filtering.
  */
-export const AI_CUSTOMIZATION_ITEM_TYPE_KEY = "aiCustomizationManagementItemType";
+export const AI_CUSTOMIZATION_ITEM_TYPE_KEY =
+  "aiCustomizationManagementItemType";
 
 /**
  * Context key for the item storage type (e.g. 'local', 'user', 'extension') used in when-clause filtering.
  */
-export const AI_CUSTOMIZATION_ITEM_STORAGE_KEY = "aiCustomizationManagementItemStorage";
+export const AI_CUSTOMIZATION_ITEM_STORAGE_KEY =
+  "aiCustomizationManagementItemStorage";
 
 /**
  * Context key for the item URI used in when-clause filtering.
@@ -137,28 +140,32 @@ export const AI_CUSTOMIZATION_ITEM_URI_KEY = "aiCustomizationManagementItemUri";
 /**
  * Context key for the parent plugin URI, set when the item is provided by a plugin.
  */
-export const AI_CUSTOMIZATION_ITEM_PLUGIN_URI_KEY = "aiCustomizationManagementItemPluginUri";
+export const AI_CUSTOMIZATION_ITEM_PLUGIN_URI_KEY =
+  "aiCustomizationManagementItemPluginUri";
 
 /**
  * Context key indicating whether the item is disabled.
  */
-export const AI_CUSTOMIZATION_ITEM_DISABLED_KEY = "aiCustomizationManagementItemDisabled";
-
+export const AI_CUSTOMIZATION_ITEM_DISABLED_KEY =
+  "aiCustomizationManagementItemDisabled";
 
 /**
  * Storage key for persisting the selected section.
  */
-export const AI_CUSTOMIZATION_MANAGEMENT_SELECTED_SECTION_KEY = "aiCustomizationManagement.selectedSection";
+export const AI_CUSTOMIZATION_MANAGEMENT_SELECTED_SECTION_KEY =
+  "aiCustomizationManagement.selectedSection";
 
 /**
  * Storage key for persisting the sidebar width.
  */
-export const AI_CUSTOMIZATION_MANAGEMENT_SIDEBAR_WIDTH_KEY = "aiCustomizationManagement.sidebarWidth";
+export const AI_CUSTOMIZATION_MANAGEMENT_SIDEBAR_WIDTH_KEY =
+  "aiCustomizationManagement.sidebarWidth";
 
 /**
  * Storage key for persisting the search query.
  */
-export const AI_CUSTOMIZATION_MANAGEMENT_SEARCH_KEY = "aiCustomizationManagement.searchQuery";
+export const AI_CUSTOMIZATION_MANAGEMENT_SEARCH_KEY =
+  "aiCustomizationManagement.searchQuery";
 
 /**
  * Layout constants for the editor.

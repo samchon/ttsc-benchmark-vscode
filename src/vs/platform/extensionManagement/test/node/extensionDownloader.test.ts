@@ -39,128 +39,210 @@ import { IStringDictionary } from "../../../../base/common/collections.js";
 const ROOT = URI.file("tests").with({ scheme: "vscode-tests" });
 
 class TestExtensionSignatureVerificationService extends mock<IExtensionSignatureVerificationService>() {
+  constructor(private readonly verificationResult: string | boolean) {
+    super();
+  }
 
-	constructor(
-		private readonly verificationResult: string | boolean) {
-		super();
-	}
-
-	override async verify(): Promise<IExtensionSignatureVerificationResult | undefined> {
-		if (this.verificationResult === true) {
-			return {
+  override async verify(): Promise<
+    IExtensionSignatureVerificationResult | undefined
+  > {
+    if (this.verificationResult === true) {
+      return {
         code: ExtensionSignatureVerificationCode.Success,
       };
-		}
-		if (this.verificationResult === false) {
-			return undefined;
-		}
-		return {
+    }
+    if (this.verificationResult === false) {
+      return undefined;
+    }
+    return {
       code: this.verificationResult as ExtensionSignatureVerificationCode,
     };
-	}
+  }
 }
 
 class TestExtensionDownloader extends ExtensionsDownloader {
-	protected override async validate(): Promise<void> { }
+  protected override async validate(): Promise<void> {}
 }
 
 suite("ExtensionDownloader Tests", () => {
+  const disposables = ensureNoDisposablesAreLeakedInTestSuite();
+  let instantiationService: TestInstantiationService;
 
-	const disposables = ensureNoDisposablesAreLeakedInTestSuite();
-	let instantiationService: TestInstantiationService;
+  setup(() => {
+    instantiationService = disposables.add(new TestInstantiationService());
 
-	setup(() => {
-		instantiationService = disposables.add(new TestInstantiationService());
+    const logService = new NullLogService();
+    const fileService = disposables.add(new FileService(logService));
+    const fileSystemProvider = disposables.add(
+      new InMemoryFileSystemProvider(),
+    );
+    disposables.add(
+      fileService.registerProvider(ROOT.scheme, fileSystemProvider),
+    );
 
-		const logService = new NullLogService();
-		const fileService = disposables.add(new FileService(logService));
-		const fileSystemProvider = disposables.add(new InMemoryFileSystemProvider());
-		disposables.add(fileService.registerProvider(ROOT.scheme, fileSystemProvider));
+    instantiationService.stub(ILogService, logService);
+    instantiationService.stub(IFileService, fileService);
+    instantiationService.stub(ILogService, logService);
+    instantiationService.stub(
+      IUriIdentityService,
+      disposables.add(new UriIdentityService(fileService)),
+    );
+    instantiationService.stub(INativeEnvironmentService, {
+      extensionsDownloadLocation: joinPath(ROOT, "CachedExtensionVSIXs"),
+    });
+    instantiationService.stub(IExtensionGalleryService, {
+      async download(extension, location, operation) {
+        await fileService.writeFile(
+          location,
+          VSBuffer.fromString("extension vsix"),
+        );
+      },
+      async downloadSignatureArchive(extension, location) {
+        await fileService.writeFile(
+          location,
+          VSBuffer.fromString("extension signature"),
+        );
+      },
+    });
+  });
 
-		instantiationService.stub(ILogService, logService);
-		instantiationService.stub(IFileService, fileService);
-		instantiationService.stub(ILogService, logService);
-		instantiationService.stub(IUriIdentityService, disposables.add(new UriIdentityService(fileService)));
-		instantiationService.stub(INativeEnvironmentService, { extensionsDownloadLocation: joinPath(ROOT, "CachedExtensionVSIXs") });
-		instantiationService.stub(IExtensionGalleryService, {
-			async download(extension, location, operation) {
-				await fileService.writeFile(location, VSBuffer.fromString("extension vsix"));
-			},
-			async downloadSignatureArchive(extension, location) {
-				await fileService.writeFile(location, VSBuffer.fromString("extension signature"));
-			},
-		});
-	});
+  test("download completes successfully if verification is disabled by options", async () => {
+    const testObject = aTestObject({ verificationResult: "error" });
 
-	test("download completes successfully if verification is disabled by options", async () => {
-		const testObject = aTestObject({ verificationResult: "error" });
+    const actual = await testObject.download(
+      aGalleryExtension("a", { isSigned: true }),
+      InstallOperation.Install,
+      false,
+    );
 
-		const actual = await testObject.download(aGalleryExtension("a", { isSigned: true }), InstallOperation.Install, false);
+    assert.strictEqual(actual.verificationStatus, undefined);
+  });
 
-		assert.strictEqual(actual.verificationStatus, undefined);
-	});
+  test("download completes successfully if verification is disabled because the module is not loaded", async () => {
+    const testObject = aTestObject({ verificationResult: false });
 
-	test("download completes successfully if verification is disabled because the module is not loaded", async () => {
-		const testObject = aTestObject({ verificationResult: false });
+    const actual = await testObject.download(
+      aGalleryExtension("a", { isSigned: true }),
+      InstallOperation.Install,
+      true,
+    );
 
-		const actual = await testObject.download(aGalleryExtension("a", { isSigned: true }), InstallOperation.Install, true);
+    assert.strictEqual(actual.verificationStatus, undefined);
+  });
 
-		assert.strictEqual(actual.verificationStatus, undefined);
-	});
+  test("download completes successfully if verification fails to execute", async () => {
+    const errorCode = "ENOENT";
+    const testObject = aTestObject({ verificationResult: errorCode });
 
-	test("download completes successfully if verification fails to execute", async () => {
-		const errorCode = "ENOENT";
-		const testObject = aTestObject({ verificationResult: errorCode });
+    const actual = await testObject.download(
+      aGalleryExtension("a", { isSigned: true }),
+      InstallOperation.Install,
+      true,
+    );
 
-		const actual = await testObject.download(aGalleryExtension("a", { isSigned: true }), InstallOperation.Install, true);
+    assert.strictEqual(actual.verificationStatus, errorCode);
+  });
 
-		assert.strictEqual(actual.verificationStatus, errorCode);
-	});
+  test("download completes successfully if verification fails ", async () => {
+    const errorCode = "IntegrityCheckFailed";
+    const testObject = aTestObject({ verificationResult: errorCode });
 
-	test("download completes successfully if verification fails ", async () => {
-		const errorCode = "IntegrityCheckFailed";
-		const testObject = aTestObject({ verificationResult: errorCode });
+    const actual = await testObject.download(
+      aGalleryExtension("a", { isSigned: true }),
+      InstallOperation.Install,
+      true,
+    );
 
-		const actual = await testObject.download(aGalleryExtension("a", { isSigned: true }), InstallOperation.Install, true);
+    assert.strictEqual(actual.verificationStatus, errorCode);
+  });
 
-		assert.strictEqual(actual.verificationStatus, errorCode);
-	});
+  test("download completes successfully if verification succeeds", async () => {
+    const testObject = aTestObject({ verificationResult: true });
 
-	test("download completes successfully if verification succeeds", async () => {
-		const testObject = aTestObject({ verificationResult: true });
+    const actual = await testObject.download(
+      aGalleryExtension("a", { isSigned: true }),
+      InstallOperation.Install,
+      true,
+    );
 
-		const actual = await testObject.download(aGalleryExtension("a", { isSigned: true }), InstallOperation.Install, true);
+    assert.strictEqual(
+      actual.verificationStatus,
+      ExtensionSignatureVerificationCode.Success,
+    );
+  });
 
-		assert.strictEqual(actual.verificationStatus, ExtensionSignatureVerificationCode.Success);
-	});
+  test("download completes successfully for unsigned extension", async () => {
+    const testObject = aTestObject({ verificationResult: true });
 
-	test("download completes successfully for unsigned extension", async () => {
-		const testObject = aTestObject({ verificationResult: true });
+    const actual = await testObject.download(
+      aGalleryExtension("a", { isSigned: false }),
+      InstallOperation.Install,
+      true,
+    );
 
-		const actual = await testObject.download(aGalleryExtension("a", { isSigned: false }), InstallOperation.Install, true);
+    assert.strictEqual(
+      actual.verificationStatus,
+      ExtensionSignatureVerificationCode.NotSigned,
+    );
+  });
 
-		assert.strictEqual(actual.verificationStatus, ExtensionSignatureVerificationCode.NotSigned);
-	});
+  test("download completes successfully for an unsigned extension even when signature verification throws error", async () => {
+    const testObject = aTestObject({ verificationResult: "error" });
 
-	test("download completes successfully for an unsigned extension even when signature verification throws error", async () => {
-		const testObject = aTestObject({ verificationResult: "error" });
+    const actual = await testObject.download(
+      aGalleryExtension("a", { isSigned: false }),
+      InstallOperation.Install,
+      true,
+    );
 
-		const actual = await testObject.download(aGalleryExtension("a", { isSigned: false }), InstallOperation.Install, true);
+    assert.strictEqual(
+      actual.verificationStatus,
+      ExtensionSignatureVerificationCode.NotSigned,
+    );
+  });
 
-		assert.strictEqual(actual.verificationStatus, ExtensionSignatureVerificationCode.NotSigned);
-	});
+  function aTestObject(options: {
+    verificationResult: boolean | string;
+  }): ExtensionsDownloader {
+    instantiationService.stub(
+      IExtensionSignatureVerificationService,
+      new TestExtensionSignatureVerificationService(options.verificationResult),
+    );
+    return disposables.add(
+      instantiationService.createInstance(TestExtensionDownloader),
+    );
+  }
 
-	function aTestObject(options: { verificationResult: boolean | string }): ExtensionsDownloader {
-		instantiationService.stub(IExtensionSignatureVerificationService, new TestExtensionSignatureVerificationService(options.verificationResult));
-		return disposables.add(instantiationService.createInstance(TestExtensionDownloader));
-	}
-
-	function aGalleryExtension(name: string, properties: Partial<IGalleryExtension> = {}, galleryExtensionProperties: IStringDictionary<unknown> = {}, assets: Partial<IGalleryExtensionAssets> = {}): IGalleryExtension {
-		const targetPlatform = getTargetPlatform(platform, arch);
-		const galleryExtension = <IGalleryExtension>Object.create({ name, publisher: "pub", version: "1.0.0", allTargetPlatforms: [targetPlatform], properties: {}, assets: {}, ...properties });
-		galleryExtension.properties = { ...galleryExtension.properties, dependencies: [], targetPlatform, ...galleryExtensionProperties };
-		galleryExtension.assets = { ...galleryExtension.assets, ...assets };
-		galleryExtension.identifier = { id: getGalleryExtensionId(galleryExtension.publisher, galleryExtension.name), uuid: generateUuid() };
-		return <IGalleryExtension>galleryExtension;
-	}
+  function aGalleryExtension(
+    name: string,
+    properties: Partial<IGalleryExtension> = {},
+    galleryExtensionProperties: IStringDictionary<unknown> = {},
+    assets: Partial<IGalleryExtensionAssets> = {},
+  ): IGalleryExtension {
+    const targetPlatform = getTargetPlatform(platform, arch);
+    const galleryExtension = <IGalleryExtension>Object.create({
+      name,
+      publisher: "pub",
+      version: "1.0.0",
+      allTargetPlatforms: [targetPlatform],
+      properties: {},
+      assets: {},
+      ...properties,
+    });
+    galleryExtension.properties = {
+      ...galleryExtension.properties,
+      dependencies: [],
+      targetPlatform,
+      ...galleryExtensionProperties,
+    };
+    galleryExtension.assets = { ...galleryExtension.assets, ...assets };
+    galleryExtension.identifier = {
+      id: getGalleryExtensionId(
+        galleryExtension.publisher,
+        galleryExtension.name,
+      ),
+      uuid: generateUuid(),
+    };
+    return <IGalleryExtension>galleryExtension;
+  }
 });

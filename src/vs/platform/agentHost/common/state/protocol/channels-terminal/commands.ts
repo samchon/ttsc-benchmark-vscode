@@ -26,18 +26,18 @@ import type { TerminalClaim } from "./state.js";
  * @version 1
  */
 export interface CreateTerminalParams extends BaseParams {
-	/** Terminal URI (client-chosen). */
-	channel: URI;
-	/** Initial owner of the terminal */
-	claim: TerminalClaim;
-	/** Human-readable terminal name */
-	name?: string;
-	/** Initial working directory URI */
-	cwd?: URI;
-	/** Initial terminal width in columns */
-	cols?: number;
-	/** Initial terminal height in rows */
-	rows?: number;
+  /** Terminal URI (client-chosen). */
+  channel: URI;
+  /** Initial owner of the terminal */
+  claim: TerminalClaim;
+  /** Human-readable terminal name */
+  name?: string;
+  /** Initial working directory URI */
+  cwd?: URI;
+  /** Initial terminal width in columns */
+  cols?: number;
+  /** Initial terminal height in rows */
+  rows?: number;
 }
 
 // ─── disposeTerminal ─────────────────────────────────────────────────────────
@@ -54,4 +54,4 @@ export interface CreateTerminalParams extends BaseParams {
  * @messageType Request
  * @version 1
  */
-export interface DisposeTerminalParams extends BaseParams { }
+export interface DisposeTerminalParams extends BaseParams {}

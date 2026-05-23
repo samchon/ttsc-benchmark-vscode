@@ -14,24 +14,35 @@ import { IProductService } from "../../product/common/productService.js";
 import { asJson, IRequestService } from "../../request/common/request.js";
 import { IApplicationStorageMainService } from "../../storage/electron-main/storageMainService.js";
 import { ITelemetryService } from "../../telemetry/common/telemetry.js";
-import { AvailableForDownload, IUpdate, State, UpdateType } from "../common/update.js";
-import { AbstractUpdateService, createUpdateURL, IUpdateURLOptions } from "./abstractUpdateService.js";
+import {
+  AvailableForDownload,
+  IUpdate,
+  State,
+  UpdateType,
+} from "../common/update.js";
+import {
+  AbstractUpdateService,
+  createUpdateURL,
+  IUpdateURLOptions,
+} from "./abstractUpdateService.js";
 
 export class LinuxUpdateService extends AbstractUpdateService {
-
-	constructor(
-		@ILifecycleMainService lifecycleMainService: ILifecycleMainService,
-		@IConfigurationService configurationService: IConfigurationService,
-		@IEnvironmentMainService environmentMainService: IEnvironmentMainService,
-		@IRequestService requestService: IRequestService,
-		@ILogService logService: ILogService,
-		@INativeHostMainService private readonly nativeHostMainService: INativeHostMainService,
-		@IProductService productService: IProductService,
-		@ITelemetryService telemetryService: ITelemetryService,
-		@IApplicationStorageMainService applicationStorageMainService: IApplicationStorageMainService,
-		@IMeteredConnectionService meteredConnectionService: IMeteredConnectionService,
-	) {
-		super(
+  constructor(
+    @ILifecycleMainService lifecycleMainService: ILifecycleMainService,
+    @IConfigurationService configurationService: IConfigurationService,
+    @IEnvironmentMainService environmentMainService: IEnvironmentMainService,
+    @IRequestService requestService: IRequestService,
+    @ILogService logService: ILogService,
+    @INativeHostMainService
+    private readonly nativeHostMainService: INativeHostMainService,
+    @IProductService productService: IProductService,
+    @ITelemetryService telemetryService: ITelemetryService,
+    @IApplicationStorageMainService
+    applicationStorageMainService: IApplicationStorageMainService,
+    @IMeteredConnectionService
+    meteredConnectionService: IMeteredConnectionService,
+  ) {
+    super(
       lifecycleMainService,
       configurationService,
       environmentMainService,
@@ -43,61 +54,86 @@ export class LinuxUpdateService extends AbstractUpdateService {
       meteredConnectionService,
       false,
     );
-	}
+  }
 
-	protected buildUpdateFeedUrl(quality: string, commit: string, options?: IUpdateURLOptions): string {
-		return createUpdateURL(
+  protected buildUpdateFeedUrl(
+    quality: string,
+    commit: string,
+    options?: IUpdateURLOptions,
+  ): string {
+    return createUpdateURL(
       this.productService.updateUrl!,
       `linux-${process.arch}`,
       quality,
       commit,
       options,
     );
-	}
+  }
 
-	protected doCheckForUpdates(explicit: boolean, _pendingCommit?: string): void {
-		if (!this.quality) {
-			return;
-		}
+  protected doCheckForUpdates(
+    explicit: boolean,
+    _pendingCommit?: string,
+  ): void {
+    if (!this.quality) {
+      return;
+    }
 
-		const internalOrg = this.getInternalOrg();
-		const background = !explicit && !internalOrg;
-		const url = this.buildUpdateFeedUrl(
+    const internalOrg = this.getInternalOrg();
+    const background = !explicit && !internalOrg;
+    const url = this.buildUpdateFeedUrl(
       this.quality,
       this.productService.commit!,
       { background, internalOrg },
     );
-		this.setState(State.CheckingForUpdates(explicit));
+    this.setState(State.CheckingForUpdates(explicit));
 
-		this.requestService.request({ url, callSite: "updateService.linux.checkForUpdates" }, CancellationToken.None)
-			.then<IUpdate | null>(asJson)
-			.then(update => {
-				if (!update || !update.url || !update.version || !update.productVersion) {
-					this.setState(State.Idle(UpdateType.Archive, undefined, explicit || undefined));
-				} else {
-					this.setState(State.AvailableForDownload(update));
-				}
-			})
-			.then(undefined, err => {
-				this.logService.error(err);
-				// only show message when explicitly checking for updates
-				const message: string | undefined = explicit ? (err.message || err) : undefined;
-				this.setState(State.Idle(UpdateType.Archive, message));
-			});
-	}
+    this.requestService
+      .request(
+        { url, callSite: "updateService.linux.checkForUpdates" },
+        CancellationToken.None,
+      )
+      .then<IUpdate | null>(asJson)
+      .then((update) => {
+        if (
+          !update ||
+          !update.url ||
+          !update.version ||
+          !update.productVersion
+        ) {
+          this.setState(
+            State.Idle(UpdateType.Archive, undefined, explicit || undefined),
+          );
+        } else {
+          this.setState(State.AvailableForDownload(update));
+        }
+      })
+      .then(undefined, (err) => {
+        this.logService.error(err);
+        // only show message when explicitly checking for updates
+        const message: string | undefined = explicit
+          ? err.message || err
+          : undefined;
+        this.setState(State.Idle(UpdateType.Archive, message));
+      });
+  }
 
-	protected override async doDownloadUpdate(state: AvailableForDownload): Promise<void> {
-		// Use the download URL if available as we don't currently detect the package type that was
-		// installed and the website download page is more useful than the tarball generally.
-		if (this.productService.downloadUrl && this.productService.downloadUrl.length > 0) {
-			this.nativeHostMainService.openExternal(
+  protected override async doDownloadUpdate(
+    state: AvailableForDownload,
+  ): Promise<void> {
+    // Use the download URL if available as we don't currently detect the package type that was
+    // installed and the website download page is more useful than the tarball generally.
+    if (
+      this.productService.downloadUrl &&
+      this.productService.downloadUrl.length > 0
+    ) {
+      this.nativeHostMainService.openExternal(
         undefined,
         this.productService.downloadUrl,
       );
-		} else if (state.update.url) {
-			this.nativeHostMainService.openExternal(undefined, state.update.url);
-		}
+    } else if (state.update.url) {
+      this.nativeHostMainService.openExternal(undefined, state.update.url);
+    }
 
-		this.setState(State.Idle(UpdateType.Archive));
-	}
+    this.setState(State.Idle(UpdateType.Archive));
+  }
 }

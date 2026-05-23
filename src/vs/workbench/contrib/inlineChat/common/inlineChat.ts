@@ -5,8 +5,14 @@
 
 import { localize } from "../../../../nls.js";
 import { MenuId } from "../../../../platform/actions/common/actions.js";
-import { Extensions, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
-import { ContextKeyExpr, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import {
+  Extensions,
+  IConfigurationRegistry,
+} from "../../../../platform/configuration/common/configurationRegistry.js";
+import {
+  ContextKeyExpr,
+  RawContextKey,
+} from "../../../../platform/contextkey/common/contextkey.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
 import {
   diffInserted,
@@ -26,57 +32,73 @@ import { NOTEBOOK_IS_ACTIVE_EDITOR } from "../../notebook/common/notebookContext
 // settings
 
 export const enum InlineChatConfigKeys {
-	NotebookAgent = "inlineChat.notebookAgent",
-	DefaultModel = "inlineChat.defaultModel",
-	Affordance = "inlineChat.affordance",
-	FixDiagnostics = "inlineChat.fixDiagnostics",
-	AskInChat = "inlineChat.askInChat",
+  NotebookAgent = "inlineChat.notebookAgent",
+  DefaultModel = "inlineChat.defaultModel",
+  Affordance = "inlineChat.affordance",
+  FixDiagnostics = "inlineChat.fixDiagnostics",
+  AskInChat = "inlineChat.askInChat",
 }
 
-Registry.as<IConfigurationRegistry>(Extensions.Configuration).registerConfiguration({
-	id: "editor",
-	properties: {
-		[InlineChatConfigKeys.NotebookAgent]: {
-			markdownDescription: localize("notebookAgent", "Enable agent-like behavior for inline chat widget in notebooks."),
-			default: false,
-			type: "boolean",
-			tags: ["experimental"],
-			experiment: {
-				mode: "startup",
-			},
-		},
-		[InlineChatConfigKeys.Affordance]: {
-			description: localize("affordance", "Controls whether an inline chat affordance is shown when text is selected."),
-			default: "off",
-			type: "string",
-			enum: ["off", "editor"],
-			enumDescriptions: [
-				localize("affordance.off", "No affordance is shown."),
-				localize("affordance.editor", "Show an affordance in the editor at the cursor position."),
-			],
-			experiment: {
-				mode: "auto",
-			},
-			tags: ["experimental"],
-			agentsWindow: { default: "editor" },
-		},
-		[InlineChatConfigKeys.FixDiagnostics]: {
-			description: localize("fixDiagnostics", "Controls whether the Fix action is shown for diagnostics in the editor."),
-			default: true,
-			type: "boolean",
-			experiment: {
-				mode: "auto",
-			},
-			tags: ["experimental"],
-		},
-		[InlineChatConfigKeys.AskInChat]: {
-			description: localize("askInChat", "Controls whether files in a chat editing session use Ask in Chat instead of Inline Chat."),
-			default: true,
-			type: "boolean",
-		},
-	},
+Registry.as<IConfigurationRegistry>(
+  Extensions.Configuration,
+).registerConfiguration({
+  id: "editor",
+  properties: {
+    [InlineChatConfigKeys.NotebookAgent]: {
+      markdownDescription: localize(
+        "notebookAgent",
+        "Enable agent-like behavior for inline chat widget in notebooks.",
+      ),
+      default: false,
+      type: "boolean",
+      tags: ["experimental"],
+      experiment: {
+        mode: "startup",
+      },
+    },
+    [InlineChatConfigKeys.Affordance]: {
+      description: localize(
+        "affordance",
+        "Controls whether an inline chat affordance is shown when text is selected.",
+      ),
+      default: "off",
+      type: "string",
+      enum: ["off", "editor"],
+      enumDescriptions: [
+        localize("affordance.off", "No affordance is shown."),
+        localize(
+          "affordance.editor",
+          "Show an affordance in the editor at the cursor position.",
+        ),
+      ],
+      experiment: {
+        mode: "auto",
+      },
+      tags: ["experimental"],
+      agentsWindow: { default: "editor" },
+    },
+    [InlineChatConfigKeys.FixDiagnostics]: {
+      description: localize(
+        "fixDiagnostics",
+        "Controls whether the Fix action is shown for diagnostics in the editor.",
+      ),
+      default: true,
+      type: "boolean",
+      experiment: {
+        mode: "auto",
+      },
+      tags: ["experimental"],
+    },
+    [InlineChatConfigKeys.AskInChat]: {
+      description: localize(
+        "askInChat",
+        "Controls whether files in a chat editing session use Ask in Chat instead of Inline Chat.",
+      ),
+      default: true,
+      type: "boolean",
+    },
+  },
 });
-
 
 export const INLINE_CHAT_ID = "editor.contrib.inlineChatController";
 
@@ -150,7 +172,9 @@ export const CTX_INLINE_CHAT_EMPTY = new RawContextKey<boolean>(
   false,
   localize("inlineChatEmpty", "Whether the interactive editor input is empty"),
 );
-export const CTX_INLINE_CHAT_OUTER_CURSOR_POSITION = new RawContextKey<"above" | "below" | "">(
+export const CTX_INLINE_CHAT_OUTER_CURSOR_POSITION = new RawContextKey<
+  "above" | "below" | ""
+>(
   "inlineChatOuterCursorPosition",
   "",
   localize(
@@ -241,12 +265,18 @@ export const inlineChatBackground = registerColor(
 export const inlineChatBorder = registerColor(
   "inlineChat.border",
   editorWidgetBorder,
-  localize("inlineChat.border", "Border color of the interactive editor widget"),
+  localize(
+    "inlineChat.border",
+    "Border color of the interactive editor widget",
+  ),
 );
 export const inlineChatShadow = registerColor(
   "inlineChat.shadow",
   widgetShadow,
-  localize("inlineChat.shadow", "Shadow color of the interactive editor widget"),
+  localize(
+    "inlineChat.shadow",
+    "Shadow color of the interactive editor widget",
+  ),
 );
 export const inlineChatInputBorder = registerColor(
   "inlineChatInput.border",
@@ -283,7 +313,7 @@ export const inlineChatInputBackground = registerColor(
 
 export const inlineChatDiffInserted = registerColor(
   "inlineChatDiff.inserted",
-  transparent(diffInserted, .5),
+  transparent(diffInserted, 0.5),
   localize(
     "inlineChatDiff.inserted",
     "Background color of inserted text in the interactive editor input",
@@ -318,7 +348,7 @@ export const minimapInlineChatDiffInserted = registerColor(
 
 export const inlineChatDiffRemoved = registerColor(
   "inlineChatDiff.removed",
-  transparent(diffRemoved, .5),
+  transparent(diffRemoved, 0.5),
   localize(
     "inlineChatDiff.removed",
     "Background color of removed text in the interactive editor input",

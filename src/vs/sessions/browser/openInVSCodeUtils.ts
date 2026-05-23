@@ -20,55 +20,60 @@ import { encodeHex, VSBuffer } from "../../base/common/buffer.js";
  * VS Code remote extension can handle the connection.
  */
 export function resolveRemoteAuthority(
-	providerId: string,
-	sessionsProvidersService: ISessionsProvidersService,
-	remoteAgentHostService: IRemoteAgentHostService,
+  providerId: string,
+  sessionsProvidersService: ISessionsProvidersService,
+  remoteAgentHostService: IRemoteAgentHostService,
 ): string | undefined {
-	const provider = sessionsProvidersService.getProvider(providerId);
-	if (!provider || !isAgentHostProvider(provider) || !provider.remoteAddress) {
-		return undefined;
-	}
+  const provider = sessionsProvidersService.getProvider(providerId);
+  if (!provider || !isAgentHostProvider(provider) || !provider.remoteAddress) {
+    return undefined;
+  }
 
-	const entry = remoteAgentHostService.getEntryByAddress(
+  const entry = remoteAgentHostService.getEntryByAddress(
     provider.remoteAddress,
   );
-	if (!entry) {
-		return undefined;
-	}
+  if (!entry) {
+    return undefined;
+  }
 
-	switch (entry.connection.type) {
-		case RemoteAgentHostEntryType.SSH:
-			if (entry.connection.sshConfigHost) {
-				return `ssh-remote+${entry.connection.sshConfigHost}`;
-			}
-			return `ssh-remote+${sshAuthorityString(entry.connection)}`;
-		case RemoteAgentHostEntryType.Tunnel:
-			return `tunnel+${entry.connection.label ?? `${entry.connection.tunnelId}.${entry.connection.clusterId}`}`;
-		default:
-			return undefined;
-	}
+  switch (entry.connection.type) {
+    case RemoteAgentHostEntryType.SSH:
+      if (entry.connection.sshConfigHost) {
+        return `ssh-remote+${entry.connection.sshConfigHost}`;
+      }
+      return `ssh-remote+${sshAuthorityString(entry.connection)}`;
+    case RemoteAgentHostEntryType.Tunnel:
+      return `tunnel+${entry.connection.label ?? `${entry.connection.tunnelId}.${entry.connection.clusterId}`}`;
+    default:
+      return undefined;
+  }
 }
 
 /**
  * Encodes an SSH connection into the authority string format expected by
  * the Remote SSH extension.
  */
-export function sshAuthorityString(connection: IRemoteAgentHostSSHConnection): string {
-	const hostName = connection.hostName;
-	const needsEncoding = connection.user || connection.port
-		|| /[A-Z/\\+]/.test(hostName) || !/^[a-zA-Z0-9.:\-]+$/.test(hostName);
-	if (!needsEncoding) {
-		return hostName;
-	}
+export function sshAuthorityString(
+  connection: IRemoteAgentHostSSHConnection,
+): string {
+  const hostName = connection.hostName;
+  const needsEncoding =
+    connection.user ||
+    connection.port ||
+    /[A-Z/\\+]/.test(hostName) ||
+    !/^[a-zA-Z0-9.:\-]+$/.test(hostName);
+  if (!needsEncoding) {
+    return hostName;
+  }
 
-	const obj: Record<string, string | number> = { hostName };
-	if (connection.user) {
-		obj.user = connection.user;
-	}
-	if (connection.port) {
-		obj.port = connection.port;
-	}
+  const obj: Record<string, string | number> = { hostName };
+  if (connection.user) {
+    obj.user = connection.user;
+  }
+  if (connection.port) {
+    obj.port = connection.port;
+  }
 
-	const json = JSON.stringify(obj);
-	return encodeHex(VSBuffer.fromString(json));
+  const json = JSON.stringify(obj);
+  return encodeHex(VSBuffer.fromString(json));
 }

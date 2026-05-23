@@ -9,7 +9,11 @@ import { URI } from "../../../../../base/common/uri.js";
 import { localize } from "../../../../../nls.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import { registerIcon } from "../../../../../platform/theme/common/iconRegistry.js";
-import { EditorInputCapabilities, IEditorSerializer, IUntypedEditorInput } from "../../../../common/editor.js";
+import {
+  EditorInputCapabilities,
+  IEditorSerializer,
+  IUntypedEditorInput,
+} from "../../../../common/editor.js";
 import { EditorInput } from "../../../../common/editor/editorInput.js";
 
 const chatDebugEditorIcon = registerIcon(
@@ -19,59 +23,66 @@ const chatDebugEditorIcon = registerIcon(
 );
 
 export class ChatDebugEditorInput extends EditorInput {
+  static readonly ID = "workbench.editor.chatDebug";
 
-	static readonly ID = "workbench.editor.chatDebug";
-
-	static readonly RESOURCE = URI.from({
+  static readonly RESOURCE = URI.from({
     scheme: "chat-debug",
     path: "default",
   });
 
-	private static _instance: ChatDebugEditorInput;
-	static get instance() {
-		if (!ChatDebugEditorInput._instance || ChatDebugEditorInput._instance.isDisposed()) {
-			ChatDebugEditorInput._instance = new ChatDebugEditorInput();
-		}
+  private static _instance: ChatDebugEditorInput;
+  static get instance() {
+    if (
+      !ChatDebugEditorInput._instance ||
+      ChatDebugEditorInput._instance.isDisposed()
+    ) {
+      ChatDebugEditorInput._instance = new ChatDebugEditorInput();
+    }
 
-		return ChatDebugEditorInput._instance;
-	}
+    return ChatDebugEditorInput._instance;
+  }
 
-	override get typeId(): string { return ChatDebugEditorInput.ID; }
+  override get typeId(): string {
+    return ChatDebugEditorInput.ID;
+  }
 
-	override get editorId(): string | undefined { return ChatDebugEditorInput.ID; }
+  override get editorId(): string | undefined {
+    return ChatDebugEditorInput.ID;
+  }
 
-	override get capabilities(): EditorInputCapabilities { return EditorInputCapabilities.Readonly | EditorInputCapabilities.Singleton; }
+  override get capabilities(): EditorInputCapabilities {
+    return EditorInputCapabilities.Readonly | EditorInputCapabilities.Singleton;
+  }
 
-	readonly resource = ChatDebugEditorInput.RESOURCE;
+  readonly resource = ChatDebugEditorInput.RESOURCE;
 
-	override getName(): string {
-		return localize("chatDebugInputName", "Agent Debug Logs");
-	}
+  override getName(): string {
+    return localize("chatDebugInputName", "Agent Debug Logs");
+  }
 
-	override getIcon(): ThemeIcon {
-		return chatDebugEditorIcon;
-	}
+  override getIcon(): ThemeIcon {
+    return chatDebugEditorIcon;
+  }
 
-	override matches(other: EditorInput | IUntypedEditorInput): boolean {
-		if (super.matches(other)) {
-			return true;
-		}
+  override matches(other: EditorInput | IUntypedEditorInput): boolean {
+    if (super.matches(other)) {
+      return true;
+    }
 
-		return other instanceof ChatDebugEditorInput;
-	}
+    return other instanceof ChatDebugEditorInput;
+  }
 }
 
 export class ChatDebugEditorInputSerializer implements IEditorSerializer {
+  canSerialize(editorInput: EditorInput): boolean {
+    return true;
+  }
 
-	canSerialize(editorInput: EditorInput): boolean {
-		return true;
-	}
+  serialize(editorInput: EditorInput): string {
+    return "";
+  }
 
-	serialize(editorInput: EditorInput): string {
-		return "";
-	}
-
-	deserialize(instantiationService: IInstantiationService): EditorInput {
-		return ChatDebugEditorInput.instance;
-	}
+  deserialize(instantiationService: IInstantiationService): EditorInput {
+    return ChatDebugEditorInput.instance;
+  }
 }

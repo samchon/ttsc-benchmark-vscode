@@ -11,7 +11,10 @@ import {
   IGlobalExtensionEnablementService,
   InstallOperation,
 } from "./extensionManagement.js";
-import { areSameExtensions, getExtensionId } from "./extensionManagementUtil.js";
+import {
+  areSameExtensions,
+  getExtensionId,
+} from "./extensionManagementUtil.js";
 import { IExtensionStorageService } from "./extensionStorage.js";
 import { ExtensionType } from "../../extensions/common/extensions.js";
 import { ILogService } from "../../log/common/log.js";
@@ -25,91 +28,110 @@ import { IUserDataProfile } from "../../userDataProfile/common/userDataProfile.j
  * 		- the extension is not installed
  * 		- or it is a release version and the unsupported extension is enabled.
  */
-export async function migrateUnsupportedExtensions(profile: IUserDataProfile | undefined, extensionManagementService: IExtensionManagementService, galleryService: IExtensionGalleryService, extensionStorageService: IExtensionStorageService, extensionEnablementService: IGlobalExtensionEnablementService, logService: ILogService): Promise<void> {
-	try {
-		const extensionsControlManifest = await extensionManagementService.getExtensionsControlManifest();
-		if (!extensionsControlManifest.deprecated) {
-			return;
-		}
-		const installed = await extensionManagementService.getInstalled(
+export async function migrateUnsupportedExtensions(
+  profile: IUserDataProfile | undefined,
+  extensionManagementService: IExtensionManagementService,
+  galleryService: IExtensionGalleryService,
+  extensionStorageService: IExtensionStorageService,
+  extensionEnablementService: IGlobalExtensionEnablementService,
+  logService: ILogService,
+): Promise<void> {
+  try {
+    const extensionsControlManifest =
+      await extensionManagementService.getExtensionsControlManifest();
+    if (!extensionsControlManifest.deprecated) {
+      return;
+    }
+    const installed = await extensionManagementService.getInstalled(
       ExtensionType.User,
       profile?.extensionsResource,
     );
-		for (const [unsupportedExtensionId, deprecated] of Object.entries(
+    for (const [unsupportedExtensionId, deprecated] of Object.entries(
       extensionsControlManifest.deprecated,
     )) {
-			if (!deprecated?.extension) {
-				continue;
-			}
-			const { id: preReleaseExtensionId, autoMigrate, preRelease } = deprecated.extension;
-			if (!autoMigrate) {
-				continue;
-			}
-			const unsupportedExtension = installed.find(
-        i => areSameExtensions(i.identifier, { id: unsupportedExtensionId }),
+      if (!deprecated?.extension) {
+        continue;
+      }
+      const {
+        id: preReleaseExtensionId,
+        autoMigrate,
+        preRelease,
+      } = deprecated.extension;
+      if (!autoMigrate) {
+        continue;
+      }
+      const unsupportedExtension = installed.find((i) =>
+        areSameExtensions(i.identifier, { id: unsupportedExtensionId }),
       );
-			// Unsupported Extension is not installed
-			if (!unsupportedExtension) {
-				continue;
-			}
+      // Unsupported Extension is not installed
+      if (!unsupportedExtension) {
+        continue;
+      }
 
-			const gallery = (await galleryService.getExtensions(
-        [{ id: preReleaseExtensionId, preRelease }],
-        {
-          targetPlatform: await extensionManagementService.getTargetPlatform(),
-          compatible: true,
-        },
-        CancellationToken.None,
-      ))[0];
-			if (!gallery) {
-				logService.info(
+      const gallery = (
+        await galleryService.getExtensions(
+          [{ id: preReleaseExtensionId, preRelease }],
+          {
+            targetPlatform:
+              await extensionManagementService.getTargetPlatform(),
+            compatible: true,
+          },
+          CancellationToken.None,
+        )
+      )[0];
+      if (!gallery) {
+        logService.info(
           `Skipping migrating '${unsupportedExtension.identifier.id}' extension because, the comaptible target '${preReleaseExtensionId}' extension is not found`,
         );
-				continue;
-			}
+        continue;
+      }
 
-			try {
-				logService.info(
+      try {
+        logService.info(
           `Migrating '${unsupportedExtension.identifier.id}' extension to '${preReleaseExtensionId}' extension...`,
         );
 
-				const isUnsupportedExtensionEnabled = !extensionEnablementService.getDisabledExtensions().some(
-          e => areSameExtensions(e, unsupportedExtension.identifier),
-        );
-				await extensionManagementService.uninstall(unsupportedExtension, {
+        const isUnsupportedExtensionEnabled = !extensionEnablementService
+          .getDisabledExtensions()
+          .some((e) => areSameExtensions(e, unsupportedExtension.identifier));
+        await extensionManagementService.uninstall(unsupportedExtension, {
           profileLocation: profile?.extensionsResource,
         });
-				logService.info(
+        logService.info(
           `Uninstalled the unsupported extension '${unsupportedExtension.identifier.id}'`,
         );
 
-				let preReleaseExtension = installed.find(
-          i => areSameExtensions(i.identifier, { id: preReleaseExtensionId }),
+        let preReleaseExtension = installed.find((i) =>
+          areSameExtensions(i.identifier, { id: preReleaseExtensionId }),
         );
-				if (!preReleaseExtension || (preReleaseExtension.isPreReleaseVersion !== !!preRelease && isUnsupportedExtensionEnabled)) {
-					preReleaseExtension = await extensionManagementService.installFromGallery(
-            gallery,
-            {
+        if (
+          !preReleaseExtension ||
+          (preReleaseExtension.isPreReleaseVersion !== !!preRelease &&
+            isUnsupportedExtensionEnabled)
+        ) {
+          preReleaseExtension =
+            await extensionManagementService.installFromGallery(gallery, {
               installPreReleaseVersion: preRelease,
               isMachineScoped: unsupportedExtension.isMachineScoped,
               operation: InstallOperation.Migrate,
               profileLocation: profile?.extensionsResource,
-              context: { [EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT]: true },
-            },
-          );
-					logService.info(
+              context: {
+                [EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT]: true,
+              },
+            });
+          logService.info(
             `Installed the pre-release extension '${preReleaseExtension.identifier.id}'`,
           );
-					if (!autoMigrate.donotDisable && !isUnsupportedExtensionEnabled) {
-						await extensionEnablementService.disableExtension(
+          if (!autoMigrate.donotDisable && !isUnsupportedExtensionEnabled) {
+            await extensionEnablementService.disableExtension(
               preReleaseExtension.identifier,
             );
-						logService.info(
+            logService.info(
               `Disabled the pre-release extension '${preReleaseExtension.identifier.id}' because the unsupported extension '${unsupportedExtension.identifier.id}' is disabled`,
             );
-					}
-					if (autoMigrate.storage) {
-						extensionStorageService.addToMigrationList(
+          }
+          if (autoMigrate.storage) {
+            extensionStorageService.addToMigrationList(
               getExtensionId(
                 unsupportedExtension.manifest.publisher,
                 unsupportedExtension.manifest.name,
@@ -119,63 +141,72 @@ export async function migrateUnsupportedExtensions(profile: IUserDataProfile | u
                 preReleaseExtension.manifest.name,
               ),
             );
-						logService.info(
+            logService.info(
               `Added pre-release extension to the storage migration list`,
             );
-					}
-				}
-				logService.info(
+          }
+        }
+        logService.info(
           `Migrated '${unsupportedExtension.identifier.id}' extension to '${preReleaseExtensionId}' extension.`,
         );
-			} catch (error) {
-				logService.error(error);
-			}
-		}
+      } catch (error) {
+        logService.error(error);
+      }
+    }
 
-		if (extensionsControlManifest.autoUpdate) {
-			for (const [extensionId, version] of Object.entries(
+    if (extensionsControlManifest.autoUpdate) {
+      for (const [extensionId, version] of Object.entries(
         extensionsControlManifest.autoUpdate,
       )) {
-				try {
-					const extensionToAutoUpdate = installed.find(
-            i => areSameExtensions(i.identifier, { id: extensionId }) && semver.lte(i.manifest.version, version),
+        try {
+          const extensionToAutoUpdate = installed.find(
+            (i) =>
+              areSameExtensions(i.identifier, { id: extensionId }) &&
+              semver.lte(i.manifest.version, version),
           );
-					if (!extensionToAutoUpdate) {
-						continue;
-					}
+          if (!extensionToAutoUpdate) {
+            continue;
+          }
 
-					const gallery = (await galleryService.getExtensions(
-            [{ id: extensionId, preRelease: extensionToAutoUpdate.preRelease }],
-            {
-              targetPlatform: await extensionManagementService.getTargetPlatform(),
-              compatible: true,
-            },
-            CancellationToken.None,
-          ))[0];
-					if (!gallery) {
-						logService.info(
+          const gallery = (
+            await galleryService.getExtensions(
+              [
+                {
+                  id: extensionId,
+                  preRelease: extensionToAutoUpdate.preRelease,
+                },
+              ],
+              {
+                targetPlatform:
+                  await extensionManagementService.getTargetPlatform(),
+                compatible: true,
+              },
+              CancellationToken.None,
+            )
+          )[0];
+          if (!gallery) {
+            logService.info(
               `Skipping updating '${extensionToAutoUpdate.identifier.id}' extension because, the compatible target '${extensionId}' extension is not found`,
             );
-						continue;
-					}
+            continue;
+          }
 
-					await extensionManagementService.installFromGallery(gallery, {
+          await extensionManagementService.installFromGallery(gallery, {
             installPreReleaseVersion: extensionToAutoUpdate.preRelease,
             isMachineScoped: extensionToAutoUpdate.isMachineScoped,
             operation: InstallOperation.Update,
             profileLocation: profile?.extensionsResource,
             context: { [EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT]: true },
           });
-					logService.info(
+          logService.info(
             `Autoupdated '${extensionToAutoUpdate.identifier.id}' extension to '${gallery.version}' extension.`,
           );
-				} catch (error) {
-					logService.error(error);
-				}
-			}
-		}
-
-	} catch (error) {
-		logService.error(error);
-	}
+        } catch (error) {
+          logService.error(error);
+        }
+      }
+    }
+  } catch (error) {
+    logService.error(error);
+  }
 }

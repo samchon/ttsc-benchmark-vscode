@@ -5,7 +5,10 @@
 
 import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
 import { IUserDataProfileService } from "../../../services/userDataProfile/common/userDataProfile.js";
-import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../../../platform/instantiation/common/extensions.js";
 import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
 import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
 import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
@@ -21,25 +24,26 @@ import { IAllowedMcpServersService } from "../../../../platform/mcp/common/mcpMa
 import { ILogService } from "../../../../platform/log/common/log.js";
 
 export class WorkbenchMcpManagementService extends BaseWorkbenchMcpManagementService {
-
-	constructor(
-		@IAllowedMcpServersService allowedMcpServersService: IAllowedMcpServersService,
-		@ILogService logService: ILogService,
-		@IUserDataProfileService userDataProfileService: IUserDataProfileService,
-		@IUriIdentityService uriIdentityService: IUriIdentityService,
-		@IWorkspaceContextService workspaceContextService: IWorkspaceContextService,
-		@IRemoteAgentService remoteAgentService: IRemoteAgentService,
-		@IUserDataProfilesService userDataProfilesService: IUserDataProfilesService,
-		@IRemoteUserDataProfilesService remoteUserDataProfilesService: IRemoteUserDataProfilesService,
-		@IInstantiationService instantiationService: IInstantiationService,
-		@ISharedProcessService sharedProcessService: ISharedProcessService,
-	) {
-		const mcpManagementService = new McpManagementChannelClient(
+  constructor(
+    @IAllowedMcpServersService
+    allowedMcpServersService: IAllowedMcpServersService,
+    @ILogService logService: ILogService,
+    @IUserDataProfileService userDataProfileService: IUserDataProfileService,
+    @IUriIdentityService uriIdentityService: IUriIdentityService,
+    @IWorkspaceContextService workspaceContextService: IWorkspaceContextService,
+    @IRemoteAgentService remoteAgentService: IRemoteAgentService,
+    @IUserDataProfilesService userDataProfilesService: IUserDataProfilesService,
+    @IRemoteUserDataProfilesService
+    remoteUserDataProfilesService: IRemoteUserDataProfilesService,
+    @IInstantiationService instantiationService: IInstantiationService,
+    @ISharedProcessService sharedProcessService: ISharedProcessService,
+  ) {
+    const mcpManagementService = new McpManagementChannelClient(
       sharedProcessService.getChannel("mcpManagement"),
       allowedMcpServersService,
       logService,
     );
-		super(
+    super(
       mcpManagementService,
       allowedMcpServersService,
       logService,
@@ -51,8 +55,8 @@ export class WorkbenchMcpManagementService extends BaseWorkbenchMcpManagementSer
       remoteUserDataProfilesService,
       instantiationService,
     );
-		this._register(mcpManagementService);
-	}
+    this._register(mcpManagementService);
+  }
 }
 
 registerSingleton(

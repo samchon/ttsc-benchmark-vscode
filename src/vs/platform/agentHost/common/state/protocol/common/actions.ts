@@ -87,65 +87,65 @@ import type {
  * @category Actions
  */
 export const enum ActionType {
-	RootAgentsChanged = "root/agentsChanged",
-	RootActiveSessionsChanged = "root/activeSessionsChanged",
-	SessionReady = "session/ready",
-	SessionCreationFailed = "session/creationFailed",
-	SessionTurnStarted = "session/turnStarted",
-	SessionDelta = "session/delta",
-	SessionResponsePart = "session/responsePart",
-	SessionToolCallStart = "session/toolCallStart",
-	SessionToolCallDelta = "session/toolCallDelta",
-	SessionToolCallReady = "session/toolCallReady",
-	SessionToolCallConfirmed = "session/toolCallConfirmed",
-	SessionToolCallComplete = "session/toolCallComplete",
-	SessionToolCallResultConfirmed = "session/toolCallResultConfirmed",
-	SessionToolCallContentChanged = "session/toolCallContentChanged",
-	SessionTurnComplete = "session/turnComplete",
-	SessionTurnCancelled = "session/turnCancelled",
-	SessionError = "session/error",
-	SessionTitleChanged = "session/titleChanged",
-	SessionUsage = "session/usage",
-	SessionReasoning = "session/reasoning",
-	SessionModelChanged = "session/modelChanged",
-	SessionAgentChanged = "session/agentChanged",
-	SessionServerToolsChanged = "session/serverToolsChanged",
-	SessionActiveClientChanged = "session/activeClientChanged",
-	SessionActiveClientToolsChanged = "session/activeClientToolsChanged",
-	SessionPendingMessageSet = "session/pendingMessageSet",
-	SessionPendingMessageRemoved = "session/pendingMessageRemoved",
-	SessionQueuedMessagesReordered = "session/queuedMessagesReordered",
-	SessionInputRequested = "session/inputRequested",
-	SessionInputAnswerChanged = "session/inputAnswerChanged",
-	SessionInputCompleted = "session/inputCompleted",
-	SessionCustomizationsChanged = "session/customizationsChanged",
-	SessionCustomizationToggled = "session/customizationToggled",
-	SessionCustomizationUpdated = "session/customizationUpdated",
-	SessionTruncated = "session/truncated",
-	SessionIsReadChanged = "session/isReadChanged",
-	SessionIsArchivedChanged = "session/isArchivedChanged",
-	SessionActivityChanged = "session/activityChanged",
-	SessionChangesetsChanged = "session/changesetsChanged",
-	SessionConfigChanged = "session/configChanged",
-	SessionMetaChanged = "session/metaChanged",
-	ChangesetStatusChanged = "changeset/statusChanged",
-	ChangesetFileSet = "changeset/fileSet",
-	ChangesetFileRemoved = "changeset/fileRemoved",
-	ChangesetOperationsChanged = "changeset/operationsChanged",
-	ChangesetCleared = "changeset/cleared",
-	RootTerminalsChanged = "root/terminalsChanged",
-	RootConfigChanged = "root/configChanged",
-	TerminalData = "terminal/data",
-	TerminalInput = "terminal/input",
-	TerminalResized = "terminal/resized",
-	TerminalClaimed = "terminal/claimed",
-	TerminalTitleChanged = "terminal/titleChanged",
-	TerminalCwdChanged = "terminal/cwdChanged",
-	TerminalExited = "terminal/exited",
-	TerminalCleared = "terminal/cleared",
-	TerminalCommandDetectionAvailable = "terminal/commandDetectionAvailable",
-	TerminalCommandExecuted = "terminal/commandExecuted",
-	TerminalCommandFinished = "terminal/commandFinished",
+  RootAgentsChanged = "root/agentsChanged",
+  RootActiveSessionsChanged = "root/activeSessionsChanged",
+  SessionReady = "session/ready",
+  SessionCreationFailed = "session/creationFailed",
+  SessionTurnStarted = "session/turnStarted",
+  SessionDelta = "session/delta",
+  SessionResponsePart = "session/responsePart",
+  SessionToolCallStart = "session/toolCallStart",
+  SessionToolCallDelta = "session/toolCallDelta",
+  SessionToolCallReady = "session/toolCallReady",
+  SessionToolCallConfirmed = "session/toolCallConfirmed",
+  SessionToolCallComplete = "session/toolCallComplete",
+  SessionToolCallResultConfirmed = "session/toolCallResultConfirmed",
+  SessionToolCallContentChanged = "session/toolCallContentChanged",
+  SessionTurnComplete = "session/turnComplete",
+  SessionTurnCancelled = "session/turnCancelled",
+  SessionError = "session/error",
+  SessionTitleChanged = "session/titleChanged",
+  SessionUsage = "session/usage",
+  SessionReasoning = "session/reasoning",
+  SessionModelChanged = "session/modelChanged",
+  SessionAgentChanged = "session/agentChanged",
+  SessionServerToolsChanged = "session/serverToolsChanged",
+  SessionActiveClientChanged = "session/activeClientChanged",
+  SessionActiveClientToolsChanged = "session/activeClientToolsChanged",
+  SessionPendingMessageSet = "session/pendingMessageSet",
+  SessionPendingMessageRemoved = "session/pendingMessageRemoved",
+  SessionQueuedMessagesReordered = "session/queuedMessagesReordered",
+  SessionInputRequested = "session/inputRequested",
+  SessionInputAnswerChanged = "session/inputAnswerChanged",
+  SessionInputCompleted = "session/inputCompleted",
+  SessionCustomizationsChanged = "session/customizationsChanged",
+  SessionCustomizationToggled = "session/customizationToggled",
+  SessionCustomizationUpdated = "session/customizationUpdated",
+  SessionTruncated = "session/truncated",
+  SessionIsReadChanged = "session/isReadChanged",
+  SessionIsArchivedChanged = "session/isArchivedChanged",
+  SessionActivityChanged = "session/activityChanged",
+  SessionChangesetsChanged = "session/changesetsChanged",
+  SessionConfigChanged = "session/configChanged",
+  SessionMetaChanged = "session/metaChanged",
+  ChangesetStatusChanged = "changeset/statusChanged",
+  ChangesetFileSet = "changeset/fileSet",
+  ChangesetFileRemoved = "changeset/fileRemoved",
+  ChangesetOperationsChanged = "changeset/operationsChanged",
+  ChangesetCleared = "changeset/cleared",
+  RootTerminalsChanged = "root/terminalsChanged",
+  RootConfigChanged = "root/configChanged",
+  TerminalData = "terminal/data",
+  TerminalInput = "terminal/input",
+  TerminalResized = "terminal/resized",
+  TerminalClaimed = "terminal/claimed",
+  TerminalTitleChanged = "terminal/titleChanged",
+  TerminalCwdChanged = "terminal/cwdChanged",
+  TerminalExited = "terminal/exited",
+  TerminalCleared = "terminal/cleared",
+  TerminalCommandDetectionAvailable = "terminal/commandDetectionAvailable",
+  TerminalCommandExecuted = "terminal/commandExecuted",
+  TerminalCommandFinished = "terminal/commandFinished",
 }
 
 // ─── Action Envelope ─────────────────────────────────────────────────────────
@@ -154,8 +154,8 @@ export const enum ActionType {
  * Identifies the client that originally dispatched an action.
  */
 export interface ActionOrigin {
-	clientId: string;
-	clientSeq: number;
+  clientId: string;
+  clientSeq: number;
 }
 
 /**
@@ -168,12 +168,12 @@ export interface ActionOrigin {
  * envelope so that any subscribable resource can route its actions uniformly.
  */
 export interface ActionEnvelope {
-	/** Channel URI this action belongs to. */
-	readonly channel: URI;
-	readonly action: StateAction;
-	readonly serverSeq: number;
-	readonly origin: ActionOrigin | undefined;
-	readonly rejectionReason?: string;
+  /** Channel URI this action belongs to. */
+  readonly channel: URI;
+  readonly action: StateAction;
+  readonly serverSeq: number;
+  readonly origin: ActionOrigin | undefined;
+  readonly rejectionReason?: string;
 }
 
 // ─── Discriminated Union ─────────────────────────────────────────────────────
@@ -182,62 +182,62 @@ export interface ActionEnvelope {
  * Discriminated union of all state actions.
  */
 export type StateAction =
-	| RootAgentsChangedAction
-	| RootActiveSessionsChangedAction
-	| RootTerminalsChangedAction
-	| RootConfigChangedAction
-	| SessionReadyAction
-	| SessionCreationFailedAction
-	| SessionTurnStartedAction
-	| SessionDeltaAction
-	| SessionResponsePartAction
-	| SessionToolCallStartAction
-	| SessionToolCallDeltaAction
-	| SessionToolCallReadyAction
-	| SessionToolCallConfirmedAction
-	| SessionToolCallCompleteAction
-	| SessionToolCallResultConfirmedAction
-	| SessionToolCallContentChangedAction
-	| SessionTurnCompleteAction
-	| SessionTurnCancelledAction
-	| SessionErrorAction
-	| SessionTitleChangedAction
-	| SessionUsageAction
-	| SessionReasoningAction
-	| SessionModelChangedAction
-	| SessionAgentChangedAction
-	| SessionServerToolsChangedAction
-	| SessionActiveClientChangedAction
-	| SessionActiveClientToolsChangedAction
-	| SessionPendingMessageSetAction
-	| SessionPendingMessageRemovedAction
-	| SessionQueuedMessagesReorderedAction
-	| SessionInputRequestedAction
-	| SessionInputAnswerChangedAction
-	| SessionInputCompletedAction
-	| SessionCustomizationsChangedAction
-	| SessionCustomizationToggledAction
-	| SessionCustomizationUpdatedAction
-	| SessionTruncatedAction
-	| SessionIsReadChangedAction
-	| SessionIsArchivedChangedAction
-	| SessionActivityChangedAction
-	| SessionChangesetsChangedAction
-	| SessionConfigChangedAction
-	| SessionMetaChangedAction
-	| ChangesetStatusChangedAction
-	| ChangesetFileSetAction
-	| ChangesetFileRemovedAction
-	| ChangesetOperationsChangedAction
-	| ChangesetClearedAction
-	| TerminalDataAction
-	| TerminalInputAction
-	| TerminalResizedAction
-	| TerminalClaimedAction
-	| TerminalTitleChangedAction
-	| TerminalCwdChangedAction
-	| TerminalExitedAction
-	| TerminalClearedAction
-	| TerminalCommandDetectionAvailableAction
-	| TerminalCommandExecutedAction
-	| TerminalCommandFinishedAction;
+  | RootAgentsChangedAction
+  | RootActiveSessionsChangedAction
+  | RootTerminalsChangedAction
+  | RootConfigChangedAction
+  | SessionReadyAction
+  | SessionCreationFailedAction
+  | SessionTurnStartedAction
+  | SessionDeltaAction
+  | SessionResponsePartAction
+  | SessionToolCallStartAction
+  | SessionToolCallDeltaAction
+  | SessionToolCallReadyAction
+  | SessionToolCallConfirmedAction
+  | SessionToolCallCompleteAction
+  | SessionToolCallResultConfirmedAction
+  | SessionToolCallContentChangedAction
+  | SessionTurnCompleteAction
+  | SessionTurnCancelledAction
+  | SessionErrorAction
+  | SessionTitleChangedAction
+  | SessionUsageAction
+  | SessionReasoningAction
+  | SessionModelChangedAction
+  | SessionAgentChangedAction
+  | SessionServerToolsChangedAction
+  | SessionActiveClientChangedAction
+  | SessionActiveClientToolsChangedAction
+  | SessionPendingMessageSetAction
+  | SessionPendingMessageRemovedAction
+  | SessionQueuedMessagesReorderedAction
+  | SessionInputRequestedAction
+  | SessionInputAnswerChangedAction
+  | SessionInputCompletedAction
+  | SessionCustomizationsChangedAction
+  | SessionCustomizationToggledAction
+  | SessionCustomizationUpdatedAction
+  | SessionTruncatedAction
+  | SessionIsReadChangedAction
+  | SessionIsArchivedChangedAction
+  | SessionActivityChangedAction
+  | SessionChangesetsChangedAction
+  | SessionConfigChangedAction
+  | SessionMetaChangedAction
+  | ChangesetStatusChangedAction
+  | ChangesetFileSetAction
+  | ChangesetFileRemovedAction
+  | ChangesetOperationsChangedAction
+  | ChangesetClearedAction
+  | TerminalDataAction
+  | TerminalInputAction
+  | TerminalResizedAction
+  | TerminalClaimedAction
+  | TerminalTitleChangedAction
+  | TerminalCwdChangedAction
+  | TerminalExitedAction
+  | TerminalClearedAction
+  | TerminalCommandDetectionAvailableAction
+  | TerminalCommandExecutedAction
+  | TerminalCommandFinishedAction;

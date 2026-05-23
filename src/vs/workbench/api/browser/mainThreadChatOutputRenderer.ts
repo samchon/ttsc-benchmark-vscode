@@ -17,60 +17,81 @@ import {
 } from "../common/extHost.protocol.js";
 import { MainThreadWebviews } from "./mainThreadWebviews.js";
 
-export class MainThreadChatOutputRenderer extends Disposable implements MainThreadChatOutputRendererShape {
+export class MainThreadChatOutputRenderer
+  extends Disposable
+  implements MainThreadChatOutputRendererShape
+{
+  private readonly _proxy: ExtHostChatOutputRendererShape;
 
-	private readonly _proxy: ExtHostChatOutputRendererShape;
+  private _webviewHandlePool = 0;
 
-	private _webviewHandlePool = 0;
+  private readonly registeredRenderers = new Map<
+    /* viewType */ string,
+    IDisposable
+  >();
 
-	private readonly registeredRenderers = new Map</* viewType */ string, IDisposable>();
-
-	constructor(
-		extHostContext: IExtHostContext,
-		private readonly _mainThreadWebview: MainThreadWebviews,
-		@IChatOutputRendererService private readonly _rendererService: IChatOutputRendererService,
-		@ILogService private readonly _logService: ILogService,
-	) {
-		super();
-		this._proxy = extHostContext.getProxy(
+  constructor(
+    extHostContext: IExtHostContext,
+    private readonly _mainThreadWebview: MainThreadWebviews,
+    @IChatOutputRendererService
+    private readonly _rendererService: IChatOutputRendererService,
+    @ILogService private readonly _logService: ILogService,
+  ) {
+    super();
+    this._proxy = extHostContext.getProxy(
       ExtHostContext.ExtHostChatOutputRenderer,
     );
-	}
+  }
 
-	override dispose(): void {
-		super.dispose();
+  override dispose(): void {
+    super.dispose();
 
-		this.registeredRenderers.forEach(disposable => disposable.dispose());
-		this.registeredRenderers.clear();
-	}
+    this.registeredRenderers.forEach((disposable) => disposable.dispose());
+    this.registeredRenderers.clear();
+  }
 
-	$registerChatOutputRenderer(viewType: string, extensionId: ExtensionIdentifier, extensionLocation: UriComponents): void {
-		const existingRegistration = this.registeredRenderers.get(viewType);
-		if (existingRegistration) {
-			this._logService.warn(
+  $registerChatOutputRenderer(
+    viewType: string,
+    extensionId: ExtensionIdentifier,
+    extensionLocation: UriComponents,
+  ): void {
+    const existingRegistration = this.registeredRenderers.get(viewType);
+    if (existingRegistration) {
+      this._logService.warn(
         `Re-registering chat output renderer for view type '${viewType}' from extension '${extensionId.value}'.`,
       );
-			existingRegistration.dispose();
-		}
+      existingRegistration.dispose();
+    }
 
-		const disposable = this._rendererService.registerRenderer(viewType, {
-			renderOutputPart: async (mime, data, webview, context, token) => {
-				const webviewHandle = `chat-output-${++this._webviewHandlePool}`;
+    const disposable = this._rendererService.registerRenderer(
+      viewType,
+      {
+        renderOutputPart: async (mime, data, webview, context, token) => {
+          const webviewHandle = `chat-output-${++this._webviewHandlePool}`;
 
-				this._mainThreadWebview.addWebview(webviewHandle, webview, {
-					serializeBuffersForPostMessage: true,
-				});
+          this._mainThreadWebview.addWebview(webviewHandle, webview, {
+            serializeBuffersForPostMessage: true,
+          });
 
-				return this._proxy.$renderChatOutput(viewType, mime, VSBuffer.wrap(data), webviewHandle, context, token);
-			},
-		}, {
-			extension: { id: extensionId, location: URI.revive(extensionLocation) },
-		});
-		this.registeredRenderers.set(viewType, disposable);
-	}
+          return this._proxy.$renderChatOutput(
+            viewType,
+            mime,
+            VSBuffer.wrap(data),
+            webviewHandle,
+            context,
+            token,
+          );
+        },
+      },
+      {
+        extension: { id: extensionId, location: URI.revive(extensionLocation) },
+      },
+    );
+    this.registeredRenderers.set(viewType, disposable);
+  }
 
-	$unregisterChatOutputRenderer(viewType: string): void {
-		this.registeredRenderers.get(viewType)?.dispose();
-		this.registeredRenderers.delete(viewType);
-	}
+  $unregisterChatOutputRenderer(viewType: string): void {
+    this.registeredRenderers.get(viewType)?.dispose();
+    this.registeredRenderers.delete(viewType);
+  }
 }

@@ -19,42 +19,45 @@ import { IChatContentPartRenderContext } from "./chatContentParts.js";
  * The title is shown in the collapsed state, and the full content is shown when expanded.
  */
 export class ChatCollapsibleMarkdownContentPart extends ChatCollapsibleContentPart {
+  private contentElement: HTMLElement | undefined;
 
-	private contentElement: HTMLElement | undefined;
+  constructor(
+    title: string,
+    private readonly markdownContent: string,
+    context: IChatContentPartRenderContext,
+    private readonly chatContentMarkdownRenderer: IMarkdownRenderer,
+    @IHoverService hoverService: IHoverService,
+    @IConfigurationService configurationService: IConfigurationService,
+  ) {
+    super(title, context, undefined, hoverService, configurationService);
+    this.icon = Codicon.check;
+  }
 
-	constructor(
-		title: string,
-		private readonly markdownContent: string,
-		context: IChatContentPartRenderContext,
-		private readonly chatContentMarkdownRenderer: IMarkdownRenderer,
-		@IHoverService hoverService: IHoverService,
-		@IConfigurationService configurationService: IConfigurationService,
-	) {
-		super(title, context, undefined, hoverService, configurationService);
-		this.icon = Codicon.check;
-	}
-
-	protected override initContent(): HTMLElement {
-		const wrapper = $(
+  protected override initContent(): HTMLElement {
+    const wrapper = $(
       ".chat-collapsible-markdown-content.chat-used-context-list",
     );
 
-		if (this.markdownContent) {
-			this.contentElement = $(".chat-collapsible-markdown-body");
-			const rendered = this._register(
+    if (this.markdownContent) {
+      this.contentElement = $(".chat-collapsible-markdown-body");
+      const rendered = this._register(
         this.chatContentMarkdownRenderer.render(
           new MarkdownString(this.markdownContent),
         ),
       );
-			this.contentElement.appendChild(rendered.element);
-			wrapper.appendChild(this.contentElement);
-		}
+      this.contentElement.appendChild(rendered.element);
+      wrapper.appendChild(this.contentElement);
+    }
 
-		return wrapper;
-	}
+    return wrapper;
+  }
 
-	hasSameContent(other: IChatRendererContent, _followingContent: IChatRendererContent[], _element: ChatTreeItem): boolean {
-		// This part is embedded in the subagent part, not rendered directly
-		return false;
-	}
+  hasSameContent(
+    other: IChatRendererContent,
+    _followingContent: IChatRendererContent[],
+    _element: ChatTreeItem,
+  ): boolean {
+    // This part is embedded in the subagent part, not rendered directly
+    return false;
+  }
 }

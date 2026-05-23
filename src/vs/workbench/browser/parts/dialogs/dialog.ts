@@ -31,44 +31,57 @@ const defaultDialogAllowableCommands = new Set([
   "editor.action.clipboardPasteAction",
 ]);
 
-export function createWorkbenchDialogOptions(options: Partial<IDialogOptions>, keybindingService: IKeybindingService, layoutService: ILayoutService, hostService: IHostService, allowableCommands = defaultDialogAllowableCommands): IDialogOptions {
-	return {
-		keyEventProcessor: (event: StandardKeyboardEvent) => {
-			const resolved = keybindingService.softDispatch(event, layoutService.activeContainer);
-			if (resolved.kind === ResultKind.KbFound && resolved.commandId) {
-				if (!allowableCommands.has(resolved.commandId)) {
-					EventHelper.stop(event, true);
-				}
-			}
-		},
-		buttonStyles: defaultButtonStyles,
-		checkboxStyles: defaultCheckboxStyles,
-		inputBoxStyles: defaultInputBoxStyles,
-		dialogStyles: defaultDialogStyles,
-		onVisibilityChange: (window, visible) => hostService.setWindowDimmed(window, visible),
-		...options,
-	};
+export function createWorkbenchDialogOptions(
+  options: Partial<IDialogOptions>,
+  keybindingService: IKeybindingService,
+  layoutService: ILayoutService,
+  hostService: IHostService,
+  allowableCommands = defaultDialogAllowableCommands,
+): IDialogOptions {
+  return {
+    keyEventProcessor: (event: StandardKeyboardEvent) => {
+      const resolved = keybindingService.softDispatch(
+        event,
+        layoutService.activeContainer,
+      );
+      if (resolved.kind === ResultKind.KbFound && resolved.commandId) {
+        if (!allowableCommands.has(resolved.commandId)) {
+          EventHelper.stop(event, true);
+        }
+      }
+    },
+    buttonStyles: defaultButtonStyles,
+    checkboxStyles: defaultCheckboxStyles,
+    inputBoxStyles: defaultInputBoxStyles,
+    dialogStyles: defaultDialogStyles,
+    onVisibilityChange: (window, visible) =>
+      hostService.setWindowDimmed(window, visible),
+    ...options,
+  };
 }
 
-export function createBrowserAboutDialogDetails(productService: IProductService): { title: string; details: string; detailsToCopy: string } {
-	const detailString = (useAgo: boolean): string => {
-		return localize(
+export function createBrowserAboutDialogDetails(
+  productService: IProductService,
+): { title: string; details: string; detailsToCopy: string } {
+  const detailString = (useAgo: boolean): string => {
+    return localize(
       "aboutDetail",
       "Version: {0}\nCommit: {1}\nDate: {2}\nBrowser: {3}",
       productService.version || "Unknown",
       productService.commit || "Unknown",
-      productService.date ? `${productService.date}${useAgo ? " (" + fromNow(new Date(productService.date), true) + ")" : ""}` : "Unknown",
+      productService.date
+        ? `${productService.date}${useAgo ? " (" + fromNow(new Date(productService.date), true) + ")" : ""}`
+        : "Unknown",
       navigator.userAgent,
     );
-	};
+  };
 
-	const details = detailString(true);
-	const detailsToCopy = detailString(false);
+  const details = detailString(true);
+  const detailsToCopy = detailString(false);
 
-	return {
+  return {
     title: productService.nameLong,
-    details: details,
-    detailsToCopy: detailsToCopy,
+    details,
+    detailsToCopy,
   };
 }
-

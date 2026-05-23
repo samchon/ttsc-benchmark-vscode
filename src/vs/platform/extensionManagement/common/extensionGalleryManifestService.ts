@@ -16,38 +16,44 @@ import {
 import { FilterType, SortBy } from "./extensionManagement.js";
 
 type ExtensionGalleryConfig = {
-	readonly serviceUrl: string;
-	readonly itemUrl: string;
-	readonly publisherUrl: string;
-	readonly resourceUrlTemplate: string;
-	readonly extensionUrlTemplate: string;
-	readonly controlUrl: string;
-	readonly nlsBaseUrl: string;
+  readonly serviceUrl: string;
+  readonly itemUrl: string;
+  readonly publisherUrl: string;
+  readonly resourceUrlTemplate: string;
+  readonly extensionUrlTemplate: string;
+  readonly controlUrl: string;
+  readonly nlsBaseUrl: string;
 };
 
-export class ExtensionGalleryManifestService extends Disposable implements IExtensionGalleryManifestService {
+export class ExtensionGalleryManifestService
+  extends Disposable
+  implements IExtensionGalleryManifestService
+{
+  readonly _serviceBrand: undefined;
+  readonly onDidChangeExtensionGalleryManifest = Event.None;
+  readonly onDidChangeExtensionGalleryManifestStatus = Event.None;
 
-	readonly _serviceBrand: undefined;
-	readonly onDidChangeExtensionGalleryManifest = Event.None;
-	readonly onDidChangeExtensionGalleryManifestStatus = Event.None;
+  get extensionGalleryManifestStatus(): ExtensionGalleryManifestStatus {
+    return !!this.productService.extensionsGallery?.serviceUrl
+      ? ExtensionGalleryManifestStatus.Available
+      : ExtensionGalleryManifestStatus.Unavailable;
+  }
 
-	get extensionGalleryManifestStatus(): ExtensionGalleryManifestStatus {
-		return !!this.productService.extensionsGallery?.serviceUrl ? ExtensionGalleryManifestStatus.Available : ExtensionGalleryManifestStatus.Unavailable;
-	}
+  constructor(
+    @IProductService protected readonly productService: IProductService,
+  ) {
+    super();
+  }
 
-	constructor(
-		@IProductService protected readonly productService: IProductService,
-	) {
-		super();
-	}
+  async getExtensionGalleryManifest(): Promise<IExtensionGalleryManifest | null> {
+    const extensionsGallery = this.productService.extensionsGallery as
+      | ExtensionGalleryConfig
+      | undefined;
+    if (!extensionsGallery?.serviceUrl) {
+      return null;
+    }
 
-	async getExtensionGalleryManifest(): Promise<IExtensionGalleryManifest | null> {
-		const extensionsGallery = this.productService.extensionsGallery as ExtensionGalleryConfig | undefined;
-		if (!extensionsGallery?.serviceUrl) {
-			return null;
-		}
-
-		const resources = [
+    const resources = [
       {
         id: `${extensionsGallery.serviceUrl}/extensionquery`,
         type: ExtensionGalleryResourceType.ExtensionQueryService,
@@ -62,32 +68,32 @@ export class ExtensionGalleryManifestService extends Disposable implements IExte
       },
     ];
 
-		if (extensionsGallery.publisherUrl) {
-			resources.push({
+    if (extensionsGallery.publisherUrl) {
+      resources.push({
         id: `${extensionsGallery.publisherUrl}/{publisher}`,
         type: ExtensionGalleryResourceType.PublisherViewUri,
       });
-		}
+    }
 
-		if (extensionsGallery.itemUrl) {
-			resources.push({
+    if (extensionsGallery.itemUrl) {
+      resources.push({
         id: `${extensionsGallery.itemUrl}?itemName={publisher}.{name}`,
         type: ExtensionGalleryResourceType.ExtensionDetailsViewUri,
       });
-			resources.push({
+      resources.push({
         id: `${extensionsGallery.itemUrl}?itemName={publisher}.{name}&ssr=false#review-details`,
         type: ExtensionGalleryResourceType.ExtensionRatingViewUri,
       });
-		}
+    }
 
-		if (extensionsGallery.resourceUrlTemplate) {
-			resources.push({
+    if (extensionsGallery.resourceUrlTemplate) {
+      resources.push({
         id: extensionsGallery.resourceUrlTemplate,
         type: ExtensionGalleryResourceType.ExtensionResourceUri,
       });
-		}
+    }
 
-		const filtering = [
+    const filtering = [
       {
         name: FilterType.Tag,
         value: 1,
@@ -122,7 +128,7 @@ export class ExtensionGalleryManifestService extends Disposable implements IExte
       },
     ];
 
-		const sorting = [
+    const sorting = [
       {
         name: SortBy.NoneOrRelevance,
         value: 0,
@@ -157,7 +163,7 @@ export class ExtensionGalleryManifestService extends Disposable implements IExte
       },
     ];
 
-		const flags = [
+    const flags = [
       {
         name: Flag.None,
         value: 0x0,
@@ -216,19 +222,19 @@ export class ExtensionGalleryManifestService extends Disposable implements IExte
       },
     ];
 
-		return {
-			version: "",
-			resources,
-			capabilities: {
-				extensionQuery: {
-					filtering,
-					sorting,
-					flags,
-				},
-				signing: {
-					allPublicRepositorySigned: true,
-				},
-			},
-		};
-	}
+    return {
+      version: "",
+      resources,
+      capabilities: {
+        extensionQuery: {
+          filtering,
+          sorting,
+          flags,
+        },
+        signing: {
+          allPublicRepositorySigned: true,
+        },
+      },
+    };
+  }
 }

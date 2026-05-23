@@ -4,15 +4,24 @@
  *--------------------------------------------------------------------------------------------*/
 import "./media/openInAgents.css";
 import { $, append } from "../../../../../base/browser/dom.js";
-import { BaseActionViewItem, IBaseActionViewItemOptions } from "../../../../../base/browser/ui/actionbar/actionViewItems.js";
+import {
+  BaseActionViewItem,
+  IBaseActionViewItemOptions,
+} from "../../../../../base/browser/ui/actionbar/actionViewItems.js";
 import { getDefaultHoverDelegate } from "../../../../../base/browser/ui/hover/hoverDelegateFactory.js";
 import { IAction } from "../../../../../base/common/actions.js";
 import { Disposable } from "../../../../../base/common/lifecycle.js";
 import { ServicesAccessor } from "../../../../../editor/browser/editorExtensions.js";
 import { localize, localize2 } from "../../../../../nls.js";
 import { IActionViewItemService } from "../../../../../platform/actions/browser/actionViewItemService.js";
-import { Action2, MenuId } from "../../../../../platform/actions/common/actions.js";
-import { ContextKeyExpr, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import {
+  Action2,
+  MenuId,
+} from "../../../../../platform/actions/common/actions.js";
+import {
+  ContextKeyExpr,
+  IContextKeyService,
+} from "../../../../../platform/contextkey/common/contextkey.js";
 import { CONTEXT_ACCESSIBILITY_MODE_ENABLED } from "../../../../../platform/accessibility/common/accessibility.js";
 import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
@@ -33,63 +42,75 @@ import {
 } from "../../common/constants.js";
 
 export class OpenWorkspaceInAgentsWindowAction extends Action2 {
-	constructor() {
-		super({
-			id: OPEN_WORKSPACE_IN_AGENTS_WINDOW_COMMAND_ID,
-			title: localize2("openWorkspaceInAgentsWindow", "Open in Agents"),
-			category: CHAT_CATEGORY,
-			precondition: OPEN_AGENTS_WINDOW_PRECONDITION,
-			f1: true,
-			menu: [{
-				id: MenuId.ChatTitleBarMenu,
-				group: "c_sessions",
-				order: 1,
-				when: OPEN_AGENTS_WINDOW_PRECONDITION,
-			}, {
-				id: MenuId.TitleBar,
-				group: TitleBarLeadingActionsGroup,
-				order: -1000,
-				when: OPEN_AGENTS_WINDOW_PRECONDITION,
-			}],
-		});
-	}
+  constructor() {
+    super({
+      id: OPEN_WORKSPACE_IN_AGENTS_WINDOW_COMMAND_ID,
+      title: localize2("openWorkspaceInAgentsWindow", "Open in Agents"),
+      category: CHAT_CATEGORY,
+      precondition: OPEN_AGENTS_WINDOW_PRECONDITION,
+      f1: true,
+      menu: [
+        {
+          id: MenuId.ChatTitleBarMenu,
+          group: "c_sessions",
+          order: 1,
+          when: OPEN_AGENTS_WINDOW_PRECONDITION,
+        },
+        {
+          id: MenuId.TitleBar,
+          group: TitleBarLeadingActionsGroup,
+          order: -1000,
+          when: OPEN_AGENTS_WINDOW_PRECONDITION,
+        },
+      ],
+    });
+  }
 
-	async run(accessor: ServicesAccessor) {
-		const nativeHostService = accessor.get(INativeHostService);
-		const workspaceContextService = accessor.get(IWorkspaceContextService);
-		const folderUri = workspaceContextService.getWorkspace().folders[0]?.uri;
-		await nativeHostService.openAgentsWindow({
+  async run(accessor: ServicesAccessor) {
+    const nativeHostService = accessor.get(INativeHostService);
+    const workspaceContextService = accessor.get(IWorkspaceContextService);
+    const folderUri = workspaceContextService.getWorkspace().folders[0]?.uri;
+    await nativeHostService.openAgentsWindow({
       folderUri: folderUri?.scheme === Schemas.file ? folderUri : undefined,
     });
-	}
+  }
 }
 
 export class OpenAgentsWindowAction extends Action2 {
-	constructor() {
-		super({
-			id: OPEN_AGENTS_WINDOW_COMMAND_ID,
-			title: localize2("openAgentsWindow", "Open Agents Window"),
-			category: CHAT_CATEGORY,
-			precondition: OPEN_AGENTS_WINDOW_PRECONDITION,
-			f1: true,
-			keybinding: [{
-				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyA,
-				weight: KeybindingWeight.WorkbenchContrib,
-				when: ContextKeyExpr.and(IsSessionsWindowContext.toNegated(), CONTEXT_ACCESSIBILITY_MODE_ENABLED.toNegated()),
-			}, {
-				// In screen reader mode, Cmd/Ctrl+Shift+A conflicts with many screen reader keybindings,
-				// so require an additional Alt modifier.
-				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyMod.Alt | KeyCode.KeyA,
-				weight: KeybindingWeight.WorkbenchContrib,
-				when: ContextKeyExpr.and(IsSessionsWindowContext.toNegated(), CONTEXT_ACCESSIBILITY_MODE_ENABLED),
-			}],
-		});
-	}
+  constructor() {
+    super({
+      id: OPEN_AGENTS_WINDOW_COMMAND_ID,
+      title: localize2("openAgentsWindow", "Open Agents Window"),
+      category: CHAT_CATEGORY,
+      precondition: OPEN_AGENTS_WINDOW_PRECONDITION,
+      f1: true,
+      keybinding: [
+        {
+          primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyA,
+          weight: KeybindingWeight.WorkbenchContrib,
+          when: ContextKeyExpr.and(
+            IsSessionsWindowContext.toNegated(),
+            CONTEXT_ACCESSIBILITY_MODE_ENABLED.toNegated(),
+          ),
+        },
+        {
+          // In screen reader mode, Cmd/Ctrl+Shift+A conflicts with many screen reader keybindings,
+          // so require an additional Alt modifier.
+          primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyMod.Alt | KeyCode.KeyA,
+          weight: KeybindingWeight.WorkbenchContrib,
+          when: ContextKeyExpr.and(
+            IsSessionsWindowContext.toNegated(),
+            CONTEXT_ACCESSIBILITY_MODE_ENABLED,
+          ),
+        },
+      ],
+    });
+  }
 
-	async run(accessor: ServicesAccessor) {
-		const nativeHostService = accessor.get(INativeHostService);
-		await nativeHostService.openAgentsWindow();
-	}
+  async run(accessor: ServicesAccessor) {
+    const nativeHostService = accessor.get(INativeHostService);
+    await nativeHostService.openAgentsWindow();
+  }
 }
 
 /**
@@ -97,25 +118,24 @@ export class OpenAgentsWindowAction extends Action2 {
  * expands to reveal a label on hover / keyboard focus.
  */
 class OpenWorkspaceInAgentsTitleBarWidget extends BaseActionViewItem {
+  constructor(
+    action: IAction,
+    options: IBaseActionViewItemOptions | undefined,
+    @IHoverService private readonly hoverService: IHoverService,
+  ) {
+    super(undefined, action, options);
+  }
 
-	constructor(
-		action: IAction,
-		options: IBaseActionViewItemOptions | undefined,
-		@IHoverService private readonly hoverService: IHoverService,
-	) {
-		super(undefined, action, options);
-	}
+  override render(container: HTMLElement): void {
+    super.render(container);
 
-	override render(container: HTMLElement): void {
-		super.render(container);
+    container.classList.add("open-in-agents-titlebar-widget");
+    container.setAttribute("role", "button");
 
-		container.classList.add("open-in-agents-titlebar-widget");
-		container.setAttribute("role", "button");
-
-		const label = this.action.label;
-		const hoverText = localize("openInAgentsHover", "Open in Agents Window");
-		container.setAttribute("aria-label", hoverText);
-		this._register(
+    const label = this.action.label;
+    const hoverText = localize("openInAgentsHover", "Open in Agents Window");
+    container.setAttribute("aria-label", hoverText);
+    this._register(
       this.hoverService.setupManagedHover(
         getDefaultHoverDelegate("element"),
         container,
@@ -123,32 +143,34 @@ class OpenWorkspaceInAgentsTitleBarWidget extends BaseActionViewItem {
       ),
     );
 
-		const icon = append(
+    const icon = append(
       container,
       $("span.open-in-agents-titlebar-widget-icon"),
     );
-		icon.setAttribute("aria-hidden", "true");
+    icon.setAttribute("aria-hidden", "true");
 
-		const labelEl = append(
+    const labelEl = append(
       container,
       $("span.open-in-agents-titlebar-widget-label"),
     );
-		labelEl.textContent = label;
-	}
+    labelEl.textContent = label;
+  }
 }
 
-export class OpenWorkspaceInAgentsContribution extends Disposable implements IWorkbenchContribution {
+export class OpenWorkspaceInAgentsContribution
+  extends Disposable
+  implements IWorkbenchContribution
+{
+  static readonly ID = "workbench.contrib.openWorkspaceInAgents.desktop";
 
-	static readonly ID = "workbench.contrib.openWorkspaceInAgents.desktop";
-
-	constructor(
-		@IActionViewItemService actionViewItemService: IActionViewItemService,
-		@IInstantiationService instantiationService: IInstantiationService,
-		@IContextKeyService contextKeyService: IContextKeyService,
-		@IProductService productService: IProductService,
-	) {
-		super();
-		this._register(
+  constructor(
+    @IActionViewItemService actionViewItemService: IActionViewItemService,
+    @IInstantiationService instantiationService: IInstantiationService,
+    @IContextKeyService contextKeyService: IContextKeyService,
+    @IProductService productService: IProductService,
+  ) {
+    super();
+    this._register(
       actionViewItemService.register(
         MenuId.TitleBar,
         OPEN_WORKSPACE_IN_AGENTS_WINDOW_COMMAND_ID,
@@ -162,5 +184,5 @@ export class OpenWorkspaceInAgentsContribution extends Disposable implements IWo
         undefined,
       ),
     );
-	}
+  }
 }

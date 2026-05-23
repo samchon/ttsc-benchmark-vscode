@@ -17,25 +17,25 @@ import { BaseIssueReporterService } from "./baseIssueReporterService.js";
 // ref https://github.com/microsoft/vscode/issues/159191
 
 export class IssueWebReporter extends BaseIssueReporterService {
-	constructor(
-		disableExtensions: boolean,
-		data: IssueReporterData,
-		os: {
-			type: string;
-			arch: string;
-			release: string;
-		},
-		product: IProductConfiguration,
-		window: Window,
-		@IIssueFormService issueFormService: IIssueFormService,
-		@IThemeService themeService: IThemeService,
-		@IFileService fileService: IFileService,
-		@IFileDialogService fileDialogService: IFileDialogService,
-		@IContextMenuService contextMenuService: IContextMenuService,
-		@IAuthenticationService authenticationService: IAuthenticationService,
-		@IOpenerService openerService: IOpenerService,
-	) {
-		super(
+  constructor(
+    disableExtensions: boolean,
+    data: IssueReporterData,
+    os: {
+      type: string;
+      arch: string;
+      release: string;
+    },
+    product: IProductConfiguration,
+    window: Window,
+    @IIssueFormService issueFormService: IIssueFormService,
+    @IThemeService themeService: IThemeService,
+    @IFileService fileService: IFileService,
+    @IFileDialogService fileDialogService: IFileDialogService,
+    @IContextMenuService contextMenuService: IContextMenuService,
+    @IAuthenticationService authenticationService: IAuthenticationService,
+    @IOpenerService openerService: IOpenerService,
+  ) {
+    super(
       disableExtensions,
       data,
       os,
@@ -51,38 +51,43 @@ export class IssueWebReporter extends BaseIssueReporterService {
       openerService,
     );
 
-		// eslint-disable-next-line no-restricted-syntax
-		const target = this.window.document.querySelector<HTMLElement>(
+    // eslint-disable-next-line no-restricted-syntax
+    const target = this.window.document.querySelector<HTMLElement>(
       ".block-system .block-info",
     );
 
-		const webInfo = this.window.navigator.userAgent;
-		if (webInfo) {
-			target?.appendChild(this.window.document.createTextNode(webInfo));
-			this.receivedSystemInfo = true;
-			this.issueReporterModel.update({ systemInfoWeb: webInfo });
-		}
+    const webInfo = this.window.navigator.userAgent;
+    if (webInfo) {
+      target?.appendChild(this.window.document.createTextNode(webInfo));
+      this.receivedSystemInfo = true;
+      this.issueReporterModel.update({ systemInfoWeb: webInfo });
+    }
 
-		this.setEventHandlers();
-	}
+    this.setEventHandlers();
+  }
 
-	public override setEventHandlers(): void {
-		super.setEventHandlers();
+  public override setEventHandlers(): void {
+    super.setEventHandlers();
 
-		this.addEventListener("issue-type", "change", (event: Event) => {
-			const issueType = parseInt((<HTMLInputElement>event.target).value);
-			this.issueReporterModel.update({ issueType: issueType });
+    this.addEventListener("issue-type", "change", (event: Event) => {
+      const issueType = parseInt((<HTMLInputElement>event.target).value);
+      this.issueReporterModel.update({ issueType });
 
-			// Resets placeholder
-			// eslint-disable-next-line no-restricted-syntax
-			const descriptionTextArea = <HTMLInputElement>this.getElementById("issue-title");
-			if (descriptionTextArea) {
-				descriptionTextArea.placeholder = localize("undefinedPlaceholder", "Please enter a title");
-			}
+      // Resets placeholder
+      // eslint-disable-next-line no-restricted-syntax
+      const descriptionTextArea = <HTMLInputElement>(
+        this.getElementById("issue-title")
+      );
+      if (descriptionTextArea) {
+        descriptionTextArea.placeholder = localize(
+          "undefinedPlaceholder",
+          "Please enter a title",
+        );
+      }
 
-			this.updateButtonStates();
-			this.setSourceOptions();
-			this.render();
-		});
-	}
+      this.updateButtonStates();
+      this.setSourceOptions();
+      this.render();
+    });
+  }
 }

@@ -25,22 +25,25 @@ import { IsAgentHostSession } from "./agentHostSkillButtons.js";
  * that resolves the session resource via `IChatWidgetService` instead.
  */
 export class OpenSessionEventsFileAction extends Action2 {
+  static readonly ID = "agentHost.openSessionEventsFile";
 
-	static readonly ID = "agentHost.openSessionEventsFile";
-
-	constructor() {
-		super({
+  constructor() {
+    super({
       id: OpenSessionEventsFileAction.ID,
       title: localize2("openSessionEventsFile", "Open Copilot CLI State File"),
       f1: true,
       category: Categories.Developer,
-      precondition: ContextKeyExpr.and(ChatContextKeys.enabled, IsAgentHostSession),
+      precondition: ContextKeyExpr.and(
+        ChatContextKeys.enabled,
+        IsAgentHostSession,
+      ),
     });
-	}
+  }
 
-	override async run(accessor: ServicesAccessor): Promise<void> {
-		const sessionsManagementService = accessor.get(ISessionsManagementService);
-		const sessionResource = sessionsManagementService.activeSession.get()?.resource;
-		await openCopilotCliStateFile(accessor, sessionResource);
-	}
+  override async run(accessor: ServicesAccessor): Promise<void> {
+    const sessionsManagementService = accessor.get(ISessionsManagementService);
+    const sessionResource =
+      sessionsManagementService.activeSession.get()?.resource;
+    await openCopilotCliStateFile(accessor, sessionResource);
+  }
 }
