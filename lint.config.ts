@@ -2,7 +2,17 @@ import type { ITtscLintConfig } from "@ttsc/lint";
 
 export default {
   files: ["src/**/*.ts"],
-  ignores: ["**/*.d.ts"],
+  // Also list `**/*.json` so the format command's `fileIsIgnoredByEntry`
+  // path sees the explicit ignore. The format-rule upgrade in
+  // `formatCommandResolver.ResolveRules` only consults `ignores`, not
+  // `files`, so a JSON file pulled into the program by
+  // `resolveJsonModule` (e.g. `extensions/theme-defaults/themes/*.json`
+  // imported from `src/vs/workbench/test/browser/componentFixtures/
+  // fixtureUtils.ts`) would otherwise be reformatted with TypeScript
+  // rules — `trailingComma: "all"` turns the trailing `}` into `};`,
+  // which then makes the next `ttsc -p src/tsconfig.json --noEmit` fail
+  // on those JSON files.
+  ignores: ["**/*.d.ts", "**/*.json"],
   format: {
     printWidth: 80,
     tabWidth: 2,
