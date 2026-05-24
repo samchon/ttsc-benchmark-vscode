@@ -21,7 +21,7 @@ export function formatArrayValue(
   return isSimpleNameRegex.test(name) ? name : `'${name}'`;
 }
 
-export type QuotePreference = "'" | '\"' | "";
+export type QuotePreference = "'" | "\"" | "";
 
 export function getQuotePreference(
   arrayValue: ISequenceValue,

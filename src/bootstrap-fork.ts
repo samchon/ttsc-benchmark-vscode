@@ -274,5 +274,5 @@ await bootstrapESM();
 await import(
   [`./${process.env["VSCODE_ESM_ENTRYPOINT"]}.js`].join(
     "/",
-  ) /* workaround: esbuild prints some strange warnings when trying to inline? */
+  ), /* workaround: esbuild prints some strange warnings when trying to inline? */
 );

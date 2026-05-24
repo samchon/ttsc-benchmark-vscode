@@ -110,7 +110,7 @@ suite("Editor Side Editing - collapsed selection", () => {
         "}",
       ],
       [new Selection(8, 25, 8, 25)],
-      [EditOperation.replaceMove(new Range(5, 1, 5, 1), '\t\"strings\"\n')],
+      [EditOperation.replaceMove(new Range(5, 1, 5, 1), "\t\"strings\"\n")],
       [
         "package main",
         "",

@@ -37,7 +37,7 @@ function loadExternalModule(): Promise<ExternalDiffModule> {
     const url = resolveAmdNodeModulePath("@vscode/diff", "dist/index.js");
     // Use a runtime-computed URL to keep bundlers from rewriting the import.
     externalModulePromise = import(
-      /* webpackIgnore: true */ /* @vite-ignore */ `${url}`
+      /* webpackIgnore: true */ /* @vite-ignore */ `${url}`,
     ) as Promise<ExternalDiffModule>;
   }
   return externalModulePromise;

@@ -418,7 +418,7 @@ suite("renderViewLine", () => {
   // issue microsoft/monaco-editor#280: Improved source code rendering for RTL languages
   test("monaco-280", async () => {
     const lineContent =
-      'var קודמות = \"מיותר קודמות צ\'ט של, אם לשון העברית שינויים ויש, אם\";';
+      "var קודמות = \"מיותר קודמות צ'ט של, אם לשון העברית שינויים ויש, אם\";";
     const lineTokens = createViewLineTokens([
       createPart(3, 6),
       createPart(13, 1),
@@ -441,7 +441,7 @@ suite("renderViewLine", () => {
 
   // issue #137036: Issue in RTL languages in recent versions
   test("issue-137036", async () => {
-    const lineContent = '<option value=\"العربية\">العربية</option>';
+    const lineContent = "<option value=\"العربية\">العربية</option>";
     const lineTokens = createViewLineTokens([
       createPart(1, 2),
       createPart(7, 3),
@@ -471,7 +471,7 @@ suite("renderViewLine", () => {
 
   // issue #99589: Rendering whitespace influences bidi layout
   test("issue-99589", async () => {
-    const lineContent = '    [\"🖨️ چاپ فاکتور\",\"🎨 تنظیمات\"]';
+    const lineContent = "    [\"🖨️ چاپ فاکتور\",\"🎨 تنظیمات\"]";
     const lineTokens = createViewLineTokens([
       createPart(5, 2),
       createPart(21, 3),

@@ -482,13 +482,13 @@ const shellIntegrationArgs: Map<ShellIntegrationExecutable, string[]> =
 shellIntegrationArgs.set(ShellIntegrationExecutable.WindowsPwsh, [
   "-noexit",
   "-command",
-  'try { . \"{0}\\out\\vs\\workbench\\contrib\\terminal\\common\\scripts\\shellIntegration.ps1\" } catch {}{1}',
+  "try { . \"{0}\\out\\vs\\workbench\\contrib\\terminal\\common\\scripts\\shellIntegration.ps1\" } catch {}{1}",
 ]);
 shellIntegrationArgs.set(ShellIntegrationExecutable.WindowsPwshLogin, [
   "-l",
   "-noexit",
   "-command",
-  'try { . \"{0}\\out\\vs\\workbench\\contrib\\terminal\\common\\scripts\\shellIntegration.ps1\" } catch {}{1}',
+  "try { . \"{0}\\out\\vs\\workbench\\contrib\\terminal\\common\\scripts\\shellIntegration.ps1\" } catch {}{1}",
 ]);
 shellIntegrationArgs.set(ShellIntegrationExecutable.Pwsh, [
   "-noexit",

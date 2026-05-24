@@ -950,7 +950,7 @@ suite("PromptValidator", () => {
     test("agent with handoffs attribute", async () => {
       const content = [
         "---",
-        'description: \"Test agent with handoffs\"',
+        "description: \"Test agent with handoffs\"",
         `handoffs:`,
         "  - label: Test Prompt",
         "    agent: agent",

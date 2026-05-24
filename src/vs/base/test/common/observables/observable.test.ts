@@ -1301,7 +1301,7 @@ suite("observables", () => {
       await p;
 
       assert.deepStrictEqual(log.getAndClearEntries(), [
-        'resolved {\"state\":\"ready\"}',
+        "resolved {\"state\":\"ready\"}",
       ]);
     });
 
@@ -1341,7 +1341,7 @@ suite("observables", () => {
       await p;
 
       assert.deepStrictEqual(log.getAndClearEntries(), [
-        'resolved {\"state\":\"ready\"}',
+        "resolved {\"state\":\"ready\"}",
       ]);
     });
 
@@ -1382,7 +1382,7 @@ suite("observables", () => {
       await p;
 
       assert.deepStrictEqual(log.getAndClearEntries(), [
-        'rejected {\"state\":\"error\"}',
+        "rejected {\"state\":\"error\"}",
       ]);
     });
 

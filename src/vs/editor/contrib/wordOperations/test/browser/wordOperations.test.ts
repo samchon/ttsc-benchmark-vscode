@@ -1037,7 +1037,7 @@ suite("WordOperations", () => {
     disposables.add(languageService.registerLanguage({ id: languageId }));
     disposables.add(
       languageConfigurationService.register(languageId, {
-        autoClosingPairs: [{ open: '\"', close: '\"' }],
+        autoClosingPairs: [{ open: "\"", close: "\"" }],
       }),
     );
 

@@ -181,7 +181,7 @@ suite("OpenerService", function () {
     store.add(CommandsRegistry.registerCommand(id, function () {}));
 
     await openerService.open(
-      URI.parse("command:" + id).with({ query: '\"123\"' }),
+      URI.parse("command:" + id).with({ query: "\"123\"" }),
       { allowCommands: true },
     );
     assert.strictEqual(lastCommand!.id, id);

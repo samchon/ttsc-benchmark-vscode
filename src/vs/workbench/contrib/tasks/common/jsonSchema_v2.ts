@@ -244,7 +244,7 @@ const presentation: IJSONSchema = {
       default: "never",
       description: nls.localize(
         "JsonSchema.tasks.presentation.revealProblems",
-        'Controls whether the problems panel is revealed when running this task or not. Takes precedence over option \"reveal\". Default is \"never\".',
+        "Controls whether the problems panel is revealed when running this task or not. Takes precedence over option \"reveal\". Default is \"never\".",
       ),
     },
     reveal: {
@@ -267,7 +267,7 @@ const presentation: IJSONSchema = {
       default: "always",
       description: nls.localize(
         "JsonSchema.tasks.presentation.reveal",
-        'Controls whether the terminal running the task is revealed or not. May be overridden by option \"revealProblems\". Default is \"always\".',
+        "Controls whether the terminal running the task is revealed or not. May be overridden by option \"revealProblems\". Default is \"always\".",
       ),
     },
     panel: {

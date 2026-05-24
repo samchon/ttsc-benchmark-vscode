@@ -3150,7 +3150,7 @@ abstract class MemoryBreakpointAction extends Action2 {
         return {
           error: localize(
             "dataBreakpointAddrStartEnd",
-            'Number must be a decimal integer or hex value starting with \"0x\", got {0}',
+            "Number must be a decimal integer or hex value starting with \"0x\", got {0}",
             n,
           ),
         };

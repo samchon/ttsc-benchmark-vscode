@@ -319,7 +319,7 @@ export function createScanner(
         const ch2 = text.charCodeAt(pos++);
         switch (ch2) {
           case CharacterCodes.doubleQuote:
-            result += '\"';
+            result += "\"";
             break;
           case CharacterCodes.backslash:
             result += "\\";

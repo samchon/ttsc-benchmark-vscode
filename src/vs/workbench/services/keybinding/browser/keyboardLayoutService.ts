@@ -577,7 +577,7 @@ export class BrowserKeyboardMapperFactory extends BrowserKeyboardMapperFactoryBa
     import(
       /* webpackIgnore: true */ FileAccess.asBrowserUri(
         `vs/workbench/services/keybinding/browser/keyboardLayouts/layout.contribution.${platform}.js` satisfies AppResourcePath,
-      ).path
+      ).path,
     ).then((m) => {
       const keymapInfos: IKeymapInfo[] =
         m.KeyboardLayoutContribution.INSTANCE.layoutInfos;

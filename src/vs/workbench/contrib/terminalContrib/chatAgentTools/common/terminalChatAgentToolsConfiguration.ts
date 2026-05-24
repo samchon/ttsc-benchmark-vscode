@@ -147,19 +147,19 @@ export const terminalChatAgentToolsConfiguration: IStringDictionary<IConfigurati
           localize("autoApprove.description.examples.title", "Examples:"),
           `|${localize("autoApprove.description.examples.value", "Value")}|${localize("autoApprove.description.examples.description", "Description")}|`,
           "|---|---|",
-          '| `\"mkdir\": true` | ' +
+          "| `\"mkdir\": true` | " +
             localize(
               "autoApprove.description.examples.mkdir",
               "Allow all commands starting with {0}",
               "`mkdir`",
             ),
-          '| `\"npm run build\": true` | ' +
+          "| `\"npm run build\": true` | " +
             localize(
               "autoApprove.description.examples.npmRunBuild",
               "Allow all commands starting with {0}",
               "`npm run build`",
             ),
-          '| `\"bin/test.sh\": true` | ' +
+          "| `\"bin/test.sh\": true` | " +
             localize(
               "autoApprove.description.examples.binTest",
               "Allow all commands that match the path {0} ({1}, {2}, etc.)",
@@ -167,37 +167,37 @@ export const terminalChatAgentToolsConfiguration: IStringDictionary<IConfigurati
               "`bin\\test.sh`",
               "`./bin/test.sh`",
             ),
-          '| `\"/^git (status\\|show\\\\b.*)$/\": true` | ' +
+          "| `\"/^git (status\\|show\\\\b.*)$/\": true` | " +
             localize(
               "autoApprove.description.examples.regexGit",
               "Allow {0} and all commands starting with {1}",
               "`git status`",
               "`git show`",
             ),
-          '| `\"/^Get-ChildItem\\\\b/i\": true` | ' +
+          "| `\"/^Get-ChildItem\\\\b/i\": true` | " +
             localize(
               "autoApprove.description.examples.regexCase",
               "will allow {0} commands regardless of casing",
               "`Get-ChildItem`",
             ),
-          '| `\"/.*/\": true` | ' +
+          "| `\"/.*/\": true` | " +
             localize(
               "autoApprove.description.examples.regexAll",
               "Allow all commands (denied commands still require approval)",
             ),
-          '| `\"rm\": false` | ' +
+          "| `\"rm\": false` | " +
             localize(
               "autoApprove.description.examples.rm",
               "Require explicit approval for all commands starting with {0}",
               "`rm`",
             ),
-          '| `\"/\\\\.ps1/i\": { approve: false, matchCommandLine: true }` | ' +
+          "| `\"/\\\\.ps1/i\": { approve: false, matchCommandLine: true }` | " +
             localize(
               "autoApprove.description.examples.ps1",
               "Require explicit approval for any _command line_ that contains {0} regardless of casing",
               '`".ps1"`',
             ),
-          '| `\"rm\": null` | ' +
+          "| `\"rm\": null` | " +
             localize(
               "autoApprove.description.examples.rmUnset",
               "Unset the default {0} value for {1}",
