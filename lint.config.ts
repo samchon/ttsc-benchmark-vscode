@@ -13,8 +13,8 @@ export default {
     eqeqeq: "error",
     "object-shorthand": "error",
     "no-useless-rename": "error",
-    "prefer-as-const": "error",
-    "prefer-namespace-keyword": "error",
+    "typescript/prefer-as-const": "error",
+    "typescript/prefer-namespace-keyword": "error",
     // Disable format/print-width: its line-breaking decisions diverge from
     // prettier 3 on multi-arg call boundary cases (e.g. an 80-column call
     // that prettier keeps inline but ttsc-lint re-breaks across 4-5 lines).
