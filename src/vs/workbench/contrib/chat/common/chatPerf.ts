@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { mark, clearMarks } from '../../../../base/common/performance.js';
-import { URI } from '../../../../base/common/uri.js';
-import { chatSessionResourceToId } from './model/chatUri.js';
+import { mark, clearMarks } from "../../../../base/common/performance.js";
+import { URI } from "../../../../base/common/uri.js";
+import { chatSessionResourceToId } from "./model/chatUri.js";
 
-const chatPerfPrefix = 'code/chat/';
+const chatPerfPrefix = "code/chat/";
 
 /** Tracks all mark names emitted per session so they can be cleared individually. */
 const chatMarksBySession = new Map<string, Set<string>>();
@@ -39,22 +39,22 @@ const chatMarksBySession = new Map<string, Set<string>>();
  *   `agent/willInvoke` → `agent/didInvoke`
  */
 export const ChatPerfMark = {
-	/** User pressed Enter / request initiated */
-	RequestStart: 'request/start',
-	/** Request added to model → UI shows the message */
-	RequestUiUpdated: 'request/uiUpdated',
-	/** Begin collecting .instructions.md / skills / hooks */
-	WillCollectInstructions: 'request/willCollectInstructions',
-	/** Done collecting instructions */
-	DidCollectInstructions: 'request/didCollectInstructions',
-	/** First streamed response content received */
-	FirstToken: 'request/firstToken',
-	/** Response fully complete */
-	RequestComplete: 'request/complete',
-	/** Agent invoke begins (LLM round-trip start) */
-	AgentWillInvoke: 'agent/willInvoke',
-	/** Agent invoke returns (LLM round-trip end) */
-	AgentDidInvoke: 'agent/didInvoke',
+  /** User pressed Enter / request initiated */
+  RequestStart: "request/start",
+  /** Request added to model → UI shows the message */
+  RequestUiUpdated: "request/uiUpdated",
+  /** Begin collecting .instructions.md / skills / hooks */
+  WillCollectInstructions: "request/willCollectInstructions",
+  /** Done collecting instructions */
+  DidCollectInstructions: "request/didCollectInstructions",
+  /** First streamed response content received */
+  FirstToken: "request/firstToken",
+  /** Response fully complete */
+  RequestComplete: "request/complete",
+  /** Agent invoke begins (LLM round-trip start) */
+  AgentWillInvoke: "agent/willInvoke",
+  /** Agent invoke returns (LLM round-trip end) */
+  AgentDidInvoke: "agent/didInvoke",
 } as const;
 
 /**
@@ -65,15 +65,15 @@ export const ChatPerfMark = {
  * disposed — see {@link clearChatMarks}.
  */
 export function markChat(sessionResource: URI, name: string): void {
-	const sessionId = chatSessionResourceToId(sessionResource);
-	const fullName = `${chatPerfPrefix}${sessionId}/${name}`;
-	let names = chatMarksBySession.get(sessionId);
-	if (!names) {
-		names = new Set();
-		chatMarksBySession.set(sessionId, names);
-	}
-	names.add(fullName);
-	mark(fullName);
+  const sessionId = chatSessionResourceToId(sessionResource);
+  const fullName = `${chatPerfPrefix}${sessionId}/${name}`;
+  let names = chatMarksBySession.get(sessionId);
+  if (!names) {
+    names = new Set();
+    chatMarksBySession.set(sessionId, names);
+  }
+  names.add(fullName);
+  mark(fullName);
 }
 
 /**
@@ -81,14 +81,14 @@ export function markChat(sessionResource: URI, name: string): void {
  * Called when the chat model is disposed.
  */
 export function clearChatMarks(sessionResource: URI): void {
-	const sessionId = chatSessionResourceToId(sessionResource);
-	const names = chatMarksBySession.get(sessionId);
-	if (names) {
-		for (const name of names) {
-			clearMarks(name);
-		}
-		chatMarksBySession.delete(sessionId);
-	}
+  const sessionId = chatSessionResourceToId(sessionResource);
+  const names = chatMarksBySession.get(sessionId);
+  if (names) {
+    for (const name of names) {
+      clearMarks(name);
+    }
+    chatMarksBySession.delete(sessionId);
+  }
 }
 
 /**
@@ -96,10 +96,10 @@ export function clearChatMarks(sessionResource: URI): void {
  * These are emitted via {@link markChatGlobal} and are never cleared.
  */
 export const ChatGlobalPerfMark = {
-	/** Begin waiting for chat extension activation (SetupAgent) */
-	WillWaitForActivation: 'willWaitForActivation',
-	/** Extension activation + readiness complete (SetupAgent) */
-	DidWaitForActivation: 'didWaitForActivation',
+  /** Begin waiting for chat extension activation (SetupAgent) */
+  WillWaitForActivation: "willWaitForActivation",
+  /** Extension activation + readiness complete (SetupAgent) */
+  DidWaitForActivation: "didWaitForActivation",
 } as const;
 
 /**
@@ -109,5 +109,5 @@ export const ChatGlobalPerfMark = {
  * Used for one-time marks like activation that should persist across requests.
  */
 export function markChatGlobal(name: string): void {
-	mark(`${chatPerfPrefix}${name}`);
+  mark(`${chatPerfPrefix}${name}`);
 }

@@ -8,15 +8,15 @@
  * in the common layer. The actual type should match @vscode/sandbox-runtime.
  */
 export interface ITerminalSandboxRuntimeConfig {
-	network?: {
-		allowedDomains?: string[];
-		deniedDomains?: string[];
-		enabled?: boolean;
-	};
-	filesystem?: {
-		denyRead?: string[];
-		allowRead?: string[];
-		allowWrite?: string[];
-		denyWrite?: string[];
-	};
+  network?: {
+    allowedDomains?: string[];
+    deniedDomains?: string[];
+    enabled?: boolean;
+  };
+  filesystem?: {
+    denyRead?: string[];
+    allowRead?: string[];
+    allowWrite?: string[];
+    denyWrite?: string[];
+  };
 }

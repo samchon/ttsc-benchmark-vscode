@@ -3,21 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+import { Event } from "../../../../base/common/event.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
 
-export const IOnboardingService = createDecorator<IOnboardingService>('onboardingService');
+export const IOnboardingService =
+  createDecorator<IOnboardingService>("onboardingService");
 
 export interface IOnboardingService {
-	readonly _serviceBrand: undefined;
+  readonly _serviceBrand: undefined;
 
-	/**
-	 * Fires when the onboarding modal is dismissed.
-	 */
-	readonly onDidDismiss: Event<void>;
+  /**
+   * Fires when the onboarding modal is dismissed.
+   */
+  readonly onDidDismiss: Event<void>;
 
-	/**
-	 * Show the onboarding modal.
-	 */
-	show(): void;
+  /**
+   * Show the onboarding modal.
+   */
+  show(): void;
 }

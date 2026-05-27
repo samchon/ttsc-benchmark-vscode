@@ -3,10 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IToolResult } from './languageModelToolsService.js';
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IToolResult } from "./languageModelToolsService.js";
 
-export const IToolResultCompressor = createDecorator<IToolResultCompressor>('IToolResultCompressor');
+export const IToolResultCompressor = createDecorator<IToolResultCompressor>(
+  "IToolResultCompressor",
+);
 
 /**
  * Result of running a {@link IToolResultFilter}.
@@ -16,8 +18,8 @@ export const IToolResultCompressor = createDecorator<IToolResultCompressor>('ITo
  * for telemetry / accounting.
  */
 export interface IToolResultFilterOutput {
-	readonly text: string;
-	readonly compressed: boolean;
+  readonly text: string;
+  readonly compressed: boolean;
 }
 
 /**
@@ -28,25 +30,25 @@ export interface IToolResultFilterOutput {
  * `compressed: false`.
  */
 export interface IToolResultFilter {
-	readonly id: string;
-	/** Tool ids this filter applies to. */
-	readonly toolIds: readonly string[];
-	/**
-	 * Decide whether this filter wants to handle the result. May inspect tool
-	 * input (e.g. for `run_in_terminal`, the command being run).
-	 */
-	matches(toolId: string, input: unknown): boolean;
-	apply(text: string, input: unknown): IToolResultFilterOutput;
+  readonly id: string;
+  /** Tool ids this filter applies to. */
+  readonly toolIds: readonly string[];
+  /**
+   * Decide whether this filter wants to handle the result. May inspect tool
+   * input (e.g. for `run_in_terminal`, the command being run).
+   */
+  matches(toolId: string, input: unknown): boolean;
+  apply(text: string, input: unknown): IToolResultFilterOutput;
 }
 
 /**
  * Result of looking up a tool invocation in an {@link IToolResultCache}.
  */
 export interface IToolResultCacheHit {
-	/** The cached output content from the previous run. */
-	readonly text: string;
-	/** Wall-clock timestamp (ms since epoch) of when the cached entry was produced. */
-	readonly timestamp: number;
+  /** The cached output content from the previous run. */
+  readonly text: string;
+  /** Wall-clock timestamp (ms since epoch) of when the cached entry was produced. */
+  readonly timestamp: number;
 }
 
 /**
@@ -63,22 +65,26 @@ export interface IToolResultCacheHit {
  *      cache can store the (possibly compressed) output.
  */
 export interface IToolResultCache {
-	readonly id: string;
-	readonly toolIds: readonly string[];
-	observe(toolId: string, input: unknown): void;
-	lookup(toolId: string, input: unknown): IToolResultCacheHit | undefined;
-	record(toolId: string, input: unknown, text: string): void;
+  readonly id: string;
+  readonly toolIds: readonly string[];
+  observe(toolId: string, input: unknown): void;
+  lookup(toolId: string, input: unknown): IToolResultCacheHit | undefined;
+  record(toolId: string, input: unknown, text: string): void;
 }
 
 export interface IToolResultCompressor {
-	readonly _serviceBrand: undefined;
-	registerFilter(filter: IToolResultFilter): void;
-	registerCache(cache: IToolResultCache): void;
-	/**
-	 * Returns a possibly-compressed copy of `result`, or `undefined` if no
-	 * compression was applied (caller should pass through the original).
-	 */
-	maybeCompress(toolId: string, input: unknown, result: IToolResult): IToolResult | undefined;
+  readonly _serviceBrand: undefined;
+  registerFilter(filter: IToolResultFilter): void;
+  registerCache(cache: IToolResultCache): void;
+  /**
+   * Returns a possibly-compressed copy of `result`, or `undefined` if no
+   * compression was applied (caller should pass through the original).
+   */
+  maybeCompress(
+    toolId: string,
+    input: unknown,
+    result: IToolResult,
+  ): IToolResult | undefined;
 }
 
 /**
@@ -98,28 +104,31 @@ export interface IToolResultCompressor {
  * payloads.
  */
 export function isProtectedFromCompression(text: string): boolean {
-	const trimmed = text.trim();
-	if (!trimmed) {
-		return false;
-	}
-	// Top-level JSON object or array — refuse to touch.
-	const first = trimmed[0];
-	const last = trimmed[trimmed.length - 1];
-	if ((first === '{' && last === '}') || (first === '[' && last === ']')) {
-		try {
-			JSON.parse(trimmed);
-			return true;
-		} catch {
-			// fall through
-		}
-	}
-	// TOML / YAML-style documents at the top level: a line `---` opener or
-	// a file-level table header like `[section]`.
-	// These are cheap heuristics — we don't try to parse YAML/TOML.
-	if (/^---\s*\n/.test(trimmed) || /^\[[A-Za-z_][A-Za-z0-9_.-]*\]\s*\n/.test(trimmed)) {
-		return true;
-	}
-	return false;
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return false;
+  }
+  // Top-level JSON object or array — refuse to touch.
+  const first = trimmed[0];
+  const last = trimmed[trimmed.length - 1];
+  if ((first === "{" && last === "}") || (first === "[" && last === "]")) {
+    try {
+      JSON.parse(trimmed);
+      return true;
+    } catch {
+      // fall through
+    }
+  }
+  // TOML / YAML-style documents at the top level: a line `---` opener or
+  // a file-level table header like `[section]`.
+  // These are cheap heuristics — we don't try to parse YAML/TOML.
+  if (
+    /^---\s*\n/.test(trimmed) ||
+    /^\[[A-Za-z_][A-Za-z0-9_.-]*\]\s*\n/.test(trimmed)
+  ) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -135,7 +144,11 @@ export const MIN_COMPRESSIBLE_LENGTH = 1024;
  * Format the banner that gets prepended to compressed text parts so the
  * model knows compression happened, which filters fired, and how to opt out.
  */
-export function formatCompressionBanner(filterIds: readonly string[], beforeChars: number, afterChars: number): string {
-	const ids = filterIds.length > 0 ? filterIds.join(', ') : 'unknown';
-	return `[Output compressed by ${ids} (${beforeChars} → ${afterChars} chars). To disable, set chat.tools.compressOutput.enabled to false.]`;
+export function formatCompressionBanner(
+  filterIds: readonly string[],
+  beforeChars: number,
+  afterChars: number,
+): string {
+  const ids = filterIds.length > 0 ? filterIds.join(", ") : "unknown";
+  return `[Output compressed by ${ids} (${beforeChars} → ${afterChars} chars). To disable, set chat.tools.compressOutput.enabled to false.]`;
 }

@@ -19,17 +19,17 @@
  */
 
 export {
-	captureGlobalTimeApi,
-	createLoggingTimeApi,
-	createVirtualTimeApi,
-	pushGlobalTimeApi,
-	realTimeApi as originalGlobalValues,
-	runWithFakedTimers,
-	VirtualClock as TimeTravelScheduler,
-} from './virtualScheduling/index.js';
+  captureGlobalTimeApi,
+  createLoggingTimeApi,
+  createVirtualTimeApi,
+  pushGlobalTimeApi,
+  realTimeApi as originalGlobalValues,
+  runWithFakedTimers,
+  VirtualClock as TimeTravelScheduler,
+} from "./virtualScheduling/index.js";
 
 export type {
-	CreateVirtualTimeApiOptions,
-	RunWithFakedTimersOptions,
-	TimeApi,
-} from './virtualScheduling/index.js';
+  CreateVirtualTimeApiOptions,
+  RunWithFakedTimersOptions,
+  TimeApi,
+} from "./virtualScheduling/index.js";

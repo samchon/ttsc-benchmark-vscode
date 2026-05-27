@@ -3,22 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
-import type { URI } from '../../../../base/common/uri.js';
-import type { AgentSignal, IAgentSubagentStartedSignal } from '../../common/agentService.js';
-import { ActionType } from '../../common/state/sessionActions.js';
-import { ResponsePartKind, ToolCallConfirmationReason } from '../../common/state/sessionState.js';
-import type { ClaudeMapperState } from './claudeMapSessionEvents.js';
-import { SUBAGENT_TOOL_NAMES, type SubagentRegistry } from './claudeSubagentRegistry.js';
-import { buildClaudeToolMeta, getClaudeInvocationMessage, getClaudeToolDisplayName, getClaudeToolInputString } from './claudeToolDisplay.js';
-import { stripClientToolNamePrefix } from './clientTools/claudeClientToolMcpServer.js';
+import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk";
+import type { URI } from "../../../../base/common/uri.js";
+import type {
+  AgentSignal,
+  IAgentSubagentStartedSignal,
+} from "../../common/agentService.js";
+import { ActionType } from "../../common/state/sessionActions.js";
+import {
+  ResponsePartKind,
+  ToolCallConfirmationReason,
+} from "../../common/state/sessionState.js";
+import type { ClaudeMapperState } from "./claudeMapSessionEvents.js";
+import {
+  SUBAGENT_TOOL_NAMES,
+  type SubagentRegistry,
+} from "./claudeSubagentRegistry.js";
+import {
+  buildClaudeToolMeta,
+  getClaudeInvocationMessage,
+  getClaudeToolDisplayName,
+  getClaudeToolInputString,
+} from "./claudeToolDisplay.js";
+import { stripClientToolNamePrefix } from "./clientTools/claudeClientToolMcpServer.js";
 
 /**
  * Phase 12 — SDK tool names that spawn subagent sessions. Re-exported
  * from the registry's canonical set so callers can keep importing it
  * from this signals module (the live mapper, replay handling, etc.).
  */
-export const SUBAGENT_SPAWNING_TOOL_NAMES: ReadonlySet<string> = SUBAGENT_TOOL_NAMES;
+export const SUBAGENT_SPAWNING_TOOL_NAMES: ReadonlySet<string> =
+  SUBAGENT_TOOL_NAMES;
 
 /**
  * Phase 12 — post-process the signals produced from a single SDK
@@ -36,36 +51,36 @@ export const SUBAGENT_SPAWNING_TOOL_NAMES: ReadonlySet<string> = SUBAGENT_TOOL_N
  * metadata yet, falls back to the literal `"subagent"` / `"Subagent"`.
  */
 export function tagWithParent(
-	signals: AgentSignal[],
-	session: URI,
-	parentToolUseId: string | null,
-	registry: SubagentRegistry,
+  signals: AgentSignal[],
+  session: URI,
+  parentToolUseId: string | null,
+  registry: SubagentRegistry,
 ): AgentSignal[] {
-	if (!parentToolUseId) {
-		return signals;
-	}
-	const tagged: AgentSignal[] = signals.map(s => {
-		if (s.kind === 'action') {
-			return { ...s, parentToolCallId: parentToolUseId };
-		}
-		if (s.kind === 'pending_confirmation') {
-			return { ...s, parentToolCallId: parentToolUseId };
-		}
-		return s;
-	});
-	const spawn = registry.getSpawn(parentToolUseId);
-	if (!spawn || !spawn.markAnnounced()) {
-		return tagged;
-	}
-	const started: IAgentSubagentStartedSignal = {
-		kind: 'subagent_started',
-		session,
-		toolCallId: parentToolUseId,
-		agentName: spawn.subagentType ?? 'subagent',
-		agentDisplayName: spawn.subagentType ?? 'Subagent',
-		agentDescription: spawn.description,
-	};
-	return [started, ...tagged];
+  if (!parentToolUseId) {
+    return signals;
+  }
+  const tagged: AgentSignal[] = signals.map((s) => {
+    if (s.kind === "action") {
+      return { ...s, parentToolCallId: parentToolUseId };
+    }
+    if (s.kind === "pending_confirmation") {
+      return { ...s, parentToolCallId: parentToolUseId };
+    }
+    return s;
+  });
+  const spawn = registry.getSpawn(parentToolUseId);
+  if (!spawn || !spawn.markAnnounced()) {
+    return tagged;
+  }
+  const started: IAgentSubagentStartedSignal = {
+    kind: "subagent_started",
+    session,
+    toolCallId: parentToolUseId,
+    agentName: spawn.subagentType ?? "subagent",
+    agentDisplayName: spawn.subagentType ?? "Subagent",
+    agentDescription: spawn.description,
+  };
+  return [started, ...tagged];
 }
 
 /**
@@ -81,37 +96,37 @@ export function tagWithParent(
  * system handling stays in the mapper proper.
  */
 export function mapSubagentSystemMessage(
-	message: Extract<SDKMessage, { type: 'system' }>,
-	session: URI,
-	registry: SubagentRegistry,
+  message: Extract<SDKMessage, { type: "system" }>,
+  session: URI,
+  registry: SubagentRegistry,
 ): AgentSignal[] {
-	const sub = (message as { subtype?: string }).subtype;
-	if (sub === 'task_started') {
-		const toolUseId = (message as { tool_use_id?: string }).tool_use_id;
-		const spawn = toolUseId ? registry.getSpawn(toolUseId) : undefined;
-		if (spawn) {
-			spawn.background = true;
-		}
-		return [];
-	}
-	if (sub === 'task_notification') {
-		const m = message as { tool_use_id?: string; status?: string };
-		if (!m.tool_use_id) {
-			return [];
-		}
-		const status = m.status;
-		if (status !== 'completed' && status !== 'failed' && status !== 'stopped') {
-			return [];
-		}
-		const spawn = registry.getSpawn(m.tool_use_id);
-		if (!spawn || !spawn.markCompleted()) {
-			return [];
-		}
-		const toolUseId = m.tool_use_id;
-		registry.removeSpawn(toolUseId);
-		return [{ kind: 'subagent_completed', session, toolCallId: toolUseId }];
-	}
-	return [];
+  const sub = (message as { subtype?: string }).subtype;
+  if (sub === "task_started") {
+    const toolUseId = (message as { tool_use_id?: string }).tool_use_id;
+    const spawn = toolUseId ? registry.getSpawn(toolUseId) : undefined;
+    if (spawn) {
+      spawn.background = true;
+    }
+    return [];
+  }
+  if (sub === "task_notification") {
+    const m = message as { tool_use_id?: string; status?: string };
+    if (!m.tool_use_id) {
+      return [];
+    }
+    const status = m.status;
+    if (status !== "completed" && status !== "failed" && status !== "stopped") {
+      return [];
+    }
+    const spawn = registry.getSpawn(m.tool_use_id);
+    if (!spawn || !spawn.markCompleted()) {
+      return [];
+    }
+    const toolUseId = m.tool_use_id;
+    registry.removeSpawn(toolUseId);
+    return [{ kind: "subagent_completed", session, toolCallId: toolUseId }];
+  }
+  return [];
 }
 
 /**
@@ -136,36 +151,48 @@ export function mapSubagentSystemMessage(
  *     `_meta.subagentAgentName`.
  */
 export function buildTopLevelSubagentReadyAction(
-	block: Extract<import('@anthropic-ai/claude-agent-sdk').SDKAssistantMessage['message']['content'][number], { type: 'tool_use' }>,
-	session: URI,
-	turnId: string,
-	registry: SubagentRegistry,
+  block: Extract<
+    import("@anthropic-ai/claude-agent-sdk").SDKAssistantMessage["message"]["content"][number],
+    { type: "tool_use" }
+  >,
+  session: URI,
+  turnId: string,
+  registry: SubagentRegistry,
 ): AgentSignal {
-	const input = block.input as Record<string, unknown> | undefined;
-	const description = typeof input?.description === 'string' ? input.description : undefined;
-	const agentName = typeof input?.subagent_type === 'string' ? input.subagent_type : undefined;
-	const inputJson = block.input !== undefined ? safeStringify(block.input) : undefined;
-	registry.recordSpawn(block.id, { subagentType: agentName, description });
-	const meta: Record<string, unknown> = { ...(buildClaudeToolMeta(block.name) ?? { toolKind: 'subagent' }) };
-	if (description) {
-		meta.subagentDescription = description;
-	}
-	if (agentName) {
-		meta.subagentAgentName = agentName;
-	}
-	return {
-		kind: 'action',
-		session,
-		action: {
-			type: ActionType.SessionToolCallReady,
-			turnId,
-			toolCallId: block.id,
-			invocationMessage: getClaudeInvocationMessage(block.name, getClaudeToolDisplayName(block.name), block.input),
-			...(inputJson !== undefined ? { toolInput: inputJson } : {}),
-			confirmed: ToolCallConfirmationReason.NotNeeded,
-			_meta: meta,
-		},
-	};
+  const input = block.input as Record<string, unknown> | undefined;
+  const description =
+    typeof input?.description === "string" ? input.description : undefined;
+  const agentName =
+    typeof input?.subagent_type === "string" ? input.subagent_type : undefined;
+  const inputJson =
+    block.input !== undefined ? safeStringify(block.input) : undefined;
+  registry.recordSpawn(block.id, { subagentType: agentName, description });
+  const meta: Record<string, unknown> = {
+    ...(buildClaudeToolMeta(block.name) ?? { toolKind: "subagent" }),
+  };
+  if (description) {
+    meta.subagentDescription = description;
+  }
+  if (agentName) {
+    meta.subagentAgentName = agentName;
+  }
+  return {
+    kind: "action",
+    session,
+    action: {
+      type: ActionType.SessionToolCallReady,
+      turnId,
+      toolCallId: block.id,
+      invocationMessage: getClaudeInvocationMessage(
+        block.name,
+        getClaudeToolDisplayName(block.name),
+        block.input,
+      ),
+      ...(inputJson !== undefined ? { toolInput: inputJson } : {}),
+      confirmed: ToolCallConfirmationReason.NotNeeded,
+      _meta: meta,
+    },
+  };
 }
 
 /**
@@ -189,103 +216,107 @@ export function buildTopLevelSubagentReadyAction(
  * responsible for stamping `parentToolCallId` on every action.
  */
 export function emitInnerAssistantSignals(
-	message: Extract<SDKMessage, { type: 'assistant' }>,
-	session: URI,
-	turnId: string,
-	state: ClaudeMapperState,
-	parentToolUseId: string,
-	registry: SubagentRegistry,
+  message: Extract<SDKMessage, { type: "assistant" }>,
+  session: URI,
+  turnId: string,
+  state: ClaudeMapperState,
+  parentToolUseId: string,
+  registry: SubagentRegistry,
 ): AgentSignal[] {
-	const messageId = message.message.id;
-	const signals: AgentSignal[] = [];
-	for (let index = 0; index < message.message.content.length; index++) {
-		const block = message.message.content[index];
-		if (block.type === 'text') {
-			signals.push({
-				kind: 'action',
-				session,
-				action: {
-					type: ActionType.SessionResponsePart,
-					turnId,
-					part: {
-						kind: ResponsePartKind.Markdown,
-						id: `${turnId}#${messageId}#${index}`,
-						content: block.text,
-					},
-				},
-			});
-			continue;
-		}
-		if (block.type === 'thinking') {
-			signals.push({
-				kind: 'action',
-				session,
-				action: {
-					type: ActionType.SessionResponsePart,
-					turnId,
-					part: {
-						kind: ResponsePartKind.Reasoning,
-						id: `${turnId}#${messageId}#${index}`,
-						content: block.thinking,
-					},
-				},
-			});
-			continue;
-		}
-		if (block.type === 'tool_use') {
-			// Strip the in-process MCP server prefix so subagent client-tool
-			// calls render with their real name (matches the top-level stream
-			// mapper). SDK-owned tools and Task/Agent passes through unchanged.
-			const toolName = stripClientToolNamePrefix(block.name);
-			state.startToolBlock(index, block.id, toolName, turnId);
-			// Inner tool input arrives pre-parsed on the synthesized
-			// `assistant` message (not via `input_json_delta` chunks), so
-			// seed the registry directly. Without this the live
-			// `tool_result` handler falls back to a generic
-			// `"{displayName} finished"` past-tense and replay (which
-			// always computes rich text) drifts from live — violating D6.
-			state.toolCalls.seedParsedInput(block.id, block.input);
-			registry.noteInnerTool(block.id, parentToolUseId);
-			const displayName = getClaudeToolDisplayName(toolName);
-			const meta = buildClaudeToolMeta(toolName);
-			const toolInputStr = getClaudeToolInputString(toolName, block.input);
-			signals.push({
-				kind: 'action',
-				session,
-				action: {
-					type: ActionType.SessionToolCallStart,
-					turnId,
-					toolCallId: block.id,
-					toolName,
-					displayName,
-					...(meta ? { _meta: meta } : {}),
-				},
-			});
-			signals.push({
-				kind: 'action',
-				session,
-				action: {
-					type: ActionType.SessionToolCallReady,
-					turnId,
-					toolCallId: block.id,
-					invocationMessage: getClaudeInvocationMessage(toolName, displayName, block.input),
-					...(toolInputStr !== undefined ? { toolInput: toolInputStr } : {}),
-					confirmed: ToolCallConfirmationReason.NotNeeded,
-				},
-			});
-			continue;
-		}
-		// Unknown inner block kind — skip silently (caller will trace at
-		// the mapper level if needed; we don't want to import ILogService
-		// here just for one trace).
-	}
-	return signals;
+  const messageId = message.message.id;
+  const signals: AgentSignal[] = [];
+  for (let index = 0; index < message.message.content.length; index++) {
+    const block = message.message.content[index];
+    if (block.type === "text") {
+      signals.push({
+        kind: "action",
+        session,
+        action: {
+          type: ActionType.SessionResponsePart,
+          turnId,
+          part: {
+            kind: ResponsePartKind.Markdown,
+            id: `${turnId}#${messageId}#${index}`,
+            content: block.text,
+          },
+        },
+      });
+      continue;
+    }
+    if (block.type === "thinking") {
+      signals.push({
+        kind: "action",
+        session,
+        action: {
+          type: ActionType.SessionResponsePart,
+          turnId,
+          part: {
+            kind: ResponsePartKind.Reasoning,
+            id: `${turnId}#${messageId}#${index}`,
+            content: block.thinking,
+          },
+        },
+      });
+      continue;
+    }
+    if (block.type === "tool_use") {
+      // Strip the in-process MCP server prefix so subagent client-tool
+      // calls render with their real name (matches the top-level stream
+      // mapper). SDK-owned tools and Task/Agent passes through unchanged.
+      const toolName = stripClientToolNamePrefix(block.name);
+      state.startToolBlock(index, block.id, toolName, turnId);
+      // Inner tool input arrives pre-parsed on the synthesized
+      // `assistant` message (not via `input_json_delta` chunks), so
+      // seed the registry directly. Without this the live
+      // `tool_result` handler falls back to a generic
+      // `"{displayName} finished"` past-tense and replay (which
+      // always computes rich text) drifts from live — violating D6.
+      state.toolCalls.seedParsedInput(block.id, block.input);
+      registry.noteInnerTool(block.id, parentToolUseId);
+      const displayName = getClaudeToolDisplayName(toolName);
+      const meta = buildClaudeToolMeta(toolName);
+      const toolInputStr = getClaudeToolInputString(toolName, block.input);
+      signals.push({
+        kind: "action",
+        session,
+        action: {
+          type: ActionType.SessionToolCallStart,
+          turnId,
+          toolCallId: block.id,
+          toolName,
+          displayName,
+          ...(meta ? { _meta: meta } : {}),
+        },
+      });
+      signals.push({
+        kind: "action",
+        session,
+        action: {
+          type: ActionType.SessionToolCallReady,
+          turnId,
+          toolCallId: block.id,
+          invocationMessage: getClaudeInvocationMessage(
+            toolName,
+            displayName,
+            block.input,
+          ),
+          ...(toolInputStr !== undefined ? { toolInput: toolInputStr } : {}),
+          confirmed: ToolCallConfirmationReason.NotNeeded,
+        },
+      });
+      continue;
+    }
+    // Unknown inner block kind — skip silently (caller will trace at
+    // the mapper level if needed; we don't want to import ILogService
+    // here just for one trace).
+  }
+  return signals;
 }
 
 function safeStringify(value: unknown): string | undefined {
-	try {
-		return JSON.stringify(value);
-	} catch {
-		return undefined;
-	}
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return undefined;
+  }
 }

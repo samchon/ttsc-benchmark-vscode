@@ -3,32 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+import {
+  IDisposable,
+  toDisposable,
+} from "../../../../base/common/lifecycle.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
 
-export const INewChatModelPickerService = createDecorator<INewChatModelPickerService>('newChatModelPickerService');
+export const INewChatModelPickerService =
+  createDecorator<INewChatModelPickerService>("newChatModelPickerService");
 
 export interface INewChatModelPickerService {
-	readonly _serviceBrand: undefined;
-	registerModelPicker(opener: () => void): IDisposable;
-	openModelPicker(): void;
+  readonly _serviceBrand: undefined;
+  registerModelPicker(opener: () => void): IDisposable;
+  openModelPicker(): void;
 }
 
 export class NewChatModelPickerService implements INewChatModelPickerService {
-	declare readonly _serviceBrand: undefined;
+  declare readonly _serviceBrand: undefined;
 
-	private readonly _openers = new Set<() => void>();
+  private readonly _openers = new Set<() => void>();
 
-	registerModelPicker(opener: () => void): IDisposable {
-		this._openers.add(opener);
-		return toDisposable(() => this._openers.delete(opener));
-	}
+  registerModelPicker(opener: () => void): IDisposable {
+    this._openers.add(opener);
+    return toDisposable(() => this._openers.delete(opener));
+  }
 
-	openModelPicker(): void {
-		let latestOpener: (() => void) | undefined;
-		for (const opener of this._openers) {
-			latestOpener = opener;
-		}
-		latestOpener?.();
-	}
+  openModelPicker(): void {
+    let latestOpener: (() => void) | undefined;
+    for (const opener of this._openers) {
+      latestOpener = opener;
+    }
+    latestOpener?.();
+  }
 }

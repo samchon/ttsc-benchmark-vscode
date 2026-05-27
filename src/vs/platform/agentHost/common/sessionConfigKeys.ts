@@ -16,16 +16,16 @@
  * property names in their `resolveSessionConfig` response.
  */
 export const enum SessionConfigKey {
-	/** `'autoApprove'` — tool auto-approval level. */
-	AutoApprove = 'autoApprove',
-	/** `'permissions'` — per-tool session allow/deny lists. */
-	Permissions = 'permissions',
-	/** `'isolation'` — `'folder'` or `'worktree'`. */
-	Isolation = 'isolation',
-	/** `'branch'` — base branch to work from. */
-	Branch = 'branch',
-	/** `'mode'` — agent execution mode (interactive / plan). */
-	Mode = 'mode',
+  /** `'autoApprove'` — tool auto-approval level. */
+  AutoApprove = "autoApprove",
+  /** `'permissions'` — per-tool session allow/deny lists. */
+  Permissions = "permissions",
+  /** `'isolation'` — `'folder'` or `'worktree'`. */
+  Isolation = "isolation",
+  /** `'branch'` — base branch to work from. */
+  Branch = "branch",
+  /** `'mode'` — agent execution mode (interactive / plan). */
+  Mode = "mode",
 }
 
 /**
@@ -35,4 +35,8 @@ export const enum SessionConfigKey {
  * `default` is the required baseline level; `autoApprove` and `autopilot`
  * are optional (an agent may choose to advertise a subset).
  */
-export const KNOWN_AUTO_APPROVE_VALUES: ReadonlySet<string> = new Set(['default', 'autoApprove', 'autopilot']);
+export const KNOWN_AUTO_APPROVE_VALUES: ReadonlySet<string> = new Set([
+  "default",
+  "autoApprove",
+  "autopilot",
+]);

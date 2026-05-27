@@ -3,454 +3,584 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/chatEditingEditorOverlay.css';
-import { combinedDisposable, Disposable, DisposableMap, DisposableStore, MutableDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { autorun, derived, derivedOpts, IObservable, observableFromEvent, observableSignalFromEvent, observableValue, transaction } from '../../../../../base/common/observable.js';
-import { HiddenItemStrategy, MenuWorkbenchToolBar } from '../../../../../platform/actions/browser/toolbar.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IChatEditingService, IChatEditingSession, IModifiedFileEntry, ModifiedFileEntryState } from '../../common/editing/chatEditingService.js';
-import { MenuId } from '../../../../../platform/actions/common/actions.js';
-import { ActionViewItem, IActionViewItemOptions } from '../../../../../base/browser/ui/actionbar/actionViewItems.js';
-import { IAction, IActionRunner } from '../../../../../base/common/actions.js';
-import { $, addDisposableGenericMouseMoveListener, append } from '../../../../../base/browser/dom.js';
-import { assertType } from '../../../../../base/common/types.js';
-import { localize } from '../../../../../nls.js';
-import { AcceptAction, navigationBearingFakeActionId, RejectAction } from './chatEditingEditorActions.js';
-import { IWorkbenchContribution } from '../../../../common/contributions.js';
-import { IEditorGroup, IEditorGroupsService } from '../../../../services/editor/common/editorGroupsService.js';
-import { EditorGroupView } from '../../../../browser/parts/editor/editorGroupView.js';
-import { Event } from '../../../../../base/common/event.js';
-import { ServiceCollection } from '../../../../../platform/instantiation/common/serviceCollection.js';
-import { IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { EditorResourceAccessor, SideBySideEditor } from '../../../../common/editor.js';
-import { isEqual } from '../../../../../base/common/resources.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { renderIcon } from '../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { IKeybindingService } from '../../../../../platform/keybinding/common/keybinding.js';
-import { IWorkbenchEnvironmentService } from '../../../../services/environment/common/environmentService.js';
-import { getCodeEditor } from '../../../../../editor/browser/editorBrowser.js';
+import "./media/chatEditingEditorOverlay.css";
+import {
+  combinedDisposable,
+  Disposable,
+  DisposableMap,
+  DisposableStore,
+  MutableDisposable,
+  toDisposable,
+} from "../../../../../base/common/lifecycle.js";
+import {
+  autorun,
+  derived,
+  derivedOpts,
+  IObservable,
+  observableFromEvent,
+  observableSignalFromEvent,
+  observableValue,
+  transaction,
+} from "../../../../../base/common/observable.js";
+import {
+  HiddenItemStrategy,
+  MenuWorkbenchToolBar,
+} from "../../../../../platform/actions/browser/toolbar.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import {
+  IChatEditingService,
+  IChatEditingSession,
+  IModifiedFileEntry,
+  ModifiedFileEntryState,
+} from "../../common/editing/chatEditingService.js";
+import { MenuId } from "../../../../../platform/actions/common/actions.js";
+import {
+  ActionViewItem,
+  IActionViewItemOptions,
+} from "../../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { IAction, IActionRunner } from "../../../../../base/common/actions.js";
+import {
+  $,
+  addDisposableGenericMouseMoveListener,
+  append,
+} from "../../../../../base/browser/dom.js";
+import { assertType } from "../../../../../base/common/types.js";
+import { localize } from "../../../../../nls.js";
+import {
+  AcceptAction,
+  navigationBearingFakeActionId,
+  RejectAction,
+} from "./chatEditingEditorActions.js";
+import { IWorkbenchContribution } from "../../../../common/contributions.js";
+import {
+  IEditorGroup,
+  IEditorGroupsService,
+} from "../../../../services/editor/common/editorGroupsService.js";
+import { EditorGroupView } from "../../../../browser/parts/editor/editorGroupView.js";
+import { Event } from "../../../../../base/common/event.js";
+import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import {
+  EditorResourceAccessor,
+  SideBySideEditor,
+} from "../../../../common/editor.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { renderIcon } from "../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { IWorkbenchEnvironmentService } from "../../../../services/environment/common/environmentService.js";
+import { getCodeEditor } from "../../../../../editor/browser/editorBrowser.js";
 
 export class ChatEditingAcceptRejectActionViewItem extends ActionViewItem {
+  private readonly _reveal = this._store.add(new MutableDisposable());
 
-	private readonly _reveal = this._store.add(new MutableDisposable());
+  constructor(
+    action: IAction,
+    options: IActionViewItemOptions,
+    private readonly _entry: IObservable<IModifiedFileEntry | undefined>,
+    private readonly _editor: { focus(): void } | undefined,
+    private readonly _keybindingService: IKeybindingService,
+    private readonly _primaryActionIds: readonly string[] = [AcceptAction.ID],
+  ) {
+    super(undefined, action, {
+      ...options,
+      icon: false,
+      label: true,
+      keybindingNotRenderedWithLabel: true,
+    });
+  }
 
-	constructor(
-		action: IAction,
-		options: IActionViewItemOptions,
-		private readonly _entry: IObservable<IModifiedFileEntry | undefined>,
-		private readonly _editor: { focus(): void } | undefined,
-		private readonly _keybindingService: IKeybindingService,
-		private readonly _primaryActionIds: readonly string[] = [AcceptAction.ID],
-	) {
-		super(undefined, action, { ...options, icon: false, label: true, keybindingNotRenderedWithLabel: true });
-	}
+  override render(container: HTMLElement): void {
+    super.render(container);
 
-	override render(container: HTMLElement): void {
-		super.render(container);
+    if (this._primaryActionIds.includes(this._action.id)) {
+      this.element?.classList.add("primary");
+    }
 
-		if (this._primaryActionIds.includes(this._action.id)) {
-			this.element?.classList.add('primary');
-		}
+    if (this._action.id === AcceptAction.ID) {
+      const listener = this._store.add(new MutableDisposable());
 
-		if (this._action.id === AcceptAction.ID) {
+      this._store.add(
+        autorun((r) => {
+          assertType(this.label);
+          assertType(this.element);
 
-			const listener = this._store.add(new MutableDisposable());
+          const ctrl = this._entry.read(r)?.autoAcceptController.read(r);
+          if (ctrl) {
+            const ratio = -100 * (ctrl.remaining / ctrl.total);
 
-			this._store.add(autorun(r => {
+            this.element.style.setProperty(
+              "--vscode-action-item-auto-timeout",
+              `${ratio}%`,
+            );
 
-				assertType(this.label);
-				assertType(this.element);
+            this.element.classList.toggle("auto", true);
+            listener.value = addDisposableGenericMouseMoveListener(
+              this.element,
+              () => ctrl.cancel(),
+            );
+          } else {
+            this.element.classList.toggle("auto", false);
+            listener.clear();
+          }
+        }),
+      );
+    }
+  }
 
-				const ctrl = this._entry.read(r)?.autoAcceptController.read(r);
-				if (ctrl) {
+  override set actionRunner(actionRunner: IActionRunner) {
+    super.actionRunner = actionRunner;
+    if (this._editor) {
+      this._reveal.value = actionRunner.onWillRun((_e) => {
+        this._editor!.focus();
+      });
+    }
+  }
 
-					const ratio = -100 * (ctrl.remaining / ctrl.total);
+  override get actionRunner(): IActionRunner {
+    return super.actionRunner;
+  }
 
-					this.element.style.setProperty('--vscode-action-item-auto-timeout', `${ratio}%`);
-
-					this.element.classList.toggle('auto', true);
-					listener.value = addDisposableGenericMouseMoveListener(this.element, () => ctrl.cancel());
-				} else {
-					this.element.classList.toggle('auto', false);
-					listener.clear();
-				}
-			}));
-		}
-	}
-
-	override set actionRunner(actionRunner: IActionRunner) {
-		super.actionRunner = actionRunner;
-		if (this._editor) {
-			this._reveal.value = actionRunner.onWillRun(_e => {
-				this._editor!.focus();
-			});
-		}
-	}
-
-	override get actionRunner(): IActionRunner {
-		return super.actionRunner;
-	}
-
-	protected override getTooltip(): string | undefined {
-		const value = super.getTooltip();
-		if (!value) {
-			return value;
-		}
-		return this._keybindingService.appendKeybinding(value, this._action.id);
-	}
+  protected override getTooltip(): string | undefined {
+    const value = super.getTooltip();
+    if (!value) {
+      return value;
+    }
+    return this._keybindingService.appendKeybinding(value, this._action.id);
+  }
 }
 
 class ChatEditorOverlayWidget extends Disposable {
+  private readonly _domNode: HTMLElement;
+  private readonly _toolbarNode: HTMLElement;
 
-	private readonly _domNode: HTMLElement;
-	private readonly _toolbarNode: HTMLElement;
+  private readonly _showStore = this._store.add(new DisposableStore());
 
-	private readonly _showStore = this._store.add(new DisposableStore());
+  private readonly _session = observableValue<IChatEditingSession | undefined>(
+    this,
+    undefined,
+  );
+  private readonly _entry = observableValue<IModifiedFileEntry | undefined>(
+    this,
+    undefined,
+  );
+  private readonly _isBusy: IObservable<boolean | undefined>;
 
-	private readonly _session = observableValue<IChatEditingSession | undefined>(this, undefined);
-	private readonly _entry = observableValue<IModifiedFileEntry | undefined>(this, undefined);
-	private readonly _isBusy: IObservable<boolean | undefined>;
+  private readonly _navigationBearings = observableValue<{
+    changeCount: number;
+    activeIdx: number;
+    entriesCount: number;
+  }>(this, { changeCount: -1, activeIdx: -1, entriesCount: -1 });
 
-	private readonly _navigationBearings = observableValue<{ changeCount: number; activeIdx: number; entriesCount: number }>(this, { changeCount: -1, activeIdx: -1, entriesCount: -1 });
+  constructor(
+    private readonly _editor: { focus(): void },
+    @IKeybindingService private readonly _keybindingService: IKeybindingService,
+    @IInstantiationService
+    private readonly _instaService: IInstantiationService,
+  ) {
+    super();
+    this._domNode = document.createElement("div");
+    this._domNode.classList.add("chat-editor-overlay-widget");
 
-	constructor(
-		private readonly _editor: { focus(): void },
-		@IKeybindingService private readonly _keybindingService: IKeybindingService,
-		@IInstantiationService private readonly _instaService: IInstantiationService,
-	) {
-		super();
-		this._domNode = document.createElement('div');
-		this._domNode.classList.add('chat-editor-overlay-widget');
+    this._isBusy = derived((r) => {
+      const entry = this._entry.read(r);
+      return entry?.waitsForLastEdits.read(r);
+    });
 
-		this._isBusy = derived(r => {
-			const entry = this._entry.read(r);
-			return entry?.waitsForLastEdits.read(r);
-		});
+    const progressNode = document.createElement("div");
+    progressNode.classList.add("chat-editor-overlay-progress");
+    append(progressNode, renderIcon(ThemeIcon.modify(Codicon.loading, "spin")));
+    const textProgress = append(progressNode, $("span.progress-message"));
+    this._domNode.appendChild(progressNode);
 
+    this._store.add(
+      autorun((r) => {
+        const busy = this._isBusy.read(r);
 
-		const progressNode = document.createElement('div');
-		progressNode.classList.add('chat-editor-overlay-progress');
-		append(progressNode, renderIcon(ThemeIcon.modify(Codicon.loading, 'spin')));
-		const textProgress = append(progressNode, $('span.progress-message'));
-		this._domNode.appendChild(progressNode);
+        this._domNode.classList.toggle("busy", busy);
+        textProgress.innerText = "";
+      }),
+    );
 
-		this._store.add(autorun(r => {
-			const busy = this._isBusy.read(r);
+    this._toolbarNode = document.createElement("div");
+    this._toolbarNode.classList.add("chat-editor-overlay-toolbar");
+  }
 
-			this._domNode.classList.toggle('busy', busy);
-			textProgress.innerText = '';
-		}));
+  override dispose() {
+    this.hide();
+    super.dispose();
+  }
 
-		this._toolbarNode = document.createElement('div');
-		this._toolbarNode.classList.add('chat-editor-overlay-toolbar');
+  getDomNode(): HTMLElement {
+    return this._domNode;
+  }
 
-	}
+  show(
+    session: IChatEditingSession,
+    entry: IModifiedFileEntry | undefined,
+    indicies: {
+      entryIndex: IObservable<number>;
+      changeIndex: IObservable<number>;
+    },
+  ) {
+    this._showStore.clear();
 
-	override dispose() {
-		this.hide();
-		super.dispose();
-	}
+    transaction((tx) => {
+      this._session.set(session, tx);
+      this._entry.set(entry, tx);
+    });
 
-	getDomNode(): HTMLElement {
-		return this._domNode;
-	}
+    this._showStore.add(
+      autorun((r) => {
+        const entryIndex = indicies.entryIndex.read(r);
+        const changeIndex = indicies.changeIndex.read(r);
 
-	show(session: IChatEditingSession, entry: IModifiedFileEntry | undefined, indicies: { entryIndex: IObservable<number>; changeIndex: IObservable<number> }) {
+        const entries = session.entries.read(r);
 
-		this._showStore.clear();
+        let activeIdx =
+          entryIndex !== undefined && changeIndex !== undefined
+            ? changeIndex
+            : -1;
 
-		transaction(tx => {
-			this._session.set(session, tx);
-			this._entry.set(entry, tx);
-		});
+        let totalChangesCount = 0;
+        for (let i = 0; i < entries.length; i++) {
+          const changesCount = entries[i].changesCount.read(r);
+          totalChangesCount += changesCount;
 
-		this._showStore.add(autorun(r => {
+          if (entryIndex !== undefined && i < entryIndex) {
+            activeIdx += changesCount;
+          }
+        }
 
-			const entryIndex = indicies.entryIndex.read(r);
-			const changeIndex = indicies.changeIndex.read(r);
+        this._navigationBearings.set(
+          {
+            changeCount: totalChangesCount,
+            activeIdx,
+            entriesCount: entries.length,
+          },
+          undefined,
+        );
+      }),
+    );
 
-			const entries = session.entries.read(r);
+    this._domNode.appendChild(this._toolbarNode);
+    this._showStore.add(toDisposable(() => this._toolbarNode.remove()));
 
-			let activeIdx = entryIndex !== undefined && changeIndex !== undefined
-				? changeIndex
-				: -1;
+    this._showStore.add(
+      this._instaService.createInstance(
+        MenuWorkbenchToolBar,
+        this._toolbarNode,
+        MenuId.ChatEditingEditorContent,
+        {
+          telemetrySource: "chatEditor.overlayToolbar",
+          hiddenItemStrategy: HiddenItemStrategy.Ignore,
+          toolbarOptions: {
+            primaryGroup: () => true,
+            useSeparatorsInPrimaryActions: true,
+          },
+          menuOptions: { renderShortTitle: true },
+          actionViewItemProvider: (action, options) => {
+            const that = this;
 
-			let totalChangesCount = 0;
-			for (let i = 0; i < entries.length; i++) {
-				const changesCount = entries[i].changesCount.read(r);
-				totalChangesCount += changesCount;
+            if (action.id === navigationBearingFakeActionId) {
+              return new (class extends ActionViewItem {
+                constructor() {
+                  super(undefined, action, {
+                    ...options,
+                    icon: false,
+                    label: true,
+                    keybindingNotRenderedWithLabel: true,
+                  });
+                }
 
-				if (entryIndex !== undefined && i < entryIndex) {
-					activeIdx += changesCount;
-				}
-			}
+                override render(container: HTMLElement) {
+                  super.render(container);
 
-			this._navigationBearings.set({ changeCount: totalChangesCount, activeIdx, entriesCount: entries.length }, undefined);
-		}));
+                  container.classList.add("label-item");
 
+                  this._store.add(
+                    autorun((r) => {
+                      assertType(this.label);
 
-		this._domNode.appendChild(this._toolbarNode);
-		this._showStore.add(toDisposable(() => this._toolbarNode.remove()));
+                      const { changeCount, activeIdx } =
+                        that._navigationBearings.read(r);
 
-		this._showStore.add(this._instaService.createInstance(MenuWorkbenchToolBar, this._toolbarNode, MenuId.ChatEditingEditorContent, {
-			telemetrySource: 'chatEditor.overlayToolbar',
-			hiddenItemStrategy: HiddenItemStrategy.Ignore,
-			toolbarOptions: {
-				primaryGroup: () => true,
-				useSeparatorsInPrimaryActions: true
-			},
-			menuOptions: { renderShortTitle: true },
-			actionViewItemProvider: (action, options) => {
-				const that = this;
+                      if (changeCount > 0) {
+                        const n = activeIdx === -1 ? "1" : `${activeIdx + 1}`;
+                        this.label.innerText = localize(
+                          "nOfM",
+                          "{0} of {1}",
+                          n,
+                          changeCount,
+                        );
+                      } else {
+                        // allow-any-unicode-next-line
+                        this.label.innerText = localize("0Of0", "—");
+                      }
 
-				if (action.id === navigationBearingFakeActionId) {
-					return new class extends ActionViewItem {
+                      this.updateTooltip();
+                    }),
+                  );
+                }
 
-						constructor() {
-							super(undefined, action, { ...options, icon: false, label: true, keybindingNotRenderedWithLabel: true });
-						}
+                protected override getTooltip(): string | undefined {
+                  const { changeCount, entriesCount } =
+                    that._navigationBearings.get();
+                  if (changeCount === -1 || entriesCount === -1) {
+                    return undefined;
+                  }
+                  let result: string | undefined;
+                  if (changeCount === 1 && entriesCount === 1) {
+                    result = localize("tooltip_11", "1 change in 1 file");
+                  } else if (changeCount === 1) {
+                    result = localize(
+                      "tooltip_1n",
+                      "1 change in {0} files",
+                      entriesCount,
+                    );
+                  } else if (entriesCount === 1) {
+                    result = localize(
+                      "tooltip_n1",
+                      "{0} changes in 1 file",
+                      changeCount,
+                    );
+                  } else {
+                    result = localize(
+                      "tooltip_nm",
+                      "{0} changes in {1} files",
+                      changeCount,
+                      entriesCount,
+                    );
+                  }
+                  if (!that._isBusy.get()) {
+                    return result;
+                  }
+                  return localize("tooltip_busy", "{0} - Working...", result);
+                }
+              })();
+            }
 
-						override render(container: HTMLElement) {
-							super.render(container);
+            if (
+              action.id === AcceptAction.ID ||
+              action.id === RejectAction.ID
+            ) {
+              return new ChatEditingAcceptRejectActionViewItem(
+                action,
+                options,
+                that._entry,
+                that._editor,
+                that._keybindingService,
+              );
+            }
 
-							container.classList.add('label-item');
+            return undefined;
+          },
+        },
+      ),
+    );
+  }
 
-							this._store.add(autorun(r => {
-								assertType(this.label);
-
-								const { changeCount, activeIdx } = that._navigationBearings.read(r);
-
-								if (changeCount > 0) {
-									const n = activeIdx === -1 ? '1' : `${activeIdx + 1}`;
-									this.label.innerText = localize('nOfM', "{0} of {1}", n, changeCount);
-								} else {
-									// allow-any-unicode-next-line
-									this.label.innerText = localize('0Of0', "—");
-								}
-
-								this.updateTooltip();
-							}));
-						}
-
-						protected override getTooltip(): string | undefined {
-							const { changeCount, entriesCount } = that._navigationBearings.get();
-							if (changeCount === -1 || entriesCount === -1) {
-								return undefined;
-							}
-							let result: string | undefined;
-							if (changeCount === 1 && entriesCount === 1) {
-								result = localize('tooltip_11', "1 change in 1 file");
-							} else if (changeCount === 1) {
-								result = localize('tooltip_1n', "1 change in {0} files", entriesCount);
-							} else if (entriesCount === 1) {
-								result = localize('tooltip_n1', "{0} changes in 1 file", changeCount);
-							} else {
-								result = localize('tooltip_nm', "{0} changes in {1} files", changeCount, entriesCount);
-							}
-							if (!that._isBusy.get()) {
-								return result;
-							}
-							return localize('tooltip_busy', "{0} - Working...", result);
-						}
-					};
-				}
-
-				if (action.id === AcceptAction.ID || action.id === RejectAction.ID) {
-					return new ChatEditingAcceptRejectActionViewItem(action, options, that._entry, that._editor, that._keybindingService);
-				}
-
-				return undefined;
-			}
-		}));
-
-	}
-
-	hide() {
-		transaction(tx => {
-			this._session.set(undefined, tx);
-			this._entry.set(undefined, tx);
-			this._navigationBearings.set({ changeCount: -1, activeIdx: -1, entriesCount: -1 }, tx);
-		});
-		this._showStore.clear();
-	}
+  hide() {
+    transaction((tx) => {
+      this._session.set(undefined, tx);
+      this._entry.set(undefined, tx);
+      this._navigationBearings.set(
+        { changeCount: -1, activeIdx: -1, entriesCount: -1 },
+        tx,
+      );
+    });
+    this._showStore.clear();
+  }
 }
 
 class ChatEditingOverlayController {
+  private readonly _store = new DisposableStore();
 
-	private readonly _store = new DisposableStore();
+  private readonly _domNode = document.createElement("div");
 
-	private readonly _domNode = document.createElement('div');
+  constructor(
+    container: HTMLElement,
+    group: IEditorGroup,
+    @IInstantiationService instaService: IInstantiationService,
+    @IChatEditingService chatEditingService: IChatEditingService,
+  ) {
+    this._domNode.classList.add("chat-editing-editor-overlay");
+    this._domNode.style.position = "absolute";
+    this._domNode.style.bottom = `24px`;
+    this._domNode.style.right = `24px`;
+    this._domNode.style.zIndex = `100`;
 
-	constructor(
-		container: HTMLElement,
-		group: IEditorGroup,
-		@IInstantiationService instaService: IInstantiationService,
-		@IChatEditingService chatEditingService: IChatEditingService,
-	) {
+    const widget = instaService.createInstance(ChatEditorOverlayWidget, group);
+    this._domNode.appendChild(widget.getDomNode());
+    this._store.add(toDisposable(() => this._domNode.remove()));
+    this._store.add(widget);
 
-		this._domNode.classList.add('chat-editing-editor-overlay');
-		this._domNode.style.position = 'absolute';
-		this._domNode.style.bottom = `24px`;
-		this._domNode.style.right = `24px`;
-		this._domNode.style.zIndex = `100`;
+    const show = () => {
+      if (!container.contains(this._domNode)) {
+        container.appendChild(this._domNode);
+      }
+    };
 
-		const widget = instaService.createInstance(ChatEditorOverlayWidget, group);
-		this._domNode.appendChild(widget.getDomNode());
-		this._store.add(toDisposable(() => this._domNode.remove()));
-		this._store.add(widget);
+    const hide = () => {
+      if (container.contains(this._domNode)) {
+        widget.hide();
+        this._domNode.remove();
+      }
+    };
 
-		const show = () => {
-			if (!container.contains(this._domNode)) {
-				container.appendChild(this._domNode);
-			}
-		};
+    const activeEditorSignal = observableSignalFromEvent(
+      this,
+      Event.any(group.onDidActiveEditorChange, group.onDidModelChange),
+    );
 
-		const hide = () => {
-			if (container.contains(this._domNode)) {
-				widget.hide();
-				this._domNode.remove();
-			}
-		};
+    const activeUriObs = derivedOpts({ equalsFn: isEqual }, (r) => {
+      activeEditorSignal.read(r); // signal
 
-		const activeEditorSignal = observableSignalFromEvent(this, Event.any(group.onDidActiveEditorChange, group.onDidModelChange));
+      const editor = group.activeEditorPane;
 
-		const activeUriObs = derivedOpts({ equalsFn: isEqual }, r => {
+      if (!getCodeEditor(editor?.getControl())) {
+        return undefined;
+      }
 
-			activeEditorSignal.read(r); // signal
+      const uri = EditorResourceAccessor.getOriginalUri(editor?.input, {
+        supportSideBySide: SideBySideEditor.PRIMARY,
+      });
 
-			const editor = group.activeEditorPane;
+      return uri;
+    });
 
-			if (!getCodeEditor(editor?.getControl())) {
-				return undefined;
-			}
+    const sessionAndEntry = derived((r) => {
+      activeEditorSignal.read(r); // signal to ensure activeEditor and activeEditorPane don't go out of sync
 
-			const uri = EditorResourceAccessor.getOriginalUri(editor?.input, { supportSideBySide: SideBySideEditor.PRIMARY });
+      const uri = activeUriObs.read(r);
+      if (!uri) {
+        return undefined;
+      }
 
-			return uri;
-		});
+      // Directly query global editing sessions (inline chat has its own overlay)
+      for (const session of chatEditingService.editingSessionsObs.read(r)) {
+        if (!session.isGlobalEditingSession) {
+          continue;
+        }
+        const entry = session.readEntry(uri, r);
+        if (entry) {
+          return { session, entry };
+        }
+      }
+      return undefined;
+    });
 
-		const sessionAndEntry = derived(r => {
+    this._store.add(
+      autorun((r) => {
+        const data = sessionAndEntry.read(r);
 
-			activeEditorSignal.read(r); // signal to ensure activeEditor and activeEditorPane don't go out of sync
+        if (!data) {
+          hide();
+          return;
+        }
 
-			const uri = activeUriObs.read(r);
-			if (!uri) {
-				return undefined;
-			}
+        const { session, entry } = data;
 
-			// Directly query global editing sessions (inline chat has its own overlay)
-			for (const session of chatEditingService.editingSessionsObs.read(r)) {
-				if (!session.isGlobalEditingSession) {
-					continue;
-				}
-				const entry = session.readEntry(uri, r);
-				if (entry) {
-					return { session, entry };
-				}
-			}
-			return undefined;
-		});
+        if (entry?.state.read(r) === ModifiedFileEntryState.Modified) {
+          // any session with changes
+          const editorPane = group.activeEditorPane;
+          assertType(editorPane);
 
-		this._store.add(autorun(r => {
+          const changeIndex = derived((r) =>
+            entry
+              ? entry.getEditorIntegration(editorPane).currentIndex.read(r)
+              : 0,
+          );
 
-			const data = sessionAndEntry.read(r);
+          const entryIndex = derived((r) =>
+            entry ? session.entries.read(r).indexOf(entry) : 0,
+          );
 
-			if (!data) {
-				hide();
-				return;
-			}
+          widget.show(session, entry, { entryIndex, changeIndex });
+          show();
+        } else {
+          // nothing
+          hide();
+        }
+      }),
+    );
+  }
 
-			const { session, entry } = data;
-
-			if (entry?.state.read(r) === ModifiedFileEntryState.Modified) {
-				// any session with changes
-				const editorPane = group.activeEditorPane;
-				assertType(editorPane);
-
-				const changeIndex = derived(r => entry
-					? entry.getEditorIntegration(editorPane).currentIndex.read(r)
-					: 0);
-
-				const entryIndex = derived(r => entry
-					? session.entries.read(r).indexOf(entry)
-					: 0
-				);
-
-				widget.show(session, entry, { entryIndex, changeIndex });
-				show();
-
-			} else {
-				// nothing
-				hide();
-			}
-		}));
-	}
-
-	dispose(): void {
-		this._store.dispose();
-	}
+  dispose(): void {
+    this._store.dispose();
+  }
 }
 
 export class ChatEditingEditorOverlay implements IWorkbenchContribution {
+  static readonly ID = "chat.edits.editorOverlay";
 
-	static readonly ID = 'chat.edits.editorOverlay';
+  private readonly _store = new DisposableStore();
 
-	private readonly _store = new DisposableStore();
+  constructor(
+    @IEditorGroupsService editorGroupsService: IEditorGroupsService,
+    @IInstantiationService instantiationService: IInstantiationService,
+    @IWorkbenchEnvironmentService
+    environmentService: IWorkbenchEnvironmentService,
+  ) {
+    const editorGroups = observableFromEvent(
+      this,
+      Event.any(
+        editorGroupsService.onDidAddGroup,
+        editorGroupsService.onDidRemoveGroup,
+      ),
+      () => editorGroupsService.groups,
+    );
 
-	constructor(
-		@IEditorGroupsService editorGroupsService: IEditorGroupsService,
-		@IInstantiationService instantiationService: IInstantiationService,
-		@IWorkbenchEnvironmentService environmentService: IWorkbenchEnvironmentService,
-	) {
+    const overlayWidgets = this._store.add(new DisposableMap<IEditorGroup>());
 
-		const editorGroups = observableFromEvent(
-			this,
-			Event.any(editorGroupsService.onDidAddGroup, editorGroupsService.onDidRemoveGroup),
-			() => editorGroupsService.groups
-		);
+    this._store.add(
+      autorun((r) => {
+        if (environmentService.isSessionsWindow) {
+          return;
+        }
 
-		const overlayWidgets = this._store.add(new DisposableMap<IEditorGroup>());
+        const toDelete = new Set(overlayWidgets.keys());
+        const groups = editorGroups.read(r);
 
-		this._store.add(autorun(r => {
+        for (const group of groups) {
+          if (!(group instanceof EditorGroupView)) {
+            // TODO@jrieken better with https://github.com/microsoft/vscode/tree/ben/layout-group-container
+            continue;
+          }
 
-			if (environmentService.isSessionsWindow) {
-				return;
-			}
+          toDelete.delete(group); // we keep the widget for this group!
 
-			const toDelete = new Set(overlayWidgets.keys());
-			const groups = editorGroups.read(r);
+          if (!overlayWidgets.has(group)) {
+            const scopedInstaService = instantiationService.createChild(
+              new ServiceCollection([
+                IContextKeyService,
+                group.scopedContextKeyService,
+              ]),
+            );
 
+            const container = group.element;
 
-			for (const group of groups) {
+            const ctrl = scopedInstaService.createInstance(
+              ChatEditingOverlayController,
+              container,
+              group,
+            );
+            overlayWidgets.set(
+              group,
+              combinedDisposable(ctrl, scopedInstaService),
+            );
+          }
+        }
 
-				if (!(group instanceof EditorGroupView)) {
-					// TODO@jrieken better with https://github.com/microsoft/vscode/tree/ben/layout-group-container
-					continue;
-				}
+        for (const group of toDelete) {
+          overlayWidgets.deleteAndDispose(group);
+        }
+      }),
+    );
+  }
 
-				toDelete.delete(group); // we keep the widget for this group!
-
-				if (!overlayWidgets.has(group)) {
-
-					const scopedInstaService = instantiationService.createChild(
-						new ServiceCollection([IContextKeyService, group.scopedContextKeyService])
-					);
-
-					const container = group.element;
-
-					const ctrl = scopedInstaService.createInstance(ChatEditingOverlayController, container, group);
-					overlayWidgets.set(group, combinedDisposable(ctrl, scopedInstaService));
-				}
-			}
-
-			for (const group of toDelete) {
-				overlayWidgets.deleteAndDispose(group);
-			}
-		}));
-	}
-
-	dispose(): void {
-		this._store.dispose();
-	}
+  dispose(): void {
+    this._store.dispose();
+  }
 }
