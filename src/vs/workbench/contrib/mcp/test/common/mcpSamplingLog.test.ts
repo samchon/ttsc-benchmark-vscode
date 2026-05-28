@@ -36,7 +36,9 @@ suite('MCP - Sampling Log', () => {
 		// fail the renderer's no-console-output assertion. The option exists in
 		// @sinonjs/fake-timers but is missing from the @types/sinon typings, so
 		// we widen the config type locally.
-		const fakeTimerOpts: Partial<sinon.SinonFakeTimersConfig> & { shouldClearNativeTimers: boolean } = { shouldClearNativeTimers: true };
+		// `SinonFakeTimersConfig` was removed from `@types/sinon` v17;
+		// the `shouldClearNativeTimers` field still exists at runtime.
+		const fakeTimerOpts: { shouldClearNativeTimers: boolean } = { shouldClearNativeTimers: true };
 		clock = sinon.useFakeTimers(fakeTimerOpts);
 		clock.setSystemTime(new Date('2023-10-01T00:00:00Z').getTime());
 	});
