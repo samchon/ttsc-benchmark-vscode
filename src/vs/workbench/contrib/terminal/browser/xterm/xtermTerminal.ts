@@ -23,10 +23,12 @@ import type {
 import type { WebglAddon as WebglAddonType } from "@xterm/addon-webgl";
 import type { SerializeAddon as SerializeAddonType } from "@xterm/addon-serialize";
 import type { ImageAddon as ImageAddonType } from "@xterm/addon-image";
-import type {
-  ClipboardAddon as ClipboardAddonType,
-  ClipboardSelectionType,
-} from "@xterm/addon-clipboard";
+import type { ClipboardAddon as ClipboardAddonType } from "@xterm/addon-clipboard";
+// `ClipboardSelectionType` is no longer exported by `@xterm/addon-clipboard`
+// (>=0.5). The OSC-52 clipboard provider uses `c` = clipboard, `p` =
+// primary selection — pin those literals locally so the rest of the
+// file keeps compiling against the new addon types.
+type ClipboardSelectionType = "c" | "p";
 import * as dom from "../../../../../base/browser/dom.js";
 import { IXtermCore } from "../xterm-private.js";
 import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
