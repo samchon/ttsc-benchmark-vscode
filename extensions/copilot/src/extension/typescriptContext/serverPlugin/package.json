@@ -7,7 +7,7 @@
 	"license": "MIT",
 	"main": "./dist/main.js",
 	"devdependencies": {
-		"typescript": "5.5.4"
+		"typescript": "7.0.1-rc"
 	},
 	"scripts": {
 		"compile": "tsx .esbuild.ts",
